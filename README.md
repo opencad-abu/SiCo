@@ -4,7 +4,7 @@ SiCo（矽科）是基于 Codex CLI 的定制集成电路设计平台智能助�
 Copilot 会话为核心，配套 Cadence Virtuoso 流程工具集——统一的工具菜单入口，
 DRC / LVS / RCE / MTS 等流程封装，LEF / GDS / CDL 导出，LSF 运行监控。
 SiCo的最终目标是多平台定制电路设计AI助手，能够协助电路/版图设计工程师快速完成工作。
-- 中文使用手册（离线 HTML）：[docs/html/index.html](docs/html/index.html)
+- 中文使用手册：[在线阅读](https://opencad-abu.github.io/SiCo/) · [离线 HTML](docs/html/index.html)
 
 ## 仓库结构
 
