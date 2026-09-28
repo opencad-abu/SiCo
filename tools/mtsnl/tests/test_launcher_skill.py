@@ -77,7 +77,10 @@ def test_launcher_double_load_and_file_readers_with_dbaccess(tmp_path: Path) -> 
     dbaccess = shutil.which(os.environ.get("MTS_DBACCESS", "dbAccess"))
     if dbaccess is None:
         pytest.skip("dbAccess is unavailable")
-    cds_lib = Path(os.environ.get("MTS_TEST_CDSLIB", "/workarea/xh/smic28/cds.lib"))
+    probe_lib = os.environ.get("MTS_TEST_CDSLIB")
+    if not probe_lib:
+        pytest.skip("set MTS_TEST_CDSLIB to a test cds.lib")
+    cds_lib = Path(probe_lib)
     if not cds_lib.is_file():
         pytest.skip(f"test cds.lib is unavailable: {cds_lib}")
 

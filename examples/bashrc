@@ -81,7 +81,7 @@ unset SICO_AI_QTERMWIDGET_RUNTIME SICO_AI_RELEASE_ROOT SICO_AI_CONTEXT SICO_AI_Q
 # CAD flow 使用新变量名；旧安装的环境需配套迁移，见 docs/SICO_FLOW_ENV_MIGRATION.md。
 # CAD flow：工程与 OA 输入（以下路径均为占位；按需启用，并先设置被引用的根目录）
 # 当前工程工作区；仅作为下列路径的公共前缀，可替换为实际目录。
-# export PROJECT_ROOT="/workarea/projs/proj3/xh"
+# export PROJECT_ROOT="/path/to/project"
 # 当前工艺安装根；runset、映射及 RC tech 必须来自该工艺。
 # export PDK_ROOT="/path/to/pdk"
 # OA 库定义文件；未设置时使用 Virtuoso 当前目录的 cds.lib。

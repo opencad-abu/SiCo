@@ -7,7 +7,7 @@ def test_catalog_category_and_combine_metadata_round_trip(tmp_path: Path) -> Non
         tmp_path / "PDK",
         False,
         categories=(category,),
-        combine_members=("smic28", "smic28hkmg"),
+        combine_members=("xxxx28", "xxxx28hkmg"),
     )
     catalog = Catalog(
         tmp_path / "cds.lib",

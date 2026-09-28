@@ -47,7 +47,7 @@ def _drc_profile(extra: str = "") -> str:
         'view = "layout"\n\n'
         "[drc]\n"
         'tool = "Calibre"\n'
-        'runset_name = "SMIC28"\n'
+        'runset_name = "XXXX28"\n'
         'runset_file = "${PDK_ROOT}/Calibre/DRC/rules.drc"\n'
         'run_mode = "Hier"\n'
         "rule_select_enable = true\n"

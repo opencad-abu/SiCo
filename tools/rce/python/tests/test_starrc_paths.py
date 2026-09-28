@@ -79,7 +79,7 @@ def _write(path: Path, text: str = "test\n") -> Path:
     return path
 
 
-def test_starrc_derives_smic_style_corner_inputs(tmp_path: Path) -> None:
+def test_starrc_derives_pdk_style_corner_inputs(tmp_path: Path) -> None:
     tech_dir = tmp_path / "StarRC"
     grid = _write(tech_dir / "RCmax/nxtgrd")
     mapping = _write(tech_dir / "RCmax/tran.map")

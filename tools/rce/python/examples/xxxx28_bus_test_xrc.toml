@@ -1,28 +1,28 @@
 [run]
-run_dir = "${RCE_RUN_ROOT}/smic28.busTest.xrc"
+run_dir = "${RCE_RUN_ROOT}/xxxx28.busTest.xrc"
 
 [input]
 type = "CDL+GDS"
 
 [input.cdl]
-file = "${SMIC28_ROOT}/busTest.cdl"
+file = "${XXXX28_ROOT}/busTest.cdl"
 cell = "busTest"
 
 [input.gds]
-file = "${SMIC28_ROOT}/busTest.gds"
+file = "${XXXX28_ROOT}/busTest.gds"
 cell = "busTest"
 
 [lvs]
 tool = "Calibre"
-runset_file = "${SMIC28_ROOT}/smic28hkmg_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_oa_cds_2015_04_15_v1.0/Calibre/XRC/calibrexrc_28HKMG_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_v1.0_0R/rulefiles/calibrexrc_28HKMG_1P10M_8Ma_8Ic_2TMc_ALPA1_TYP/SmicSP0T_cal28_LG_HKMG_plmtx_0925_V1.0_1R.lvs"
+runset_file = "${XXXX28_ROOT}/xxxx28hkmg_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_oa_cds_2015_04_15_v1.0/Calibre/XRC/calibrexrc_28HKMG_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_v1.0_0R/rulefiles/calibrexrc_28HKMG_1P10M_8Ma_8Ic_2TMc_ALPA1_TYP/XxxxSP0T_cal28_LG_HKMG_plmtx_0925_V1.0_1R.lvs"
 ignore_error = false
 case_sensitive = true
 hcell_enable = true
-hcell_file = "${SMIC28_ROOT}/smic28hkmg_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_oa_cds_2015_04_15_v1.0/Calibre/XRC/calibrexrc_28HKMG_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_v1.0_0R/rc/Typ/hcell_list"
+hcell_file = "${XXXX28_ROOT}/xxxx28hkmg_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_oa_cds_2015_04_15_v1.0/Calibre/XRC/calibrexrc_28HKMG_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_v1.0_0R/rc/Typ/hcell_list"
 
 [extract]
 tool = "CalXRC"
-tech_dir = "${SMIC28_ROOT}/smic28hkmg_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_oa_cds_2015_04_15_v1.0/Calibre/XRC/calibrexrc_28HKMG_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_v1.0_0R/rc"
+tech_dir = "${XXXX28_ROOT}/xxxx28hkmg_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_oa_cds_2015_04_15_v1.0/Calibre/XRC/calibrexrc_28HKMG_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_v1.0_0R/rc"
 corner = "Typ"
 corners = ["Typ"]
 temperature = "25"

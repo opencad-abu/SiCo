@@ -19,7 +19,7 @@ export CAD_HOME="/path/to/cad"
 export PROJECT_ROOT="${PWD}"
 export PDK_ROOT="${PROJECT_ROOT}/ETIP_N55_PDK_V1.0"
 export RCE_RUN_ROOT="${PROJECT_ROOT}/.rce"
-export SMIC28_ROOT="${PROJECT_ROOT}/smic28"  # SMIC28 example only
+export XXXX28_ROOT="${PROJECT_ROOT}/xxxx28"  # 示例；按实际 PDK 替换
 ```
 
 `CAD_HOME` is the sole installation root; this repository is installed below
@@ -1026,8 +1026,8 @@ with `lvs.ignore_error = true`; it is recorded in `log/lvs-ignored-mismatch` and
 does not suppress PEX/xRC errors. Failure details are written to
 `log/exit-abnormally`.
 
-See [examples/smic28_bus_test_xrc.toml](examples/smic28_bus_test_xrc.toml) for
-a complete `CDL+GDS` XRC run. It uses `SMIC28_ROOT` for both the test design
+See [examples/xxxx28_bus_test_xrc.toml](examples/xxxx28_bus_test_xrc.toml) for
+a complete `CDL+GDS` XRC run. It uses `XXXX28_ROOT` for both the test design
 and its adjacent PDK tree, and `RCE_RUN_ROOT` for generated data.
 
 ## StarRC Technology Inputs

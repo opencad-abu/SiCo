@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 import re
 
 import pytest
@@ -119,7 +120,10 @@ def test_scope_rejects_missing_or_duplicate_top() -> None:
 
 
 def _golden_netlist(dialect: str, name: str) -> Path:
-    base = Path("/workarea/xh/smic28/simulation")
+    root = os.environ.get("MTS_TEST_GOLDEN_ROOT")
+    if not root:
+        pytest.skip("set MTS_TEST_GOLDEN_ROOT to the Cadence golden simulation root")
+    base = Path(root)
     directory = base / ("bufferx1_spectre" if dialect == "spectre" else "bufferx1_hspiceD")
     path = directory / name
     if not path.is_file():

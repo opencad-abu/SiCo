@@ -82,28 +82,28 @@ export STARRC_TECH_DIR="stack_A,$PDK_ROOT/rc/stack_A/starrc"
 export CALXRC_TECH_DIR="stack_A,$PDK_ROOT/rc/stack_A/calibre-xrc"
 export RCE_CORNER="Typ"</code></pre></div>
 <p>有多种金属栈时，用分号增加 <code>显示名,路径</code>，例如 <code>stack_A,路径A;stack_B,路径B</code>。GUI 中先选择 Process Directory 的金属栈，再选择该目录中的 corner。</p>
-<h3 id="techdir-proj2">proj2 的目录对照</h3>
-<p>下面选取 <code>/workarea/projs/proj2/common/pdk</code> 中的一个金属栈，展示原始工艺文件的位置。<code>1p9m_6X1Z1U</code> 是金属栈名称；该目录中的 typical 模型对应典型角。整理时把金属栈与 RC corner 分成两级，便于以后增加其他角：</p>
-<div class="code-block"><div class="code-label">proj2 · 原始 PDK 文件节选</div><pre><code>$PROJ_PDK_HOME/
-├── Assura/online/1p9m_6X1Z1U/       # Quantus / Assura 侧的工艺数据
+<h3 id="techdir-example">工艺目录对照</h3>
+<p>下面选取 <code>$PROJ_PDK_HOME</code> 中的一个金属栈，展示原始工艺文件的位置。<code>stack_A</code> 是金属栈名称；该目录中的 typical 模型对应典型角。整理时把金属栈与 RC corner 分成两级，便于以后增加其他角：</p>
+<div class="code-block"><div class="code-label">原始 PDK 文件节选</div><pre><code>$PROJ_PDK_HOME/
+├── Assura/online/stack_A/            # Quantus / Assura 侧的工艺数据
 │   ├── qrcTechFile
 │   ├── RCXspiceINIT
 │   ├── RCXdspfINIT
 │   ├── lvsfile
 │   ├── cap_coeff.dat, caps2d, capsw3d
 │   └── rcxfs.dat, paxfile_coeff
-├── CCI/online/1p9m_6X1Z1U/          # StarRC / CCI 侧的工艺数据
+├── CCI/online/stack_A/               # StarRC / CCI 侧的工艺数据
 │   ├── starrcxt.nxtgrd
 │   ├── starrcxt_mapping
-│   ├── starrcxt_mapping_1p9m
+│   ├── starrcxt_mapping_stack_A
 │   └── *.itf                         # 建模输入，不直接替代 nxtgrd
 └── Calibre/
-    ├── online/rcx_online/1p9m_6X1Z1U/
+    ├── online/rcx_online/stack_A/
     │   ├── calibre.rcx               # 原始 Calibre RCX 规则入口
     │   └── rules                     # 由 calibre.rcx 引用的规则数据
     └── rcx/calview.cellmap           # Calibre View 的 OA cell map</code></pre></div>
-<p>例如，可将已确认的 typical StarRC 文件通过软链接组织到 <code>rc/1p9m_6X1Z1U/starrc/Typ/nxtgrd</code> 和 <code>tran.map</code>，再把 Process Directory 指向 <code>rc/1p9m_6X1Z1U/starrc</code>。其他角使用各自的模型。Quantus 的 Calibre 适配文件、CalXRC 的规则入口按下面各节准备。</p>
-<p>核对时，proj2 modulefile 中的 <code>$PROJ_PDK_HOME/QRC</code>、<code>StarRC</code>、<code>CalXRC</code> 尚无对应目录。这里展示的是整理方法与原始文件对照，不表示该项目已经具有可直接运行的完整 corner 配置。</p>
+<p>例如，可将已确认的 typical StarRC 文件通过软链接组织到 <code>rc/stack_A/starrc/Typ/nxtgrd</code> 和 <code>tran.map</code>，再把 Process Directory 指向 <code>rc/stack_A/starrc</code>。其他角使用各自的模型。Quantus 的 Calibre 适配文件、CalXRC 的规则入口按下面各节准备。</p>
+<p>核对时，项目 modulefile 中的 <code>$PROJ_PDK_HOME/QRC</code>、<code>StarRC</code>、<code>CalXRC</code> 尚无对应目录。这里展示的是整理方法与原始文件对照，不表示该项目已经具有可直接运行的完整 corner 配置。</p>
 <div class="notice"><strong>识别文件用于列出 corner；运行还需要完整的配套文件。</strong> 下表分别标出必需、按功能必需和 PDK 配套项。文件可以是有效软链接；引用目标及其依赖必须在执行节点可读。目录示例用于说明组织方式，规则和工艺数据应来自同一套已确认的 PDK。</div>
 <h3 id="techdir-qrc">示例一 · Quantus / QRC</h3>
 <div class="code-block"><div class="code-label">Quantus · Calibre LVS 输入的晶体管级提取</div><pre><code>quantus/
@@ -225,7 +225,7 @@ dspfana /path/to/output/amplifier.dspf</code></pre></div>
 
 <footer class="page-footer"><span>内容基线 d48ccb31 · 核对 2026-09-28</span><a href="mts.html">MTS 多工艺网表 →</a></footer>
 </main>
-<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#engine">先选择提取引擎</a><a href="#techdirs">Techdir 目录层次</a><a href="#techdir-proj2">proj2 目录对照</a><a href="#techdir-qrc">Quantus 文件清单</a><a href="#techdir-starrc">StarRC 文件清单</a><a href="#techdir-calxrc">Calibre XRC 文件清单</a><a href="#run">配置一次提取</a><a href="#corners">单角与多角</a><a href="#formats">各引擎支持的输出格式</a><a href="#oa-view">输出原生 OA 寄生 view</a><a href="#selection">选择性抽取与 blocking</a><a href="#cli">命令行与运行记录</a></aside>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#engine">先选择提取引擎</a><a href="#techdirs">Techdir 目录层次</a><a href="#techdir-example">工艺目录对照</a><a href="#techdir-qrc">Quantus 文件清单</a><a href="#techdir-starrc">StarRC 文件清单</a><a href="#techdir-calxrc">Calibre XRC 文件清单</a><a href="#run">配置一次提取</a><a href="#corners">单角与多角</a><a href="#formats">各引擎支持的输出格式</a><a href="#oa-view">输出原生 OA 寄生 view</a><a href="#selection">选择性抽取与 blocking</a><a href="#cli">命令行与运行记录</a></aside>
 </div></div>
 </body>
 </html>
