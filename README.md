@@ -1,4 +1,4 @@
-# SiCo · 矽科
+# SiCo
 
 SiCo（矽科）是基于 Codex CLI 的定制集成电路设计平台智能助手：以 Silicon
 Copilot 会话为核心，配套 Cadence Virtuoso 流程工具集——统一的工具菜单入口，
