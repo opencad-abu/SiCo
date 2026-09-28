@@ -12,7 +12,7 @@ if [[ -z ${SICO_HOME:-} ]]; then
 fi
 export SICO_HOME
 export PROJECT_ROOT="${PROJECT_ROOT:-${PWD}}"
-export PDK_ROOT="${PDK_ROOT:-${PROJECT_ROOT}/ETIP_N55_PDK_V1.0}"
+export PDK_ROOT="${PDK_ROOT:-${PROJECT_ROOT}/PDK_V1.0}"
 RCE_RUN_ROOT="${RCE_RUN_ROOT:-${PROJECT_ROOT}/.rce}"
 export RCE_RUN_ROOT
 
@@ -44,16 +44,16 @@ else
     export COMPANY
 fi
 
-export ETIP_N55_PDK_HOME="${ETIP_N55_PDK_HOME:-${PDK_ROOT}}"
+export PDK_HOME="${PDK_HOME:-${PDK_ROOT}}"
 export CDS_LIB="${CDS_LIB:-${PROJECT_ROOT}/cds.lib}"
-export TECH_LAYER_MAP="${TECH_LAYER_MAP:-${PROJECT_ROOT}/ETIPN55/ETIPN55.layermap}"
+export TECH_LAYER_MAP="${TECH_LAYER_MAP:-${PROJECT_ROOT}/tech_A/tech_A.layermap}"
 export CDL_HEADER_FILE="${CDL_HEADER_FILE:-}"
 
 export RCE_DB_DIR="${RCE_DB_DIR:-${RCE_RUN_ROOT}/virtuoso}"
 export PROJ_DATA_ROOT_DIR="${PROJ_DATA_ROOT_DIR:-${RCE_RUN_ROOT}/virtuoso}"
 
 if [[ -z ${RCE_LVS_FILE:-} ]]; then
-    export RCE_LVS_FILE="ETIPN55,${PDK_ROOT}/pv/ETIPN55.lvs.cal"
+    export RCE_LVS_FILE="tech_A,${PDK_ROOT}/pv/tech_A.lvs.cal"
 fi
 export QUANTUS_TECH_DIR="${QUANTUS_TECH_DIR:-Default,${PDK_ROOT}/rc/QRC}"
 export STARRC_TECH_DIR="${STARRC_TECH_DIR:-Default,${PDK_ROOT}/rc/StarRC}"
@@ -69,10 +69,10 @@ export MULTI_CPU_ALLOWED="${MULTI_CPU_ALLOWED:-1,2,4,8}"
 
 # Test design defaults for manual GUI selection:
 #   Input Type : OA
-#   SCH_LIB    : ESCN55H7
+#   SCH_LIB    : worklib
 #   SCH_CELL   : AND2X1H7
 #   SCH_VIEW   : schematic
-#   LAY_LIB    : ESCN55H7
+#   LAY_LIB    : worklib
 #   LAY_CELL   : AND2X1H7
 #   LAY_VIEW   : layout_drc
 #   Run Type   : Local Host

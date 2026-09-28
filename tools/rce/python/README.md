@@ -17,7 +17,7 @@ environment and keep only relative suffixes in TOML. For example:
 ```sh
 export CAD_HOME="/path/to/cad"
 export PROJECT_ROOT="${PWD}"
-export PDK_ROOT="${PROJECT_ROOT}/ETIP_N55_PDK_V1.0"
+export PDK_ROOT="${PROJECT_ROOT}/PDK_V1.0"
 export RCE_RUN_ROOT="${PROJECT_ROOT}/.rce"
 export XXXX28_ROOT="${PROJECT_ROOT}/xxxx28"  # 示例；按实际 PDK 替换
 ```
@@ -108,7 +108,7 @@ backend policy instead of archiving every file with a netlist extension.
 
 ```toml
 [run]
-run_dir = "${RCE_RUN_ROOT}/ESCN55H7.AND2X1H7.test"
+run_dir = "${RCE_RUN_ROOT}/worklib.AND2X1H7.test"
 cds_lib = "${PROJECT_ROOT}/cds.lib"
 run_type = "Current Host"
 
@@ -116,20 +116,20 @@ run_type = "Current Host"
 type = "OA"
 
 [input.schematic]
-lib = "ESCN55H7"
+lib = "worklib"
 cell = "AND2X1H7"
 view = "schematic"
 cdl_header_file = ""
 
 [input.layout]
-lib = "ESCN55H7"
+lib = "worklib"
 cell = "AND2X1H7"
 view = "layout_drc"
-layer_map = "${PROJECT_ROOT}/ETIPN55/ETIPN55.layermap"
+layer_map = "${PROJECT_ROOT}/tech_A/tech_A.layermap"
 
 [lvs]
 tool = "Calibre"
-runset_file = "${PDK_ROOT}/pv/ETIPN55.lvs.cal"
+runset_file = "${PDK_ROOT}/pv/tech_A.lvs.cal"
 ignore_error = false
 case_sensitive = true
 hcell_enable = false
