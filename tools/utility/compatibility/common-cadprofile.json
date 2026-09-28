@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "compatibility": [
+    {
+      "legacy": "cadprofile.model exports from cadconfig.booleans",
+      "source": "tools/common/python/cadprofile/model.py",
+      "replacement": "tools/common/python/cadconfig/booleans.py",
+      "owner": "tools/common/python/cadconfig/booleans.py",
+      "exports": {"_FLOW_BOOLEAN_PATHS": "FLOW_BOOLEAN_PATHS"},
+      "consumers": ["tools/common/python/cadprofile/__init__.py", "tools/common/python/cadprofile/cli.py", "tools/common/python/cadprofile/skill_data.py", "tools/common/python/tests/cadprofile_profile_fixtures.py", "tools/common/python/tests/flow_profile_adapter_fixtures.py", "tools/common/python/tests/test_config_paths.py", "deploy/tests/fixtures/flow_config_native_probe.py", "tools/rce/python/tests/test_recognize_gates.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/common/python/tests/test_cadprofile_core_basic.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cadprofile.model exports from cadconfig.paths",
+      "source": "tools/common/python/cadprofile/model.py",
+      "replacement": "tools/common/python/cadconfig/paths.py",
+      "owner": "tools/common/python/cadconfig/paths.py",
+      "exports": {"_PATH_KEYS": "PATH_KEYS", "_SELECTION_FILE_OR_INLINE_KEYS": "SELECTION_PATH_KEYS"},
+      "consumers": ["tools/common/python/cadprofile/__init__.py", "tools/common/python/cadprofile/cli.py", "tools/common/python/cadprofile/skill_data.py", "tools/common/python/tests/cadprofile_profile_fixtures.py", "tools/common/python/tests/flow_profile_adapter_fixtures.py", "tools/common/python/tests/test_config_paths.py", "deploy/tests/fixtures/flow_config_native_probe.py", "tools/rce/python/tests/test_recognize_gates.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/common/python/tests/test_cadprofile_core_basic.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cadprofile.model exports from cadconfig.scalars",
+      "source": "tools/common/python/cadprofile/model.py",
+      "replacement": "tools/common/python/cadconfig/scalars.py",
+      "owner": "tools/common/python/cadconfig/scalars.py",
+      "exports": {"_INTEGER_TEXT_PATHS": "INTEGER_TEXT_PATHS"},
+      "consumers": ["tools/common/python/cadprofile/__init__.py", "tools/common/python/cadprofile/cli.py", "tools/common/python/cadprofile/skill_data.py", "tools/common/python/tests/cadprofile_profile_fixtures.py", "tools/common/python/tests/flow_profile_adapter_fixtures.py", "tools/common/python/tests/test_config_paths.py", "deploy/tests/fixtures/flow_config_native_probe.py", "tools/rce/python/tests/test_recognize_gates.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/common/python/tests/test_cadprofile_core_basic.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cadprofile.model exports from cadprofile.normalization",
+      "source": "tools/common/python/cadprofile/model.py",
+      "replacement": "tools/common/python/cadprofile/normalization.py",
+      "owner": "tools/common/python/cadprofile/normalization.py",
+      "exports": {"_profile_defaults": "_profile_defaults", "_normalization_overrides": "_normalization_overrides", "_set_path": "_set_path", "_normalized_raw": "_normalized_raw", "_path_views": "_path_views"},
+      "consumers": ["tools/common/python/cadprofile/__init__.py", "tools/common/python/cadprofile/cli.py", "tools/common/python/cadprofile/skill_data.py", "tools/common/python/tests/cadprofile_profile_fixtures.py", "tools/common/python/tests/flow_profile_adapter_fixtures.py", "tools/common/python/tests/test_config_paths.py", "deploy/tests/fixtures/flow_config_native_probe.py", "tools/rce/python/tests/test_recognize_gates.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/common/python/tests/test_cadprofile_core_basic.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cadprofile.model exports from cadprofile.schema",
+      "source": "tools/common/python/cadprofile/model.py",
+      "replacement": "tools/common/python/cadprofile/schema.py",
+      "owner": "tools/common/python/cadprofile/schema.py",
+      "exports": {"FORMAT_NAME": "FORMAT_NAME", "SCHEMA_VERSION": "SCHEMA_VERSION", "SUPPORTED_FLOWS": "SUPPORTED_FLOWS", "ProfileScalar": "ProfileScalar", "ProfileValue": "ProfileValue", "ProfileEntry": "ProfileEntry", "_METADATA_KEYS": "_METADATA_KEYS", "_ALLOWED_TOP_LEVEL": "_ALLOWED_TOP_LEVEL", "_REQUIRED_TABLES": "_REQUIRED_TABLES", "_INPUT_TYPES": "_INPUT_TYPES", "_FLOW_ALLOWED_PATHS": "_FLOW_ALLOWED_PATHS", "_FLOW_DYNAMIC_PATH_PREFIXES": "_FLOW_DYNAMIC_PATH_PREFIXES", "_ARRAY_PATHS": "_ARRAY_PATHS", "_GUI_TEXT_PATHS": "_GUI_TEXT_PATHS", "_FLOW_ENUM_VALUES": "_FLOW_ENUM_VALUES", "_BIN_OPTION_NAME": "_BIN_OPTION_NAME", "_REDUCTION_OUTPUT_TAG": "_REDUCTION_OUTPUT_TAG"},
+      "consumers": ["tools/common/python/cadprofile/__init__.py", "tools/common/python/cadprofile/cli.py", "tools/common/python/cadprofile/skill_data.py", "tools/common/python/tests/cadprofile_profile_fixtures.py", "tools/common/python/tests/flow_profile_adapter_fixtures.py", "tools/common/python/tests/test_config_paths.py", "deploy/tests/fixtures/flow_config_native_probe.py", "tools/rce/python/tests/test_recognize_gates.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/common/python/tests/test_cadprofile_core_basic.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cadprofile.model exports from cadprofile.validation_common",
+      "source": "tools/common/python/cadprofile/model.py",
+      "replacement": "tools/common/python/cadprofile/validation_common.py",
+      "owner": "tools/common/python/cadprofile/validation_common.py",
+      "exports": {"_validate_metadata": "_validate_metadata", "_validate_top_level": "_validate_top_level", "_validate_profile_paths": "_validate_profile_paths", "_validate_field_types": "_validate_field_types", "_validate_common": "_validate_common"},
+      "consumers": ["tools/common/python/cadprofile/__init__.py", "tools/common/python/cadprofile/cli.py", "tools/common/python/cadprofile/skill_data.py", "tools/common/python/tests/cadprofile_profile_fixtures.py", "tools/common/python/tests/flow_profile_adapter_fixtures.py", "tools/common/python/tests/test_config_paths.py", "deploy/tests/fixtures/flow_config_native_probe.py", "tools/rce/python/tests/test_recognize_gates.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/common/python/tests/test_cadprofile_core_basic.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cadprofile.model exports from cadprofile.validation_flows",
+      "source": "tools/common/python/cadprofile/model.py",
+      "replacement": "tools/common/python/cadprofile/validation_flows.py",
+      "owner": "tools/common/python/cadprofile/validation_flows.py",
+      "exports": {"_decimal_text": "_decimal_text", "_validate_run_mode": "_validate_run_mode", "_validate_drc": "_validate_drc", "_validate_lvs": "_validate_lvs", "_validate_rce": "_validate_rce", "_validate_lef": "_validate_lef"},
+      "consumers": ["tools/common/python/cadprofile/__init__.py", "tools/common/python/cadprofile/cli.py", "tools/common/python/cadprofile/skill_data.py", "tools/common/python/tests/cadprofile_profile_fixtures.py", "tools/common/python/tests/flow_profile_adapter_fixtures.py", "tools/common/python/tests/test_config_paths.py", "deploy/tests/fixtures/flow_config_native_probe.py", "tools/rce/python/tests/test_recognize_gates.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/common/python/tests/test_cadprofile_core_basic.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cadprofile.model exports from cadprofile.values",
+      "source": "tools/common/python/cadprofile/model.py",
+      "replacement": "tools/common/python/cadprofile/values.py",
+      "owner": "tools/common/python/cadprofile/values.py",
+      "exports": {"ProfileError": "ProfileError", "ProfileDocument": "ProfileDocument", "_normalize_flow": "_normalize_flow", "_control_free": "_control_free", "_normalize_value": "_normalize_value", "_flatten_table": "_flatten_table", "_require_table": "_require_table", "_optional_text": "_optional_text", "_get_path": "_get_path", "_positive_integer_text": "_positive_integer_text", "_validate_positive_integer_text": "_validate_positive_integer_text"},
+      "consumers": ["tools/common/python/cadprofile/__init__.py", "tools/common/python/cadprofile/cli.py", "tools/common/python/cadprofile/skill_data.py", "tools/common/python/tests/cadprofile_profile_fixtures.py", "tools/common/python/tests/flow_profile_adapter_fixtures.py", "tools/common/python/tests/test_config_paths.py", "deploy/tests/fixtures/flow_config_native_probe.py", "tools/rce/python/tests/test_recognize_gates.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/common/python/tests/test_cadprofile_core_basic.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    }
+  ]
+}

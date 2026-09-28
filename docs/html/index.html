@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SiCo 使用手册：使用手册。安装、环境变量、Virtuoso 集成与 CAD flow 配置。">
+<title>使用手册 · SiCo 使用手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b4543a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='sans-serif' font-size='24' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/manual.css">
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
+  <span class="edition">使用手册 / 2026.09</span>
+  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+</header>
+<noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="手册目录">
+<p class="rail-label">SICO DOCUMENTATION</p>
+<a href="index.html" aria-current="page">开始阅读</a>
+<p class="nav-group">开始使用</p>
+<a href="installation.html">01 · 安装</a>
+<a href="environment.html">02 · 环境变量</a>
+<a href="virtuoso.html">03 · Virtuoso 集成</a>
+<a href="flows.html">04 · CAD flows</a>
+<p class="nav-group">流程指南</p>
+<a href="drc.html">DRC · 规则检查</a>
+<a href="lvs.html">LVS · 连接检查</a>
+<a href="rce.html">RCE · 寄生提取</a>
+<a href="mts.html">MTS · 多工艺网表</a>
+<a href="utilities.html">LEF / GDS / CDL</a>
+<a href="lsf.html">LSF · 运行与资源</a>
+<p class="nav-group">参考附录</p>
+<a href="environment-internal.html">环境接口附录</a>
+<div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
+</nav>
+<div class="reading">
+<main id="main">
+<p class="eyebrow">SILICON COPILOT / USER GUIDE</p>
+<h1>从环境就绪，到流程运行。</h1>
+<p class="lead">SiCo 使用手册。为 CAD 工程师与电路设计者整理安装、Virtuoso 接入和常用 CAD flow 的配置方法，让每一次运行都有明确的输入、设置与结果。</p>
+<div class="meta"><span class="tag">中文使用手册</span><span class="tag">离线可读</span><span class="tag">内容核对 · 2026.09.28</span></div>
+<div class="cards">
+  <a class="card" href="installation.html"><span class="number">01 / GET STARTED</span><h2>安装与首次启动</h2><p>选择安装目录，配置 Python 与工具环境，完成第一次启动检查。</p><span class="arrow">开始安装 →</span></a>
+  <a class="card" href="environment.html"><span class="number">02 / CONFIGURATION</span><h2>环境变量速查</h2><p>按名称或用途查找变量，查看可选值、默认值及生效范围。</p><span class="arrow">查找配置 →</span></a>
+  <a class="card" href="virtuoso.html"><span class="number">03 / INTEGRATION</span><h2>接入 Virtuoso</h2><p>配置 .cdsinit、加载 SiCo 菜单，并关联当前工程的 IC 会话。</p><span class="arrow">完成接入 →</span></a>
+  <a class="card" href="flows.html"><span class="number">04 / CAD FLOWS</span><h2>配置与运行流程</h2><p>DRC、LVS、RCE、MTS，以及 LEF、网表导入和 GDS/CDL 导出。</p><span class="arrow">选择流程 →</span></a>
+</div>
+<h2 id="first-run">第一次使用，按这个顺序</h2>
+<div class="pipeline" aria-label="初次使用步骤"><span><b>01</b>加载站点环境</span><span><b>02</b>选择 SiCo 安装</span><span><b>03</b>接入 Virtuoso</span><span><b>04</b>配置并运行 flow</span></div>
+<p>先加载项目的 Cadence、PDK 和许可证环境，再设置 <code>SICO_HOME</code>。进入自己的工程工作目录，启动 Virtuoso 或 <code>sico</code>。DRC、LVS、RCE 等独立工具可以直接使用，不要求先建立 AI 会话。</p>
+<div class="notice"><strong>已有站点配置？</strong> 从站点提供的 setup 脚本开始，在<a href="environment.html">环境变量表</a>核对项目差异，再阅读对应 flow。示例中的 <code>/path/to/…</code>、库名、工艺文件和模型名称均需替换为自己的实际配置。</div>
+<h2 id="choose-flow">按目标选择入口</h2>
+<div class="table-wrap"><table><thead><tr><th>要完成的工作</th><th>Virtuoso 菜单项</th><th>阅读</th></tr></thead><tbody>
+<tr><td>检查版图设计规则</td><td>SiCo → DRC</td><td><a href="drc.html">DRC 配置</a></td></tr>
+<tr><td>比较版图与原理图连接</td><td>SiCo → LVS</td><td><a href="lvs.html">LVS 配置</a></td></tr>
+<tr><td>抽取寄生 RC 或生成 OA 寄生 view</td><td>SiCo → RCE</td><td><a href="rce.html">RCE 配置</a></td></tr>
+<tr><td>从不同项目生成带独立模型作用域的网表</td><td>SiCo → MTS Netlistor…</td><td><a href="mts.html">MTS 配置</a></td></tr>
+<tr><td>导出 GDS、CDL、LEF 或导入文本网表</td><td>Stream GDS / Export CDL / LEF Generator / Netlist to View…</td><td><a href="utilities.html">导出与辅助工具</a></td></tr>
+<tr><td>查看计算节点与当前用户作业</td><td>SiCo → LSF Load Monitor</td><td><a href="lsf.html">LSF 配置</a></td></tr>
+</tbody></table></div>
+<h2 id="workspace">先认清三个目录</h2>
+<div class="table-wrap"><table><thead><tr><th>目录</th><th>保存什么</th><th>使用方式</th></tr></thead><tbody>
+<tr><td><code>$SICO_HOME</code></td><td>程序、运行库、公共默认配置</td><td>由 CAD 管理；全套入口使用同一份安装。</td></tr>
+<tr><td>个人工程下的 <code>.sico</code></td><td>持久会话、工程服务状态和运行辅助数据</td><td>由 SiCo 创建和管理；包含历史记录，不当作临时缓存清空。</td></tr>
+<tr><td>各 flow 的结果目录</td><td>运行 TOML、工具命令、日志与输出</td><td>通过表单的输出目录或各 <code>*_DB_DIR</code> 变量选择。</td></tr>
+</tbody></table></div>
+<p>本手册说明当前主线的使用行为。二进制安装可能落后于主线；安装中的 <code>RUNTIME-MANIFEST.json</code> 用于识别实际代码版本。页面无需联网，浅色主题沿用 SiCo GUI 的红棕强调色，深色主题参考 AIVI / oaplg 家族风格。</p>
+
+<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="installation.html">安装与首次启动 →</a></footer>
+</main>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#first-run">第一次使用，按这个顺序</a><a href="#choose-flow">按目标选择入口</a><a href="#workspace">先认清三个目录</a></aside>
+</div></div>
+</body>
+</html>

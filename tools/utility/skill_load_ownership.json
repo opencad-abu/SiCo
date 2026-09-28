@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "loaders": [
+    {
+      "owner": "tools/ai/skill++/AI.ils",
+      "reason": "The versioned parent loads these implementation fragments as a group; fragment reload follows the parent lifecycle.",
+      "sources": [
+        "tools/ai/skill/AI_circuit_gate.il",
+        "tools/ai/skill/AI_circuit_gate_devices.il",
+        "tools/ai/skill/AI_circuit_gate_verify.il",
+        "tools/ai/skill/AI_circuit_matrix.il",
+        "tools/ai/skill/AI_circuit_matrix_results.il",
+        "tools/ai/skill/AI_circuit_opamp.il",
+        "tools/ai/skill/AI_circuit_opamp_contract.il",
+        "tools/ai/skill/AI_circuit_opamp_results.il",
+        "tools/ai/skill/AI_circuit_opamp_run.il",
+        "tools/ai/skill/AI_circuit_rc.il",
+        "tools/ai/skill/AI_circuit_rc_maestro.il",
+        "tools/ai/skill/AI_circuit_rc_run.il",
+        "tools/ai/skill/AI_circuit_rebuild.il",
+        "tools/ai/skill/AI_circuit_rebuild_devices.il",
+        "tools/ai/skill/AI_circuit_rebuild_maestro.il",
+        "tools/ai/skill/AI_circuit_rebuild_source.il",
+        "tools/ai/skill/AI_flow_command.il"
+      ]
+    },
+    {
+      "owner": "tools/sico/skill++/SICO.ils",
+      "reason": "The versioned parent loads these implementation fragments as a group; fragment reload follows the parent lifecycle.",
+      "sources": [
+        "tools/sico/skill/SICO_binding.il",
+        "tools/ai/skill/AI_copilot_circuit.il",
+        "tools/ai/skill/AI_copilot_literals.il",
+        "tools/ai/skill/AI_copilot_results.il",
+        "tools/ai/skill/AI_copilot_targets.il",
+        "tools/sico/skill/SICO_entry.il",
+        "tools/ai/skill/AI_entry_project.il"
+      ]
+    },
+    {
+      "owner": "tools/ai/skill++/AI_shared.ils",
+      "reason": "Shared implementation fragments load as one versioned group used by both source entries.",
+      "sources": [
+        "tools/ai/skill/AI_cdf_callbacks.il",
+        "tools/ai/skill/AI_cdf_data.il",
+        "tools/ai/skill/AI_cdf_probe.il",
+        "tools/ai/skill/AI_cdf_transfer.il",
+        "tools/ai/skill/AI_cdf_update.il",
+        "tools/ai/skill/AI_circuit.il",
+        "tools/ai/skill/AI_circuit_config.il",
+        "tools/ai/skill/AI_circuit_context.il",
+        "tools/ai/skill/AI_circuit_create.il",
+        "tools/ai/skill/AI_circuit_create_build.il",
+        "tools/ai/skill/AI_circuit_create_check.il",
+        "tools/ai/skill/AI_circuit_extensions.il",
+        "tools/ai/skill/AI_circuit_preview.il",
+        "tools/ai/skill/AI_circuit_project.il",
+        "tools/ai/skill/AI_circuit_symbol.il",
+        "tools/ai/skill/AI_circuit_task.il",
+        "tools/ai/skill/AI_circuit_text.il",
+        "tools/ai/skill/AI_entry_context.il",
+        "tools/ai/skill/AI_inspect_records.il",
+        "tools/ai/skill/AI_inspect_snapshot.il",
+        "tools/ai/skill/AI_inspect_values.il",
+        "tools/ai/skill/AI_maestro_ac.il",
+        "tools/ai/skill/AI_maestro_results.il",
+        "tools/ai/skill/AI_maestro_waveform.il",
+        "tools/ai/skill/AI_pdk_capture.il",
+        "tools/ai/skill/AI_pdk_cdf.il",
+        "tools/ai/skill/AI_pdk_core.il",
+        "tools/ai/skill/AI_pdk_db.il",
+        "tools/ai/skill/AI_pdk_init.il",
+        "tools/ai/skill/AI_simulation_check.il",
+        "tools/ai/skill/AI_simulation_config.il",
+        "tools/ai/skill/AI_simulation_coordinates.il",
+        "tools/ai/skill/AI_simulation_dimensions.il",
+        "tools/ai/skill/AI_simulation_run.il",
+        "tools/ai/skill/AI_simulation_setup.il",
+        "tools/ai/skill/AI_template_capture_geometry.il",
+        "tools/ai/skill/AI_template_symbol.il",
+        "tools/ai/skill/AI_template_symbol_binding.il",
+        "tools/ai/skill/AI_template_symbol_draw.il",
+        "tools/ai/skill/AI_template_symbol_geometry.il",
+        "tools/ai/skill/AI_templates.il",
+        "tools/ai/skill/AI_test_workspace.il",
+        "tools/ai/skill/AI_window_context.il",
+        "tools/ai/skill/AI_pdk_cdf_validation.il"
+      ]
+    }
+  ],
+  "lifecycles": [
+    {
+      "source": "tools/ai/skill/AI_pdk_worker.il",
+      "kind": "worker",
+      "owner": "deploy/build_pdk_worker_context.py",
+      "owner_anchor": "AI_pdk_worker.il",
+      "reason": "The isolated PDK worker context owns the procedure definitions; this source is not a menu-loaded module.",
+      "evidence": [
+        {
+          "path": "tools/ai/python/cadai/pdk_worker.py",
+          "contains": "worker"
+        }
+      ]
+    },
+    {
+      "source": "tools/ai/skill/AI_runtime_init.il",
+      "kind": "runtime-init",
+      "owner": "deploy/build_ai_skill_context.py",
+      "owner_anchor": "AI_runtime_init.il",
+      "reason": "The builder registers aiRuntimeInitialize for initialization in the target session.",
+      "evidence": [
+        {
+          "path": "tools/ai/skill/AI_runtime_init.il",
+          "contains": "procedure(aiRuntimeInitialize("
+        }
+      ]
+    },
+    {
+      "source": "tools/common/skill/SICO_catalogWorker.il",
+      "kind": "worker",
+      "owner": "tools/common/python/cadview/catalog_worker.py",
+      "owner_anchor": "worker_call(\"cadRuntimeCatalog\")",
+      "reason": "The protected catalog worker context owns definitions; each catalog process invokes the exported worker.",
+      "evidence": [
+        {
+          "path": "tools/common/skill/SICO_catalogWorker.il",
+          "contains": "procedure(cadRuntimeCatalog("
+        }
+      ]
+    },
+    {
+      "source": "deploy/context_bootstrap.il",
+      "kind": "site-template",
+      "owner": "deploy/RUNTIME_RELEASE_POLICY.md",
+      "owner_anchor": "SICO_loadRuntime",
+      "reason": "A site integration template or separately compiled bootstrap has its own explicit initialization lifecycle.",
+      "evidence": [
+        {
+          "path": "deploy/context_bootstrap.il",
+          "contains": "procedure(SICO_loadRuntime("
+        }
+      ]
+    },
+    {
+      "source": "tools/common/skill/SICO_toolsMenu.il",
+      "kind": "runtime-init",
+      "owner": "deploy/nonai_skill_sources.json",
+      "owner_anchor": "SICO_toolsMenu.il",
+      "reason": "Protected tool menus are installed by the target-session initializer, without development source loading.",
+      "evidence": [
+        {
+          "path": "tools/common/skill/SICO_toolsRuntime.il",
+          "contains": "SICO_toolsInstallMenus()"
+        }
+      ]
+    },
+    {
+      "source": "tools/common/skill/SICO_toolsRuntime.il",
+      "kind": "runtime-init",
+      "owner": "deploy/build_nonai_skill_context.py",
+      "owner_anchor": "SICO_toolsInitialize",
+      "reason": "The non-AI context initializer registers session state explicitly; a file-version skip must not suppress initialization.",
+      "evidence": [
+        {
+          "path": "tools/common/skill/SICO_toolsRuntime.il",
+          "contains": "procedure(SICO_toolsInitialize("
+        }
+      ]
+    },
+    {
+      "source": "tools/mtsnl/skill/MTS_bindingWorker.il",
+      "kind": "worker",
+      "owner": "tools/mtsnl/python/mtsnetlistor/binding.py",
+      "owner_anchor": "worker_call(\"mtsRuntimeBinding\"",
+      "reason": "Protected worker definitions are invoked by the binding provider.",
+      "evidence": [
+        {
+          "path": "tools/mtsnl/skill/MTS_bindingWorker.il",
+          "contains": "procedure(mtsRuntimeBinding("
+        }
+      ]
+    },
+    {
+      "source": "tools/mtsnl/skill/MTS_defaultsWorker.il",
+      "kind": "worker",
+      "owner": "tools/mtsnl/skill/MTS_probeWorker.il",
+      "owner_anchor": "mtsDefaultsSnapshot(",
+      "reason": "Shared defaults helpers belong to the protected defaults worker lifecycle.",
+      "evidence": [
+        {
+          "path": "tools/mtsnl/tests/defaults_fixtures.py",
+          "contains": "MTS_defaultsWorker.il"
+        }
+      ]
+    },
+    {
+      "source": "tools/mtsnl/skill/MTS_probeWorker.il",
+      "kind": "worker",
+      "owner": "tools/mtsnl/python/mtsnetlistor/defaults_probe.py",
+      "owner_anchor": "mtsRuntimeDefaultsMae",
+      "reason": "The defaults provider selects ASI or MAE within the protected worker context.",
+      "evidence": [
+        {
+          "path": "tools/mtsnl/skill/MTS_probeWorker.il",
+          "contains": "procedure(mtsRuntimeDefaultsMae("
+        }
+      ]
+    },
+    {
+      "source": "tools/mtsnl/skill/MTS_projectWorker.il",
+      "kind": "worker",
+      "owner": "tools/mtsnl/python/mtsnetlistor/project_protocol.py",
+      "owner_anchor": "worker_call(\"mtsRuntimeProject\"",
+      "reason": "The persistent project worker loads definitions once and owns task/session cleanup.",
+      "evidence": [
+        {
+          "path": "tools/mtsnl/skill/MTS_projectWorker.il",
+          "contains": "procedure(mtsRuntimeProject("
+        }
+      ]
+    },
+    {
+      "source": "tools/mtsnl/skill/MTS_symbolWorker.il",
+      "kind": "worker",
+      "owner": "tools/mtsnl/python/mtsnetlistor/symbol.py",
+      "owner_anchor": "worker_call(\"mtsRuntimeSourceSymbol\")",
+      "reason": "Source and target symbol operations execute in protected worker processes.",
+      "evidence": [
+        {
+          "path": "tools/mtsnl/skill/MTS_symbolWorker.il",
+          "contains": "procedure(mtsRuntimeSourceSymbol("
+        }
+      ]
+    }
+  ]
+}

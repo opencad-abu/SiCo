@@ -1,0 +1,155 @@
+lefOptionInherit="From Options File"
+lefBooleanOptionChoices=list(lefOptionInherit "true" "false")
+lefBoundaryOptionChoices=list(lefOptionInherit "off" "always" "as needed")
+
+lefOptionSpecs=list(
+  list('pins 'pinsTextPinMap "PinsTextPinMap" "Text-Pin Map:" 'text)
+  list('pins 'pinsPowerNames "PinsPowerNames" "Power Names:" 'text)
+  list('pins 'pinsGroundNames "PinsGroundNames" "Ground Names:" 'text)
+  list('pins 'pinsGeomSearchLevel "PinsGeomSearchLevel" "Geometry Levels:" 'text)
+  list('pins 'pinsTextPreserveLabels "PinsTextPreserveLabels" "Preserve Labels:" 'boolean)
+  list('pins 'pinsRestrictToPRBndry "PinsRestrictToPRBndry" "Restrict to PR Boundary:" 'boolean)
+  list('pins 'pinsBoundaryCreate "PinsBoundaryCreate" "Create Boundary:" 'boundary)
+  list('pins 'pinsBoundaryLayers "PinsBoundaryLayers" "Boundary Layers:" 'text)
+  list('pins 'pinsCreatePwrPins "PinsCreatePwrPinsFromRouting" "Power Pins from Routing:" 'boolean)
+  list('pins 'pinsPwrRoutingLayers "PinsPwrRoutingLayers" "Power Routing Layers:" 'text)
+  list('pins 'pinsCreatePolyPRB "PinsCreatePolyPRB" "Rectilinear Boundary:" 'boolean)
+
+  list('extract 'extractSig "ExtractSig" "Extract Signal:" 'boolean)
+  list('extract 'extractLayersSig "ExtractLayersSig" "Signal Layers:" 'text)
+  list('extract 'extractPinLayersSig "ExtractPinLayersSig" "Signal Pin Layers:" 'text)
+  list('extract 'extractNumLevelsSig "ExtractNumLevelsSig" "Signal Levels:" 'text)
+  list('extract 'extractPwr "ExtractPwr" "Extract Power:" 'boolean)
+  list('extract 'extractLayersPwr "ExtractLayersPwr" "Power Layers:" 'text)
+  list('extract 'extractPinLayersPwr "ExtractPinLayersPwr" "Power Pin Layers:" 'text)
+  list('extract 'extractNumLevelsPwr "ExtractNumLevelsPwr" "Power Levels:" 'text)
+  list('extract 'extractConnectivity "ExtractConnectivity" "Connectivity:" 'text)
+
+  list('abstract 'abstractBlockageTable "AbstractBlockageTable" "Blockage Layers:" 'text)
+  list('abstract 'abstractDetailedLayers "AbstractBlockageDetailedLayers" "Detailed Layers:" 'text)
+  list('abstract 'abstractCoverLayers "AbstractBlockageCoverLayers" "Cover Layers:" 'text)
+  list('abstract 'abstractShrinkWrapLayers "AbstractBlockageShrinkWrapLayers" "Shrink-Wrap Layers:" 'text)
+  list('abstract 'abstractCutAroundPin "AbstractBlockageCutAroundPin" "Pin Cut Layers:" 'text)
+  list('abstract 'blockageCutVia "BlockageCutVia" "Cut Around Vias:" 'boolean)
+  list('abstract 'abstractPinFracture "AbstractPinFracture" "Fracture Pins:" 'boolean)
+  list('abstract 'abstractBlockageFracture "AbstractBlockageFracture" "Fracture Blockages:" 'boolean)
+  list('abstract 'abstractSiteName "AbstractSiteName" "Site Name:" 'text)
+)
+
+unless(boundp('lefLoadedBinOptions)
+  lefLoadedBinOptions=nil
+)
+
+procedure(lefResetLoadedBinOptions()
+  lefLoadedBinOptions=nil
+)
+
+procedure(lefOptionGroup(spec) car(spec))
+procedure(lefOptionFieldName(spec) cadr(spec))
+procedure(lefOptionName(spec) caddr(spec))
+procedure(lefOptionPrompt(spec) cadddr(spec))
+procedure(lefOptionKind(spec) car(cddddr(spec)))
+
+procedure(lefOptionSpecByName(name)
+  let((found)
+    foreach(spec lefOptionSpecs
+      when((lefOptionName(spec)==name)
+        found=spec))
+    found
+  )
+)
+
+procedure(lefOptionSpecCount()
+  length(lefOptionSpecs)
+)
+
+procedure(lefCreateOptionField(spec)
+  let((name kind)
+    name=lefOptionFieldName(spec)
+    kind=lefOptionKind(spec)
+    cond(
+      ((kind=='boolean)
+        hiCreateComboField(
+          ?name name ?items lefBooleanOptionChoices
+          ?defValue lefOptionInherit ?editable nil))
+      ((kind=='boundary)
+        hiCreateComboField(
+          ?name name ?items lefBoundaryOptionChoices
+          ?defValue lefOptionInherit ?editable nil))
+      (t
+        hiCreateStringField(
+          ?name name ?defValue lefOptionInherit))
+    )
+  )
+)
+
+procedure(lefCreateOptionGroup(group name frame)
+  let((items row label field)
+    items=nil
+    row=0
+    foreach(spec lefOptionSpecs
+      when((lefOptionGroup(spec)==group)
+        label=hiCreateLabel(
+          ?name concat(lefOptionFieldName(spec) "Prompt")
+          ?labelText lefOptionPrompt(spec)
+          ?justification 'right)
+        field=lefCreateOptionField(spec)
+        items=append1(items
+          list(label 'row row 'col 0 'horiz_align 'right 'vert_align 'center))
+        items=append1(items
+          list(field 'row row 'col 1 'horiz_align 'none 'vert_align 'center))
+        row=row+1))
+    items=append1(items list('col_stretch 1 1))
+    hiCreateGridLayout(name
+      ?frame frame ?horiz_align 'left ?spacing 5 ?items items)
+  )
+)
+
+procedure(lefResetOptionFields(form)
+  let((field)
+    foreach(spec lefOptionSpecs
+      field=get(form lefOptionFieldName(spec))
+      when(field
+        field~>value=lefOptionInherit))
+  )
+)
+
+procedure(lefApplyBinOptions(form options)
+  let((spec field)
+    lefLoadedBinOptions=options
+    lefResetOptionFields(form)
+    foreach(pair options
+      spec=lefOptionSpecByName(car(pair))
+      when(spec
+        field=get(form lefOptionFieldName(spec))
+        when(field
+          field~>value=cadr(pair))))
+  )
+  t
+)
+
+procedure(lefFormBinOptions(form)
+  let((options field value)
+    options=nil
+    foreach(pair lefLoadedBinOptions
+      unless(lefOptionSpecByName(car(pair))
+        options=append1(options pair)))
+    foreach(spec lefOptionSpecs
+      field=get(form lefOptionFieldName(spec))
+      when(field
+        value=field~>value
+        unless(value==lefOptionInherit
+          options=append1(options list(lefOptionName(spec) value)))))
+    options
+  )
+)
+
+procedure(lefWriteBinOptions(outFile form)
+  let((options)
+    options=lefFormBinOptions(form)
+    when(options
+      SICO_tomlWriteSection(outFile "abstract.bin_options")
+      foreach(pair options
+        SICO_tomlWriteString(outFile car(pair) cadr(pair))))
+  )
+)

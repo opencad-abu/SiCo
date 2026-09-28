@@ -1,0 +1,217 @@
+; Stage forms are created by HI in SKILL value slots.  Import both globals so
+; close/reopen and callbacks observe the same live handles.
+importSkillVar(streamGdsForm exportCdlForm)
+
+defclass(STAGEOPTIONSGUI ()
+  (
+    (replaceBusBitChar @initform nil)
+    (optionsLay       @initform nil)
+  )
+)
+
+defmethod(makeStageOptions ((inst STAGEOPTIONSGUI))
+  inst->replaceBusBitChar=hiCreateBooleanButton(
+    ?name           'replaceBusBitChar
+    ?buttonText     "Replace <> with []"
+    ?buttonLocation 'left
+    ?defValue       t
+  )
+  inst->optionsLay=makevbl(
+    'stageOptions list(inst->replaceBusBitChar) ?f "Options" ?a left)
+)
+
+defclass(STREAMGDSGUI (INPUTGUI OUTPUTGUI HARDWARE STAGEOPTIONSGUI)
+  (
+    (title       @initform streamGdsStruc->title @initarg title)
+    (cmd         @initform streamGdsStruc->cmd @initarg cmd)
+    (formdone    @initform streamGdsStruc->formdone @initarg formdone)
+    (inpLay      @initform nil)
+    (outLay      @initform nil)
+    (hardwareLay @initform nil)
+    (mainLay     @initform nil)
+    (mainForm    @initform nil)
+  )
+)
+
+defmethod(makeInpLay ((inst STREAMGDSGUI))
+  makeLayInp(inst)
+  inst->inpLay=makevbl('streamGdsInp list(inst->layInp) ?f "Layout Input")
+)
+
+defmethod(makeOutLay ((inst STREAMGDSGUI))
+  makeOutDir(inst)
+  inst->outLay=makevbl('streamGdsOutLay list(inst->outDir) ?f "Output Configuration")
+)
+
+defmethod(makeHardwareLay ((inst STREAMGDSGUI))
+  makeServers(inst)
+  makeRunCpus(inst)
+  inst->hardwareLay=makevbl(
+    'streamGdsHardwareLay list(inst->servers inst->runCpu)
+    ?f "Hardware Configuration")
+)
+
+defmethod(makeMainLay ((inst STREAMGDSGUI))
+  makeInpLay(inst)
+  makeOutLay(inst)
+  makeHardwareLay(inst)
+  makeStageOptions(inst)
+  inst->mainLay=makevbl('streamGdsMainLay list(inst->inpLay inst->outLay inst->optionsLay inst->hardwareLay))
+)
+
+defmethod(makeForm ((inst STREAMGDSGUI))
+  makeMainLay(inst)
+  when((! inst->mainForm)
+    inst->mainForm=hiCreateLayoutForm(
+      'streamGdsForm
+      inst->title
+      inst->mainLay
+      ?callback     'streamGdsFormDoneCB
+      ?sizePolicy    'expanding
+      ?initialSize   500:450
+      ?buttonLayout  list('Empty
+                           list('Run\+Close 'streamGdsRunCloseCB)
+                           list('Run 'streamGdsRunCB)
+                           list('Close 'hiFormClose))
+    )
+  )
+)
+
+procedure(cadDisplayStreamGdsForm()
+  if(and(boundp('streamGdsForm) streamGdsForm
+         lvsStageFormValidP(streamGdsForm)) then
+    progn(
+      unless(hiIsFormDisplayed(streamGdsForm)
+        SICO_lsfChoicesCB(streamGdsForm)
+        hiDisplayForm(streamGdsForm))
+      streamGdsForm)
+  else
+    let((gui)
+      when(and(boundp('streamGdsForm) streamGdsForm
+               !lvsStageFormValidP(streamGdsForm))
+        streamGdsForm=nil)
+    gui=makeInstance('STREAMGDSGUI)
+    gui->title          = streamGdsStruc->title
+    gui->cmd            = streamGdsStruc->cmd
+    gui->formdone       = streamGdsStruc->formdone
+    gui->outDirChoices  = streamGdsStruc->outDirChoices
+    gui->outDirCB       = streamGdsStruc->outDirCB
+    gui->defOutDir      = streamGdsStruc->defOutDir
+    gui->lsfChoicesCB   = streamGdsStruc->lsfChoicesCB
+    gui->queueCB        = streamGdsStruc->queueCB
+    gui->runTypeChoices = streamGdsStruc->runTypeChoices
+    gui->defQueueName   = streamGdsStruc->defQueueName
+    gui->queueChoices   = streamGdsStruc->queueChoices
+    gui->defSrvName     = streamGdsStruc->defSrvName
+    gui->srvChoices     = streamGdsStruc->srvChoices
+    gui->cpuChoices     = streamGdsStruc->cpuChoices
+    makeForm(gui)
+    hiInstantiateForm(gui->mainForm)
+    ddHiLinkFields(gui->mainForm~>layLib gui->mainForm~>layCell gui->mainForm~>layView)
+    SICO_lsfChoicesCB(gui->mainForm)
+      hiDisplayForm(gui->mainForm)
+      gui->mainForm
+    )
+  )
+)
+
+defclass(EXPORTCDLGUI (INPUTGUI OUTPUTGUI HARDWARE STAGEOPTIONSGUI)
+  (
+    (title       @initform exportCdlStruc->title @initarg title)
+    (cmd         @initform exportCdlStruc->cmd @initarg cmd)
+    (formdone    @initform exportCdlStruc->formdone @initarg formdone)
+    (inpLay      @initform nil)
+    (outLay      @initform nil)
+    (hardwareLay @initform nil)
+    (mainLay     @initform nil)
+    (mainForm    @initform nil)
+  )
+)
+
+defmethod(makeInpLay ((inst EXPORTCDLGUI))
+  makeSchInp(inst)
+  makeCdlInclude(inst)
+  inst->inpLay=makevbl(
+    'exportCdlInp list(inst->schInp inst->cdlInclude) ?f "Schematic Input")
+)
+
+defmethod(makeOutLay ((inst EXPORTCDLGUI))
+  makeOutDir(inst)
+  inst->outLay=makevbl('exportCdlOutLay list(inst->outDir) ?f "Output Configuration")
+)
+
+defmethod(makeHardwareLay ((inst EXPORTCDLGUI))
+  makeServers(inst)
+  makeRunCpus(inst)
+  inst->hardwareLay=makevbl(
+    'exportCdlHardwareLay list(inst->servers inst->runCpu)
+    ?f "Hardware Configuration")
+)
+
+defmethod(makeMainLay ((inst EXPORTCDLGUI))
+  makeInpLay(inst)
+  makeOutLay(inst)
+  makeHardwareLay(inst)
+  makeStageOptions(inst)
+  inst->mainLay=makevbl('exportCdlMainLay list(inst->inpLay inst->outLay inst->optionsLay inst->hardwareLay))
+)
+
+defmethod(makeForm ((inst EXPORTCDLGUI))
+  makeMainLay(inst)
+  when((! inst->mainForm)
+    inst->mainForm=hiCreateLayoutForm(
+      'exportCdlForm
+      inst->title
+      inst->mainLay
+      ?callback     'exportCdlFormDoneCB
+      ?sizePolicy    'expanding
+      ?initialSize   500:450
+      ?buttonLayout  list('Empty
+                           list('Run\+Close 'exportCdlRunCloseCB)
+                           list('Run 'exportCdlRunCB)
+                           list('Close 'hiFormClose))
+    )
+  )
+)
+
+procedure(cadDisplayExportCdlForm()
+  if(and(boundp('exportCdlForm) exportCdlForm
+         lvsStageFormValidP(exportCdlForm)) then
+    progn(
+      unless(hiIsFormDisplayed(exportCdlForm)
+        SICO_lsfChoicesCB(exportCdlForm)
+        hiDisplayForm(exportCdlForm))
+      exportCdlForm)
+  else
+    let((gui)
+      when(and(boundp('exportCdlForm) exportCdlForm
+               !lvsStageFormValidP(exportCdlForm))
+        exportCdlForm=nil)
+    gui=makeInstance('EXPORTCDLGUI)
+    gui->title          = exportCdlStruc->title
+    gui->cmd            = exportCdlStruc->cmd
+    gui->formdone       = exportCdlStruc->formdone
+    gui->outDirChoices  = exportCdlStruc->outDirChoices
+    gui->outDirCB       = exportCdlStruc->outDirCB
+    gui->defOutDir      = exportCdlStruc->defOutDir
+    gui->lsfChoicesCB   = exportCdlStruc->lsfChoicesCB
+    gui->queueCB        = exportCdlStruc->queueCB
+    gui->runTypeChoices = exportCdlStruc->runTypeChoices
+    gui->defQueueName   = exportCdlStruc->defQueueName
+    gui->queueChoices   = exportCdlStruc->queueChoices
+    gui->defSrvName     = exportCdlStruc->defSrvName
+    gui->srvChoices     = exportCdlStruc->srvChoices
+    gui->cpuChoices     = exportCdlStruc->cpuChoices
+    makeForm(gui)
+    hiInstantiateForm(gui->mainForm)
+    ddHiLinkFields(gui->mainForm~>schLib gui->mainForm~>schCell gui->mainForm~>schView)
+    SICO_lsfChoicesCB(gui->mainForm)
+      hiDisplayForm(gui->mainForm)
+      gui->mainForm
+    )
+  )
+)
+
+procedure(lvsStageCdlIncludeGuiRevision()
+  "20260812.cdl.include.v2"
+)

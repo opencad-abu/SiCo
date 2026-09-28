@@ -1,0 +1,52 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Cadence Abstract Generator options example for IC23.1.
+;;
+;; This compact template follows the IC618 Abstract Generator RAK and uses
+;; GPDK045 layer names. Copy it into a project and replace all layer lists,
+;; connectivity, power/ground regular expressions, and site name for the PDK.
+;; The LEF Generator replay overrides views, bin selection, output path, and
+;; LEF version after importing this file.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; IC23.1 no longer accepts the older TLF logical import type.
+absSetOption( "ImportLogicalType" "LIB")
+absSetOption( "ExportLEFUnits" "1000")
+absSetOption( "ExportBusChars" "[ ]")
+absSetOption( "ExportDividerChar" "/")
+
+absSelectBin("Core" )
+
+;; Pins. Use PinsTextPinMap when labels must be converted into pins.
+absSetBinOption( "Core" "PinsTextPinMap"                 "")
+absSetBinOption( "Core" "PinsPowerNames"                 "^((V(DD|CC))|(v(dd|cc)))(!)?$")
+absSetBinOption( "Core" "PinsGroundNames"                "^((VSS|GND)|(vss|gnd))(!)?$")
+absSetBinOption( "Core" "PinsGeomSearchLevel"            "20")
+absSetBinOption( "Core" "PinsTextPreserveLabels"         "true")
+absSetBinOption( "Core" "PinsRestrictToPRBndry"          "false")
+absSetBinOption( "Core" "PinsBoundaryCreate"             "as needed")
+absSetBinOption( "Core" "PinsBoundaryLayers"             "NW PW DNW AA GT M1 M2 M3 M4 M5 M6 M7 M8 M9 M10 M11 V1 V2 V3 V4 V5 V6 V7 V8")
+absSetBinOption( "Core" "PinsCreatePwrPinsFromRouting"   "false")
+absSetBinOption( "Core" "PinsPwrRoutingLayers"           "M1 M2 M3 M4 M5 M6 M7 M8 M9 M10 M11 V1 V2 V3 V4 V5 V6 V7 V8")
+absSetBinOption( "Core" "PinsCreatePolyPRB"              "false")
+
+;; Extract. Enable ExtractSig and/or ExtractPwr for generated pin geometry.
+absSetBinOption( "Core" "ExtractSig"                     "false")
+absSetBinOption( "Core" "ExtractLayersSig"               "M1 M2 V1 CT")
+absSetBinOption( "Core" "ExtractPinLayersSig"            "M1 M2")
+absSetBinOption( "Core" "ExtractNumLevelsSig"            "32")
+absSetBinOption( "Core" "ExtractPwr"                     "false")
+absSetBinOption( "Core" "ExtractLayersPwr"               "M1 M2")
+absSetBinOption( "Core" "ExtractPinLayersPwr"            "M1 M2")
+absSetBinOption( "Core" "ExtractNumLevelsPwr"            "32")
+absSetBinOption( "Core" "ExtractConnectivity"            "(M1 M2 V1)(AA M1 CT)(GT M1 CT)")
+
+;; Abstract. Layer lists and CoreSite must match the target technology.
+absSetBinOption( "Core" "AbstractBlockageTable"           "M1 M2 M3 M4")
+absSetBinOption( "Core" "AbstractBlockageDetailedLayers"  "M1 M2")
+absSetBinOption( "Core" "AbstractBlockageCoverLayers"     "")
+absSetBinOption( "Core" "AbstractBlockageShrinkWrapLayers" "")
+absSetBinOption( "Core" "AbstractBlockageCutAroundPin"    "M1 M2")
+absSetBinOption( "Core" "BlockageCutVia"                 "true")
+absSetBinOption( "Core" "AbstractPinFracture"             "true")
+absSetBinOption( "Core" "AbstractBlockageFracture"        "true")
+absSetBinOption( "Core" "AbstractSiteName"                "CoreSite")

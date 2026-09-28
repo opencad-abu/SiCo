@@ -1,0 +1,199 @@
+# SiCo 环境设置参考（Csh/Tcsh）。先加载站点 Cadence/LSF 环境，再 source 本文件。
+# 使用前修改 SICO_HOME；使用 MTS 时还需配置下方 MTS_NETLISTOR_MODULEFILES。
+# 在启动 Virtuoso 前 source 本文件；切换安装后，新开 shell 和工程服务才会使用新配置。
+# 示例：source /software/sico/latest/examples/cshrc
+
+# SiCo 安装根：二进制测试选 latest-bin；源码测试可改为 /software/sico/latest。
+setenv SICO_HOME "/software/sico/latest-bin"
+
+if ( -f "$SICO_HOME/scripts/sicoAutoLoad.il" ) then
+    # 源码树使用站点 Python；按实际安装路径修改，需包含 SiCo 所需的 Qt 等依赖。
+    setenv SICO_PYTHON_ROOT "/software/pkgs/python/3.9.13"
+    # 源码树的终端 Python 实现目录。
+    setenv SICO_AI_PYQT_ROOT "$SICO_HOME/tools/ai/terminal/pyqt"
+else
+    # 二进制包使用本安装自带的 Python runtime。
+    setenv SICO_PYTHON_ROOT "$SICO_HOME/runtime/python"
+    # 清除上一份源码安装的终端目录覆盖。
+    unsetenv SICO_AI_PYQT_ROOT
+endif
+
+# EDA 兼容库只使用本安装的 lib；Python/Qt 的库目录仍由下方独立变量传递。
+if ( $?LD_LIBRARY_PATH ) then
+    setenv LD_LIBRARY_PATH "${SICO_HOME}/lib:${LD_LIBRARY_PATH}"
+else
+    setenv LD_LIBRARY_PATH "$SICO_HOME/lib"
+endif
+
+# Python 可执行文件，供 SiCo 及其子进程使用。
+setenv SICO_PYTHON "$SICO_PYTHON_ROOT/bin/python3"
+# SiCo Python/Qt 的动态库目录；不直接改 LD_LIBRARY_PATH，以免影响 Virtuoso。
+setenv SICO_SYSTEM_LD_LIBRARY_PATH "${SICO_PYTHON_ROOT}/lib:${SICO_HOME}/lib"
+# AI 窗口和终端使用同一组 Python 动态库。
+setenv SICO_AI_PYTHON_LIBRARY_PATH "$SICO_SYSTEM_LD_LIBRARY_PATH"
+# SKILL/runtime 查找工具实现的目录，与 SICO_HOME 保持一致。
+setenv SICO_RUNTIME_TOOLS "$SICO_HOME/tools"
+# 公共命令目录，提供 sico、sico-ai-terminal、lsfmonitor 等命令。
+setenv PATH "${SICO_HOME}/bin:${PATH}"
+
+# 清除旧安装的终端运行库、发行根、context 和 Qt 插件路径覆盖，改由当前安装解析。
+unsetenv SICO_AI_QTERMWIDGET_RUNTIME
+unsetenv SICO_AI_RELEASE_ROOT
+unsetenv SICO_AI_CONTEXT
+unsetenv SICO_AI_QT_PLUGIN_PATH
+
+# MTS 项目 modulefiles（使用 MTS 时必配）
+# 改为站点实际目录后取消注释；若上游环境已设置，则保留上游值。
+# setenv MTS_NETLISTOR_MODULEFILES "/path/to/project/modulefiles"
+# 独立启动时可用 mts-netlistor gui --module-root DIR 覆盖上述目录。
+# 两者都未配置、变量为空或目录不存在时，MTS 弹窗提示并结束启动。
+# 不从 SICO_HOME、安装相邻目录或 MODULEPATH 自动推导项目列表。
+# modulecmd 可执行文件覆盖（可选）；默认从 PATH 和 /bin/modulecmd 查找。
+# setenv MTS_NETLISTOR_MODULECMD "/path/to/modules/bin/modulecmd"
+# 详细说明见 docs/ENVIRONMENT.md 的“MTS 项目 modulefiles”。
+
+# 以下为可选配置：已有 modulefile/项目配置时可保留现有值，按需取消注释。
+
+# Agent 后端；当前使用 Codex。
+# setenv SICO_BACKEND "codex"
+# 模型 API 协议；Codex 使用 responses。
+# setenv SICO_PROVIDER "responses"
+# 模型网关基础地址；与 SICO_MODEL 一起设置，替换为站点实际地址。
+# setenv SICO_API_BASE_URL "https://api.example.com/v1"
+# 网关提供的模型名称；替换为实际可用模型。
+# setenv SICO_MODEL "your-model-name"
+# API 密钥；通过站点私有配置注入，示例文件中不填写真实密钥。
+# setenv SICO_API_KEY "replace-in-private-config"
+# Codex 单次工具调用超时，单位为秒，允许 1–3600，默认 1800。
+# setenv SICO_MCP_TIMEOUT "1800"
+# 上游模型仅在 AI 队列可访问时启用；只调度 HTTP worker，须在 Service 启动前设置。
+# setenv SICO_CODEX_LSF_EXE "bsub"
+# setenv SICO_CODEX_LSF_ARGS "-Is -q ai"
+# 模型无新输出的等待上限，单位为秒，默认 900。
+# setenv SICO_MODEL_IDLE_TIMEOUT "900"
+# 可选 PDK 数据索引；可用相对当前工程的路径，调用 PDK 工具时才校验。
+# setenv SICO_PDK_DATA "/path/to/pdk-data/index.json"
+# 可选项目模板库；相对路径按当前工程解析，缺失不阻止 agent 启动。
+# setenv SICO_CIRCUIT_TEMPLATES_DIR "config/circuit-templates"
+# PDK 工作模式；普通设计用 design，专门的采集/维护进程才用 generation。
+# setenv SICO_PDK_WORKFLOW "design"
+# 多人共用此配置：各自在自己的工程目录启动，SiCo 自动使用 <启动目录>/.sico。
+# 通常不设置；状态目录含持久会话记录，不能当缓存清空。
+# 清除历史错误配置可用：unsetenv SICO_TEMP_DIR; unsetenv CAD_TEMP_DIR（启动 Virtuoso 前）。
+# 新版也接受空值或相对路径；相对路径按启动目录解析，子进程继承固定的绝对路径。
+# 旧二进制包请保持两个变量 unset；非空 CAD_TEMP_DIR 已淘汰，不会自动迁移。
+# 无需把 XDG_RUNTIME_DIR 指向家目录；GUI 自动准备权限为 0700 的运行目录。
+# setenv SICO_TEMP_DIR ".sico"
+
+# CAD flow 使用新变量名；旧安装的环境需配套迁移，见 docs/SICO_FLOW_ENV_MIGRATION.md。
+# CAD flow：工程与 OA 输入（以下路径均为占位；按需启用，并先设置被引用的根目录）
+# 当前工程工作区；仅作为下列路径的公共前缀，可替换为实际目录。
+# setenv PROJECT_ROOT "/workarea/projs/proj3/xh"
+# 当前工艺安装根；runset、映射及 RC tech 必须来自该工艺。
+# setenv PDK_ROOT "/path/to/pdk"
+# OA 库定义文件；未设置时使用 Virtuoso 当前目录的 cds.lib。
+# setenv CDS_LIB "${PROJECT_ROOT}/cds.lib"
+# OA layout 导出 GDS 所需的层映射文件。
+# setenv TECH_LAYER_MAP "${PDK_ROOT}/stream/streamOut.map"
+# CDL Include 初值；设置后默认勾选，按工艺提供器件定义。
+# setenv CDL_HEADER_FILE "${PDK_ROOT}/cdl/devices.cdl"
+# LVS/RCE 的 Calibre 层次对应文件；设置后 Hcell 默认启用。
+# setenv HCELL_FILE "${PROJECT_ROOT}/config/hcell.list"
+
+# CAD flow：结果根目录（GUI 选择 Project Directory 时使用；不设置则用当前目录）
+# DRC 运行目录根。
+# setenv DRC_DB_DIR "${PROJECT_ROOT}/runs/drc"
+# 独立 LVS 运行目录根。
+# setenv LVS_DB_DIR "${PROJECT_ROOT}/runs/lvs"
+# RCE 寄生提取运行目录根。
+# setenv RCE_DB_DIR "${PROJECT_ROOT}/runs/rce"
+# 独立 Stream GDS 的输出目录根。
+# setenv GDS_DB_DIR "${PROJECT_ROOT}/exports/gds"
+# 独立 Export CDL 的输出目录根。
+# setenv CDL_DB_DIR "${PROJECT_ROOT}/exports/cdl"
+# LEF Generator 的输出目录根。
+# setenv LEF_DB_DIR "${PROJECT_ROOT}/exports/lef"
+
+# CAD flow：可复用 GUI Profile（预填 Config File；不是每次运行生成的 TOML）
+# DRC 表单配置；使用 GUI Save/Save As 保存的 Profile。
+# setenv DRC_CONFIG "${PROJECT_ROOT}/config/drc-profile.toml"
+# LVS 表单配置。
+# setenv LVS_CONFIG "${PROJECT_ROOT}/config/lvs-profile.toml"
+# RCE 表单配置。
+# setenv RCE_CONFIG "${PROJECT_ROOT}/config/rce-profile.toml"
+# LEF 表单配置。
+# setenv LEF_CONFIG "${PROJECT_ROOT}/config/lef-profile.toml"
+
+# CAD flow：规则与 RC 工艺（格式为“显示名,路径;显示名,路径”，整个值须加引号）
+# DRC runset 下拉列表；只保留项目实际使用的规则。
+# setenv DRC_FILE "default,${PDK_ROOT}/pv/drc.cal;signoff,${PDK_ROOT}/pv/drc-signoff.cal"
+# 独立 LVS runset；与下面的 RCE 前置 LVS 分开设置。
+# setenv LVS_FILE "default,${PDK_ROOT}/pv/lvs.cal"
+# QRC/StarRC 前置 LVS runset；不会回退到 LVS_FILE。
+# setenv RCE_LVS_FILE "default,${PDK_ROOT}/pv/lvs-rc.cal"
+# QRC/Quantus 工艺目录，建议指向包含各 corner 的根目录。
+# setenv QUANTUS_TECH_DIR "default,${PDK_ROOT}/rc/quantus"
+# StarRC 工艺目录，建议指向包含各 corner 的根目录。
+# setenv STARRC_TECH_DIR "default,${PDK_ROOT}/rc/starrc"
+# Calibre XRC 工艺目录；各 corner 的 xrc.cal 管理其专用 LVS include。
+# setenv CALXRC_TECH_DIR "default,${PDK_ROOT}/rc/calibre-xrc"
+
+# CAD flow：工具与抽取初值（环境修改后重新启动 Virtuoso）
+# DRC 默认工具，当前支持 Calibre。
+# setenv DRC_DEF_TOOL "Calibre"
+# LVS 默认工具，当前支持 Calibre。
+# setenv LVS_DEF_TOOL "Calibre"
+# RCE 默认引擎：StarRC、QRC 或 CalXRC。
+# setenv RCE_DEF_TOOL "StarRC"
+# 首选工艺角，大小写按工艺实际目录填写；不存在时选择扫描到的有效项。
+# setenv RCE_CORNER "Typ"
+# 默认抽取温度，单位为摄氏度。
+# setenv RCE_DEF_TEMP "125"
+# 温度下拉列表，逗号分隔。
+# setenv RCE_TEMP_LIST "125,85,25"
+# 输出格式候选；按引擎能力选用，原生 OA 寄生 view 使用 view。
+# setenv RCE_OUTPUT_CHOICES "dspf,spf,spef,view"
+# 各 flow 的 CPU 数候选，逗号分隔；仍受工具许可和 LSF 限额约束。
+# setenv SICO_FLOW_CPU_ALLOW "1,2,4,8"
+
+# CAD flow：原生 OA 寄生 view 与 Quantus（仅相应模式需要）
+# Calibre View cellmap；也可留空由当前 corner 查找。
+# setenv RCE_CALIBRE_VIEW_CELLMAP "${PDK_ROOT}/rc/calibre-xrc/Typ/calview.cellmap"
+# StarRC OA 器件映射，由 PDK 提供。
+# setenv RCE_STARRC_OA_DEVICE_MAP "${PDK_ROOT}/rc/starrc/Typ/OA_DEVICE_MAP"
+# StarRC OA 层映射，不能使用 TECH_LAYER_MAP 的 stream-out 映射代替。
+# setenv RCE_STARRC_OA_LAYER_MAP "${PDK_ROOT}/rc/starrc/Typ/OA_LAYER_MAP"
+# QRC foundry blocking-cell 文件；相对路径以当前有效 corner 为基准，仅有真实文件时设置。
+# setenv RCE_QUANTUS_BLOCK_CELL_FILE "fabBlockCells.list"
+
+# CAD flow：LEF Generator
+# Abstract Generator 工艺选项文件，包含 pin、extract、blockage 和 site 等设置。
+# setenv LEFGEN_OPT_FILE "${PDK_ROOT}/lef/abstract.options"
+# LEF 批处理 cell-list 文件；单 cell 导出可不设置。
+# setenv LEF_CELL_LIST "${PROJECT_ROOT}/config/lef-cells.list"
+# Abstract 分类初值：Core、Block、IO 或 Corner，默认 Core。
+# setenv LEF_DEFAULT_BIN "Core"
+# 覆盖 Abstract Generator 可执行文件，默认从 PATH 查找 abstract。
+# setenv LEF_ABSTRACT "abstract"
+
+# CAD flow：工具发现与 LSF（先加载站点工具模块和许可证配置）
+# XRC 设置此项后使用其 bin/calibre；DRC/LVS 仍从 PATH 查找 calibre。
+# setenv MGC_HOME "/path/to/calibre"
+# 仅在启用上方 MGC_HOME 且站点尚未配置 PATH 时启用此行。
+# setenv PATH "${MGC_HOME}/bin:${PATH}"
+# 寄生网表降阶工具，默认从 PATH 查找 qreduce。
+# setenv RCE_QREDUCE "qreduce"
+# 各 flow 的 LSF 提交命令；需要时可改为绝对路径。
+# setenv SICO_LSF_BSUB "bsub"
+# LSF 作业终止命令。
+# setenv SICO_LSF_BKILL "bkill"
+# 提交前查询队列交互模式的 bqueues；拓扑发现仍从 PATH 查找工具。
+# setenv SICO_LSF_BQUEUES "bqueues"
+
+# 队列/主机由 LSF 动态发现，无需设置静态候选；许可证由站点 modulefile 管理。
+# si、strmout、calibre、qrc、StarXtract、abstract、cdsTextTo5x 按使用的流程加入 PATH。
+# 各 flow 默认共用 SICO_PYTHON，无需另配解释器。
+# 工具默认命令统一维护在 $SICO_HOME/etc/flow-defaults/，详见 docs/SICO_FLOW_DEFAULTS_MAINTENANCE.md。
+
+# LSF 拼音由 SiCo 自动建立私有 IBus 会话；无需在此覆盖 QT_IM_MODULE 或 IBUS_ADDRESS。
+# 本文件只设置 shell 环境；Virtuoso 的 .cdsinit 初始化参考见同目录的 cdsinit。

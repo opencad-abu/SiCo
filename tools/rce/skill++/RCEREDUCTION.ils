@@ -1,0 +1,431 @@
+;------------------------------------------------------------------------------
+; Quantus standalone reduction controls and completed-output mapping.
+;------------------------------------------------------------------------------
+
+defclass(RCEREDUCTIONGUI ()
+  (
+    (reductionEnable              @initform nil)
+    (reductionMode                @initform nil)
+    (reductionOutputTag           @initform nil)
+    (reductionControl             @initform nil)
+    (reductionDelayRel            @initform nil)
+    (reductionDelayAbs            @initform nil)
+    (reductionFrequency           @initform nil)
+    (reductionTemperature         @initform nil)
+    (reductionGround              @initform nil)
+    (reductionNegative            @initform nil)
+    (reductionSelectionFile       @initform nil)
+    (reductionCanonicalDeviceFile @initform nil)
+    (reductionModePrompt        @initform nil)
+    (reductionOutputTagPrompt   @initform nil)
+    (reductionControlPrompt     @initform nil)
+    (reductionDelayRelPrompt    @initform nil)
+    (reductionDelayAbsPrompt    @initform nil)
+    (reductionFrequencyPrompt   @initform nil)
+    (reductionSelectionFilePrompt @initform nil)
+    (reductionTemperaturePrompt @initform nil)
+    (reductionGroundPrompt      @initform nil)
+    (reductionCanonicalDeviceFilePrompt @initform nil)
+    (reductionEnableLay           @initform nil)
+    (reductionOptions             @initform nil)
+  )
+)
+
+defmethod(makeReductionOptions ((inst RCEREDUCTIONGUI))
+  inst->reductionEnable=hiCreateBooleanButton(
+    ?name           'reductionEnable
+    ?buttonText     "Run Standalone Reduction After Extraction"
+    ?buttonLocation 'left
+    ?defValue       nil
+    ?callback       "rceReductionCB(hiGetCurrentForm())"
+  )
+  inst->reductionMode=hiCreateComboField(
+    ?name     'reductionMode
+    ?items    '("Default" "Reduction Control" "Delay and Frequency"
+                "Selection File")
+    ?defValue "Default"
+    ?editable nil
+    ?callback "rceReductionModeCB(hiGetCurrentForm())"
+  )
+  inst->reductionOutputTag=hiCreateStringField(
+    ?name     'reductionOutputTag
+    ?defValue "reduced"
+  )
+  inst->reductionControl=hiCreateStringField(
+    ?name     'reductionControl
+    ?defValue "0.5"
+  )
+  inst->reductionDelayRel=hiCreateStringField(
+    ?name     'reductionDelayRel
+    ?defValue "0.05"
+  )
+  inst->reductionDelayAbs=hiCreateStringField(
+    ?name     'reductionDelayAbs
+    ?defValue "1e-12"
+  )
+  inst->reductionFrequency=hiCreateStringField(
+    ?name     'reductionFrequency
+    ?defValue "20"
+  )
+  inst->reductionTemperature=hiCreateStringField(
+    ?name     'reductionTemperature
+    ?defValue ""
+  )
+  inst->reductionGround=hiCreateStringField(
+    ?name     'reductionGround
+    ?defValue "0"
+  )
+  inst->reductionSelectionFile=hiCreateFileSelectorField(
+    ?name   'reductionSelectionFile
+    ?mode   'existingFile
+  )
+  inst->reductionNegative=hiCreateBooleanButton(
+    ?name           'reductionNegative
+    ?buttonText     "Reduce Negative R"
+    ?buttonLocation 'left
+    ?defValue       nil
+  )
+  inst->reductionCanonicalDeviceFile=hiCreateFileSelectorField(
+    ?name   'reductionCanonicalDeviceFile
+    ?mode   'existingFile
+  )
+
+  ; Keep prompt text in dedicated label fields.  A shared grid column makes
+  ; the labels line up even when mode-specific rows are hidden and restored.
+  inst->reductionModePrompt=hiCreateLabel(
+    ?name 'reductionModePrompt
+    ?labelText "Reduction Mode:"
+    ?justification 'left
+  )
+  inst->reductionOutputTagPrompt=hiCreateLabel(
+    ?name 'reductionOutputTagPrompt
+    ?labelText "Output Postfix:"
+    ?justification 'left
+  )
+  inst->reductionControlPrompt=hiCreateLabel(
+    ?name 'reductionControlPrompt
+    ?labelText "Reduction Control:"
+    ?justification 'right
+  )
+  inst->reductionDelayRelPrompt=hiCreateLabel(
+    ?name 'reductionDelayRelPrompt
+    ?labelText "Delay Error Relative:"
+    ?justification 'left
+  )
+  inst->reductionDelayAbsPrompt=hiCreateLabel(
+    ?name 'reductionDelayAbsPrompt
+    ?labelText "Delay Error Absolute (s):"
+    ?justification 'left
+  )
+  inst->reductionFrequencyPrompt=hiCreateLabel(
+    ?name 'reductionFrequencyPrompt
+    ?labelText "Frequency (GHz):"
+    ?justification 'left
+  )
+  inst->reductionSelectionFilePrompt=hiCreateLabel(
+    ?name 'reductionSelectionFilePrompt
+    ?labelText "Selection File:"
+    ?justification 'left
+  )
+  inst->reductionTemperaturePrompt=hiCreateLabel(
+    ?name 'reductionTemperaturePrompt
+    ?labelText "R-Temperature (C):"
+    ?justification 'left
+  )
+  inst->reductionGroundPrompt=hiCreateLabel(
+    ?name 'reductionGroundPrompt
+    ?labelText "Ground Net:"
+    ?justification 'left
+  )
+  inst->reductionCanonicalDeviceFilePrompt=hiCreateLabel(
+    ?name 'reductionCanonicalDeviceFilePrompt
+    ?labelText "Canonical Device File:"
+    ?justification 'left
+  )
+
+  inst->reductionEnableLay=makehbl(
+    'reductionEnableLay
+    list(inst->reductionEnable list('stretch_item 1))
+    ?a left
+  )
+  inst->reductionOptions=hiCreateGridLayout(
+    'reductionOptions
+    ?frame "Reduction Options"
+    ?horiz_align 'left
+    ?spacing 5
+    ?margins '(nil nil nil nil)
+    ?items list(
+      list(inst->reductionModePrompt
+           'row 0 'col 0 'horiz_align 'right 'vert_align 'center)
+      list(inst->reductionMode
+           'row 0 'col 1 'horiz_align 'none 'vert_align 'center)
+      list(inst->reductionOutputTagPrompt
+           'row 1 'col 0 'horiz_align 'right 'vert_align 'center)
+      list(inst->reductionOutputTag
+           'row 1 'col 1 'horiz_align 'none 'vert_align 'center)
+      list(inst->reductionControlPrompt
+           'row 2 'col 0 'horiz_align 'right 'vert_align 'center)
+      list(inst->reductionControl
+           'row 2 'col 1 'horiz_align 'none 'vert_align 'center)
+      list(inst->reductionDelayRelPrompt
+           'row 3 'col 0 'horiz_align 'right 'vert_align 'center)
+      list(inst->reductionDelayRel
+           'row 3 'col 1 'horiz_align 'none 'vert_align 'center)
+      list(inst->reductionDelayAbsPrompt
+           'row 4 'col 0 'horiz_align 'right 'vert_align 'center)
+      list(inst->reductionDelayAbs
+           'row 4 'col 1 'horiz_align 'none 'vert_align 'center)
+      list(inst->reductionFrequencyPrompt
+           'row 5 'col 0 'horiz_align 'right 'vert_align 'center)
+      list(inst->reductionFrequency
+           'row 5 'col 1 'horiz_align 'none 'vert_align 'center)
+      list(inst->reductionSelectionFilePrompt
+           'row 6 'col 0 'horiz_align 'right 'vert_align 'center)
+      list(inst->reductionSelectionFile
+           'row 6 'col 1 'horiz_align 'none 'vert_align 'center)
+      list(inst->reductionTemperaturePrompt
+           'row 7 'col 0 'horiz_align 'right 'vert_align 'center)
+      list(inst->reductionTemperature
+           'row 7 'col 1 'horiz_align 'none 'vert_align 'center)
+      list(inst->reductionGroundPrompt
+           'row 8 'col 0 'horiz_align 'right 'vert_align 'center)
+      list(inst->reductionGround
+           'row 8 'col 1 'horiz_align 'none 'vert_align 'center)
+      list(inst->reductionNegative
+           'row 9 'col 0 'col_span 2
+           'horiz_align 'left 'vert_align 'center)
+      list(inst->reductionCanonicalDeviceFilePrompt
+           'row 10 'col 0 'horiz_align 'right 'vert_align 'center)
+      list(inst->reductionCanonicalDeviceFile
+           'row 10 'col 1 'horiz_align 'none 'vert_align 'center)
+      list('col_min_width 0 190)
+      list('col_min_width 1 180)
+      list('col_stretch 1 1)
+    )
+  )
+  inst->reductionOptions->invisible=t
+);defmethod makeReductionOptions
+
+procedure(rceAlignReductionPrompts(form)
+  ; Prompt text is supplied by the explicit label/grid layout above.  Keep
+  ; this compatibility hook for callers from older RCE form lifecycles and
+  ; establish a usable input width before the form is first displayed.
+  when(form
+    hiSetFieldMinSize(form 'reductionDelayRel ?widgetWidth 180)
+    hiSetFieldMinSize(form 'reductionDelayAbs ?widgetWidth 180)
+    hiSetFieldMinSize(form 'reductionFrequency ?widgetWidth 180)
+    t)
+)
+
+procedure(rceReductionFileOutputP(outputType)
+  and(member(lowerCase(or(outputType ""))
+             '("dspf" "spf" "sp" "spice" "hspice"))
+      t)
+)
+
+procedure(rceReductionOutputSupportedP(form)
+  let((outputType)
+    outputType=lowerCase(or(form~>outType~>value ""))
+    and(or(rceReductionFileOutputP(outputType)
+           and(form~>extTool~>value=="QRC"
+               rceNativeViewOutputP(outputType)
+               member(rceNativeViewKindValue(form) '("smart" "extracted"))))
+        t)
+  )
+)
+
+procedure(rceReductionMultiCornerP(form)
+  and(form form~>cornerType form~>cornerType~>value=="Multiple Corners")
+)
+
+procedure(rceReductionEnabledP(form)
+  and(form~>reductionEnable form~>reductionEnable~>value
+      rceReductionOutputSupportedP(form)
+      !rceReductionMultiCornerP(form))
+)
+
+procedure(rceReductionTemperatureSupportedP(form)
+  let((outputType)
+    outputType=lowerCase(or(form~>outType~>value ""))
+    and(or(member(outputType '("dspf" "spf"))
+           and(form~>extTool~>value=="QRC"
+               rceNativeViewOutputP(outputType)
+               rceNativeViewKindValue(form)=="smart"))
+        t)
+  )
+)
+
+procedure(rceSyncReduction(form)
+  let((supported enabled mode spiceOutput)
+    when(form~>reductionEnable
+      supported=and(rceReductionOutputSupportedP(form)
+                    !rceReductionMultiCornerP(form))
+      form~>reductionEnable~>enabled=supported
+      unless(supported
+        form~>reductionEnable~>value=nil)
+      enabled=and(supported form~>reductionEnable~>value)
+      form~>reductionOptions~>invisible=!enabled
+      mode=or(form~>reductionMode~>value "Default")
+      form~>reductionControl~>invisible=
+        not(and(enabled mode=="Reduction Control"))
+      form~>reductionControlPrompt~>invisible=
+        not(and(enabled mode=="Reduction Control"))
+      form~>reductionDelayRel~>invisible=
+        not(and(enabled mode=="Delay and Frequency"))
+      form~>reductionDelayAbs~>invisible=
+        not(and(enabled mode=="Delay and Frequency"))
+      form~>reductionFrequency~>invisible=
+        not(and(enabled mode=="Delay and Frequency"))
+      form~>reductionDelayRelPrompt~>invisible=
+        not(and(enabled mode=="Delay and Frequency"))
+      form~>reductionDelayAbsPrompt~>invisible=
+        not(and(enabled mode=="Delay and Frequency"))
+      form~>reductionFrequencyPrompt~>invisible=
+        not(and(enabled mode=="Delay and Frequency"))
+      form~>reductionSelectionFile~>invisible=
+        not(and(enabled mode=="Selection File"))
+      form~>reductionSelectionFilePrompt~>invisible=
+        not(and(enabled mode=="Selection File"))
+      unless(rceReductionTemperatureSupportedP(form)
+        form~>reductionTemperature~>value="")
+      form~>reductionTemperature~>invisible=
+        not(and(enabled rceReductionTemperatureSupportedP(form)))
+      form~>reductionTemperaturePrompt~>invisible=
+        not(and(enabled rceReductionTemperatureSupportedP(form)))
+      spiceOutput=member(lowerCase(or(form~>outType~>value ""))
+                         '("sp" "spice" "hspice"))
+      unless(spiceOutput
+        form~>reductionCanonicalDeviceFile~>value="")
+      form~>reductionCanonicalDeviceFile~>invisible=
+        not(and(enabled spiceOutput))
+      form~>reductionCanonicalDeviceFilePrompt~>invisible=
+        not(and(enabled spiceOutput))
+    )
+  )
+)
+
+procedure(rceReductionCB(form)
+  rceSyncReduction(form)
+)
+
+procedure(rceReductionModeCB(form)
+  rceSyncReduction(form)
+)
+
+procedure(rceReductionNumericValue(value)
+  when(and(stringp(value) strlen(value)>0)
+    atof(value t))
+)
+
+procedure(rceReductionError(message)
+  GUI_messageApp('e "RCE" message)
+  nil
+)
+
+procedure(rceValidateReduction(form)
+  prog((mode number path tag temperature)
+    unless(form~>reductionEnable~>value
+      return(t))
+    when(rceReductionMultiCornerP(form)
+      return(rceReductionError(
+        "Reduction is disabled for Multiple Corners.")))
+    unless(rceReductionOutputSupportedP(form)
+      return(rceReductionError(
+        "Reduction supports DSPF/SPICE files and Quantus Smart/Extracted Views.")))
+    tag=or(form~>reductionOutputTag~>value "")
+    unless(rexMatchp("^[A-Za-z0-9_]+$" tag)
+      return(rceReductionError(
+        "Reduction Output Tag must contain only letters, digits, and underscore.")))
+    mode=form~>reductionMode~>value
+    unless(member(mode '("Default" "Reduction Control" "Delay and Frequency"
+                          "Selection File"))
+      return(rceReductionError("Select a supported Reduction Mode.")))
+    when(mode=="Reduction Control"
+      number=rceReductionNumericValue(form~>reductionControl~>value)
+      unless(and(number number>=0 number<=1)
+        return(rceReductionError(
+          "Reduction Control must be a number from 0 through 1."))))
+    when(mode=="Delay and Frequency"
+      number=rceReductionNumericValue(form~>reductionDelayRel~>value)
+      unless(and(number number>=0 number<=1)
+        return(rceReductionError(
+          "Delay Error Relative must be a number from 0 through 1.")))
+      number=rceReductionNumericValue(form~>reductionDelayAbs~>value)
+      unless(and(number number>=0)
+        return(rceReductionError(
+          "Delay Error Absolute must be a non-negative number in seconds.")))
+      number=rceReductionNumericValue(form~>reductionFrequency~>value)
+      unless(and(number number>0)
+        return(rceReductionError(
+          "Reduction Frequency must be a positive number in GHz."))))
+    when(mode=="Selection File"
+      path=form~>reductionSelectionFile~>value
+      unless(and(path isFile(path))
+        return(rceReductionError(
+          "Select an accessible qreduce Selection File."))))
+    temperature=or(form~>reductionTemperature~>value "")
+    when(strlen(temperature)>0
+      unless(and(rceReductionTemperatureSupportedP(form)
+                 rceReductionNumericValue(temperature))
+        return(rceReductionError(
+          "Reduction Temperature is numeric and applies only to DSPF or Smart View."))))
+    path=or(form~>reductionCanonicalDeviceFile~>value "")
+    when(strlen(path)>0
+      unless(and(member(lowerCase(or(form~>outType~>value ""))
+                        '("sp" "spice" "hspice"))
+                 isFile(path))
+        return(rceReductionError(
+          "Canonical Device File must be accessible and is valid only for SPICE."))))
+    return(t)
+  )
+)
+
+procedure(rceReducedOutputPath(path outputType tag)
+  let((suffix prefixLength tail)
+    suffix=case(lowerCase(or(outputType ""))
+      (("dspf" "spf") strcat("." lowerCase(outputType)))
+      (("sp" "spice" "hspice") ".sp")
+      (t "")
+    )
+    prefixLength=strlen(path)-strlen(suffix)
+    tail=when(and(strlen(suffix)>0 prefixLength>0)
+           substring(path prefixLength+1 strlen(suffix)))
+    if(and(tail lowerCase(tail)==suffix) then
+      strcat(substring(path 1 prefixLength) "." tag suffix)
+    else
+      strcat(path "." tag)
+    )
+  )
+)
+
+procedure(rceFinalOutputPaths(form outputPaths outputType)
+  let((paths path tag)
+    if(and(rceReductionEnabledP(form)
+           rceReductionFileOutputP(outputType)) then
+      progn(
+        tag=form~>reductionOutputTag~>value
+        paths=nil
+        foreach(path outputPaths
+          paths=append1(paths rceReducedOutputPath(path outputType tag)))
+        paths)
+    else
+      outputPaths)
+  )
+)
+
+procedure(rceReductionViewTarget(form target)
+  if(and(target rceReductionEnabledP(form)
+         rceNativeViewOutputP(form~>outType~>value)) then
+    list(car(target) cadr(target)
+         strcat(caddr(target) "_" form~>reductionOutputTag~>value))
+  else
+    target)
+)
+
+procedure(rceReductionAbsolutePath(value)
+  if(and(value strlen(value)>0) then SICO_absolutePath(value) else "")
+)
+
+procedure(rceReductionRevision()
+  "20260908.recognize.gates.v1"
+)

@@ -1,0 +1,285 @@
+procedure(lefFrontendRevision()
+  "20260924.flow.environment.v3"
+)
+procedure(lefFormValidP(form)
+  SICO_lsfFormValidP(form)
+)
+; HI passes the form handle to symbol callbacks.  Keep completion/close
+; handling separate from the Run action so no callback ever deletes its form.
+procedure(lefFormDoneCB(form)
+  when(lefFormValidP(form)
+    SICO_lsfCancelFormDiscovery(form))
+  t
+)
+procedure(lefRunCB(form)
+  when(lefFormValidP(form)
+    lefStart(form))
+  t
+)
+procedure(lefRunCloseCB(form)
+  when(lefFormValidP(form)
+    when(lefStart(form)
+      hiFormClose(form)))
+  t
+)
+procedure(lefOutDirCB(form)
+  when(lefFormValidP(form)
+    let((dir)
+      case(form~>outDirType~>value
+      ("Current Directory" || "Project Directory"
+        form~>outDirPath~>editable=nil
+        form~>outDirPath~>enabled=nil)
+      ("Customize Directory"
+        form~>outDirPath~>editable=t
+        form~>outDirPath~>enabled=t))
+      case(form~>outDirType~>value
+      ("Current Directory"
+        form~>outDirPath~>value=strcat(pwd())
+        lefInputCB(form))
+      ("Project Directory"
+        if(dir=SICO_envValue("LEF_DB_DIR") then
+          if(or(isDir(dir) cadOutDirUsableP(dir)) then
+            form~>outDirPath~>value=dir
+            lefInputCB(form)
+          else
+            GUI_messageApp('w "LEF" lefMsgStruc->projShellNotSet)
+            form~>outDirType~>value="Current Directory"
+            form~>outDirPath~>value=strcat(pwd())
+            lefInputCB(form))
+        else
+          GUI_messageApp('w "LEF" lefMsgStruc->projShellNotSet)
+          form~>outDirType~>value="Current Directory"
+          form~>outDirPath~>value=strcat(pwd())
+          lefInputCB(form)))
+      ("Customize Directory"
+        form~>outDirPath~>value="Please select a directory..."
+        form~>lefFile~>value="")
+      )
+    )
+  )
+  t
+)
+procedure(lefCellListValue(form)
+  if(lefFormValidP(form) then
+    let((value)
+      value=form~>cellListFile~>value
+      if(and(value strlen(value)>0) then value else nil))
+    else nil)
+)
+procedure(lefInlineCellsValue()
+  lefLoadedInlineCellNames()
+)
+procedure(lefBatchInput(form)
+  and(lefFormValidP(form)
+      or(lefCellListValue(form)
+          and(lefInlineCellsValue() length(lefInlineCellsValue())>1)))
+)
+procedure(lefRunTagFromForm(form)
+  if(lefFormValidP(form) then
+    if(lefBatchInput(form) then "batch" else form~>lefCell~>value)
+    else "")
+)
+procedure(lefDefaultRunDir(runRoot lib cell view cellListFile)
+  let((batch runTag)
+    batch=and(cellListFile strlen(cellListFile)>0)
+    runTag=if(batch then "batch" else cell)
+    if(and(runRoot strlen(runRoot)>0 lib strlen(lib)>0
+             runTag strlen(runTag)>0 view strlen(view)>0) then
+      simplifyFilename(strcat(runRoot "/" lib "." runTag "." view) t)
+    else
+      "")
+  )
+)
+procedure(lefDefaultOutputPath(runRoot lib cell view cellListFile)
+  let((batch runDir fileName)
+    batch=and(cellListFile strlen(cellListFile)>0)
+    runDir=lefDefaultRunDir(runRoot lib cell view cellListFile)
+    fileName=if(batch then strcat(lib ".lef") else strcat(or(cell "") ".lef"))
+    if(and(runDir strlen(runDir)>0) then
+      simplifyFilename(strcat(runDir "/" fileName) t)
+    else
+      "")
+  )
+)
+procedure(lefInputCB(form)
+  when(lefFormValidP(form)
+    let((batchMarker)
+      batchMarker=if(lefBatchInput(form) then "batch" else nil)
+      form~>lefFile~>value=lefDefaultOutputPath(
+        form~>outDirPath~>value form~>lefLib~>value
+        form~>lefCell~>value form~>layoutView~>value batchMarker))
+  )
+  t
+)
+procedure(lefCellInputCB(form)
+  when(lefFormValidP(form)
+    lefSetLoadedInlineCells(nil)
+    form~>inlineCells~>value=""
+    form~>inlineCells~>invisible=t
+    lefInputCB(form))
+  t
+)
+procedure(lefRunDirFromForm(form)
+  if(lefFormValidP(form) then
+    simplifyFilename(lefDefaultRunDir(
+      form~>outDirPath~>value form~>lefLib~>value
+      form~>lefCell~>value form~>layoutView~>value
+      if(lefBatchInput(form) then "batch" else nil)) t)
+    else "")
+)
+procedure(lefValidateCells(form lib view)
+  let((cellListFile inlineCells valid)
+    valid=t
+    cellListFile=lefCellListValue(form)
+    inlineCells=lefInlineCellsValue()
+    cond(
+      (cellListFile
+        unless(isFile(cellListFile)
+          GUI_messageApp('e "LEF" lefMessages()->cellListFile)
+          valid=nil))
+      (and(inlineCells length(inlineCells)>1)
+        foreach(cell inlineCells
+          unless(ddGetObj(lib cell view)
+            valid=nil))
+        unless(valid
+          GUI_messageApp('e "LEF" lefMessages()->inputOaLay)))
+      (t
+        unless(and(form~>lefCell~>value
+                     form~>lefCell~>value!=""
+                     ddGetObj(lib form~>lefCell~>value view))
+          GUI_messageApp('e "LEF" lefMessages()->inputOaLay)
+          valid=nil)))
+    valid
+  )
+)
+procedure(lefValidateForm(form)
+  if(!lefFormValidP(form) then
+    nil
+  else
+    let((lib view valid)
+      valid=SICO_lsfValidateSelection(form "LEF")
+    lib=form~>lefLib~>value
+    view=form~>layoutView~>value
+    if(!valid then
+      nil
+    else if(or(!lib lib=="" !view view=="" not(ddGetObj(lib))) then
+      GUI_messageApp('e "LEF" lefMessages()->inputOaLay)
+      valid=nil))
+    when(valid
+      valid=lefValidateCells(form lib view))
+    when(and(valid
+               or(!form~>cdsLib~>value form~>cdsLib~>value==""
+                   not(isFile(form~>cdsLib~>value))))
+      GUI_messageApp('e "LEF" lefMessages()->cdsLib)
+      valid=nil)
+    when(and(valid
+               or(form~>runPins~>value form~>runExtract~>value
+                   form~>runAbstract~>value)
+               or(!form~>optionsFile~>value form~>optionsFile~>value==""
+                   not(isFile(form~>optionsFile~>value))))
+      GUI_messageApp('e "LEF" lefMessages()->optionsFile)
+      valid=nil)
+    when(and(valid
+               or(!form~>outDirPath~>value form~>outDirPath~>value==""
+                   form~>outDirPath~>value=="Please select a directory..."
+                   !cadOutDirUsableP(form~>outDirPath~>value)))
+      GUI_messageApp('e "LEF" lefMessages()->runRoot)
+      valid=nil)
+    when(and(valid
+             or(!lefRunDirFromForm(form) lefRunDirFromForm(form)==""))
+      GUI_messageApp('e "LEF" lefMessages()->runDir)
+      valid=nil)
+    when(and(valid or(!form~>lefFile~>value form~>lefFile~>value==""))
+      GUI_messageApp('e "LEF" lefMessages()->outputFile)
+      valid=nil)
+    when(and(valid !form~>exportGeometry~>value !form~>exportTech~>value)
+      GUI_messageApp('e "LEF" lefMessages()->outputData)
+      valid=nil)
+      valid
+    )
+  )
+)
+procedure(lefTomlWriteStringArray(outFile key values)
+  let((first)
+    first=t
+    fprintf(outFile "%s = [" key)
+    foreach(value values
+      unless(first
+        fprintf(outFile ", "))
+      fprintf(outFile "%s" SICO_tomlString(value))
+      first=nil)
+    fprintf(outFile "]\n"))
+)
+procedure(lefWriteToml(form)
+  prog((runDir tempFile configFile outFile cellListFile inlineCells status)
+    unless(lefFormValidP(form)
+      return(nil))
+    unless(lefValidateForm(form)
+      return(nil))
+    runDir=lefRunDirFromForm(form)
+    unless(isDir(runDir)
+      status=system(strcat("mkdir -p " SICO_shellQuote(runDir)))
+      unless(status==0
+        GUI_messageApp('e "LEF" lefMessages()->noConfig)
+        return(nil)))
+    tempFile=SICO_tempPath("lefXXXX")
+    unless(tempFile
+      GUI_messageApp('e "LEF" lefMessages()->noConfig)
+      return(nil))
+    tempFile=makeTempFileName(tempFile)
+    configFile=strcat(runDir "/lef.toml")
+    outFile=outfile(tempFile "w")
+    unless(outFile
+      GUI_messageApp('e "LEF" lefMessages()->noConfig)
+      return(nil))
+    SICO_tomlWriteSection(outFile "run")
+    SICO_tomlWriteString(outFile "run_dir" runDir)
+    SICO_tomlWriteString(outFile "cds_lib"
+      simplifyFilename(form~>cdsLib~>value t))
+    SICO_tomlWriteString(outFile "run_type" form~>runType~>value)
+    SICO_tomlWriteString(outFile "queue_name" form~>queueName~>value)
+    SICO_tomlWriteString(
+      outFile "server_name" SICO_lsfSelectedHost(form~>srvName~>value))
+    SICO_tomlWriteString(outFile "cpus" form~>runCpu~>value)
+    when(lefLoadedAbstractExecutable()
+      SICO_tomlWriteString(outFile "executable"
+        lefLoadedAbstractExecutable()))
+    SICO_tomlWriteSection(outFile "input")
+    SICO_tomlWriteString(outFile "library" form~>lefLib~>value)
+    cellListFile=lefCellListValue(form)
+    inlineCells=lefInlineCellsValue()
+    cond(
+      (cellListFile
+        SICO_tomlWriteString(outFile "cell_list_file"
+          simplifyFilename(cellListFile t)))
+      (and(inlineCells length(inlineCells)>1)
+        lefTomlWriteStringArray(outFile "cells" inlineCells))
+      (t
+        SICO_tomlWriteString(outFile "cell" form~>lefCell~>value)))
+    SICO_tomlWriteString(outFile "layout_view" form~>layoutView~>value)
+    SICO_tomlWriteString(outFile "logical_view" form~>logicalView~>value)
+    SICO_tomlWriteString(outFile "abstract_view" form~>abstractView~>value)
+    SICO_tomlWriteSection(outFile "abstract")
+    when(and(form~>optionsFile~>value form~>optionsFile~>value!="")
+      SICO_tomlWriteString(outFile "options_file"
+        simplifyFilename(form~>optionsFile~>value t)))
+    SICO_tomlWriteString(outFile "bin" form~>binName~>value)
+    lefWriteBinOptions(outFile form)
+    SICO_tomlWriteSection(outFile "steps")
+    SICO_tomlWriteBool(outFile "pins" form~>runPins~>value)
+    SICO_tomlWriteBool(outFile "extract" form~>runExtract~>value)
+    SICO_tomlWriteBool(outFile "abstract" form~>runAbstract~>value)
+    SICO_tomlWriteSection(outFile "output")
+    SICO_tomlWriteString(outFile "lef_file"
+      simplifyFilename(form~>lefFile~>value t))
+    SICO_tomlWriteString(outFile "lef_version" form~>lefVersion~>value)
+    SICO_tomlWriteBool(outFile "geometry" form~>exportGeometry~>value)
+    SICO_tomlWriteBool(outFile "technology" form~>exportTech~>value)
+    close(outFile)
+    unless(system(strcat("mv " SICO_shellQuote(tempFile) " "
+                         SICO_shellQuote(configFile)))==0
+      GUI_messageApp('e "LEF" lefMessages()->noConfig)
+      return(nil))
+    return(configFile)
+  )
+)

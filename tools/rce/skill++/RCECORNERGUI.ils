@@ -1,0 +1,147 @@
+; RCE process corner and technology controls.
+
+unless(and(boundp('RCECORNERGUIVersion)
+             RCECORNERGUIVersion=="20260919.gui.modules.v1")
+defmethod(makeExtBasicOpt ((inst EXTOPTGUI))
+  let((index selectField nameField tempField rowLayout selectName
+       selectItemName nameName tempName rowName)
+    inst->cornerType=hiCreateRadioField(
+      ?name        'cornerType
+      ?prompt      "Corner Scope:"
+      ?choices     inst->cornerTypeChoices
+      ?defValue    "Single Corner"
+      ?itemsPerRow 2
+      ?callback    inst->cornerTypeCB
+    )
+    inst->corner=hiCreateComboField(
+      ?name     'corner
+      ?prompt   "Select Corner:"
+      ?items    inst->cornerChoices
+      ?defValue car(inst->cornerChoices)
+      ?editable nil
+      ?callback inst->cornerCB
+    )
+    inst->temp=hiCreateComboField(
+      ?name     'temp
+      ?prompt   "Temperature:"
+      ?defValue inst->tempDefvalue
+      ?items    inst->tempChoices
+      ?editable t
+    )
+    inst->singleCornerSetup=makehbl('singleCornerSetup
+                                     list(inst->corner inst->temp)
+                                     ?a right)
+    inst->cornerSelectFields=nil
+    inst->cornerNameFields=nil
+    inst->cornerTempFields=nil
+    inst->cornerRowNames=nil
+    inst->cornerRowLayouts=nil
+    for(index 1 32
+      selectName=concat("rceCornerSelect" sprintf(nil "%02d" index))
+      selectItemName=concat("rceCornerItem" sprintf(nil "%02d" index))
+      nameName=concat("rceCornerName" sprintf(nil "%02d" index))
+      tempName=concat("rceCornerTemp" sprintf(nil "%02d" index))
+      rowName=concat("rceCornerRow" sprintf(nil "%02d" index))
+      selectField=hiCreateToggleField(
+        ?name        selectName
+        ?choices     list(list(selectItemName ""))
+        ?value       list(nil)
+        ?itemsPerRow 1
+      )
+      nameField=hiCreateLabel(
+        ?name          nameName
+        ?labelText     " "
+        ?justification 'left
+      )
+      tempField=hiCreateComboField(
+        ?name     tempName
+        ?prompt   "Temp:"
+        ?defValue inst->tempDefvalue
+        ?items    inst->tempChoices
+        ?editable t
+      )
+      rowLayout=makehbl(rowName
+                         list(selectField
+                              nameField
+                              tempField
+                              list('stretch_item 1))
+                         ?a left)
+      inst->cornerSelectFields=append1(inst->cornerSelectFields selectField)
+      inst->cornerNameFields=append1(inst->cornerNameFields nameField)
+      inst->cornerTempFields=append1(inst->cornerTempFields tempField)
+      inst->cornerRowNames=append1(inst->cornerRowNames rowName)
+      inst->cornerRowLayouts=append1(inst->cornerRowLayouts rowLayout)
+    )
+    inst->multiCornerSetup=hiCreateVerticalBoxLayout(
+      'multiCornerSetup
+      ?items       inst->cornerRowLayouts
+      ?horiz_align 'left
+      ?spacing     3
+      ?scrollable  t
+      ?invisible   t
+    )
+    inst->tech=makevbl('tech
+                        list(inst->cornerType
+                             inst->singleCornerSetup
+                             inst->multiCornerSetup)
+                        ?a left)
+    inst->rcType=hiCreateRadioField(
+      ?name     'rcType
+      ?prompt   "Extract   Type:"
+      ?choices  inst->rcTypeChoices
+      ?callback inst->rcTypeCB
+    )
+    inst->topCellSource=hiCreateRadioField(
+      ?name        'topCellSource
+      ?prompt      "Top   Cell    Name:"
+      ?choices     inst->topCellSourceChoices
+      ?defValue    "Schematic"
+      ?itemsPerRow 2
+      ?callback    inst->topCellSourceCB
+    )
+    inst->extractTopCell=hiCreateStringField(
+      ?name     'extractTopCell
+      ?defValue ""
+      ?editable nil
+    )
+    inst->extractTopCellRow=makehbl('extractTopCellRow
+                                    list(inst->topCellSource inst->extractTopCell)
+                                    ?a left)
+    inst->nameSource=hiCreateRadioField(
+      ?name        'nameSource
+      ?prompt      "Use  Name  From:"
+      ?choices     inst->nameSourceChoices
+      ?defValue    "Schematic"
+      ?itemsPerRow 2
+      ?callback    inst->nameSourceCB
+    )
+    inst->basicOpt=makevbl('basicOpt
+                            list(inst->tech
+                                  inst->rcType))
+  )
+)
+
+defmethod(makeExtRcTechDir ((inst EXTOPTGUI))
+  inst->rcTechDirName=hiCreateComboField(
+    ?name     'rcTechDirName
+    ?prompt   "Model   Setup:"
+    ?items    inst->rcTechDirChoices
+    ?defValue car(inst->rcTechDirChoices)
+    ?editable nil
+    ?callback inst->rcTechDirCB
+  )
+  inst->rcTechDirPath=hiCreateFileSelectorField(
+    ?name     'rcTechDirPath
+    ?mode     'directoryOnly
+    ?defValue RCE_extTechValue(or(SICO_envValue("RCE_DEF_TOOL") "StarRC") car(inst->rcTechDirChoices))
+    ?callback inst->rcTechDirPathCB
+  )
+  inst->rcTechDir=makehbl('rcTechDir list(inst->rcTechDirName inst->rcTechDirPath) ?a left)
+)
+
+procedure(cadBaseMultiCornerRevision()
+  "20260803.multi.corner.align.v4"
+)
+
+RCECORNERGUIVersion="20260919.gui.modules.v1"
+)

@@ -1,0 +1,498 @@
+; Development source bootstrap; protected runtimes use SICO_toolsInitialize.
+let((commonSkill)
+  commonSkill=strcat("/" buildString(reverse(cdr(reverse(
+    parseString(simplifyFilename(get_filename(piport) t) "/")))) "/")
+    "/../../common/skill/")
+  load(strcat(commonSkill "SICO_environment.il"))
+  load(strcat(commonSkill "SICO_installation.il")))
+
+;------------------------------------------------------------------------------
+; RCE frontend loader.
+;------------------------------------------------------------------------------
+
+unless(and(isCallable('cadCommonGuiModulesRevision)
+             cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
+             isCallable('SICO_lsfModulesRevision)
+             SICO_lsfModulesRevision()=="20260924.flow.environment.v3"
+             isCallable('rceGuiModulesRevision)
+             rceGuiModulesRevision()=="20260919.gui.modules.v1"
+             isCallable('rceSummaryModulesRevision)
+             rceSummaryModulesRevision()=="20260919.gui.modules.v1"
+             isCallable('rceCallbackModulesRevision)
+             rceCallbackModulesRevision()=="20260919.callback.modules.v1"
+             isCallable('rceLoaderRevision)
+             rceLoaderRevision()=="20260924.flow.environment.v3"
+             isCallable('SICO_tomlRevision)
+             SICO_tomlRevision()=="20260922.sico.temp.v6"
+             isCallable('SICO_profileRevision)
+             SICO_profileRevision()=="20260924.profile.environment.v4"
+             isCallable('SICO_profileGuiRevision)
+             SICO_profileGuiRevision()=="20260818.profile.gui.v2"
+             isCallable('rceProfileRevision)
+             rceProfileRevision()=="20260909.pin.order.v1"
+             isCallable('SICO_profileAdapter)
+             SICO_profileAdapter("RCE")
+             isCallable('SICO_guiProtocolRevision)
+             SICO_guiProtocolRevision()=="20260814.cadgui.v1"
+             isCallable('rceCustomSvrfRevision)
+             rceCustomSvrfRevision()=="20260813.custom.svrf.common.v1"
+             isCallable('rceCustomSvrfGuiRevision)
+             rceCustomSvrfGuiRevision()=="20260813.custom.svrf.common.v1"
+             isCallable('cadBaseLvsOptionsRevision)
+             cadBaseLvsOptionsRevision()=="20260908.recognize.gates.v1"
+             isCallable('cadBaseLvsCustomSvrfRevision)
+             cadBaseLvsCustomSvrfRevision()=="20260812.custom.svrf.align.v2"
+             isCallable('cadBaseCustomSvrfRevision)
+             cadBaseCustomSvrfRevision()=="20260813.custom.svrf.common.v1"
+             isCallable('cadBaseRuleFileLabelRevision)
+             cadBaseRuleFileLabelRevision()=="20260812.rule.file.label.v1"
+             isCallable('cadBaseCdlIncludeRevision)
+             cadBaseCdlIncludeRevision()=="20260812.cdl.include.v2"
+             isCallable('rceCdlIncludeRevision)
+             rceCdlIncludeRevision()=="20260812.cdl.include.v2"
+             isCallable('rceCdlIncludeConfigRevision)
+             rceCdlIncludeConfigRevision()=="20260812.cdl.include.v2"
+             isCallable('rceCdlIncludeGuiRevision)
+             rceCdlIncludeGuiRevision()=="20260812.cdl.include.layout.v3"
+             isCallable('rceAdvancedOptionsGuiRevision)
+             rceAdvancedOptionsGuiRevision()=="20260817.advanced.options.v1"
+             isCallable('rceCdlIncludeBatchRevision)
+             rceCdlIncludeBatchRevision()=="20260812.cdl.include.v2"
+             isCallable('rceAbsolutePathRevision)
+             rceAbsolutePathRevision()=="20260812.toml.absolute.paths.v1"
+             isCallable('rceUsesCadTempPath)
+             rceUsesCadTempPath()
+             isCallable('rceNetlistViewRevision)
+             rceNetlistViewRevision()=="20260911.corner.text.views.v1"
+             isCallable('rceTermOrderRevision)
+             rceTermOrderRevision()=="20260911.view.term.order.v2"
+             isCallable('rceFlowAuditRevision)
+             rceFlowAuditRevision()=="20260911.flow.audit.v1"
+             isCallable('cadBatchMonitorAuditRevision)
+             cadBatchMonitorAuditRevision()=="20260911.flow.audit.v1"
+             isCallable('RCE_tomlRevision)
+             RCE_tomlRevision()=="20260803.multi.corner.v5"
+             isCallable('cadCommonGuiModulesRevision)
+           cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
+           isCallable('cadBaseHardwareRevision)
+             cadBaseHardwareRevision()=="20260820.lsf.monitor.v7"
+             isCallable('SICO_lsfModulesRevision)
+           SICO_lsfModulesRevision()=="20260924.flow.environment.v3"
+           isCallable('SICO_lsfRevision)
+             SICO_lsfRevision()=="20260901.form.lifecycle.v1"
+             isCallable('SICO_lsfMonitorRevision)
+             SICO_lsfMonitorRevision()=="20260924.sico.monitor.environment.v3"
+             isCallable('GUI_flowLogRevision)
+             GUI_flowLogRevision()=="20260721.flow.log.owned.v2"
+             isCallable('rceDspfRegionCodecRevision)
+             rceDspfRegionCodecRevision()=="20260721.dspf.regions.v1"
+             isCallable('rceDspfProtocolRevision)
+             rceDspfProtocolRevision()=="20260721.dspf.protocol.v3"
+             isCallable('rceDspfGeometryRevision)
+             rceDspfGeometryRevision()=="20260721.dspf.geometry.v1"
+             isCallable('rceDspfLauncherRevision)
+             rceDspfLauncherRevision()=="20260814.dspf.launcher.v5"
+             isCallable('rceDspfAnalyzerRevision)
+             rceDspfAnalyzerRevision()=="20260722.dspf.analyzer.v5"
+             isCallable('rceSummaryUiRevision)
+             rceSummaryUiRevision()=="20260911.flow.audit.v1"
+             isCallable('cadBatchCoreRevision)
+             cadBatchCoreRevision()=="20260923.batch.commands.v3"
+             isCallable('rceBatchAdapterRevision)
+             rceBatchAdapterRevision()=="20260924.flow.environment.v3"
+             isCallable('rceReductionRevision)
+             rceReductionRevision()=="20260908.recognize.gates.v1")
+
+procedure(rceLoaderRevision()
+  "20260924.flow.environment.v3"
+)
+
+procedure(rceResolveToolsRoot()
+  SICO_installationPath(SICO_installationRoot() "tools"))
+
+procedure(rceLoadFile(path)
+  if(isFile(path) then
+    load(path)
+  else
+    warn("RCE loader cannot find: %s\n" path)
+    nil
+  )
+)
+
+procedure(rceLoadBaseGui()
+  if(and(isCallable('cadCommonGuiModulesRevision)
+           cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
+           isCallable('cadBaseGuiRevision)
+           cadBaseGuiRevision()=="20260721.case.sensitive.v2"
+           isCallable('cadBaseMultiCornerRevision)
+           cadBaseMultiCornerRevision()=="20260803.multi.corner.align.v4"
+           isCallable('cadBaseInputRevision)
+           cadBaseInputRevision()=="20260716.input.sync.v1"
+           isCallable('cadCommonGuiModulesRevision)
+           cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
+           isCallable('cadBaseHardwareRevision)
+           cadBaseHardwareRevision()=="20260820.lsf.monitor.v7"
+           isCallable('cadBaseLvsOptionsRevision)
+           cadBaseLvsOptionsRevision()=="20260908.recognize.gates.v1"
+           isCallable('cadBaseLvsCustomSvrfRevision)
+           cadBaseLvsCustomSvrfRevision()=="20260812.custom.svrf.align.v2"
+           isCallable('cadBaseRuleFileLabelRevision)
+           cadBaseRuleFileLabelRevision()=="20260812.rule.file.label.v1"
+           isCallable('cadBaseCdlIncludeRevision)
+           cadBaseCdlIncludeRevision()=="20260812.cdl.include.v2"
+           isCallable('rceGuiModulesRevision)
+           rceGuiModulesRevision()=="20260919.gui.modules.v1"
+           isCallable('rceBaseGuiRevision)
+           rceBaseGuiRevision()=="20260909.pin.order.v1"
+           isCallable('makeLayInp) isCallable('makeOutDir)
+           isCallable('makeLvsHcell) isCallable('makeLvsCustomSvrf)
+           isCallable('makeCustomSvrf) isCallable('cadCustomSvrfBind)
+           isCallable('makeCdlInclude) isCallable('cadCdlIncludeCB)
+           isCallable('cadCdlIncludeInputTypeCB)
+           isCallable('makeNlOpt)) then
+    cadBaseGuiLoaded=t
+    t
+  else
+    let((ok)
+      ok=and(rceLoadFile(strcat(rceCommonRoot "/skill++/BASEGUI.ils"))
+          rceLoadFile(strcat(rceCommonRoot "/skill++/INPUTGUI.ils"))
+          rceLoadFile(strcat(rceCommonRoot "/skill++/OUTPUTGUI.ils"))
+          rceLoadFile(strcat(rceCommonRoot "/skill++/CUSTOMSVRFGUI.ils"))
+          rceLoadFile(strcat(rceCommonRoot "/skill++/LVSOPTGUI.ils"))
+          rceLoadFile(strcat(rceCommonRoot "/skill++/HARDWAREGUI.ils"))
+          rceLoadFile(strcat(rceCommonRoot "/skill++/TOOLSETGUI.ils")))
+      when(ok
+        ok=rceLoadFile(strcat(rceSkillRoot "/skill++/RCEBASEGUI.ils")))
+      when(ok
+        ok=rceLoadFile(strcat(rceSkillRoot "/skill++/RCECORNERGUI.ils")))
+      when(ok
+        ok=rceLoadFile(strcat(rceSkillRoot "/skill++/RCESELECTIONGUI.ils")))
+      when(ok
+        ok=rceLoadFile(strcat(rceSkillRoot "/skill++/RCENETLISTGUI.ils")))
+      when(ok
+        ok=rceLoadFile(strcat(rceSkillRoot "/skill++/RCEEXTRACTGUI.ils")))
+      when(ok
+        cadBaseGuiLoaded=t)
+      ok
+    )
+  )
+)
+
+procedure(rceLoadBatchSupport()
+  if(and(isCallable('cadBatchGuiSharedRevision)
+           isCallable('cadBatchAdapterRevision)
+           cadBatchAdapterRevision()=="20260812.common.v1"
+           cadBatchGuiSharedRevision()=="20260812.common.v1"
+           isCallable('cadBatchRowsRevision)
+           cadBatchRowsRevision()=="20260812.common.v1"
+           isCallable('cadBatchCoreRevision)
+           cadBatchCoreRevision()=="20260923.batch.commands.v3"
+           isCallable('cadBatchMonitorRevision)
+           cadBatchMonitorRevision()=="20260902.form.lifecycle.v1"
+           isCallable('cadBatchMonitorAuditRevision)
+           cadBatchMonitorAuditRevision()=="20260911.flow.audit.v1"
+           isCallable('cadBatchGuiRevision)
+           cadBatchGuiRevision()=="20260812.common.v1") then
+    t
+  else
+    let((ok)
+      ok=t
+      foreach(path
+        list(
+          strcat(rceCommonRoot "/skill/SICO_batchAdapter.il")
+          strcat(rceCommonRoot "/skill/SICO_batchGui.il")
+          strcat(rceCommonRoot "/skill/SICO_batchRows.il")
+          strcat(rceCommonRoot "/skill/SICO_batchCore.il")
+          strcat(rceCommonRoot "/skill/SICO_batchMonitor.il")
+          strcat(rceCommonRoot "/skill++/BATCHGUI.ils"))
+        when(ok
+          unless(rceLoadFile(path)
+            ok=nil)))
+      ok
+    )
+  )
+)
+
+procedure(rceLoadFrontend()
+  if(and(isCallable('rceGuiModulesRevision)
+           rceGuiModulesRevision()=="20260919.gui.modules.v1"
+           isCallable('rceSummaryModulesRevision)
+           rceSummaryModulesRevision()=="20260919.gui.modules.v1"
+           isCallable('rceCallbackModulesRevision)
+           rceCallbackModulesRevision()=="20260919.callback.modules.v1"
+           isCallable('rceFrontendRevision)
+           rceFrontendRevision()==rceLoaderRevision()
+           isCallable('SICO_tomlRevision)
+           SICO_tomlRevision()=="20260922.sico.temp.v6"
+           isCallable('SICO_profileRevision)
+           SICO_profileRevision()=="20260924.profile.environment.v4"
+           isCallable('SICO_profileGuiRevision)
+           SICO_profileGuiRevision()=="20260818.profile.gui.v2"
+           isCallable('rceProfileRevision)
+           rceProfileRevision()=="20260909.pin.order.v1"
+           isCallable('SICO_profileAdapter)
+           SICO_profileAdapter("RCE")
+           isCallable('SICO_guiProtocolRevision)
+           SICO_guiProtocolRevision()=="20260814.cadgui.v1"
+           isCallable('rceCustomSvrfRevision)
+           rceCustomSvrfRevision()=="20260813.custom.svrf.common.v1"
+           isCallable('rceCustomSvrfGuiRevision)
+           rceCustomSvrfGuiRevision()=="20260813.custom.svrf.common.v1"
+           isCallable('rceConfigRevision)
+           rceConfigRevision()==rceLoaderRevision()
+           isCallable('rceGuiRevision)
+           rceGuiRevision()==rceLoaderRevision()
+           isCallable('cadBaseGuiRevision)
+           cadBaseGuiRevision()=="20260721.case.sensitive.v2"
+           isCallable('cadBaseMultiCornerRevision)
+           cadBaseMultiCornerRevision()=="20260803.multi.corner.align.v4"
+           isCallable('cadBaseInputRevision)
+           cadBaseInputRevision()=="20260716.input.sync.v1"
+           isCallable('cadCommonGuiModulesRevision)
+           cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
+           isCallable('cadBaseHardwareRevision)
+           cadBaseHardwareRevision()=="20260820.lsf.monitor.v7"
+           isCallable('cadBaseLvsOptionsRevision)
+           cadBaseLvsOptionsRevision()=="20260908.recognize.gates.v1"
+           isCallable('cadBaseLvsCustomSvrfRevision)
+           cadBaseLvsCustomSvrfRevision()=="20260812.custom.svrf.align.v2"
+           isCallable('cadBaseCustomSvrfRevision)
+           cadBaseCustomSvrfRevision()=="20260813.custom.svrf.common.v1"
+           isCallable('cadBaseRuleFileLabelRevision)
+           cadBaseRuleFileLabelRevision()=="20260812.rule.file.label.v1"
+           isCallable('cadBaseCdlIncludeRevision)
+           cadBaseCdlIncludeRevision()=="20260812.cdl.include.v2"
+           isCallable('rceCdlIncludeRevision)
+           rceCdlIncludeRevision()=="20260812.cdl.include.v2"
+           isCallable('rceCdlIncludeConfigRevision)
+           rceCdlIncludeConfigRevision()=="20260812.cdl.include.v2"
+           isCallable('rceCdlIncludeGuiRevision)
+           rceCdlIncludeGuiRevision()=="20260812.cdl.include.layout.v3"
+           isCallable('rceAdvancedOptionsGuiRevision)
+           rceAdvancedOptionsGuiRevision()=="20260817.advanced.options.v1"
+           isCallable('rceReductionRevision)
+           rceReductionRevision()=="20260908.recognize.gates.v1"
+           isCallable('rceCdlIncludeBatchRevision)
+           rceCdlIncludeBatchRevision()=="20260812.cdl.include.v2"
+           isCallable('rceAbsolutePathRevision)
+           rceAbsolutePathRevision()=="20260812.toml.absolute.paths.v1"
+           isCallable('rceUsesCadTempPath)
+           rceUsesCadTempPath()
+           isCallable('rceBaseGuiRevision)
+           rceBaseGuiRevision()=="20260909.pin.order.v1"
+           isCallable('cadDisplayRceForm)
+           isCallable('rceFormValidP)
+           isCallable('rceFormDoneCB)
+           isCallable('rceRunCB)
+           isCallable('rceRunCloseCB)
+           isCallable('SICO_windowIconRevision)
+           SICO_windowIconRevision()=="20260921.sico.flow.icon.v1"
+           isCallable('SICO_setWindowIcon)
+           isCallable('GUI_flowLogRevision)
+           GUI_flowLogRevision()=="20260721.flow.log.owned.v2"
+           isCallable('GUI_flowLogOpen)
+           isCallable('GUI_flowLogShow)
+           isCallable('GUI_flowLogClose)
+           isCallable('SICO_importTextCellView)
+           isCallable('SICO_toolsRoot)
+           isCallable('SICO_absolutePath)
+           isCallable('SICO_fileStem)
+           isCallable('SICO_tempDir)
+           isCallable('SICO_tempPath)
+           isCallable('SICO_tempEnvironment)
+           isCallable('RCE_tomlRevision)
+           RCE_tomlRevision()=="20260803.multi.corner.v5"
+           isCallable('SICO_lsfModulesRevision)
+           SICO_lsfModulesRevision()=="20260924.flow.environment.v3"
+           isCallable('SICO_lsfRevision)
+           SICO_lsfRevision()=="20260901.form.lifecycle.v1"
+           isCallable('SICO_lsfMonitorRevision)
+           SICO_lsfMonitorRevision()=="20260924.sico.monitor.environment.v3"
+           isCallable('SICO_lsfCancelCommand)
+           isCallable('cadBatchCoreRevision)
+           cadBatchCoreRevision()=="20260923.batch.commands.v3"
+           isCallable('cadBatchMonitorRevision)
+           cadBatchMonitorRevision()=="20260902.form.lifecycle.v1"
+           isCallable('cadBatchMonitorAuditRevision)
+           cadBatchMonitorAuditRevision()=="20260911.flow.audit.v1"
+           isCallable('rceDspfRegionCodecRevision)
+           rceDspfRegionCodecRevision()=="20260721.dspf.regions.v1"
+           isCallable('rceDspfProtocolRevision)
+           rceDspfProtocolRevision()=="20260721.dspf.protocol.v3"
+           isCallable('rceDspfGeometryRevision)
+           rceDspfGeometryRevision()=="20260721.dspf.geometry.v1"
+           isCallable('rceDspfLauncherRevision)
+           rceDspfLauncherRevision()=="20260814.dspf.launcher.v5"
+           isCallable('rceDspfAnalyzerChooseFile)
+           isCallable('rceDspfLauncherStopAll)
+           isCallable('rceDspfAnalyzerRevision)
+           rceDspfAnalyzerRevision()=="20260722.dspf.analyzer.v5"
+           isCallable('rceDspfAnalyzerStart)
+           isCallable('rceDspfAnalyzerStop)
+           isCallable('rceSummaryUiRevision)
+           rceSummaryUiRevision()=="20260911.flow.audit.v1"
+           isCallable('rceSummaryCaptureRun)
+           isCallable('rceSummaryDisplay)
+           isCallable('rceSummaryAnalyzeCB)
+           isCallable('rceSummaryOpenLogCB)
+           isCallable('rceSummaryOpenCB)
+           isCallable('rceSummaryCopyCB)
+           isCallable('rceParasiticNetlistOutputP)
+           isCallable('rceParasiticViewSpec)
+           isCallable('rceReducedParasiticViewName)
+           isCallable('rceNetlistViewRequest)
+           isCallable('rceNetlistViewRevision)
+           rceNetlistViewRevision()=="20260911.corner.text.views.v1"
+           isCallable('rceTermOrderRevision)
+           rceTermOrderRevision()=="20260911.view.term.order.v2"
+           isCallable('rceFlowAuditRevision)
+           rceFlowAuditRevision()=="20260911.flow.audit.v1"
+           isCallable('rceCheckOaTermOrder)
+           isCallable('rceNativeViewOutputP)
+           isCallable('rceSyncNativeView)
+           isCallable('rceCreateNativeViewFromRequest)
+           isCallable('rceCompleteViewRequest)
+           isCallable('rceUsesCadTempPath)
+           rceUsesCadTempPath()
+           isCallable('rceBatchAdapterRevision)
+           rceBatchAdapterRevision()=="20260924.flow.environment.v3"
+           isCallable('cadBatchFlowAdapter)
+           cadBatchFlowAdapter("RCE")
+           isCallable('rceBatchStart)
+           isCallable('rceBatchPrimaryViewRequest)
+           isCallable('rceCdlIncludeBatchRevision)
+           isCallable('rceIpcSetMeta)
+           isCallable('rceIpcGetMeta)
+           isCallable('rceSyncExtractTopCell)
+           isCallable('rceSyncInputNames)
+           isCallable('rceSyncStartRve)
+           isCallable('rceSyncReduction)
+           isCallable('rceAlignReductionPrompts)
+           isCallable('rceValidateReduction)
+           isCallable('rceTopCellSourceCB)
+           isCallable('rceSyncNetlistCustomize)
+           isCallable('rceParasiticInfoCB)
+           isCallable('rceNameSourceCB)
+           isCallable('rceSyncBlockCellSelection)
+           isCallable('rceRefreshProcessCorners)
+           isCallable('SICO_lsfStartQueueDiscovery)
+           isCallable('SICO_lsfStartHostDiscovery)
+           isCallable('SICO_lsfValidateSelection)
+           isCallable('SICO_lsfWrapCommand)
+           isCallable('makeLvsHcell)
+           isCallable('rceLvsHcellCB)
+           isCallable('rceLvsVirtualConnFieldCB)
+           isCallable('cadCdlIncludeCB)
+           isCallable('cadCdlIncludeInputTypeCB)
+           isCallable('cadLvsCustomSvrfCB)
+           isCallable('cadLvsCustomSvrfBind)
+           isCallable('cadCustomSvrfCB)
+           isCallable('cadCustomSvrfBind)) then
+    rceFrontendLoaded=t
+    t
+  else
+    let((ok)
+      ok=and(rceLoadFile(strcat(rceCommonRoot "/skill/SICO_environment.il"))
+        rceLoadFile(strcat(rceCommonRoot "/skill/SICO_installation.il"))
+        rceLoadFile(strcat(rceCommonRoot "/skill/SICO_toml.il")))
+      when(ok
+        ok=rceLoadFile(strcat(rceCommonRoot "/skill/SICO_profile.il")))
+      when(ok
+        ok=rceLoadFile(strcat(rceCommonRoot "/skill++/PROFILEGUI.ils")))
+      when(ok
+        ok=rceLoadFile(strcat(rceCommonRoot "/skill/SICO_guiProtocol.il")))
+      when(ok
+        ok=and(rceLoadFile(strcat(rceCommonRoot "/skill/SICO_lsf.il"))
+          rceLoadFile(strcat(rceCommonRoot "/skill/SICO_lsfSelection.il"))
+          rceLoadFile(strcat(rceCommonRoot "/skill/SICO_lsfProtocol.il"))
+          rceLoadFile(strcat(rceCommonRoot "/skill/SICO_lsfProcess.il"))
+          rceLoadFile(strcat(rceCommonRoot "/skill/SICO_lsfCommands.il"))
+          rceLoadFile(strcat(rceCommonRoot "/skill/SICO_lsfHosts.il"))
+          rceLoadFile(strcat(rceCommonRoot "/skill/SICO_lsfQueues.il"))
+          rceLoadFile(strcat(rceCommonRoot "/skill/SICO_lsfChoices.il"))))
+      when(ok
+        ok=rceLoadFile(strcat(rceCommonRoot "/skill/SICO_lsfMonitor.il")))
+      when(ok
+        ok=rceLoadFile(strcat(rceCommonRoot "/skill/SICO_envOptions.il")))
+      when(ok
+        ok=rceLoadFile(strcat(rceSkillRoot "/skill/RCE_toml.il")))
+      when(ok
+        ok=rceLoadFile(strcat(rceSkillRoot "/skill/RCE_envOptions.il")))
+      when(ok
+        ok=rceLoadBaseGui())
+      when(ok
+        ok=rceLoadBatchSupport())
+      when(ok
+        foreach(path
+          list(
+            strcat(rceUtilityRoot "/skill/UI_messageApp.il")
+            strcat(rceUtilityRoot "/skill/UI_askApp.il")
+            strcat(rceUtilityRoot "/skill/UI_windowIcon.il")
+            strcat(rceUtilityRoot "/skill/UI_flowLog.il")
+            strcat(rceUtilityRoot "/skill/DM_textCellView.il")
+            strcat(rceSkillRoot "/skill/RCE_termOrder.il")
+            strcat(rceSkillRoot "/skill/RCE_dspfRegionCodec.il")
+            strcat(rceSkillRoot "/skill/RCE_dspfProtocol.il")
+            strcat(rceSkillRoot "/skill/RCE_dspfGeometry.il")
+            strcat(rceSkillRoot "/skill/RCE_dspfLauncher.il")
+            strcat(rceSkillRoot "/skill/RCE_dspfAnalyzer.il")
+            strcat(rceSkillRoot "/skill/RCE_summaryValues.il")
+            strcat(rceSkillRoot "/skill/RCE_summaryRun.il")
+            strcat(rceSkillRoot "/skill/RCE_summaryHtml.il")
+            strcat(rceSkillRoot "/skill/RCE_summaryResults.il")
+            strcat(rceSkillRoot "/skill/RCE_summaryActions.il")
+            strcat(rceSkillRoot "/skill/UI_rceSummary.il")
+            strcat(rceSkillRoot "/skill/CMD_rceSelectNetAddDone.il")
+            strcat(rceSkillRoot "/skill/UI_rceSelectCellForm.il")
+            strcat(rceSkillRoot "/skill/UI_rceCleanSelectCell.il")
+            strcat(rceSkillRoot "/skill/UI_rceFinishSelectCell.il")
+            strcat(rceSkillRoot "/skill/UI_rceSelectCell.il")
+            strcat(rceSkillRoot "/skill/UI_rceSelectNetFromView.il")
+            strcat(rceSkillRoot "/skill/UI_rceUpdateSelectCell.il")
+            strcat(rceSkillRoot "/skill++/RCECFG.ils")
+            strcat(rceSkillRoot "/skill++/RCEREDUCTION.ils")
+            strcat(rceSkillRoot "/skill++/RCEVIEWTARGET.ils")
+            strcat(rceSkillRoot "/skill++/RCEVIEWSYNC.ils")
+            strcat(rceSkillRoot "/skill++/RCEINPUTCB.ils")
+            strcat(rceSkillRoot "/skill++/RCEPINORDER.ils")
+            strcat(rceSkillRoot "/skill++/RCENETLISTCB.ils")
+            strcat(rceSkillRoot "/skill++/RCEVIEWREQUEST.ils")
+            strcat(rceSkillRoot "/skill++/RCEOPTIONCB.ils")
+            strcat(rceSkillRoot "/skill++/RCECORNERPATH.ils")
+            strcat(rceSkillRoot "/skill++/RCECORNERCB.ils")
+            strcat(rceSkillRoot "/skill++/RCEVIEWIMPORT.ils")
+            strcat(rceSkillRoot "/skill++/RCEIPCCB.ils")
+            strcat(rceSkillRoot "/skill++/RCERUNLOCK.ils")
+            strcat(rceSkillRoot "/skill++/RCERUN.ils")
+            strcat(rceSkillRoot "/skill++/RCETOMLWRITE.ils")
+            strcat(rceSkillRoot "/skill++/RCECONFIGWRITE.ils")
+            strcat(rceSkillRoot "/skill++/RCECB.ils")
+            strcat(rceSkillRoot "/skill++/RCEBATCH.ils")
+            strcat(rceSkillRoot "/skill++/RCEPROFILE.ils")
+            strcat(rceSkillRoot "/skill++/RCEGUI.ils"))
+          when(ok
+            unless(rceLoadFile(path)
+              ok=nil))
+        ))
+      when(ok
+        rceFrontendLoaded=t)
+      ok
+    )
+  )
+)
+
+)
+
+rceToolsRoot=rceResolveToolsRoot()
+rceSkillRoot=if(rceToolsRoot then
+  simplifyFilename(strcat(rceToolsRoot "/rce") t))
+rceCommonRoot=if(rceToolsRoot then
+  simplifyFilename(strcat(rceToolsRoot "/common") t))
+rceUtilityRoot=if(rceToolsRoot then
+  simplifyFilename(strcat(rceToolsRoot "/utility") t))
+
+if(and(rceSkillRoot rceCommonRoot rceUtilityRoot) then
+  rceLoadFrontend()
+else
+  warn("RCE root is not configured. Set SICO_HOME; tools are expected under SICO_HOME/tools.\n")
+)

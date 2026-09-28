@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "compatibility": [
+    {
+      "legacy": "aivworkbench.plugins.latched_dynamic_comparator exports from aivworkbench.plugins.latched_dynamic_comparator_contract",
+      "source": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator.py",
+      "replacement": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_contract.py",
+      "owner": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_contract.py",
+      "exports": {"BaselineCandidate": "BaselineCandidate", "BaselineGenerationRequest": "BaselineGenerationRequest", "_validate": "_validate"},
+      "consumers": ["tools/aivw/python/aivworkbench/m1ai_rnm.py", "tools/aivw/python/aivworkbench/registry.py", "tools/aivw/tests/l1_matrix_cases_mapping.py", "tools/aivw/tests/test_executor.py", "tools/aivw/tests/test_model_generation.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/aivw/tests/test_xcelium_l1.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "aivworkbench.plugins.latched_dynamic_comparator exports from aivworkbench.plugins.latched_dynamic_comparator_l1",
+      "source": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator.py",
+      "replacement": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_l1.py",
+      "owner": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_l1.py",
+      "exports": {"_render_l1_testbench": "_render_l1_testbench"},
+      "consumers": ["tools/aivw/python/aivworkbench/m1ai_rnm.py", "tools/aivw/python/aivworkbench/registry.py", "tools/aivw/tests/l1_matrix_cases_mapping.py", "tools/aivw/tests/test_executor.py", "tools/aivw/tests/test_model_generation.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/aivw/tests/test_xcelium_l1.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "aivworkbench.plugins.latched_dynamic_comparator exports from aivworkbench.plugins.latched_dynamic_comparator_legacy",
+      "source": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator.py",
+      "replacement": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_legacy.py",
+      "owner": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_legacy.py",
+      "exports": {"_render_legacy_smoke_testbench": "_render_legacy_smoke_testbench"},
+      "consumers": ["tools/aivw/python/aivworkbench/m1ai_rnm.py", "tools/aivw/python/aivworkbench/registry.py", "tools/aivw/tests/l1_matrix_cases_mapping.py", "tools/aivw/tests/test_executor.py", "tools/aivw/tests/test_model_generation.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/aivw/tests/test_xcelium_l1.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "aivworkbench.plugins.latched_dynamic_comparator exports from aivworkbench.plugins.latched_dynamic_comparator_matrix",
+      "source": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator.py",
+      "replacement": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_matrix.py",
+      "owner": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_matrix.py",
+      "exports": {"_case_supply_values": "_case_supply_values", "_finite_number": "_finite_number", "_matrix_instances": "_matrix_instances", "_sv_event": "_sv_event", "_sv_string": "_sv_string"},
+      "consumers": ["tools/aivw/python/aivworkbench/m1ai_rnm.py", "tools/aivw/python/aivworkbench/registry.py", "tools/aivw/tests/l1_matrix_cases_mapping.py", "tools/aivw/tests/test_executor.py", "tools/aivw/tests/test_model_generation.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/aivw/tests/test_xcelium_l1.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "aivworkbench.plugins.latched_dynamic_comparator exports from aivworkbench.plugins.latched_dynamic_comparator_model",
+      "source": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator.py",
+      "replacement": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_model.py",
+      "owner": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_model.py",
+      "exports": {"_render_model": "_render_model", "_sv_name": "_sv_name"},
+      "consumers": ["tools/aivw/python/aivworkbench/m1ai_rnm.py", "tools/aivw/python/aivworkbench/registry.py", "tools/aivw/tests/l1_matrix_cases_mapping.py", "tools/aivw/tests/test_executor.py", "tools/aivw/tests/test_model_generation.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/aivw/tests/test_xcelium_l1.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "aivworkbench.plugins.xcelium_evidence exports from aivworkbench.plugins.xcelium_evidence_contract",
+      "source": "tools/aivw/python/aivworkbench/plugins/xcelium_evidence.py",
+      "replacement": "tools/aivw/python/aivworkbench/plugins/xcelium_evidence_contract.py",
+      "owner": "tools/aivw/python/aivworkbench/plugins/xcelium_evidence_contract.py",
+      "exports": {"ADAPTER_NAME": "ADAPTER_NAME", "ADAPTER_VERSION": "ADAPTER_VERSION", "WAVEFORM_SCOPE": "WAVEFORM_SCOPE", "EvidenceHooks": "EvidenceHooks", "EvidencePreparation": "EvidencePreparation"},
+      "consumers": ["tools/aivw/python/aivworkbench/executors/xcelium.py", "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator.py", "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_l1.py", "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_matrix.py", "tools/aivw/tests/l1_matrix_cases_mapping.py", "tools/aivw/tests/l1_matrix_cases_routes.py", "tools/aivw/tests/l1_matrix_cases_runtime.py", "tools/aivw/tests/xcelium_evidence_cases_contract.py", "tools/aivw/tests/xcelium_evidence_fixtures.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/aivw/tests/test_xcelium_evidence.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "aivworkbench.plugins.xcelium_evidence exports from aivworkbench.plugins.xcelium_evidence_prepare",
+      "source": "tools/aivw/python/aivworkbench/plugins/xcelium_evidence.py",
+      "replacement": "tools/aivw/python/aivworkbench/plugins/xcelium_evidence_prepare.py",
+      "owner": "tools/aivw/python/aivworkbench/plugins/xcelium_evidence_prepare.py",
+      "exports": {"_SAFE_TCL_PATH": "_SAFE_TCL_PATH"},
+      "consumers": ["tools/aivw/python/aivworkbench/executors/xcelium.py", "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator.py", "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_l1.py", "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_matrix.py", "tools/aivw/tests/l1_matrix_cases_mapping.py", "tools/aivw/tests/l1_matrix_cases_routes.py", "tools/aivw/tests/l1_matrix_cases_runtime.py", "tools/aivw/tests/xcelium_evidence_cases_contract.py", "tools/aivw/tests/xcelium_evidence_fixtures.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/aivw/tests/test_xcelium_evidence.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "aivworkbench.plugins.xcelium_evidence exports from aivworkbench.plugins.xcelium_evidence_routes",
+      "source": "tools/aivw/python/aivworkbench/plugins/xcelium_evidence.py",
+      "replacement": "tools/aivw/python/aivworkbench/plugins/xcelium_evidence_routes.py",
+      "owner": "tools/aivw/python/aivworkbench/plugins/xcelium_evidence_routes.py",
+      "exports": {"QUALIFIED_MODEL_PARAMETERS": "QUALIFIED_MODEL_PARAMETERS", "_SAFE_ID": "_SAFE_ID", "qualified_model_parameter_mapping": "qualified_model_parameter_mapping", "qualified_model_parameter_routes": "qualified_model_parameter_routes"},
+      "consumers": ["tools/aivw/python/aivworkbench/executors/xcelium.py", "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator.py", "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_l1.py", "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_matrix.py", "tools/aivw/tests/l1_matrix_cases_mapping.py", "tools/aivw/tests/l1_matrix_cases_routes.py", "tools/aivw/tests/l1_matrix_cases_runtime.py", "tools/aivw/tests/xcelium_evidence_cases_contract.py", "tools/aivw/tests/xcelium_evidence_fixtures.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/aivw/tests/test_xcelium_evidence.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    }
+  ]
+}

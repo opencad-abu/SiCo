@@ -1,0 +1,224 @@
+{
+  "schema_version": 1,
+  "rules": [
+    {
+      "id": "assistant-client-no-execution",
+      "paths": [
+        "tools/sico/python/sico/service/frontend_startup.py",
+        "tools/sico/python/sico/service/startup_lifecycle.py",
+        "tools/sico/python/sico/service/startup_result.py",
+        "tools/sico/python/sico/service/remote_frontend.py",
+        "tools/sico/python/sico/service/remote_sessions.py",
+        "tools/sico/python/sico/service/remote_catalog.py",
+        "tools/sico/python/sico/service/remote_control.py",
+        "tools/sico/python/sico/service/remote_recovery.py",
+        "tools/sico/python/sico/service/remote_queries.py",
+        "tools/sico/python/sico/service/remote_replay.py",
+        "tools/sico/python/sico/service/service_startup.py",
+        "tools/sico/python/sico/service/local_startup.py",
+        "tools/sico/python/sico/service/replay_view.py"
+      ],
+      "forbid_modules": [
+        "sico.service.startup",
+        "sico.service.controller",
+        "sico.service.project_sessions",
+        "sico.service.project_workspace",
+        "sico.service.backend",
+        "sico.service.sessions",
+        "sico.service.service_entry",
+        "sico.storage",
+        "sico.codex.backend",
+        "sico.service.frontend_port",
+        "sico.service.frontend_queries",
+        "sico.transport.bridge"
+      ],
+      "forbid_symbols": [
+        "SessionController",
+        "SessionJournal",
+        "SessionReader",
+        "SessionInbox",
+        "SessionRecovery",
+        "ProjectSessionOwner",
+        "DesktopStartup",
+        "DesktopSessions",
+        "FrontendPort",
+        "create_backend",
+        "provider_from_config",
+        "ContextBroker",
+        "BridgeClient",
+        "run_service"
+      ],
+      "rationale": "Remote startup and client capabilities can prepare connections and publish DTOs but cannot construct execution or persistence owners.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_service_boundaries.py",
+        "tools/ai/python/tests/test_agent_service_process_boundaries.py"
+      ]
+    },
+    {
+      "id": "agent-service-no-test-harness",
+      "forbid_modules": [
+        "agent_startup_harness",
+        "agent_local_harness",
+        "agent_frontend_harness",
+        "agent_query_harness",
+        "agent_sessions_harness"
+      ],
+      "rationale": "AS-07C retains historical FB in-process composition only in tests; runtime imports must use project-service owners.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_service_closeout.py"
+      ],
+      "root": "tools/sico/python/sico"
+    },
+    {
+      "id": "agent-ui-no-test-harness",
+      "forbid_modules": [
+        "agent_startup_harness",
+        "agent_local_harness",
+        "agent_frontend_harness",
+        "agent_query_harness",
+        "agent_sessions_harness"
+      ],
+      "rationale": "AS-07C retains historical FB in-process composition only in tests; runtime imports must use project-service owners.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_service_closeout.py"
+      ],
+      "root": "tools/sico/python/sico_ui"
+    },
+    {
+      "id": "service-records-no-ui",
+      "paths": [
+        "tools/sico/python/sico/service/session_records.py",
+        "tools/sico/python/sico/service/record_deletion.py",
+        "tools/sico/python/sico/service/damaged_record.py",
+        "tools/sico/python/sico/service/session_creation.py"
+      ],
+      "forbid_modules": [
+        "sico_ui"
+      ],
+      "forbid_module_prefixes": [
+        "PyQt",
+        "PySide"
+      ],
+      "rationale": "Record mutation and retained creation inputs stay service-owned; no Qt execution or private client access.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_service_record_remediation.py",
+        "tools/ai/python/tests/test_agent_service_record_native_thread.py"
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "id": "frontend-RemoteFrontend",
+      "source": "tools/sico/python/sico/service/remote_frontend.py:RemoteFrontend",
+      "public": [
+        "accept_quick",
+        "activity",
+        "address",
+        "background_request",
+        "can_control",
+        "catalog",
+        "catalog_snapshot",
+        "close_desktop",
+        "command",
+        "connection",
+        "connection_state",
+        "control",
+        "create_session",
+        "delete_session",
+        "review_deletion",
+        "descriptor",
+        "desktop_busy",
+        "detached",
+        "display_name",
+        "end_session",
+        "event_batch",
+        "event_detail",
+        "force_stop_service",
+        "chat_page",
+        "handle",
+        "initial_id",
+        "input_detail",
+        "interrupt",
+        "is_closing",
+        "launch_directory",
+        "layout_path",
+        "open_initial",
+        "open_session",
+        "opened_sessions",
+        "owns",
+        "prepare_replay",
+        "preview_matches",
+        "preview_session",
+        "preview_source",
+        "query_input",
+        "reconnect_session",
+        "recovery",
+        "released_targets",
+        "rename_session",
+        "replay_matches",
+        "service_status",
+        "session",
+        "source",
+        "stop_service",
+        "target_source",
+        "tool_result",
+        "view",
+        "wait_desktop",
+        "open_home",
+        "platforms"
+      ],
+      "forbid_attributes": [
+        "owner",
+        "journal",
+        "controller",
+        "sessions",
+        "attach",
+        "events",
+        "queries",
+        "commands",
+        "publish_session",
+        "publish_history"
+      ],
+      "rationale": "Reviewed remote client capability surface; publication contains one authoritative immutable set of session facts.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_service_boundaries.py",
+        "tools/ai/python/tests/test_agent_service_process_boundaries.py",
+        "tools/ai/python/tests/test_ic_platform_service.py"
+      ]
+    },
+    {
+      "id": "frontend-SessionPublication",
+      "source": "tools/sico/python/sico/service/remote_sessions.py:SessionPublication",
+      "public": [
+        "activity",
+        "address",
+        "base",
+        "closing",
+        "context",
+        "display_name",
+        "label",
+        "model",
+        "resources",
+        "view"
+      ],
+      "forbid_attributes": [],
+      "rationale": "Reviewed remote client capability surface; publication contains one authoritative immutable set of session facts.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_service_boundaries.py",
+        "tools/ai/python/tests/test_agent_service_process_boundaries.py"
+      ],
+      "frozen": true,
+      "fields": [
+        "address",
+        "context",
+        "label",
+        "base",
+        "model",
+        "resources",
+        "display_name",
+        "activity",
+        "closing"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+"""Legacy test collector; remove after scripts migrate to domain cases."""
+
+from config_request_cases import (
+    test_request_toml_is_canonical_and_does_not_contain_target_cdslib,
+    test_legacy_request_defaults_overwrite_controls_off_and_digest_is_stable,
+    test_unknown_keys_and_missing_environment_are_rejected,
+    test_multi_cell_request_round_trips_cell_specific_settings,
+    test_saved_legacy_single_cell_configuration_stays_in_legacy_form,
+)
+
+from config_serialization_cases import (
+    test_saved_multi_cell_configuration_is_loadable_toml,
+    test_saved_multi_cell_configuration_preserves_all_ordered_per_cell_state,
+    test_save_request_keeps_existing_configuration_when_atomic_replace_fails,
+)
+
+from config_workspace_cases import (
+    test_workspace_v2_round_trips_multiple_processes_in_order,
+    test_workspace_preserves_raw_process_field_text,
+    test_workspace_preserves_source_project_module_name,
+    test_workspace_rejects_presentation_for_unselected_cell,
+    test_workspace_loader_rejects_v1_request_document,
+    test_workspace_loader_rejects_non_integer_schema_version,
+)
+
+from config_artifact_cases import (
+    test_job_paths_use_proj_ade_db_dir_and_advisory_lock,
+    test_job_paths_reject_relative_or_missing_proj_dir,
+    test_job_paths_allocate_unique_runs_when_timestamp_and_digest_repeat,
+    test_job_paths_reject_digest_that_could_escape_run_namespace,
+)
+
+__all__ = ['test_request_toml_is_canonical_and_does_not_contain_target_cdslib', 'test_legacy_request_defaults_overwrite_controls_off_and_digest_is_stable', 'test_unknown_keys_and_missing_environment_are_rejected', 'test_multi_cell_request_round_trips_cell_specific_settings', 'test_saved_legacy_single_cell_configuration_stays_in_legacy_form', 'test_saved_multi_cell_configuration_is_loadable_toml', 'test_saved_multi_cell_configuration_preserves_all_ordered_per_cell_state', 'test_save_request_keeps_existing_configuration_when_atomic_replace_fails', 'test_workspace_v2_round_trips_multiple_processes_in_order', 'test_workspace_preserves_raw_process_field_text', 'test_workspace_preserves_source_project_module_name', 'test_workspace_rejects_presentation_for_unselected_cell', 'test_workspace_loader_rejects_v1_request_document', 'test_workspace_loader_rejects_non_integer_schema_version', 'test_job_paths_use_proj_ade_db_dir_and_advisory_lock', 'test_job_paths_reject_relative_or_missing_proj_dir', 'test_job_paths_allocate_unique_runs_when_timestamp_and_digest_repeat', 'test_job_paths_reject_digest_that_could_escape_run_namespace']

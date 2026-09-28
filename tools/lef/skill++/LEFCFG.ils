@@ -1,0 +1,92 @@
+unless(and(isCallable('SICO_lsfLocalHost)
+             isCallable('SICO_lsfAutoHost))
+  cond(
+    (and(boundp('lefCommonRoot) lefCommonRoot)
+      load(strcat(lefCommonRoot "/skill/SICO_lsf.il")))
+    (isCallable('cadLoadRelative)
+      cadLoadRelative("common/skill/SICO_lsf.il"))
+    (t
+      warn("LEFCFG requires the shared CAD LSF helper.\n"))
+  )
+)
+
+defstruct(lefstr
+  title cmd formdone outDirChoices outDirCB defOutDir optionsFile cellListFile cdsLib
+  binChoices defaultBin lefVersions defaultLefVersion runTypeChoices
+  defQueueName queueChoices defSrvName srvChoices cpuChoices
+)
+
+procedure(lefWorkingDir()
+  or(SICO_envValue("PWD") ".")
+)
+
+procedure(lefProjectRunRoot()
+  or(SICO_envValue("LEF_DB_DIR") lefWorkingDir())
+)
+
+procedure(lefDefaultBin()
+  let((value choices)
+    choices='("Core" "Block" "IO" "Corner")
+    value=SICO_envValue("LEF_DEFAULT_BIN")
+    if(member(value choices) then value else "Core")
+  )
+)
+
+procedure(lefConfig()
+  lefStruc
+)
+
+defstruct(lefmsg
+  projShellNotSet inputOaLay cellListFile cdsLib optionsFile runRoot
+  runDir outputFile outputData noConfig
+)
+
+procedure(lefInitializeConfig()
+  lefStruc=make_lefstr(
+  ?title             strcat(SICO_logo() "::LEF Generator")
+  ; Button callbacks are symbols so HI supplies the owning form handle.  The
+  ; form is intentionally kept alive after Close and can be displayed again.
+  ?cmd               'lefRunCB
+  ?formdone          'lefFormDoneCB
+  ?outDirChoices     '("Project Directory" "Current Directory" "Customize Directory")
+  ?outDirCB          "lefOutDirCB(hiGetCurrentForm())"
+  ?defOutDir         lefProjectRunRoot()
+  ?optionsFile       or(SICO_envValue("LEFGEN_OPT_FILE") "")
+  ?cellListFile      or(SICO_envValue("LEF_CELL_LIST") "")
+  ?cdsLib            or(SICO_envValue("CDS_LIB")
+                         strcat(lefWorkingDir() "/cds.lib"))
+  ?binChoices        '("Core" "Block" "IO" "Corner")
+  ?defaultBin        lefDefaultBin()
+  ?lefVersions       '("5.8" "5.7" "5.6" "5.5")
+  ?defaultLefVersion "5.8"
+  ?runTypeChoices    '("Current Host" "LSF Farm")
+  ?defQueueName      ""
+  ?queueChoices      list("")
+  ?defSrvName        SICO_lsfLocalHost()
+  ?srvChoices        list(SICO_lsfLocalHost())
+  ?cpuChoices        or(parseString(or(SICO_envValue("SICO_FLOW_CPU_ALLOW") "") ", \t")
+                        '("1" "2" "4" "8"))
+  )
+
+  lefMsgStruc=make_lefmsg(
+  ?projShellNotSet "LEF_DB_DIR was not set; using current directory."
+  ?inputOaLay  "The layout library, cell, or view is missing or invalid."
+  ?cellListFile "The cell list file is missing or cannot be accessed."
+  ?cdsLib      "The cds.lib file is missing or cannot be accessed."
+  ?optionsFile "The Abstract Generator options file is missing or cannot be accessed."
+  ?runRoot     "The run root must be an existing writable directory."
+  ?runDir      "The derived run directory is empty."
+  ?outputFile  "The output LEF filename is empty."
+  ?outputData  "Enable geometry LEF, technology LEF, or both."
+  ?noConfig    "Cannot create the LEF flow configuration."
+  )
+  t
+)
+
+unless(getShellEnvVar("VIRTUOSO_CONTEXT_BUILD")=="1"
+  lefInitializeConfig()
+)
+
+procedure(lefMessages()
+  lefMsgStruc
+)

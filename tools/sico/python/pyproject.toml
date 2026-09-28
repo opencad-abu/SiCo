@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sico"
+version = "0.1.0"
+description = "Silicon Copilot desktop, sessions and task orchestration"
+requires-python = ">=3.9"
+dependencies = ["cadai==0.1.0"]
+
+[tool.setuptools.packages.find]
+include = ["sico", "sico.*", "sico_ui", "sico_ui.*"]
+
+[project.scripts]
+sico = "sico.entry:main"

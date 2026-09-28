@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "internal": [
+    {
+      "id": "dspf-shared-graph",
+      "root": "tools/rce/python/rcepy",
+      "module": "rcepy.dspf._graph",
+      "owner": "tools/rce/python/rcepy/dspf/_graph.py",
+      "consumers": {
+        "tools/rce/python/rcepy/dspf/analysis.py": [
+          "connected_component_count",
+          "shortest_resistance_path"
+        ]
+      },
+      "rationale": "Graph algorithms are internal DSPF operations; only analysis owns repository-to-graph queries.",
+      "evidence": [
+        "tools/rce/python/tests/test_dspf_graph.py",
+        "tools/rce/python/tests/test_dspf_analysis.py"
+      ]
+    },
+    {
+      "id": "catalog-future-worker",
+      "root": "tools/common/python/cadgui",
+      "module": "cadgui.library_browser_controller_worker",
+      "owner": "tools/common/python/cadgui/library_browser_controller_worker.py",
+      "consumers": {
+        "tools/common/python/cadgui/library_browser_controller.py": [
+          "_CatalogFutureWorker"
+        ]
+      },
+      "rationale": "Only the catalog controller constructs its Qt Future waiter; other UI clients consume the controller.",
+      "evidence": [
+        "tools/common/python/tests/test_cadgui_library_browser_controller.py"
+      ]
+    },
+    {
+      "id": "bundle-data-contract",
+      "root": "tools/aivw/python/aivworkbench",
+      "module": "aivworkbench.agent.providers.bundle_contract",
+      "owner": "tools/aivw/python/aivworkbench/agent/providers/bundle_contract.py",
+      "consumers": {
+        "tools/aivw/python/aivworkbench/agent/providers/bundle_integrity.py": [
+          "BundleValidation",
+          "_BUNDLE_FORMAT",
+          "_COMMIT",
+          "_PYTHON_VERSION",
+          "_WINDOWS_DRIVE",
+          "_load_bundle_json"
+        ],
+        "tools/aivw/python/aivworkbench/agent/providers/bundle_provider.py": [
+          "_load_bundle_json"
+        ],
+        "tools/aivw/python/aivworkbench/agent/providers/bundle.py": [
+          "BundleValidation",
+          "_BUNDLE_FORMAT",
+          "_COMMIT",
+          "_PYTHON_VERSION",
+          "_SHA256",
+          "_WINDOWS_DRIVE",
+          "_DuplicateBundleKey",
+          "_load_bundle_json",
+          "_reject_bundle_constant",
+          "_reject_bundle_duplicates"
+        ]
+      },
+      "rationale": "Offline data validation shares one strict decoder and format constants; the old import facade is separately governed by the compatibility registry.",
+      "evidence": [
+        "tools/aivw/tests/test_bundle_release_boundary.py",
+        "tools/aivw/tests/agent_bundle_cases.py"
+      ]
+    }
+  ]
+}

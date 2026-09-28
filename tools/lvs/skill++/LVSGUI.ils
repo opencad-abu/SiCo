@@ -1,0 +1,282 @@
+; Keep the HI form handle shared with the SKILL value slot across callbacks.
+importSkillVar(lvsForm)
+
+when(and(boundp('lvsForm) lvsForm hiIsForm(lvsForm)
+         !get(lvsForm 'lvsRecognizeGates))
+  when(hiIsFormDisplayed(lvsForm)
+    hiFormClose(lvsForm))
+  unless(hiIsFormDisplayed(lvsForm)
+    when(hiDeleteForm(lvsForm)
+      lvsForm=nil))
+)
+
+defclass(LVSGUI (PROFILEGUI INPUTGUI OUTPUTGUI LVSOPTGUI HARDWARE TOOLSETGUI BATCHGUI)
+  (
+    (title        @initform lvsStruc->title @initarg title)
+    (cmd          @initform lvsStruc->cmd @initarg cmd)
+    (reportCmd    @initform lvsStruc->reportCmd @initarg reportCmd)
+    (formdone     @initform lvsStruc->formdone @initarg formdone)
+    (inpLay       @initform nil)
+    (inputSync    @initform nil)
+    (schToLay     @initform nil)
+    (layToSch     @initform nil)
+    (inputMore    @initform nil)
+    (inputMoreContents @initform nil)
+    (outLay       @initform nil)
+    (lvsOptLay    @initform nil)
+    (svdbQuery    @initform nil)
+    (lvsRunMode   @initform nil)
+    (lvsMore      @initform nil)
+    (lvsMoreContents @initform nil)
+    (hardwareLay  @initform nil)
+    (toolLay      @initform nil)
+    (mainLay      @initform nil)
+    (mainForm     @initform nil)
+  )
+)
+
+defmethod(makeLvsCpus ((inst LVSGUI))
+  inst->lvsCpu=hiCreateComboField(
+    ?name     'lvsCpu
+    ?prompt   "CPU Number:"
+    ?items    inst->cpuChoices
+    ?defValue "1"
+    ?editable nil
+  )
+)
+
+defmethod(makeLvsSvdbQuery ((inst LVSGUI))
+  inst->svdbQuery=hiCreateToggleField(
+    ?name       'svdbQuery
+    ?prompt     "SVDB query:"
+    ?choices    list(list('svdbQueryCci "CCI")
+                     list('svdbQuerySi "SI")
+                     list('svdbQueryRecon "RECON")
+                     list('svdbQueryIxfNxfSlph "IXF+NXF+SLPH")
+                     list('svdbQueryPinloc "PINLOC"))
+    ?itemsPerRow 5
+    ?value      '(nil nil nil nil nil)
+    ?defValue   '(nil nil nil nil nil)
+  )
+)
+
+defmethod(makeLvsInputNameSync ((inst LVSGUI))
+  inst->schToLay=hiCreateButton(
+    ?name       'schToLay
+    ?buttonText "->"
+    ?callback   "lvsSyncInputNames(hiGetCurrentForm() \"Schematic\")"
+    ?toolTip    "Copy Schematic Library/Cell to Layout"
+  )
+  inst->layToSch=hiCreateButton(
+    ?name       'layToSch
+    ?buttonText "<-"
+    ?callback   "lvsSyncInputNames(hiGetCurrentForm() \"Layout\")"
+    ?toolTip    "Copy Layout Library/Cell to Schematic"
+  )
+  inst->inputSync=makevbl('inputSync
+    list(list('stretch_item 1)
+          inst->schToLay
+          inst->layToSch
+          list('stretch_item 1))
+    ?s 2)
+)
+
+defmethod(makeInpLay ((inst LVSGUI))
+  makeInpType(inst)
+  makeFrontendInp(inst)
+  makeBackendInp(inst)
+  makeLvsInputNameSync(inst)
+  inst->designInp=makehbl('designInp
+    list(list(inst->frontendInp 'stretch 1)
+          inst->inputSync
+          list(inst->backendInp 'stretch 1)))
+  makeCdlInclude(inst)
+  inst->inputMoreContents=makevbl(
+    'inputMoreContents list(inst->cdlInclude))
+  inst->inputMore=hiCreateDisclosureTriangle(
+    ?name        'inputMore
+    ?labelText   "More Input Options"
+    ?onFields    '(inputMoreContents)
+    ?offFields   '()
+    ?persistent  nil
+  )
+  inst->batchFlow="LVS"
+  makeBatchControls(inst)
+  inst->inpLay=makevbl(
+    'lvsInp
+    list(inst->batchRunScope inst->inpType inst->designInp inst->batchTaskLay
+         inst->inputMore inst->inputMoreContents)
+    ?f "Input Configuration")
+)
+
+defmethod(makeOutLay ((inst LVSGUI))
+  makeOutDir(inst)
+  inst->outLay=makevbl('lvsOutLay list(inst->outDir) ?f "Output Configuration")
+)
+
+defmethod(makeLvsOptLay ((inst LVSGUI))
+  makeLvsRunMode(inst)
+  makeLvsRunset(inst)
+  makeLvsHcell(inst)
+  makeLvsCase(inst)
+  makeLvsVirtualConn(inst)
+  makeLvsVirtualConnName(inst)
+  makeLvsSvdbQuery(inst)
+  makeLvsRecognizeGates(inst)
+  makeCustomSvrf(inst)
+  inst->lvsBasicOpt=makehbl(
+    'lvsBasicOpt
+    list(inst->lvsCaseBtn inst->lvsVirtualConn inst->lvsVirtualConnName))
+  inst->lvsMoreContents=makevbl(
+    'lvsMoreContents list(inst->svdbQuery inst->lvsRecognizeGates inst->customSvrf))
+  inst->lvsMore=hiCreateDisclosureTriangle(
+    ?name        'lvsMore
+    ?labelText   "More LVS Options"
+    ?onFields    '(lvsMoreContents)
+    ?offFields   '()
+    ?persistent  nil
+  )
+  inst->lvsOptLay=makevbl(
+    'lvsOptLay
+    list(inst->lvsRunMode inst->lvsRunset inst->lvsHcell inst->lvsBasicOpt
+         inst->lvsMore inst->lvsMoreContents)
+    ?f "LVS Options")
+)
+
+defmethod(makeLvsRunMode ((inst LVSGUI))
+  inst->lvsRunMode=hiCreateRadioField(
+    ?name        'lvsRunMode
+    ?prompt      "Run Mode:"
+    ?choices     '("Hier" "Flat")
+    ?defValue    "Hier"
+    ?itemsPerRow 2
+    ?callback    '("lvsRunModeCB(hiGetCurrentForm())")
+  )
+)
+
+defmethod(makeHardwareLay ((inst LVSGUI))
+  makeServers(inst)
+  makeLvsCpus(inst)
+  makeBatchParallelCells(inst)
+  inst->hardwareLay=makevbl(
+    'lvsHardwareLay
+    list(inst->servers inst->lvsCpu inst->batchParallelCells)
+    ?f "Hardware Configuration")
+)
+
+defmethod(makeToolLay ((inst LVSGUI))
+  makeLvsTool(inst)
+  inst->toolLay=makehbl('lvsToolLay list(inst->lvsEngine) ?f "Tool Configuration")
+)
+
+defmethod(makeMainLay ((inst LVSGUI))
+  inst->profileFlow="LVS"
+  makeProfileControls(inst)
+  makeInpLay(inst)
+  makeOutLay(inst)
+  makeLvsOptLay(inst)
+  makeHardwareLay(inst)
+  makeToolLay(inst)
+  inst->mainLay=makevbl('lvsMainLay
+                         list(inst->profileLay
+                               inst->inpLay
+                               inst->lvsOptLay
+                               inst->outLay
+                               inst->toolLay
+                               inst->hardwareLay))
+)
+
+defmethod(makeForm ((inst LVSGUI))
+  makeMainLay(inst)
+  when((! inst->mainForm)
+    inst->mainForm=hiCreateLayoutForm(
+      'lvsForm
+      inst->title
+      inst->mainLay
+      ?callback     'lvsFormDoneCB
+      ?sizePolicy    'expanding
+      ?initialSize   680:740
+      ?buttonLayout  list('Empty
+                           list('Run\+Close 'lvsRunCloseCB)
+                           list('Run 'lvsRunCB)
+                           list('Report 'lvsReportCB)
+                           list('Close 'hiFormClose))
+    )
+  )
+)
+
+procedure(cadDisplayLvsForm()
+  if(and(boundp('lvsForm) lvsForm lvsFormValidP(lvsForm)) then
+    progn(
+      unless(hiIsFormDisplayed(lvsForm)
+        SICO_lsfChoicesCB(lvsForm)
+        hiDisplayForm(lvsForm))
+      lvsForm)
+  else
+    let((gui)
+      when(and(boundp('lvsForm) lvsForm !lvsFormValidP(lvsForm))
+        lvsForm=nil)
+    gui=makeInstance('LVSGUI)
+    gui->title                = lvsStruc->title
+    gui->cmd                  = lvsStruc->cmd
+    gui->reportCmd            = lvsStruc->reportCmd
+    gui->formdone             = lvsStruc->formdone
+    gui->inpChoices           = lvsStruc->inpChoices
+    gui->inpCB                = lvsStruc->inpCB
+    gui->cdlFileCB            = lvsStruc->cdlFileCB
+    gui->gdsFileCB            = lvsStruc->gdsFileCB
+    gui->outDirChoices        = lvsStruc->outDirChoices
+    gui->outDirCB             = lvsStruc->outDirCB
+    gui->defOutDir            = lvsStruc->defOutDir
+    gui->lvsRunsetEnvName     = lvsStruc->lvsRunsetEnvName
+    gui->lvsRunsetChoices     = lvsStruc->lvsRunsetChoices
+    gui->lvsRunsetCB          = lvsStruc->lvsRunsetCB
+    gui->lvsHcellCB           = lvsStruc->lvsHcellCB
+    gui->lvsVirtualConnCB     = lvsStruc->lvsVirtualConnCB
+    gui->lsfChoicesCB         = lvsStruc->lsfChoicesCB
+    gui->queueCB              = lvsStruc->queueCB
+    gui->runTypeChoices       = lvsStruc->runTypeChoices
+    gui->defQueueName         = lvsStruc->defQueueName
+    gui->queueChoices         = lvsStruc->queueChoices
+    gui->defSrvName           = lvsStruc->defSrvName
+    gui->srvChoices           = lvsStruc->srvChoices
+    gui->cpuChoices           = lvsStruc->cpuChoices
+    gui->lvsToolChoices       = lvsStruc->lvsToolChoices
+    gui->lvsToolDefValue      = lvsStruc->lvsToolDefValue
+    makeForm(gui)
+    hiInstantiateForm(gui->mainForm)
+    gui->mainForm->svdbQuery->hiToolTip=list(
+      "Calibre Connectivity Interface"
+      "LVS Recon or short isolation"
+      "LVS Recon ERC"
+      "ASCII cross-reference"
+      "Pin locations"
+    )
+    putpropq(gui->mainForm nil cadProfilePathStates)
+    putpropq(gui->mainForm nil cadProfileSourcePath)
+    cadCustomSvrfBind(gui->mainForm)
+    ddHiLinkFields(gui->mainForm~>schLib gui->mainForm~>schCell gui->mainForm~>schView)
+    ddHiLinkFields(gui->mainForm~>layLib gui->mainForm~>layCell gui->mainForm~>layView)
+    cadBatchBindForm(gui->mainForm "LVS")
+    SICO_lsfChoicesCB(gui->mainForm)
+      hiDisplayForm(gui->mainForm)
+      gui->mainForm
+    )
+  )
+)
+
+procedure(lvsCustomSvrfGuiRevision()
+  "20260813.custom.svrf.common.v1"
+)
+
+procedure(lvsCdlIncludeGuiRevision()
+  "20260812.cdl.include.layout.v3"
+)
+
+procedure(lvsInputSyncGuiRevision()
+  "20260817.input.sync.v1"
+)
+
+procedure(lvsAdvancedOptionsGuiRevision()
+  "20260817.advanced.options.v1"
+)

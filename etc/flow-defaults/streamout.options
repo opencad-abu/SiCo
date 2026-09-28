@@ -1,0 +1,17 @@
+# Stream-out defaults. Paths and bus replacement are generated.
+[geometry]
+case                               "preserve"
+convertDot                         "node"
+convertPin                         "geometry"
+labelCase                          "preserve"
+labelDepth                         "1"
+
+[vertices]
+maxVertices                        "200"
+
+[pins]
+pinAttNum                          "0"
+
+[format]
+strmVersion                        "5"
+subMasterSeparator                 "_CDNS_"

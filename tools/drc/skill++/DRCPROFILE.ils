@@ -1,0 +1,119 @@
+;------------------------------------------------------------------------------
+; DRC configuration-profile adapter.
+;------------------------------------------------------------------------------
+
+procedure(drcProfileCollect(form)
+  let((checks entries groups tasks)
+    groups=SICO_profileStringList(or(form~>drcRuleSelectGroups nil))
+    checks=SICO_profileStringList(or(form~>drcRuleSelectChecks nil))
+    tasks=or(form~>cadBatchTasks nil)
+    entries=list(
+      list("run.root_type" or(form~>outDirType~>value "Customize Directory"))
+      list("run.root" or(form~>outDirPath~>value ""))
+      list("run.run_type" or(form~>runType~>value "Current Host"))
+      list("run.queue_name" or(form~>queueName~>value ""))
+      list("run.server_name" SICO_lsfSelectedHost(form~>srvName~>value))
+      list("input.type" "OA")
+      list("input.layout.lib" or(form~>layLib~>value ""))
+      list("input.layout.cell" or(form~>layCell~>value ""))
+      list("input.layout.view" or(form~>layView~>value ""))
+      list("drc.tool" or(form~>drcTool~>value "Calibre"))
+      list("drc.runset_name" or(form~>drcRunsetName~>value ""))
+      list("drc.runset_file" or(form~>drcRunsetFile~>value ""))
+      list("drc.run_mode" or(form~>drcRunMode~>value "Hier"))
+      list("drc.rule_select_enable" and(form~>drcRuleSelectEnable~>value t))
+      list("drc.custom_svrf_enable" and(form~>customSvrfEnable~>value t))
+      list("drc.custom_svrf_command" or(form~>customSvrfCommand~>value ""))
+      list("runtime.cpus" or(form~>runCpu~>value "1"))
+      list("batch.scope" or(form~>batchRunScope~>value "Single Cell"))
+      list("batch.parallel_cells" or(form~>batchParallelCells~>value "2"))
+    )
+    when(groups
+      entries=append1(entries list("drc.rule_select_groups" groups)))
+    when(checks
+      entries=append1(entries list("drc.rule_select_checks" checks)))
+    when(tasks
+      entries=append1(entries list("batch.tasks" tasks)))
+    entries
+  )
+)
+
+procedure(drcProfileApply(form data)
+  prog((root rootType runsetFile scope)
+    root=SICO_profilePathValue(data "run.root" form~>outDirPath~>value)
+    rootType=SICO_profileDataValue(data "run.root_type" "Customize Directory")
+    unless(member(rootType
+                  '("Project Directory" "Current Directory"
+                    "Customize Directory"))
+      return(nil))
+    form~>outDirType~>value=rootType
+    drcOutDirCB(form)
+    when(form~>outDirType~>value=="Customize Directory"
+      form~>outDirPath~>value=or(root ""))
+
+    form~>layLib~>value=SICO_profileDataValue(
+      data "input.layout.lib" form~>layLib~>value)
+    form~>layCell~>value=SICO_profileDataValue(
+      data "input.layout.cell" form~>layCell~>value)
+    form~>layView~>value=SICO_profileDataValue(
+      data "input.layout.view" form~>layView~>value)
+
+    drcRuleSelectCancelDiscovery(form)
+    form~>drcRunsetName~>value=SICO_profileDataValue(
+      data "drc.runset_name" form~>drcRunsetName~>value)
+    drcRunsetCB(form)
+    runsetFile=SICO_profilePathValue(
+      data "drc.runset_file" form~>drcRunsetFile~>value)
+    form~>drcRunsetFile~>value=or(runsetFile "")
+    drcRuleSelectInvalidate(form)
+
+    form~>drcTool~>value=SICO_profileDataValue(
+      data "drc.tool" form~>drcTool~>value)
+    form~>drcRunMode~>value=SICO_profileDataValue(
+      data "drc.run_mode" "Hier")
+    form~>runCpu~>value=SICO_profileDataValue(data "runtime.cpus" "1")
+    drcRunModeCB(form)
+
+    form~>drcRuleSelectEnable~>value=SICO_profileDataValue(
+      data "drc.rule_select_enable" nil)
+    form~>drcRuleSelectGroups=SICO_profileStringList(
+      SICO_profileDataValue(data "drc.rule_select_groups" nil))
+    form~>drcRuleSelectChecks=SICO_profileStringList(
+      SICO_profileDataValue(data "drc.rule_select_checks" nil))
+    form~>drcRuleSelectRuleFile=SICO_absolutePath(
+      form~>drcRunsetFile~>value)
+    drcRuleSelectEnableCB(form)
+
+    form~>customSvrfEnable~>value=SICO_profileDataValue(
+      data "drc.custom_svrf_enable" nil)
+    form~>customSvrfCommand~>value=SICO_profileDataValue(
+      data "drc.custom_svrf_command" "")
+    cadCustomSvrfCB(form)
+
+    form~>batchRunScope~>value="Single Cell"
+    cadBatchScopeCB(form)
+    form~>cadBatchTasks=SICO_profileDataValue(data "batch.tasks" nil)
+    form~>cadBatchEditIndex=nil
+    form~>batchParallelCells~>value=SICO_profileDataValue(
+      data "batch.parallel_cells" "2")
+    scope=SICO_profileDataValue(data "batch.scope" "Single Cell")
+    form~>batchRunScope~>value=scope
+    cadBatchScopeCB(form)
+    cadBatchSetEditorValues(form cadBatchDesignValues(form))
+    cadBatchRefreshReport(form)
+
+    form~>runType~>value=SICO_profileDataValue(
+      data "run.run_type" "Current Host")
+    SICO_lsfSetPreferredValues(
+      form SICO_profileDataValue(data "run.queue_name" "")
+      SICO_profileDataValue(data "run.server_name" ""))
+    SICO_lsfChoicesCB(form)
+    return(t)
+  )
+)
+
+procedure(drcProfileRevision()
+  "20260820.rce.live.log.v4"
+)
+
+SICO_profileRegisterAdapter("DRC" 'drcProfileCollect 'drcProfileApply)

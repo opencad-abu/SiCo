@@ -1,0 +1,413 @@
+{
+  "schema_version": 1,
+  "compatibility": [
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/common/skill++/PROFILEGUI.ils",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/common/skill++/PROFILEGUI.ils",
+      "owner": "tools/common/skill++/PROFILEGUI.ils",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_profileGuiRevision": "SICO_profileGuiRevision"
+      }
+    },
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/common/skill/SICO_envOptions.il",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/common/skill/SICO_envOptions.il",
+      "owner": "tools/common/skill/SICO_envOptions.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_envOptionsRevision": "SICO_envOptionsRevision",
+        "CAD_envPairNames": "SICO_envPairNames",
+        "CAD_envPairValue": "SICO_envPairValue",
+        "CAD_parseEnvPairs": "SICO_parseEnvPairs"
+      }
+    },
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/common/skill/SICO_environment.il",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/common/skill/SICO_environment.il",
+      "owner": "tools/common/skill/SICO_environment.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_envValue": "SICO_envValue"
+      }
+    },
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/common/skill/SICO_guiProtocol.il",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/common/skill/SICO_guiProtocol.il",
+      "owner": "tools/common/skill/SICO_guiProtocol.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_guiProtocolRead": "SICO_guiProtocolRead",
+        "CAD_guiProtocolRevision": "SICO_guiProtocolRevision",
+        "CAD_guiProtocolValidField": "SICO_guiProtocolValidField",
+        "CAD_guiProtocolWrite": "SICO_guiProtocolWrite",
+        "CAD_guiPythonEnvironment": "SICO_guiPythonEnvironment",
+        "CAD_guiPythonLaunchCommand": "SICO_guiPythonLaunchCommand"
+      }
+    },
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/common/skill/SICO_lsf.il",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/common/skill/SICO_lsf.il",
+      "owner": "tools/common/skill/SICO_lsf.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_lsfAutoHost": "SICO_lsfAutoHost",
+        "CAD_lsfFormValidP": "SICO_lsfFormValidP",
+        "CAD_lsfLocalHost": "SICO_lsfLocalHost",
+        "CAD_lsfRevision": "SICO_lsfRevision",
+        "CAD_lsfUniqueHosts": "SICO_lsfUniqueHosts"
+      }
+    },
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/common/skill/SICO_lsfChoices.il",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/common/skill/SICO_lsfChoices.il",
+      "owner": "tools/common/skill/SICO_lsfChoices.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_lsfChoicesCB": "SICO_lsfChoicesCB",
+        "CAD_lsfInitializeRuntime": "SICO_lsfInitializeRuntime",
+        "CAD_lsfModulesRevision": "SICO_lsfModulesRevision",
+        "CAD_lsfQueueChoicesCB": "SICO_lsfQueueChoicesCB"
+      }
+    },
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/common/skill/SICO_lsfCommands.il",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/common/skill/SICO_lsfCommands.il",
+      "owner": "tools/common/skill/SICO_lsfCommands.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_lsfCancelCommand": "SICO_lsfCancelCommand",
+        "CAD_lsfDiscoveryCommand": "SICO_lsfDiscoveryCommand",
+        "CAD_lsfDiscoveryPath": "SICO_lsfDiscoveryPath",
+        "CAD_lsfDiscoveryScript": "SICO_lsfDiscoveryScript",
+        "CAD_lsfMaxCpu": "SICO_lsfMaxCpu",
+        "CAD_lsfNormalizeCpu": "SICO_lsfNormalizeCpu",
+        "CAD_lsfPythonExe": "SICO_lsfPythonExe",
+        "CAD_lsfSelectedHost": "SICO_lsfSelectedHost",
+        "CAD_lsfWrapCommand": "SICO_lsfWrapCommand"
+      }
+    },
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/common/skill/SICO_lsfHosts.il",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/common/skill/SICO_lsfHosts.il",
+      "owner": "tools/common/skill/SICO_lsfHosts.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_lsfDiscoveryDataHandler": "SICO_lsfDiscoveryDataHandler",
+        "CAD_lsfDiscoveryErrHandler": "SICO_lsfDiscoveryErrHandler",
+        "CAD_lsfDiscoveryPostFunc": "SICO_lsfDiscoveryPostFunc",
+        "CAD_lsfStartHostDiscovery": "SICO_lsfStartHostDiscovery"
+      }
+    },
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/common/skill/SICO_lsfMonitor.il",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/common/skill/SICO_lsfMonitor.il",
+      "owner": "tools/common/skill/SICO_lsfMonitor.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_lsfMonitorButtonIcon": "SICO_lsfMonitorButtonIcon",
+        "CAD_lsfMonitorCancelCid": "SICO_lsfMonitorCancelCid",
+        "CAD_lsfMonitorCancelForm": "SICO_lsfMonitorCancelForm",
+        "CAD_lsfMonitorDataHandler": "SICO_lsfMonitorDataHandler",
+        "CAD_lsfMonitorErrHandler": "SICO_lsfMonitorErrHandler",
+        "CAD_lsfMonitorInitializeRuntime": "SICO_lsfMonitorInitializeRuntime",
+        "CAD_lsfMonitorLaunchCommand": "SICO_lsfMonitorLaunchCommand",
+        "CAD_lsfMonitorPostFunc": "SICO_lsfMonitorPostFunc",
+        "CAD_lsfMonitorReadSelection": "SICO_lsfMonitorReadSelection",
+        "CAD_lsfMonitorRegisterExitCleanup": "SICO_lsfMonitorRegisterExitCleanup",
+        "CAD_lsfMonitorRevision": "SICO_lsfMonitorRevision",
+        "CAD_lsfMonitorStart": "SICO_lsfMonitorStart",
+        "CAD_lsfMonitorStartSelector": "SICO_lsfMonitorStartSelector",
+        "CAD_lsfMonitorStopAll": "SICO_lsfMonitorStopAll"
+      }
+    },
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/common/skill/SICO_lsfProcess.il",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/common/skill/SICO_lsfProcess.il",
+      "owner": "tools/common/skill/SICO_lsfProcess.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_lsfBeginProcess": "SICO_lsfBeginProcess",
+        "CAD_lsfCancelFormDiscovery": "SICO_lsfCancelFormDiscovery",
+        "CAD_lsfCancelState": "SICO_lsfCancelState",
+        "CAD_lsfDeleteFile": "SICO_lsfDeleteFile",
+        "CAD_lsfRegisterExitCleanup": "SICO_lsfRegisterExitCleanup",
+        "CAD_lsfSignalSucceededP": "SICO_lsfSignalSucceededP",
+        "CAD_lsfStopAll": "SICO_lsfStopAll"
+      }
+    },
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/common/skill/SICO_lsfProtocol.il",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/common/skill/SICO_lsfProtocol.il",
+      "owner": "tools/common/skill/SICO_lsfProtocol.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_lsfProtocolRecords": "SICO_lsfProtocolRecords",
+        "CAD_lsfReadHosts": "SICO_lsfReadHosts",
+        "CAD_lsfReadQueues": "SICO_lsfReadQueues"
+      }
+    },
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/common/skill/SICO_lsfQueues.il",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/common/skill/SICO_lsfQueues.il",
+      "owner": "tools/common/skill/SICO_lsfQueues.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_lsfQueueDiscoveryDataHandler": "SICO_lsfQueueDiscoveryDataHandler",
+        "CAD_lsfQueueDiscoveryErrHandler": "SICO_lsfQueueDiscoveryErrHandler",
+        "CAD_lsfQueueDiscoveryPostFunc": "SICO_lsfQueueDiscoveryPostFunc",
+        "CAD_lsfStartQueueDiscovery": "SICO_lsfStartQueueDiscovery"
+      }
+    },
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/common/skill/SICO_lsfSelection.il",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/common/skill/SICO_lsfSelection.il",
+      "owner": "tools/common/skill/SICO_lsfSelection.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_lsfApplyHosts": "SICO_lsfApplyHosts",
+        "CAD_lsfApplyQueues": "SICO_lsfApplyQueues",
+        "CAD_lsfClearPreferredValues": "SICO_lsfClearPreferredValues",
+        "CAD_lsfClearVerifiedSelection": "SICO_lsfClearVerifiedSelection",
+        "CAD_lsfPreferredHost": "SICO_lsfPreferredHost",
+        "CAD_lsfPreferredQueue": "SICO_lsfPreferredQueue",
+        "CAD_lsfSelectionValidP": "SICO_lsfSelectionValidP",
+        "CAD_lsfSetPreferredValues": "SICO_lsfSetPreferredValues",
+        "CAD_lsfUpdateQueueField": "SICO_lsfUpdateQueueField",
+        "CAD_lsfValidateSelection": "SICO_lsfValidateSelection"
+      }
+    },
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/common/skill/SICO_profile.il",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/common/skill/SICO_profile.il",
+      "owner": "tools/common/skill/SICO_profile.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_profileAdapter": "SICO_profileAdapter",
+        "CAD_profileApply": "SICO_profileApply",
+        "CAD_profileApplyFields": "SICO_profileApplyFields",
+        "CAD_profileArrayPathP": "SICO_profileArrayPathP",
+        "CAD_profileCollect": "SICO_profileCollect",
+        "CAD_profileCollectFields": "SICO_profileCollectFields",
+        "CAD_profileDataValue": "SICO_profileDataValue",
+        "CAD_profileDefaultPath": "SICO_profileDefaultPath",
+        "CAD_profileEntryLessP": "SICO_profileEntryLessP",
+        "CAD_profileEntrySection": "SICO_profileEntrySection",
+        "CAD_profileFlowKey": "SICO_profileFlowKey",
+        "CAD_profileFormValue": "SICO_profileFormValue",
+        "CAD_profileLaunchCommand": "SICO_profileLaunchCommand",
+        "CAD_profileLoadCB": "SICO_profileLoadCB",
+        "CAD_profileMessage": "SICO_profileMessage",
+        "CAD_profilePath": "SICO_profilePath",
+        "CAD_profilePathStates": "SICO_profilePathStates",
+        "CAD_profilePathValue": "SICO_profilePathValue",
+        "CAD_profilePersistentEntries": "SICO_profilePersistentEntries",
+        "CAD_profilePersistentEntryP": "SICO_profilePersistentEntryP",
+        "CAD_profilePreserveRawPaths": "SICO_profilePreserveRawPaths",
+        "CAD_profilePythonEntry": "SICO_profilePythonEntry",
+        "CAD_profilePythonExe": "SICO_profilePythonExe",
+        "CAD_profileRegisterAdapter": "SICO_profileRegisterAdapter",
+        "CAD_profileResolvedPathP": "SICO_profileResolvedPathP",
+        "CAD_profileRevision": "SICO_profileRevision",
+        "CAD_profileSamePathP": "SICO_profileSamePathP",
+        "CAD_profileSaveAsCB": "SICO_profileSaveAsCB",
+        "CAD_profileSaveCB": "SICO_profileSaveCB",
+        "CAD_profileSaveTo": "SICO_profileSaveTo",
+        "CAD_profileSetFormValue": "SICO_profileSetFormValue",
+        "CAD_profileSetLoadData": "SICO_profileSetLoadData",
+        "CAD_profileStringList": "SICO_profileStringList",
+        "CAD_profileUniqueEntries": "SICO_profileUniqueEntries",
+        "CAD_profileWrite": "SICO_profileWrite",
+        "CAD_profileWriteEntries": "SICO_profileWriteEntries",
+        "CAD_profileWriteEntryValue": "SICO_profileWriteEntryValue",
+        "CAD_profileWriteKey": "SICO_profileWriteKey",
+        "CAD_profileWriteValue": "SICO_profileWriteValue"
+      }
+    },
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/common/skill/SICO_toml.il",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/common/skill/SICO_toml.il",
+      "owner": "tools/common/skill/SICO_toml.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_absolutePath": "SICO_absolutePath",
+        "CAD_backendCommand": "SICO_backendCommand",
+        "CAD_fileStem": "SICO_fileStem",
+        "CAD_initializeWorkingDir": "SICO_initializeWorkingDir",
+        "CAD_logo": "SICO_logo",
+        "CAD_nativeEntry": "SICO_nativeEntry",
+        "CAD_pythonLibraryPath": "SICO_pythonLibraryPath",
+        "CAD_shellQuote": "SICO_shellQuote",
+        "CAD_tempDir": "SICO_tempDir",
+        "CAD_tempEnvironment": "SICO_tempEnvironment",
+        "CAD_tempPath": "SICO_tempPath",
+        "CAD_tomlBool": "SICO_tomlBool",
+        "CAD_tomlRevision": "SICO_tomlRevision",
+        "CAD_tomlString": "SICO_tomlString",
+        "CAD_tomlWriteBool": "SICO_tomlWriteBool",
+        "CAD_tomlWriteSection": "SICO_tomlWriteSection",
+        "CAD_tomlWriteString": "SICO_tomlWriteString",
+        "CAD_tomlWriteStringList": "SICO_tomlWriteStringList",
+        "CAD_toolsRoot": "SICO_toolsRoot"
+      }
+    },
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/utility/skill/DM_textCellView.il",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/utility/skill/DM_textCellView.il",
+      "owner": "tools/utility/skill/DM_textCellView.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_importTextCellView": "SICO_importTextCellView"
+      }
+    },
+    {
+      "legacy": "CAD_* SKILL forwarding to tools/utility/skill/UI_windowIcon.il",
+      "source": "tools/common/skill/SICO_legacyFunctions.il",
+      "replacement": "tools/utility/skill/UI_windowIcon.il",
+      "owner": "tools/utility/skill/UI_windowIcon.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "CAD_setWindowIcon": "SICO_setWindowIcon",
+        "CAD_windowIcon": "SICO_windowIcon",
+        "CAD_windowIconBrand": "SICO_windowIconBrand",
+        "CAD_windowIconPath": "SICO_windowIconPath",
+        "CAD_windowIconRevision": "SICO_windowIconRevision"
+      }
+    }
+  ]
+}

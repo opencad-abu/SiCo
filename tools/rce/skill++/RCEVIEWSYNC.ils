@@ -1,0 +1,171 @@
+; Synchronize native view fields and validate CDL export directories. SKILL++ lexical scope.
+
+unless(boundp('rceNativeViewSyncActive)
+  rceNativeViewSyncActive=nil
+)
+procedure(rceViewTargetCB(form)
+  let((target normalized)
+    unless(rceNativeViewSyncActive
+      target=rceParseNativeViewTarget(form~>viewTarget~>value)
+      when(target
+        normalized=rceNativeViewTargetString(target)
+        putpropq(form normalized rceNativeViewTargetExplicitValue)
+        form~>viewTarget~>value=normalized
+        form~>viewName~>value=caddr(target))
+      unless(target
+        putpropq(form nil rceNativeViewTargetExplicitValue))
+    )
+    target
+  )
+)
+
+procedure(rceNeedsCdlRunDirectory(form)
+  and(member(form~>inpType~>value '("CDL+GDS" "CDL+LAY" "SVDB" "CCI"))
+      rceNativeViewOutputP(form~>outType~>value)
+      form~>extTool~>value=="QRC")
+)
+
+procedure(rceValidateCdlRunDirectory(form)
+  let((directory)
+    if(rceNeedsCdlRunDirectory(form) then
+      directory=form~>cdlRunDirectory~>value
+      if(and(directory strlen(directory)>0 isDir(directory)
+             isFile(strcat(directory "/si.env"))) then
+        t
+      else
+        GUI_messageApp('e "RCE"
+          "Please set a valid CDL Run Directory under More Input Options. Select the CDL export directory containing si.env so that the QRC OA view can be generated correctly.")
+        nil)
+    else t)
+  )
+)
+
+procedure(rceSyncNativeView(form)
+  let((visible items oldKind oldName selectedKind defaultName target tool
+        explicitValue explicitTarget previousInput inputChanged)
+    when(form~>cdlRunDirectory
+      form~>cdlRunDirectory~>invisible=!rceNeedsCdlRunDirectory(form))
+    if(rceNativeViewSyncActive then
+      rceNativeViewOutputP(form~>outType~>value)
+    else
+      rceNativeViewSyncActive=t
+      unwindProtect(
+        progn(
+          when(form~>nativeViewLay
+            visible=rceNativeViewOutputP(form~>outType~>value)
+            tool=form~>extTool~>value
+            form~>nativeViewLay~>invisible=!visible
+            items=rceNativeViewKindItems(form)
+            oldKind=form~>viewKind~>value
+            oldName=form~>viewName~>value
+            if(tool=="QRC" then
+              selectedKind=if(member(oldKind items) then oldKind else car(items))
+              unless(oldKind==selectedKind
+                form~>viewKind~>value=selectedKind
+              )
+              form~>viewKind~>defValue=selectedKind
+              form~>viewKind~>invisible=!visible
+              form~>viewKindFixed~>invisible=t
+              form~>viewKind~>enabled=and(visible length(items)>1)
+            else
+              selectedKind=car(items)
+              form~>viewKindFixed~>value=selectedKind
+              form~>viewKind~>invisible=t
+              form~>viewKindFixed~>invisible=!visible
+              form~>viewKind~>enabled=nil
+            )
+            defaultName=rceNativeViewDefaultName(selectedKind)
+            when(or(!oldName strlen(oldName)==0
+                      member(oldName '("smart_view" "oa_extracted" "av_extracted"
+                                       "calibre" "starrc" "parasitic")))
+              form~>viewName~>value=defaultName
+            )
+            form~>viewName~>enabled=visible
+
+            form~>viewDeviceMap~>invisible=or(!visible tool=="QRC")
+            form~>viewLayerMap~>invisible=or(!visible tool!="StarRC")
+            when(tool=="CalXRC"
+              form~>viewDeviceMap~>prompt="Calibre Cellmap File:"
+            )
+            when(tool=="StarRC"
+              form~>viewDeviceMap~>prompt="Device Mapping File:"
+            )
+            when(or(!form~>viewDeviceMap~>value
+                      strlen(form~>viewDeviceMap~>value)==0)
+              form~>viewDeviceMap~>value=rceNativeViewDeviceMapDefault(form)
+            )
+            when(or(!form~>viewLayerMap~>value
+                      strlen(form~>viewLayerMap~>value)==0)
+              form~>viewLayerMap~>value=rceNativeViewLayerMapDefault(form)
+            )
+            target=rceNativeViewImplicitTarget(form)
+            previousInput=getq(form rceNativeViewInputType)
+            inputChanged=not(previousInput==form~>inpType~>value)
+            if(form~>inpType~>value=="OA" then
+              progn(
+                form~>viewTarget~>editable=nil
+                form~>viewTarget~>value=rceNativeViewTargetString(target)
+                form~>viewName~>editable=visible
+                form~>viewName~>enabled=visible)
+            else
+              progn(
+                form~>viewTarget~>editable=visible
+                explicitValue=getq(form rceNativeViewTargetExplicitValue)
+                unless(and(stringp(explicitValue) strlen(explicitValue)>0)
+                  if(inputChanged then
+                    explicitValue=rceNativeViewTargetString(target)
+                  else
+                    explicitValue=when(rceParseNativeViewTarget(
+                                      form~>viewTarget~>value)
+                                form~>viewTarget~>value)))
+                explicitTarget=rceParseNativeViewTarget(explicitValue)
+                when(explicitTarget
+                  form~>viewName~>value=caddr(explicitTarget))
+                form~>viewTarget~>value=or(explicitValue "")
+                ; A non-OA flow has no implicit OA cellview to derive the
+                ; destination from, so both parts of the explicit target are
+                ; user-editable.  Keep View Name and the third target token
+                ; synchronized through their respective field callbacks.
+                form~>viewName~>editable=visible
+                form~>viewName~>enabled=visible)
+            )
+            putpropq(form form~>inpType~>value rceNativeViewInputType)
+          )
+          visible
+        )
+        rceNativeViewSyncActive=nil
+      )
+    )
+  )
+)
+
+procedure(rceViewKindCB(form)
+  let((oldDefaults)
+    unless(rceNativeViewSyncActive
+      oldDefaults='("smart_view" "oa_extracted" "av_extracted"
+                    "calibre" "starrc" "parasitic")
+      when(member(form~>viewName~>value oldDefaults)
+        form~>viewName~>value=rceNativeViewDefaultName(form~>viewKind~>value)
+      )
+      rceSyncNativeView(form)
+      rceSyncReduction(form)
+    )
+  )
+)
+
+procedure(rceViewNameCB(form)
+  let((target normalized)
+    unless(rceNativeViewSyncActive
+      when(and(rceNativeViewExplicitTargetP(form)
+               form~>inpType~>value!="OA")
+        target=rceParseNativeViewTarget(form~>viewTarget~>value)
+        when(target
+          normalized=rceNativeViewTargetString(
+            list(car(target) cadr(target) form~>viewName~>value))
+          putpropq(form normalized rceNativeViewTargetExplicitValue)
+          form~>viewTarget~>value=normalized))
+      rceSyncNativeView(form)
+      rceSyncReduction(form)
+    )
+  )
+)

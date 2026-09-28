@@ -1,0 +1,222 @@
+unless(and(isCallable('SICO_tomlRevision)
+             SICO_tomlRevision()=="20260922.sico.temp.v6"
+             isCallable('SICO_tomlString) isCallable('SICO_shellQuote)
+             isCallable('SICO_absolutePath) isCallable('SICO_tempPath))
+  cond(
+    (and(boundp('drcCommonRoot) drcCommonRoot)
+      load(strcat(drcCommonRoot "/skill/SICO_toml.il")))
+    (isCallable('cadLoadRelative)
+      cadLoadRelative("common/skill/SICO_toml.il"))
+    (t
+      warn("DRCCB requires DRC.ils or a configured SICO_HOME.\n"))
+  )
+)
+
+procedure(drcFrontendRevision()
+  "20260924.flow.environment.v3"
+)
+
+; HI passes the owning form to symbol callbacks.  Keep close and run actions
+; separate so a callback never deletes a mapped form or touches a stale global.
+procedure(drcFormValidP(form)
+  SICO_lsfFormValidP(form)
+)
+
+procedure(drcFormDoneCB(form)
+  when(drcFormValidP(form)
+    ; Rule Select cleanup also cancels its child process; shared LSF cleanup
+    ; handles queue/host discovery.  Neither operation closes or deletes form.
+    drcRuleSelectFormDone(form)
+    SICO_lsfCancelFormDiscovery(form))
+  t
+)
+
+procedure(drcRunCB(form)
+  when(drcFormValidP(form)
+    cadBatchDispatchStart(form 'drcStart 'drcBatchStart))
+  t
+)
+
+procedure(drcRunCloseCB(form)
+  when(drcFormValidP(form)
+    when(cadBatchDispatchStart(form 'drcStart 'drcBatchStart)
+      hiFormClose(form)))
+  t
+)
+
+procedure(drcAbsolutePathRevision()
+  "20260812.toml.absolute.paths.v1"
+)
+
+procedure(drcCustomSvrfRevision()
+  "20260813.custom.svrf.common.v1"
+)
+
+procedure(drcRunModeCB(form)
+  let((hier)
+    hier=form~>drcRunMode~>value=="Hier"
+    unless(hier
+      form~>runCpu~>value="1")
+    form~>runCpu~>enabled=hier
+  )
+)
+
+procedure(drcOutDirCB(form)
+  let((dir)
+    case(form~>outDirType~>value
+      ("Current Directory" || "Project Directory"
+        form~>outDirPath~>editable=nil
+        form~>outDirPath~>enabled=nil)
+      ("Customize Directory"
+        form~>outDirPath~>editable=t
+        form~>outDirPath~>enabled=t)
+    )
+    case(form~>outDirType~>value
+      ("Current Directory"
+        form~>outDirPath~>value=strcat(pwd()))
+      ("Project Directory"
+        if(dir=SICO_envValue("DRC_DB_DIR") then
+          if(or(isDir(dir) cadOutDirUsableP(dir)) then
+            form~>outDirPath~>value=dir
+          else
+            GUI_messageApp('w "DRC" drcMsgStruc->projShellNotSet)
+            form~>outDirPath~>value=strcat(pwd()))
+        else
+          GUI_messageApp('w "DRC" drcMsgStruc->projShellNotSet)
+          form~>outDirType~>value="Current Directory"
+          form~>outDirPath~>value=strcat(pwd())))
+      ("Customize Directory"
+        form~>outDirPath~>value="Please select a directory...")
+    )
+  )
+)
+
+procedure(drcLsfChoicesCB(form)
+  SICO_lsfChoicesCB(form)
+)
+
+procedure(drcRunsetCB(form)
+  let(()
+    form~>drcRunsetFile~>value=SICO_envPairValue("DRC_FILE" form~>drcRunsetName~>value)
+    drcRuleSelectInvalidate(form)
+  )
+)
+
+procedure(drcRunDirFromForm(form)
+  strcat(form~>outDirPath~>value "/" form~>layLib~>value "." form~>layCell~>value)
+)
+
+procedure(drcValidateForm(form)
+  let((runset valid)
+    valid=SICO_lsfValidateSelection(form "DRC")
+    if(!valid then
+      nil
+    else if(form~>layLib~>value=="" || ! form~>layLib~>value ||
+        form~>layCell~>value=="" || ! form~>layCell~>value ||
+        form~>layView~>value=="" || ! form~>layView~>value then
+      GUI_messageApp('e "DRC" drcMsgStruc->inputOaLay)
+      valid=nil
+    else
+      when(or(!form~>outDirPath~>value
+              form~>outDirPath~>value==""
+              form~>outDirPath~>value=="Please select a directory...")
+        GUI_messageApp('e "DRC" drcMsgStruc->dirAccess)
+        valid=nil)
+      runset=form~>drcRunsetFile~>value
+      when(runset && runset!=""
+        runset=SICO_absolutePath(runset)
+        form~>drcRunsetFile~>value=runset)
+      when(runset=="" || ! runset || ! isFile(runset)
+        GUI_messageApp('e "DRC" drcMsgStruc->runsetFile)
+        valid=nil)
+      when(and(valid form~>drcRuleSelectEnable~>value)
+        drcRuleSelectInvalidate(form)
+        unless(or(form~>drcRuleSelectGroups form~>drcRuleSelectChecks)
+          GUI_messageApp('e "DRC"
+            "Rule Select is enabled, but no rule group or check is selected.")
+          valid=nil))))
+    valid
+  )
+)
+
+procedure(drcWriteToml(form)
+  prog((tempFile runDir cmdFile cdslib outFile laylib laycell layview
+        runsetFile layerMap)
+    unless(drcValidateForm(form)
+      return(nil))
+    cdslib=SICO_absolutePath(
+             or(getShellEnvVar("CDS_LIB") strcat(pwd() "/cds.lib")))
+    tempFile=SICO_tempPath("drcXXXX")
+    unless(tempFile
+      GUI_messageApp('e "DRC" drcMsgStruc->noConfig)
+      return(nil))
+    tempFile=makeTempFileName(tempFile)
+    runDir=drcRunDirFromForm(form)
+    runDir=simplifyFilename(runDir t)
+    cmdFile=strcat(runDir "/drc.toml")
+    laylib=form~>layLib~>value
+    laycell=form~>layCell~>value
+    layview=form~>layView~>value
+    runsetFile=SICO_absolutePath(form~>drcRunsetFile~>value)
+    layerMap=SICO_absolutePath(getShellEnvVar("TECH_LAYER_MAP"))
+
+    ; The run root may be a project directory that does not exist yet.
+    ; mkdir -p creates the whole chain, so its exit status is the authority.
+    when(! isDir(runDir)
+      info(strcat("<INFO> DRC::" drcMsgStruc->dirExist "\n"))
+      unless(system(strcat("mkdir -p " SICO_shellQuote(runDir)))==0
+        GUI_messageApp('e "DRC" drcMsgStruc->dirAccess)
+        return(nil)))
+
+    outFile=outfile(tempFile)
+    unless(outFile
+      GUI_messageApp('e "DRC" drcMsgStruc->noConfig)
+      return(nil))
+    SICO_tomlWriteSection(outFile "run")
+    SICO_tomlWriteString(outFile "run_dir" runDir)
+    SICO_tomlWriteString(outFile "cds_lib" cdslib)
+    SICO_tomlWriteString(outFile "run_type" form~>runType~>value)
+    SICO_tomlWriteString(outFile "queue_name" form~>queueName~>value)
+    SICO_tomlWriteString(
+      outFile "server_name" SICO_lsfSelectedHost(form~>srvName~>value))
+
+    SICO_tomlWriteSection(outFile "input")
+    SICO_tomlWriteString(outFile "type" "OA")
+
+    SICO_tomlWriteSection(outFile "input.schematic")
+    SICO_tomlWriteString(outFile "lib" "")
+    SICO_tomlWriteString(outFile "cell" "")
+    SICO_tomlWriteString(outFile "view" "")
+
+    SICO_tomlWriteSection(outFile "input.layout")
+    SICO_tomlWriteString(outFile "lib" laylib)
+    SICO_tomlWriteString(outFile "cell" laycell)
+    SICO_tomlWriteString(outFile "view" layview)
+    SICO_tomlWriteString(outFile "layer_map" layerMap)
+
+    SICO_tomlWriteSection(outFile "drc")
+    SICO_tomlWriteString(outFile "tool" form~>drcTool~>value)
+    SICO_tomlWriteString(outFile "runset_name" form~>drcRunsetName~>value)
+    SICO_tomlWriteString(outFile "runset_file" runsetFile)
+    SICO_tomlWriteString(outFile "run_mode" form~>drcRunMode~>value)
+    SICO_tomlWriteBool(outFile "rule_select_enable"
+                      form~>drcRuleSelectEnable~>value)
+    SICO_tomlWriteStringList(outFile "rule_select_groups"
+                            or(form~>drcRuleSelectGroups nil))
+    SICO_tomlWriteStringList(outFile "rule_select_checks"
+                            or(form~>drcRuleSelectChecks nil))
+    SICO_tomlWriteBool(outFile "custom_svrf_enable" form~>customSvrfEnable~>value)
+    SICO_tomlWriteString(outFile "custom_svrf_command"
+                        or(form~>customSvrfCommand~>value ""))
+
+    SICO_tomlWriteSection(outFile "runtime")
+    SICO_tomlWriteString(outFile "cpus" form~>runCpu~>value)
+
+    close(outFile)
+    unless(system(strcat("mv " SICO_shellQuote(tempFile) " "
+                         SICO_shellQuote(cmdFile)))==0
+      GUI_messageApp('e "DRC" drcMsgStruc->noConfig)
+      return(nil))
+    return(cmdFile)
+  )
+)

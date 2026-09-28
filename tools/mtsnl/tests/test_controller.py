@@ -1,0 +1,27 @@
+"""Legacy collector; remove when test scripts use domain case modules."""
+
+from controller_catalog_cases import (
+    test_controller_discards_stale_catalog_result,
+    test_controller_forwards_source_cache_controls,
+    test_controller_forwards_current_catalog_worker_output,
+    test_controller_cancel_marks_busy_operation_canceled,
+    test_controller_keeps_previous_catalog_while_refresh_is_busy,
+    test_controller_keeps_generation_result_while_new_catalog_refresh_runs,
+)
+
+from controller_generation_cases import (
+    test_controller_forwards_session_target_cds_lib_as_source_forbidden_path,
+    test_controller_generate_many_uses_batch_worker,
+    test_controller_forwards_worker_logs_to_on_log,
+    test_controller_read_source_defaults_returns_typed_result,
+)
+
+from controller_publication_cases import (
+    test_publish_many_validates_all_artifacts_before_any_publication,
+    test_publish_many_stops_after_first_non_success_result,
+    test_cancelled_publication_keeps_late_manual_cleanup_evidence,
+    test_cancelled_batch_returns_completed_publication_prefix,
+    test_late_cancelled_publication_cannot_overwrite_new_operation,
+)
+
+__all__ = ['test_controller_discards_stale_catalog_result', 'test_controller_forwards_source_cache_controls', 'test_controller_forwards_current_catalog_worker_output', 'test_controller_cancel_marks_busy_operation_canceled', 'test_controller_keeps_previous_catalog_while_refresh_is_busy', 'test_controller_keeps_generation_result_while_new_catalog_refresh_runs', 'test_controller_forwards_session_target_cds_lib_as_source_forbidden_path', 'test_controller_generate_many_uses_batch_worker', 'test_controller_forwards_worker_logs_to_on_log', 'test_controller_read_source_defaults_returns_typed_result', 'test_publish_many_validates_all_artifacts_before_any_publication', 'test_publish_many_stops_after_first_non_success_result', 'test_cancelled_publication_keeps_late_manual_cleanup_evidence', 'test_cancelled_batch_returns_completed_publication_prefix', 'test_late_cancelled_publication_cannot_overwrite_new_operation']

@@ -1,0 +1,202 @@
+; Apply extractor capabilities to netlist customization controls. SKILL++ lexical scope.
+
+procedure(rceSyncNetlistCustomize(form)
+  let((tool outputType nameSource viewOutput qrcView pinSupported hierSupported
+        parasiticSupported coordinatesSupported capacitanceOnly noParasitics
+        values coordinates resLayer resDimensions)
+    tool=form~>extTool~>value
+    outputType=lowerCase(or(form~>outType~>value ""))
+    nameSource=lowerCase(or(form~>nameSource~>value "schematic"))
+    viewOutput=rceNativeViewOutputP(outputType)
+    qrcView=and(viewOutput tool=="QRC")
+    noParasitics=and(tool=="CalXRC" form~>rcType~>value=="NONE")
+
+    form~>nameSource~>enabled=!qrcView
+    when(qrcView
+      form~>nameSource~>value="Schematic"
+      nameSource="schematic"
+    )
+
+    pinSupported=rcePinOrderSupportedP(form)
+    hierSupported=if(not(viewOutput) then t else nil)
+    parasiticSupported=if(and(not(noParasitics)
+                                not(viewOutput)
+                                or(tool!="StarRC"
+                                    member(outputType '("dspf" "spf" "spef"))))
+                         then t else nil)
+    capacitanceOnly=if(and(tool=="CalXRC"
+                             member(form~>rcType~>value '("Cg+Cc" "Cg")))
+                      then t else nil)
+    coordinatesSupported=if(and(parasiticSupported
+                                  not(and(tool=="StarRC" outputType=="spef"))
+                                  not(capacitanceOnly))
+                           then t else nil)
+
+    form~>nlLay~>invisible=viewOutput
+
+    rceSyncPinOrder(form pinSupported)
+
+    form~>bracketBtn~>enabled=not(viewOutput)
+    when(viewOutput
+      form~>bracketBtn~>value=nil
+    )
+    form~>bracketChoices~>enabled=and(not(viewOutput) form~>bracketBtn~>value)
+
+    form~>hierDeliBtn~>enabled=hierSupported
+    unless(hierSupported
+      form~>hierDeliBtn~>value=nil
+    )
+    form~>hierDeliChoices~>enabled=and(hierSupported form~>hierDeliBtn~>value)
+
+    when(noParasitics
+      form~>netSelBtn~>value=nil
+      form~>relFilterCapBtn~>value=nil
+      form~>absFilterCapBtn~>value=nil
+      form~>absFilterResBtn~>value=nil
+      form~>nlRmInst~>value="FALSE"
+    )
+    form~>netSelBtn~>enabled=!noParasitics
+    form~>relFilterCapBtn~>enabled=!noParasitics
+    form~>absFilterCapBtn~>enabled=!noParasitics
+    form~>absFilterResBtn~>enabled=!noParasitics
+    form~>nlRmInst~>enabled=and(outputType=="dspf" !noParasitics)
+    rceNetSelBtnCB(form)
+    rceRelFilterCapBtnCB(form)
+    rceAbsFilterCapBtnCB(form)
+    rceAbsFilterResBtnCB(form)
+
+    values=or(form~>nlParInfo~>value '(nil nil nil))
+    coordinates=and(coordinatesSupported nth(0 values))
+    resLayer=and(parasiticSupported nth(1 values))
+    resDimensions=and(parasiticSupported nth(2 values))
+    when(tool=="StarRC" && parasiticSupported
+      when(or(coordinates resLayer resDimensions)
+        resLayer=t
+        resDimensions=t
+      )
+    )
+    form~>nlParInfo~>value=list(coordinates resLayer resDimensions)
+    form~>nlParInfo~>parasiticCoordinates~>enabled=coordinatesSupported
+    form~>nlParInfo~>parasiticResLayer~>enabled=parasiticSupported
+    form~>nlParInfo~>parasiticResDimensions~>enabled=parasiticSupported
+    t
+  )
+)
+
+procedure(rceParasiticInfoCB(form index)
+  let((values coordinates resLayer resDimensions selected)
+    values=or(form~>nlParInfo~>value '(nil nil nil))
+    coordinates=nth(0 values)
+    resLayer=nth(1 values)
+    resDimensions=nth(2 values)
+    when(form~>extTool~>value=="StarRC"
+      cond(
+        (coordinates
+          resLayer=t
+          resDimensions=t
+        )
+        (index==1
+          selected=resLayer
+          resLayer=selected
+          resDimensions=selected
+        )
+        (index==2
+          selected=resDimensions
+          resLayer=selected
+          resDimensions=selected
+        )
+      )
+      form~>nlParInfo~>value=list(coordinates resLayer resDimensions)
+    )
+    rceSyncNetlistCustomize(form)
+    rceSyncReduction(form)
+  )
+)
+
+procedure(rceNameSourceCB(form)
+  rceSyncNetlistCustomize(form)
+  rceSyncNativeView(form)
+)
+
+procedure(rceRcTypeCB(form)
+  let(()
+    case(form~>extTool~>value
+      ("QRC"
+        case(form~>rcType~>value
+          ("Totem" || "Voltus-Fi"
+            form~>outType~>enabled=nil
+            form~>outType~>value="dspf"
+          )
+          (t
+            form~>outType~>enabled=t
+            unless(member(form~>outType~>value form~>outType~>choices)
+              form~>outType~>value=car(form~>outType~>choices))
+          )
+        );case
+      );QRC
+      (t t)
+    );case
+    rceSyncCreateNetlistView(form)
+    rceSyncNetlistCustomize(form)
+  );let
+)
+
+procedure(rceOutTypeCB(form)
+  let(()
+    case(form~>outType~>value
+      ("view" || "extview" || "smartview" || "calibreview" || "starrcview"
+        form~>nlLay~>invisible=t
+        form~>nlRmInst~>enabled=nil
+      )
+      ("sp" || "spice"
+        form~>nlLay~>invisible=nil
+        form~>nlRmInst~>enabled=nil
+      )
+      ("dspf"
+        form~>nlLay~>invisible=nil
+        form~>nlRmInst~>enabled=t
+      )
+      (t
+        form~>nlLay~>invisible=nil
+        form~>nlRmInst~>enabled=nil
+      )
+    );case
+    form~>nlMoreInfo~>persistent=nil
+
+
+    case(form->outType~>value
+      ("view" || "extview" || "smartview" || "calibreview" || "starrcview"
+        when(form~>extTool~>value!="QRC"
+          when(member(lowerCase(form~>outType~>value) '("extview" "smartview"))
+            GUI_messageApp('i "RCE" extmsgStruc->viewEngine)
+            form~>extTool~>value="QRC"
+          )
+        )
+        form~>nlRmInst~>value="TRUE"
+      )
+      ("sp" || "spice"
+        form~>nlRmInst~>value="TRUE"
+      )
+      ("dspf"
+        form~>nlRmInst~>value="FALSE"
+      )
+      (t
+        form~>nlRmInst~>value="TRUE"
+      )
+    );case
+    rceSyncNativeView(form)
+    rceSyncExtractTopCell(form)
+    rceSyncCreateNetlistView(form)
+    rceSyncStartRve(form)
+    rceSyncNetlistCustomize(form)
+    rceSyncReduction(form)
+  );let
+)
+
+procedure(rceBracketBtnCB(form)
+  rceSyncNetlistCustomize(form)
+)
+
+procedure(rceHierDeliBtnCB(form)
+  rceSyncNetlistCustomize(form)
+)

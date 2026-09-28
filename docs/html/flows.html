@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SiCo 使用手册：CAD flow 配置。安装、环境变量、Virtuoso 集成与 CAD flow 配置。">
+<title>CAD flow 配置 · SiCo 使用手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b4543a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='sans-serif' font-size='24' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/manual.css">
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
+  <span class="edition">使用手册 / 2026.09</span>
+  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+</header>
+<noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="手册目录">
+<p class="rail-label">SICO DOCUMENTATION</p>
+<a href="index.html">开始阅读</a>
+<p class="nav-group">开始使用</p>
+<a href="installation.html">01 · 安装</a>
+<a href="environment.html">02 · 环境变量</a>
+<a href="virtuoso.html">03 · Virtuoso 集成</a>
+<a href="flows.html" aria-current="page">04 · CAD flows</a>
+<p class="nav-group">流程指南</p>
+<a href="drc.html">DRC · 规则检查</a>
+<a href="lvs.html">LVS · 连接检查</a>
+<a href="rce.html">RCE · 寄生提取</a>
+<a href="mts.html">MTS · 多工艺网表</a>
+<a href="utilities.html">LEF / GDS / CDL</a>
+<a href="lsf.html">LSF · 运行与资源</a>
+<p class="nav-group">参考附录</p>
+<a href="environment-internal.html">环境接口附录</a>
+<div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
+</nav>
+<div class="reading">
+<main id="main">
+<p class="eyebrow">04 / CAD FLOWS</p>
+<h1>配置流程的共同方法</h1>
+<p class="lead">环境变量提供表单初值，Profile 保存可复用的业务设置，运行 TOML 记录当次执行输入。先分清这三层，再配置具体流程。</p>
+<h2 id="configuration">配置在哪里生效</h2>
+<div class="table-wrap"><table><thead><tr><th>配置位置</th><th>负责什么</th><th>修改后何时生效</th></tr></thead><tbody>
+<tr><td>shell / 项目 modulefile</td><td>工具路径、规则候选、工艺目录、表单初值</td><td>重新启动使用这些环境的 Virtuoso / SiCo 进程。</td></tr>
+<tr><td>GUI Profile</td><td>DRC、LVS、RCE、LEF 的表单业务选项</td><td>点击 <strong>Load</strong> 后回填表单；之后仍可手动调整。</td></tr>
+<tr><td>运行目录中的 TOML</td><td>该次任务最终输入、选项与运行路径</td><td>对应 backend 读取该 TOML 时。</td></tr>
+<tr><td><code>$SICO_HOME/etc/flow-defaults/</code></td><td>CAD 统一维护的工具默认命令</td><td>下一次生成命令时；一次生成中的各 corner 共用同一份快照。</td></tr>
+</tbody></table></div>
+<div class="notice"><strong>Profile 与运行 TOML 用途不同。</strong> 表单的 Load 接受带元数据的 Profile；不能把任意 <code>drc.toml</code>、<code>lvs.toml</code>、<code>rce.toml</code> 或 <code>lef.toml</code> 当作 GUI Profile 载入。</div>
+<h2 id="project-settings">配置工程与规则候选</h2>
+<div class="code-block"><div class="code-label">Bash · 公共工程设置示例</div><pre><code>export PROJECT_ROOT="/path/to/my/project"
+export PDK_ROOT="/path/to/pdk"
+export CDS_LIB="$PROJECT_ROOT/cds.lib"
+export TECH_LAYER_MAP="$PDK_ROOT/stream/streamOut.map"
+export CDL_HEADER_FILE="$PDK_ROOT/cdl/devices.cdl"
+
+export DRC_DB_DIR="$PROJECT_ROOT/runs/drc"
+export LVS_DB_DIR="$PROJECT_ROOT/runs/lvs"
+export RCE_DB_DIR="$PROJECT_ROOT/runs/rce"
+export DRC_FILE="default,$PDK_ROOT/pv/drc.cal"
+export LVS_FILE="default,$PDK_ROOT/pv/lvs.cal"
+export RCE_LVS_FILE="default,$PDK_ROOT/pv/lvs-rc.cal"</code></pre></div>
+<p>候选列表采用 <code>显示名,路径;显示名,路径</code>，整个值必须加引号。单个裸路径也可以使用。<code>PROJECT_ROOT</code> 和 <code>PDK_ROOT</code> 是示例里的路径前缀约定，不是 SiCo 自动发现的工艺设置。</p>
+<h2 id="profile">保存与复用 Profile</h2>
+<ol class="steps"><li>在 flow 表单完成设置后，使用 <strong>Save As…</strong> 将 Profile 保存到项目配置目录。</li><li>下一次在 <strong>Config File</strong> 选择该文件并点击 <strong>Load</strong>。加载前会校验 flow 类型、版本和字段。</li><li>按本次设计修改库、cell、view 和输出路径，点击 <strong>Run</strong>；本次运行生成自己的 TOML，不覆盖 Profile。</li></ol>
+<div class="code-block"><div class="code-label">TOML · Profile 标识，正文由 GUI 保存</div><pre><code>[cad_config]
+format = "sico-flow-profile"
+version = 1
+flow = "RCE"</code></pre></div>
+<p><code>flow</code> 可为 <code>DRC</code>、<code>LVS</code>、<code>RCE</code> 或 <code>LEF</code>。这段仅展示标识，不是可执行的完整配置。可设置 <code>DRC_CONFIG</code>、<code>LVS_CONFIG</code>、<code>RCE_CONFIG</code>、<code>LEF_CONFIG</code> 预填路径。</p>
+<p>Profile 的相对路径基于 Profile 所在目录，支持 <code>$VAR</code> 与 <code>${VAR}</code>。Profile 中尚未定义的变量表达式可保留；实际运行前必须提供其非空值。路径表达式未经修改再次保存时会保留原文。</p>
+<h2 id="outputs">输出目录与执行主机</h2>
+<p>表单通常提供 <strong>Project Directory</strong>、<strong>Current Directory</strong>、<strong>Customize Directory</strong>。项目目录分别来自各 flow 的 <code>*_DB_DIR</code>，未配置时使用当前目录；进入运行前确认实际显示的目录及其写权限。</p>
+<p><strong>Current Host</strong> 默认在当前主机执行；选择 <strong>LSF Farm</strong> 后，等待队列与主机发现完成，再选择可提交的 Queue。直接运行 CLI backend 不会仅因 TOML 中写了 LSF 信息就自动提交，参见<a href="lsf.html">LSF 配置</a>。</p>
+<h2 id="defaults">CAD 统一维护的工具默认项</h2>
+<div class="table-wrap"><table><thead><tr><th>文件</th><th>用途</th></tr></thead><tbody>
+<tr><td><code>calibre-drc.svrf</code> / <code>calibre-lvs.svrf</code> / <code>calibre-xrc.svrf</code></td><td>Calibre 各阶段的公共 SVRF 默认片段。</td></tr>
+<tr><td><code>quantus.options</code></td><td>Quantus 非 GUI 固定 options；按命令与输出模式分段。</td></tr>
+<tr><td><code>quantus.launch.args</code></td><td>Quantus 启动参数；出厂许可证等待为 <code>-lic_queue 1800</code>。</td></tr>
+<tr><td><code>starrc.options</code></td><td>StarRC 抽取、耦合、数据库与文件输出默认项。</td></tr>
+<tr><td><code>cdl.env</code> / <code>streamout.options</code></td><td>公共 CDL 与 GDS 导出的默认设置。</td></tr>
+</tbody></table></div>
+<p>CPU、温度、输出格式等 GUI 设置仍在表单中配置；PDK runset 与 tech 文件仍由工艺提供。CAD 调整默认文件前保留旧值，先用对应 <code>generate</code> 检查最终命令，再进行必要的工具验证。当次使用的默认文件快照与来源保存在运行目录的 <code>log/flow-defaults/</code>。</p>
+<h2 id="next">选择具体流程</h2>
+<p><a href="drc.html">DRC →</a>　<a href="lvs.html">LVS →</a>　<a href="rce.html">RCE →</a>　<a href="mts.html">MTS →</a>　<a href="utilities.html">LEF 与导出工具 →</a></p>
+
+<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="drc.html">DRC 版图规则检查 →</a></footer>
+</main>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#configuration">配置在哪里生效</a><a href="#project-settings">配置工程与规则候选</a><a href="#profile">保存与复用 Profile</a><a href="#outputs">输出目录与执行主机</a><a href="#defaults">CAD 统一维护的工具默认项</a><a href="#next">选择具体流程</a></aside>
+</div></div>
+</body>
+</html>

@@ -1,0 +1,24 @@
+[run]
+run_dir = "${LEF_RUN_DIR}"
+cds_lib = "${CDS_LIB}"
+
+[input]
+library = "AG_Abstract"
+cell = "INVX1"
+layout_view = "layout"
+logical_view = "schematic"
+abstract_view = "abstract"
+
+[abstract]
+options_file = "${LEFGEN_OPT_FILE}"
+bin = "Core"
+
+[abstract.bin_options]
+ExtractSig = false
+AbstractPinFracture = true
+
+[output]
+lef_file = "INVX1.lef"
+lef_version = "5.8"
+geometry = true
+technology = false

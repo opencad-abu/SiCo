@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -eu
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+product_root=$(CDPATH= cd -- "$script_dir/.." && pwd -P)
+. "$product_root/tools/common/sh/sico-installation.sh"
+sico_installation "$product_root"
+sico_launcher_environment
+common_python=$SICO_HOME/tools/common/python
+
+python=${SICO_PYTHON-}
+if [ -z "$python" ] && [ -n "${SICO_PYTHON_ROOT-}" ]
+then
+    python=$SICO_PYTHON_ROOT/bin/python3
+fi
+if [ -z "$python" ]; then
+    python=python3
+fi
+
+case $python in
+    */*) [ -f "$python" ] && [ -x "$python" ] ;;
+    *) command -v "$python" >/dev/null 2>&1 ;;
+esac || {
+    echo "nl2view: Python is not executable: $python" >&2
+    exit 2
+}
+
+if [ -z "${NL2VIEW_ORIG_LD_LIBRARY_PATH+x}" ]; then
+    export NL2VIEW_ORIG_LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}
+fi
+export LD_LIBRARY_PATH=${SICO_SYSTEM_LD_LIBRARY_PATH-}
+export PYTHONNOUSERSITE=1
+unset PYTHONHOME
+unset LD_PRELOAD LD_AUDIT
+unset CDS_MPS_SESSION CDS_MPS_HOST CDS_MPS_PORT
+export PYTHONDONTWRITEBYTECODE=1
+export PYTHONPATH=${common_python}${PYTHONPATH:+:${PYTHONPATH}}
+exec "$python" -s -m cadview.nl2view "$@"

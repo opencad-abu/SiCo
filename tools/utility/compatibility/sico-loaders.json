@@ -1,0 +1,313 @@
+{
+  "schema_version": 1,
+  "compatibility": [
+    {
+      "legacy": "CAD_batchAdapter.il source loader",
+      "source": "tools/common/skill/CAD_batchAdapter.il",
+      "replacement": "tools/common/skill/SICO_batchAdapter.il",
+      "owner": "tools/common/skill/SICO_batchAdapter.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_batchCore.il source loader",
+      "source": "tools/common/skill/CAD_batchCore.il",
+      "replacement": "tools/common/skill/SICO_batchCore.il",
+      "owner": "tools/common/skill/SICO_batchCore.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_batchGui.il source loader",
+      "source": "tools/common/skill/CAD_batchGui.il",
+      "replacement": "tools/common/skill/SICO_batchGui.il",
+      "owner": "tools/common/skill/SICO_batchGui.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_batchMonitor.il source loader",
+      "source": "tools/common/skill/CAD_batchMonitor.il",
+      "replacement": "tools/common/skill/SICO_batchMonitor.il",
+      "owner": "tools/common/skill/SICO_batchMonitor.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_batchRows.il source loader",
+      "source": "tools/common/skill/CAD_batchRows.il",
+      "replacement": "tools/common/skill/SICO_batchRows.il",
+      "owner": "tools/common/skill/SICO_batchRows.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_catalogWorker.il source loader",
+      "source": "tools/common/skill/CAD_catalogWorker.il",
+      "replacement": "tools/common/skill/SICO_catalogWorker.il",
+      "owner": "tools/common/skill/SICO_catalogWorker.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_envOptions.il source loader",
+      "source": "tools/common/skill/CAD_envOptions.il",
+      "replacement": "tools/common/skill/SICO_envOptions.il",
+      "owner": "tools/common/skill/SICO_envOptions.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_guiProtocol.il source loader",
+      "source": "tools/common/skill/CAD_guiProtocol.il",
+      "replacement": "tools/common/skill/SICO_guiProtocol.il",
+      "owner": "tools/common/skill/SICO_guiProtocol.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_lsf.il source loader",
+      "source": "tools/common/skill/CAD_lsf.il",
+      "replacement": "tools/common/skill/SICO_lsf.il",
+      "owner": "tools/common/skill/SICO_lsf.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_lsfChoices.il source loader",
+      "source": "tools/common/skill/CAD_lsfChoices.il",
+      "replacement": "tools/common/skill/SICO_lsfChoices.il",
+      "owner": "tools/common/skill/SICO_lsfChoices.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_lsfCommands.il source loader",
+      "source": "tools/common/skill/CAD_lsfCommands.il",
+      "replacement": "tools/common/skill/SICO_lsfCommands.il",
+      "owner": "tools/common/skill/SICO_lsfCommands.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_lsfHosts.il source loader",
+      "source": "tools/common/skill/CAD_lsfHosts.il",
+      "replacement": "tools/common/skill/SICO_lsfHosts.il",
+      "owner": "tools/common/skill/SICO_lsfHosts.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_lsfMonitor.il source loader",
+      "source": "tools/common/skill/CAD_lsfMonitor.il",
+      "replacement": "tools/common/skill/SICO_lsfMonitor.il",
+      "owner": "tools/common/skill/SICO_lsfMonitor.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_lsfProcess.il source loader",
+      "source": "tools/common/skill/CAD_lsfProcess.il",
+      "replacement": "tools/common/skill/SICO_lsfProcess.il",
+      "owner": "tools/common/skill/SICO_lsfProcess.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_lsfProtocol.il source loader",
+      "source": "tools/common/skill/CAD_lsfProtocol.il",
+      "replacement": "tools/common/skill/SICO_lsfProtocol.il",
+      "owner": "tools/common/skill/SICO_lsfProtocol.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_lsfQueues.il source loader",
+      "source": "tools/common/skill/CAD_lsfQueues.il",
+      "replacement": "tools/common/skill/SICO_lsfQueues.il",
+      "owner": "tools/common/skill/SICO_lsfQueues.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_lsfSelection.il source loader",
+      "source": "tools/common/skill/CAD_lsfSelection.il",
+      "replacement": "tools/common/skill/SICO_lsfSelection.il",
+      "owner": "tools/common/skill/SICO_lsfSelection.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_profile.il source loader",
+      "source": "tools/common/skill/CAD_profile.il",
+      "replacement": "tools/common/skill/SICO_profile.il",
+      "owner": "tools/common/skill/SICO_profile.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "CAD_toml.il source loader",
+      "source": "tools/common/skill/CAD_toml.il",
+      "replacement": "tools/common/skill/SICO_toml.il",
+      "owner": "tools/common/skill/SICO_toml.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "cadToolRegister.il entry",
+      "source": "cadToolRegister.il",
+      "replacement": "tools/common/skill/sicoToolRegister.il",
+      "owner": "tools/common/skill/sicoToolRegister.il",
+      "consumers": [],
+      "external_consumers": "Retired after v0.0.1; proj3 uses the current entry.",
+      "evidence": [
+        "docs/SICO_REFACTOR_STATUS.md"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "deploy/cadAutoLoad.il.src entry",
+      "source": "deploy/cadAutoLoad.il.src",
+      "replacement": "scripts/sicoAutoLoad.il",
+      "owner": "scripts/sicoAutoLoad.il",
+      "consumers": [],
+      "external_consumers": "Retired after v0.0.1; proj3 uses the current entry.",
+      "evidence": [
+        "docs/SICO_REFACTOR_STATUS.md"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "tools/ai/python/cad-ai-agent entry",
+      "source": "tools/ai/python/cad-ai-agent",
+      "replacement": "tools/sico/python/sico/__main__.py",
+      "owner": "tools/sico/python/sico/__main__.py",
+      "consumers": [],
+      "external_consumers": "Retired after v0.0.1; proj3 uses the current entry.",
+      "evidence": [
+        "docs/SICO_REFACTOR_STATUS.md"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    }
+  ]
+}

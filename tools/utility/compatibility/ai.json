@@ -1,0 +1,1827 @@
+{
+  "schema_version": 1,
+  "compatibility": [
+    {
+      "legacy": "cadai.mcp exports from cadai.mcp_definitions",
+      "source": "tools/ai/python/cadai/mcp.py",
+      "replacement": "tools/ai/python/cadai/mcp_definitions.py",
+      "owner": "tools/ai/python/cadai/mcp_definitions.py",
+      "exports": {"TOOLS": "TOOLS", "_TOOLS_BY_NAME": "TOOLS_BY_NAME"},
+      "consumers": ["tools/ai/python/cadai/cli.py", "tools/ai/python/cadai/launch.py", "tools/ai/python/cadai/mcp_environment.py", "tools/sico/python/sico/adapters/assistant_tools.py", "tools/sico/python/sico/adapters/circuit.py", "tools/sico/python/sico/adapters/results.py", "tools/ai/python/tests/circuit_create_support.py", "tools/ai/python/tests/pdk_ipc_worker.py", "tools/ai/python/tests/pdk_pool_native_worker.py", "tools/ai/python/tests/template_smic28_support.py", "tools/ai/python/tests/template_symbol_fixture.py", "tools/ai/python/tests/test_ac_measure.py", "tools/ai/python/tests/test_ac_response.py", "tools/ai/python/tests/test_ac_specs.py", "tools/ai/python/tests/test_ac_specs_gui.py", "tools/ai/python/tests/test_ac_transport.py", "tools/ai/python/tests/test_agent_assistant_tools.py", "tools/ai/python/tests/test_agent_circuit.py", "tools/ai/python/tests/test_agent_circuit_errors.py", "tools/ai/python/tests/test_agent_pdk_choice.py", "tools/ai/python/tests/test_agent_results.py", "tools/ai/python/tests/test_cdf_callbacks_native.py", "tools/ai/python/tests/test_cdf_tools.py", "tools/ai/python/tests/test_cdf_update.py", "tools/ai/python/tests/test_circuit_config.py", "tools/ai/python/tests/test_circuit_create.py", "tools/ai/python/tests/test_circuit_gate.py", "tools/ai/python/tests/test_circuit_gate_gui.py", "tools/ai/python/tests/test_circuit_geometry.py", "tools/ai/python/tests/test_circuit_library.py", "tools/ai/python/tests/test_circuit_matrix.py", "tools/ai/python/tests/test_circuit_matrix_gui.py", "tools/ai/python/tests/test_circuit_native_transport.py", "tools/ai/python/tests/test_circuit_opamp.py", "tools/ai/python/tests/test_circuit_opamp_gui.py", "tools/ai/python/tests/test_circuit_project.py", "tools/ai/python/tests/test_circuit_project_gui.py", "tools/ai/python/tests/test_circuit_rc_gui.py", "tools/ai/python/tests/test_circuit_rebuild.py", "tools/ai/python/tests/test_circuit_rebuild_gui.py", "tools/ai/python/tests/test_circuit_recipe.py", "tools/ai/python/tests/test_circuit_release_contract.py", "tools/ai/python/tests/test_circuit_spec.py", "tools/ai/python/tests/test_circuit_templates.py", "tools/ai/python/tests/test_circuit_tools.py", "tools/ai/python/tests/test_claude_launch.py", "tools/ai/python/tests/test_codex_integration.py", "tools/ai/python/tests/test_document_tools.py", "tools/ai/python/tests/test_draw_symbol.py", "tools/ai/python/tests/test_entry_context.py", "tools/ai/python/tests/test_inspection.py", "tools/ai/python/tests/test_live_ipc.py", "tools/ai/python/tests/test_mcp.py", "tools/ai/python/tests/test_mcp_cdf_handler.py", "tools/ai/python/tests/test_mcp_creation_edit_handlers.py", "tools/ai/python/tests/test_mcp_measurement_handler.py", "tools/ai/python/tests/test_mcp_pdk_handler.py", "tools/ai/python/tests/test_mcp_project_library_handlers.py", "tools/ai/python/tests/test_mcp_protocol.py", "tools/ai/python/tests/test_mcp_registry.py", "tools/ai/python/tests/test_mcp_resource_handler.py", "tools/ai/python/tests/test_mcp_simulation_handler.py", "tools/ai/python/tests/test_mcp_template_handler.py", "tools/ai/python/tests/test_mcp_transport.py", "tools/ai/python/tests/test_measurement_catalog.py", "tools/ai/python/tests/test_measurement_catalog_semantics.py", "tools/ai/python/tests/test_pdk_binding.py", "tools/ai/python/tests/test_pdk_choice.py", "tools/ai/python/tests/test_pdk_session.py", "tools/ai/python/tests/test_result_contract.py", "tools/ai/python/tests/test_result_gui.py", "tools/ai/python/tests/test_schematic_snapshot.py", "tools/ai/python/tests/test_search.py", "tools/ai/python/tests/test_simulation_recipe.py", "tools/ai/python/tests/test_skill_preflight_transport.py", "tools/ai/python/tests/test_skill_reference.py", "tools/ai/python/tests/test_skill_reference_fallback.py", "tools/ai/python/tests/test_socket_server.py", "tools/ai/python/tests/test_template_circuit_transport.py", "tools/ai/python/tests/test_template_library_mcp.py", "tools/ai/python/tests/test_template_symbol.py", "tools/ai/python/tests/test_template_transport.py", "tools/ai/python/tests/test_tool_help.py", "tools/ai/python/tests/test_tool_help_index.py", "tools/ai/python/tests/test_transport.py", "tools/ai/python/tests/test_waveform_pair.py", "tools/ai/python/tests/test_waveform_specs.py", "tools/ai/python/tests/test_waveform_transport.py", "tools/ai/python/tests/test_workflow_tools.py", "deploy/tests/fixtures/mcp_layers_native_probe.py", "deploy/tests/test_runtime_release.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/ai/python/tests/test_mcp_registry.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cadai.mcp exports from cadai.mcp_instructions",
+      "source": "tools/ai/python/cadai/mcp.py",
+      "replacement": "tools/ai/python/cadai/mcp_instructions.py",
+      "owner": "tools/ai/python/cadai/mcp_instructions.py",
+      "exports": {"SERVER_INSTRUCTIONS": "SERVER_INSTRUCTIONS"},
+      "consumers": ["tools/ai/python/cadai/cli.py", "tools/ai/python/cadai/launch.py", "tools/ai/python/cadai/mcp_environment.py", "tools/sico/python/sico/adapters/assistant_tools.py", "tools/sico/python/sico/adapters/circuit.py", "tools/sico/python/sico/adapters/results.py", "tools/ai/python/tests/circuit_create_support.py", "tools/ai/python/tests/pdk_ipc_worker.py", "tools/ai/python/tests/pdk_pool_native_worker.py", "tools/ai/python/tests/template_smic28_support.py", "tools/ai/python/tests/template_symbol_fixture.py", "tools/ai/python/tests/test_ac_measure.py", "tools/ai/python/tests/test_ac_response.py", "tools/ai/python/tests/test_ac_specs.py", "tools/ai/python/tests/test_ac_specs_gui.py", "tools/ai/python/tests/test_ac_transport.py", "tools/ai/python/tests/test_agent_assistant_tools.py", "tools/ai/python/tests/test_agent_circuit.py", "tools/ai/python/tests/test_agent_circuit_errors.py", "tools/ai/python/tests/test_agent_pdk_choice.py", "tools/ai/python/tests/test_agent_results.py", "tools/ai/python/tests/test_cdf_callbacks_native.py", "tools/ai/python/tests/test_cdf_tools.py", "tools/ai/python/tests/test_cdf_update.py", "tools/ai/python/tests/test_circuit_config.py", "tools/ai/python/tests/test_circuit_create.py", "tools/ai/python/tests/test_circuit_gate.py", "tools/ai/python/tests/test_circuit_gate_gui.py", "tools/ai/python/tests/test_circuit_geometry.py", "tools/ai/python/tests/test_circuit_library.py", "tools/ai/python/tests/test_circuit_matrix.py", "tools/ai/python/tests/test_circuit_matrix_gui.py", "tools/ai/python/tests/test_circuit_native_transport.py", "tools/ai/python/tests/test_circuit_opamp.py", "tools/ai/python/tests/test_circuit_opamp_gui.py", "tools/ai/python/tests/test_circuit_project.py", "tools/ai/python/tests/test_circuit_project_gui.py", "tools/ai/python/tests/test_circuit_rc_gui.py", "tools/ai/python/tests/test_circuit_rebuild.py", "tools/ai/python/tests/test_circuit_rebuild_gui.py", "tools/ai/python/tests/test_circuit_recipe.py", "tools/ai/python/tests/test_circuit_release_contract.py", "tools/ai/python/tests/test_circuit_spec.py", "tools/ai/python/tests/test_circuit_templates.py", "tools/ai/python/tests/test_circuit_tools.py", "tools/ai/python/tests/test_claude_launch.py", "tools/ai/python/tests/test_codex_integration.py", "tools/ai/python/tests/test_document_tools.py", "tools/ai/python/tests/test_draw_symbol.py", "tools/ai/python/tests/test_entry_context.py", "tools/ai/python/tests/test_inspection.py", "tools/ai/python/tests/test_live_ipc.py", "tools/ai/python/tests/test_mcp.py", "tools/ai/python/tests/test_mcp_cdf_handler.py", "tools/ai/python/tests/test_mcp_creation_edit_handlers.py", "tools/ai/python/tests/test_mcp_measurement_handler.py", "tools/ai/python/tests/test_mcp_pdk_handler.py", "tools/ai/python/tests/test_mcp_project_library_handlers.py", "tools/ai/python/tests/test_mcp_protocol.py", "tools/ai/python/tests/test_mcp_registry.py", "tools/ai/python/tests/test_mcp_resource_handler.py", "tools/ai/python/tests/test_mcp_simulation_handler.py", "tools/ai/python/tests/test_mcp_template_handler.py", "tools/ai/python/tests/test_mcp_transport.py", "tools/ai/python/tests/test_measurement_catalog.py", "tools/ai/python/tests/test_measurement_catalog_semantics.py", "tools/ai/python/tests/test_pdk_binding.py", "tools/ai/python/tests/test_pdk_choice.py", "tools/ai/python/tests/test_pdk_session.py", "tools/ai/python/tests/test_result_contract.py", "tools/ai/python/tests/test_result_gui.py", "tools/ai/python/tests/test_schematic_snapshot.py", "tools/ai/python/tests/test_search.py", "tools/ai/python/tests/test_simulation_recipe.py", "tools/ai/python/tests/test_skill_preflight_transport.py", "tools/ai/python/tests/test_skill_reference.py", "tools/ai/python/tests/test_skill_reference_fallback.py", "tools/ai/python/tests/test_socket_server.py", "tools/ai/python/tests/test_template_circuit_transport.py", "tools/ai/python/tests/test_template_library_mcp.py", "tools/ai/python/tests/test_template_symbol.py", "tools/ai/python/tests/test_template_transport.py", "tools/ai/python/tests/test_tool_help.py", "tools/ai/python/tests/test_tool_help_index.py", "tools/ai/python/tests/test_transport.py", "tools/ai/python/tests/test_waveform_pair.py", "tools/ai/python/tests/test_waveform_specs.py", "tools/ai/python/tests/test_waveform_transport.py", "tools/ai/python/tests/test_workflow_tools.py", "deploy/tests/fixtures/mcp_layers_native_probe.py", "deploy/tests/test_runtime_release.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/ai/python/tests/test_mcp_registry.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cadai.mcp exports from cadai.mcp_transport",
+      "source": "tools/ai/python/cadai/mcp.py",
+      "replacement": "tools/ai/python/cadai/mcp_transport.py",
+      "owner": "tools/ai/python/cadai/mcp_transport.py",
+      "exports": {"SocketClient": "SocketClient"},
+      "consumers": ["tools/ai/python/cadai/cli.py", "tools/ai/python/cadai/launch.py", "tools/ai/python/cadai/mcp_environment.py", "tools/sico/python/sico/adapters/assistant_tools.py", "tools/sico/python/sico/adapters/circuit.py", "tools/sico/python/sico/adapters/results.py", "tools/ai/python/tests/circuit_create_support.py", "tools/ai/python/tests/pdk_ipc_worker.py", "tools/ai/python/tests/pdk_pool_native_worker.py", "tools/ai/python/tests/template_smic28_support.py", "tools/ai/python/tests/template_symbol_fixture.py", "tools/ai/python/tests/test_ac_measure.py", "tools/ai/python/tests/test_ac_response.py", "tools/ai/python/tests/test_ac_specs.py", "tools/ai/python/tests/test_ac_specs_gui.py", "tools/ai/python/tests/test_ac_transport.py", "tools/ai/python/tests/test_agent_assistant_tools.py", "tools/ai/python/tests/test_agent_circuit.py", "tools/ai/python/tests/test_agent_circuit_errors.py", "tools/ai/python/tests/test_agent_pdk_choice.py", "tools/ai/python/tests/test_agent_results.py", "tools/ai/python/tests/test_cdf_callbacks_native.py", "tools/ai/python/tests/test_cdf_tools.py", "tools/ai/python/tests/test_cdf_update.py", "tools/ai/python/tests/test_circuit_config.py", "tools/ai/python/tests/test_circuit_create.py", "tools/ai/python/tests/test_circuit_gate.py", "tools/ai/python/tests/test_circuit_gate_gui.py", "tools/ai/python/tests/test_circuit_geometry.py", "tools/ai/python/tests/test_circuit_library.py", "tools/ai/python/tests/test_circuit_matrix.py", "tools/ai/python/tests/test_circuit_matrix_gui.py", "tools/ai/python/tests/test_circuit_native_transport.py", "tools/ai/python/tests/test_circuit_opamp.py", "tools/ai/python/tests/test_circuit_opamp_gui.py", "tools/ai/python/tests/test_circuit_project.py", "tools/ai/python/tests/test_circuit_project_gui.py", "tools/ai/python/tests/test_circuit_rc_gui.py", "tools/ai/python/tests/test_circuit_rebuild.py", "tools/ai/python/tests/test_circuit_rebuild_gui.py", "tools/ai/python/tests/test_circuit_recipe.py", "tools/ai/python/tests/test_circuit_release_contract.py", "tools/ai/python/tests/test_circuit_spec.py", "tools/ai/python/tests/test_circuit_templates.py", "tools/ai/python/tests/test_circuit_tools.py", "tools/ai/python/tests/test_claude_launch.py", "tools/ai/python/tests/test_codex_integration.py", "tools/ai/python/tests/test_document_tools.py", "tools/ai/python/tests/test_draw_symbol.py", "tools/ai/python/tests/test_entry_context.py", "tools/ai/python/tests/test_inspection.py", "tools/ai/python/tests/test_live_ipc.py", "tools/ai/python/tests/test_mcp.py", "tools/ai/python/tests/test_mcp_cdf_handler.py", "tools/ai/python/tests/test_mcp_creation_edit_handlers.py", "tools/ai/python/tests/test_mcp_measurement_handler.py", "tools/ai/python/tests/test_mcp_pdk_handler.py", "tools/ai/python/tests/test_mcp_project_library_handlers.py", "tools/ai/python/tests/test_mcp_protocol.py", "tools/ai/python/tests/test_mcp_registry.py", "tools/ai/python/tests/test_mcp_resource_handler.py", "tools/ai/python/tests/test_mcp_simulation_handler.py", "tools/ai/python/tests/test_mcp_template_handler.py", "tools/ai/python/tests/test_mcp_transport.py", "tools/ai/python/tests/test_measurement_catalog.py", "tools/ai/python/tests/test_measurement_catalog_semantics.py", "tools/ai/python/tests/test_pdk_binding.py", "tools/ai/python/tests/test_pdk_choice.py", "tools/ai/python/tests/test_pdk_session.py", "tools/ai/python/tests/test_result_contract.py", "tools/ai/python/tests/test_result_gui.py", "tools/ai/python/tests/test_schematic_snapshot.py", "tools/ai/python/tests/test_search.py", "tools/ai/python/tests/test_simulation_recipe.py", "tools/ai/python/tests/test_skill_preflight_transport.py", "tools/ai/python/tests/test_skill_reference.py", "tools/ai/python/tests/test_skill_reference_fallback.py", "tools/ai/python/tests/test_socket_server.py", "tools/ai/python/tests/test_template_circuit_transport.py", "tools/ai/python/tests/test_template_library_mcp.py", "tools/ai/python/tests/test_template_symbol.py", "tools/ai/python/tests/test_template_transport.py", "tools/ai/python/tests/test_tool_help.py", "tools/ai/python/tests/test_tool_help_index.py", "tools/ai/python/tests/test_transport.py", "tools/ai/python/tests/test_waveform_pair.py", "tools/ai/python/tests/test_waveform_specs.py", "tools/ai/python/tests/test_waveform_transport.py", "tools/ai/python/tests/test_workflow_tools.py", "deploy/tests/fixtures/mcp_layers_native_probe.py", "deploy/tests/test_runtime_release.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/ai/python/tests/test_mcp_registry.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "sico_ui.target_provider exports from sico.service.targets",
+      "source": "tools/sico/python/sico_ui/target_provider.py",
+      "replacement": "tools/sico/python/sico/service/targets.py",
+      "owner": "tools/sico/python/sico/service/targets.py",
+      "exports": {"BridgeTargetProvider": "BridgeTargetProvider", "TargetBridgeError": "TargetBridgeError"},
+      "consumers": [],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/ai/python/tests/test_agent_target_provider.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cad_ai_terminal.qt_frontend exports from cad_ai_terminal.appearance",
+      "source": "tools/ai/terminal/pyqt/cad_ai_terminal/qt_frontend.py",
+      "replacement": "tools/ai/terminal/pyqt/cad_ai_terminal/appearance.py",
+      "owner": "tools/ai/terminal/pyqt/cad_ai_terminal/appearance.py",
+      "exports": {"_logo_text": "_logo_text", "_normalize_session_title": "_normalize_session_title", "_fixed_pitch_terminal_font": "_fixed_pitch_terminal_font"},
+      "consumers": ["tools/ai/python/tests/terminal_smoke/run.py", "tools/ai/terminal/pyqt/cad_ai_terminal/main.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/ai/python/tests/test_pyqt_terminal.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cad_ai_terminal.qt_frontend exports from cad_ai_terminal.input_behavior",
+      "source": "tools/ai/terminal/pyqt/cad_ai_terminal/qt_frontend.py",
+      "replacement": "tools/ai/terminal/pyqt/cad_ai_terminal/input_behavior.py",
+      "owner": "tools/ai/terminal/pyqt/cad_ai_terminal/input_behavior.py",
+      "exports": {"_schedule_scroll_restore": "_schedule_scroll_restore"},
+      "consumers": ["tools/ai/python/tests/terminal_smoke/run.py", "tools/ai/terminal/pyqt/cad_ai_terminal/main.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/ai/python/tests/test_pyqt_terminal.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cad_ai_terminal.qt_frontend exports from cad_ai_terminal.output_capture",
+      "source": "tools/ai/terminal/pyqt/cad_ai_terminal/qt_frontend.py",
+      "replacement": "tools/ai/terminal/pyqt/cad_ai_terminal/output_capture.py",
+      "owner": "tools/ai/terminal/pyqt/cad_ai_terminal/output_capture.py",
+      "exports": {"_append_test_output": "_append_test_output"},
+      "consumers": ["tools/ai/python/tests/terminal_smoke/run.py", "tools/ai/terminal/pyqt/cad_ai_terminal/main.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/ai/python/tests/test_pyqt_terminal.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cad_ai_terminal.qt_frontend exports from cad_ai_terminal.resources",
+      "source": "tools/ai/terminal/pyqt/cad_ai_terminal/qt_frontend.py",
+      "replacement": "tools/ai/terminal/pyqt/cad_ai_terminal/resources.py",
+      "owner": "tools/ai/terminal/pyqt/cad_ai_terminal/resources.py",
+      "exports": {"_resource_path": "_resource_path", "_logo_candidates": "_logo_candidates"},
+      "consumers": ["tools/ai/python/tests/terminal_smoke/run.py", "tools/ai/terminal/pyqt/cad_ai_terminal/main.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/ai/python/tests/test_pyqt_terminal.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cad_ai_terminal.terminal_session exports from cad_ai_terminal.input_behavior",
+      "source": "tools/ai/terminal/pyqt/cad_ai_terminal/terminal_session.py",
+      "replacement": "tools/ai/terminal/pyqt/cad_ai_terminal/input_behavior.py",
+      "owner": "tools/ai/terminal/pyqt/cad_ai_terminal/input_behavior.py",
+      "exports": {"INPUT_METHOD_CURSOR_SYNC_MS": "INPUT_METHOD_CURSOR_SYNC_MS", "_refresh_input_method_cursor": "_refresh_input_method_cursor", "apply_scroll_policy": "apply_scroll_policy"},
+      "consumers": ["tools/ai/terminal/pyqt/cad_ai_terminal/qt_frontend.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/ai/python/tests/test_pyqt_terminal.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cad_ai_terminal.terminal_session exports from cad_ai_terminal.shell_environment",
+      "source": "tools/ai/terminal/pyqt/cad_ai_terminal/terminal_session.py",
+      "replacement": "tools/ai/terminal/pyqt/cad_ai_terminal/shell_environment.py",
+      "owner": "tools/ai/terminal/pyqt/cad_ai_terminal/shell_environment.py",
+      "exports": {"sanitize_shell_environment": "sanitize_shell_environment"},
+      "consumers": ["tools/ai/terminal/pyqt/cad_ai_terminal/qt_frontend.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/ai/python/tests/test_pyqt_terminal.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "WorkbenchSource complete snapshot compatibility",
+      "source": "tools/sico/python/sico/service/workbench_snapshot.py",
+      "replacement": "tools/sico/python/sico/service/workbench_data.py:WorkbenchSource.query_pages",
+      "owner": "tools/sico/python/sico/service/workbench_data.py",
+      "consumers": ["tools/sico/python/sico/service/workbench_data.py", "tools/ai/python/tests/test_agent_workbench_query.py"],
+      "evidence": ["tools/ai/python/tests/test_agent_workbench_query.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Move supported snapshot/empty consumers to bounded query_pages/empty_query and migrate complete-snapshot fixtures; remove snapshot/empty and WorkbenchSnapshot in the next incompatible service API version. Keep shared projection helpers used by query publication."
+    },
+    {
+      "legacy": "cadai.live_model exports from cadai.live_protocol",
+      "source": "tools/ai/python/cadai/live_model.py",
+      "replacement": "tools/ai/python/cadai/live_protocol.py",
+      "owner": "tools/ai/python/cadai/live_protocol.py",
+      "exports": {
+        "DEFAULT_DEBOUNCE_MS": "DEFAULT_DEBOUNCE_MS",
+        "LIVE_PROTOCOL_VERSION": "LIVE_PROTOCOL_VERSION",
+        "MAX_DEBOUNCE_MS": "MAX_DEBOUNCE_MS",
+        "MAX_EVENT_HISTORY": "MAX_EVENT_HISTORY",
+        "MAX_LIVE_ID_LENGTH": "MAX_LIVE_ID_LENGTH",
+        "MAX_STATUS_BYTES": "MAX_STATUS_BYTES",
+        "LiveModelProtocolError": "LiveModelProtocolError",
+        "loads_strict": "loads_strict"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/controller.py",
+        "tools/ai/python/cadai/mcp_live_handler.py",
+        "tools/ai/python/cadai/transport.py",
+        "tools/ai/python/tests/live_model_fixture.py",
+        "tools/ai/python/tests/live_model_protocol_cases.py",
+        "tools/ai/python/tests/live_model_result_cases.py",
+        "tools/ai/python/tests/live_model_session_cases.py",
+        "tools/ai/python/tests/test_live_ipc.py"
+      ],
+      "external_consumers": "Supported external imports require downstream migration confirmation.",
+      "evidence": [
+        "tools/ai/python/tests/test_live_model.py",
+        "tools/ai/python/tests/test_live_ipc.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Move the listed protocol imports in controller, transport, MCP, test cases and supported external clients to their explicit owners; after no supported caller depends on these aliases, remove only the listed exports at the next incompatible API version. LiveModelSession and its lifecycle remain supported."
+    },
+    {
+      "legacy": "cadai.live_model exports from cadai.live_messages",
+      "source": "tools/ai/python/cadai/live_model.py",
+      "replacement": "tools/ai/python/cadai/live_messages.py",
+      "owner": "tools/ai/python/cadai/live_messages.py",
+      "exports": {
+        "parse_live_message": "parse_live_message",
+        "parse_live_status": "parse_live_status"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/controller.py",
+        "tools/ai/python/cadai/mcp_live_handler.py",
+        "tools/ai/python/cadai/transport.py",
+        "tools/ai/python/tests/live_model_fixture.py",
+        "tools/ai/python/tests/live_model_protocol_cases.py",
+        "tools/ai/python/tests/live_model_result_cases.py",
+        "tools/ai/python/tests/live_model_session_cases.py",
+        "tools/ai/python/tests/test_live_ipc.py"
+      ],
+      "external_consumers": "Supported external imports require downstream migration confirmation.",
+      "evidence": [
+        "tools/ai/python/tests/test_live_model.py",
+        "tools/ai/python/tests/test_live_ipc.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Move the listed protocol imports in controller, transport, MCP, test cases and supported external clients to their explicit owners; after no supported caller depends on these aliases, remove only the listed exports at the next incompatible API version. LiveModelSession and its lifecycle remain supported."
+    },
+    {
+      "legacy": "cadai.pdk_preparation exports from cadai.pdk_selection",
+      "source": "tools/ai/python/cadai/pdk_preparation.py",
+      "replacement": "tools/ai/python/cadai/pdk_selection.py",
+      "owner": "tools/ai/python/cadai/pdk_selection.py",
+      "exports": {
+        "BASE_LIBRARIES": "BASE_LIBRARIES",
+        "DESIGN_TOOLS": "DESIGN_TOOLS",
+        "INSTRUCTIONS": "INSTRUCTIONS"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/mcp_instructions.py",
+        "tools/ai/python/cadai/pdk_session.py",
+        "tools/sico/python/sico/codex/backend.py",
+        "tools/sico/python/sico/core/loop.py",
+        "tools/ai/python/tests/pdk_acceptance_smic28.py",
+        "tools/ai/python/tests/pdk_pool_native_worker.py",
+        "tools/ai/python/tests/test_circuit_edit.py",
+        "tools/ai/python/tests/test_pdk_choice.py",
+        "tools/ai/python/tests/test_pdk_collection_native.py",
+        "tools/ai/python/tests/test_pdk_enrichment.py",
+        "tools/ai/python/tests/test_pdk_pool_preparation.py",
+        "tools/ai/python/tests/test_pdk_preparation.py",
+        "tools/ai/python/tests/test_pdk_preparation_hooks.py"
+      ],
+      "external_consumers": "Known repository consumers include class imports; INSTRUCTIONS serves MCP and Agent prompts, DESIGN_TOOLS serves circuit edit checks. No direct BASE_LIBRARIES importer was found; supported downstream constant imports require migration confirmation.",
+      "evidence": [
+        "tools/ai/python/tests/test_pdk_preparation_hooks.py",
+        "tools/ai/python/tests/test_pdk_choice.py",
+        "tools/ai/python/tests/test_pdk_pool_preparation.py",
+        "tools/ai/python/tests/test_circuit_edit.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported repository and external imports of these three policy aliases to cadai.pdk_selection; once no caller depends on the old constant paths, remove only the aliases at the next incompatible API version. PdkPreparation, its session binding and its lifecycle hooks remain supported."
+    },
+    {
+      "legacy": "cadai.schematic_snapshot exports from cadai.snapshot_schema",
+      "source": "tools/ai/python/cadai/schematic_snapshot.py",
+      "replacement": "tools/ai/python/cadai/snapshot_schema.py",
+      "owner": "tools/ai/python/cadai/snapshot_schema.py",
+      "exports": {
+        "SNAPSHOT_SCHEMA_VERSION": "SNAPSHOT_SCHEMA_VERSION",
+        "MAX_SNAPSHOT_BYTES": "MAX_SNAPSHOT_BYTES",
+        "MAX_SNAPSHOT_LINE_BYTES": "MAX_SNAPSHOT_LINE_BYTES",
+        "MAX_QUERY_LIMIT": "MAX_QUERY_LIMIT",
+        "SnapshotError": "SnapshotError",
+        "SnapshotNotFound": "SnapshotNotFound"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/mcp.py",
+        "tools/ai/python/cadai/mcp_snapshot_handler.py",
+        "tools/ai/python/cadai/mcp_snapshot_schema.py",
+        "tools/ai/python/tests/test_mcp_ownership.py",
+        "tools/ai/python/tests/test_schematic_snapshot.py",
+        "tools/ai/python/tests/test_snapshot_lifecycle.py"
+      ],
+      "external_consumers": "Known direct repository imports include the store, errors and MCP query bound; supported external schema/limit/error imports require downstream migration confirmation. Internal helper imports are implementation bindings, not additional supported APIs.",
+      "evidence": [
+        "tools/ai/python/tests/test_schematic_snapshot.py",
+        "tools/ai/python/tests/test_snapshot_lifecycle.py",
+        "tools/ai/python/tests/test_mcp_ownership.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported callers of these six schema/limit/error aliases to cadai.snapshot_schema; after repository and supported external consumers no longer depend on the old value paths, remove only those aliases at the next incompatible API version. SchematicSnapshotStore and its lazy SQLite initialization remain current."
+    },
+    {
+      "legacy": "cadai.launch exports from cadai.claude_launch",
+      "source": "tools/ai/python/cadai/launch.py",
+      "replacement": "tools/ai/python/cadai/claude_launch.py",
+      "owner": "tools/ai/python/cadai/claude_launch.py",
+      "exports": {
+        "build_claude_command": "build_claude_command",
+        "build_claude_mcp_config": "build_claude_mcp_config"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/cadai/controller.py",
+        "tools/sico/python/sico/codex/runtime.py",
+        "tools/sico/python/sico/codex/settings.py",
+        "tools/ai/python/tests/controller_launch_cases.py",
+        "tools/ai/python/tests/test_agent_executable.py",
+        "tools/ai/python/tests/test_circuit_tools.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_codex_e2e.py",
+        "tools/ai/python/tests/test_codex_integration.py",
+        "tools/ai/python/tests/test_codex_selection.py",
+        "tools/ai/python/tests/test_entry_context.py",
+        "tools/ai/python/tests/test_inspection.py",
+        "tools/ai/python/tests/test_model_environment.py",
+        "tools/ai/python/tests/test_production_feedback.py",
+        "tools/ai/python/tests/test_python_selection.py",
+        "tools/ai/python/tests/test_search_launch.py",
+        "tools/ai/python/tests/test_skill_preflight_transport.py",
+        "tools/ai/python/tests/test_template_library_launch.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_terminal_environment.py",
+        "tools/ai/python/tests/test_tool_help.py",
+        "deploy/tests/test_runtime_release.py"
+      ],
+      "external_consumers": "Known repository consumers import launch helpers through this facade, including controller injection points and Agent Codex runtime/settings. Constant and error aliases have no direct repository importer; supported downstream imports still require migration confirmation. Imported implementation dependencies and underscore helpers are not additional public APIs.",
+      "evidence": [
+        "tools/ai/python/tests/test_launch_boundaries.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_agent_executable.py",
+        "tools/ai/python/tests/test_codex_selection.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_terminal_environment.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported controller, CLI, Agent runtime/settings, test and external imports to their responsibility owners. Remove these same-object aliases only at the next incompatible API version after consumer migration; preserve call-time filesystem/probe/gateway behavior and controller injection hooks."
+    },
+    {
+      "legacy": "cadai.launch exports from cadai.codex_launch",
+      "source": "tools/ai/python/cadai/launch.py",
+      "replacement": "tools/ai/python/cadai/codex_launch.py",
+      "owner": "tools/ai/python/cadai/codex_launch.py",
+      "exports": {
+        "build_codex_command": "build_codex_command",
+        "prepare_codex_gateway": "prepare_codex_gateway"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/cadai/controller.py",
+        "tools/sico/python/sico/codex/runtime.py",
+        "tools/sico/python/sico/codex/settings.py",
+        "tools/ai/python/tests/controller_launch_cases.py",
+        "tools/ai/python/tests/test_agent_executable.py",
+        "tools/ai/python/tests/test_circuit_tools.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_codex_e2e.py",
+        "tools/ai/python/tests/test_codex_integration.py",
+        "tools/ai/python/tests/test_codex_selection.py",
+        "tools/ai/python/tests/test_entry_context.py",
+        "tools/ai/python/tests/test_inspection.py",
+        "tools/ai/python/tests/test_model_environment.py",
+        "tools/ai/python/tests/test_production_feedback.py",
+        "tools/ai/python/tests/test_python_selection.py",
+        "tools/ai/python/tests/test_search_launch.py",
+        "tools/ai/python/tests/test_skill_preflight_transport.py",
+        "tools/ai/python/tests/test_template_library_launch.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_terminal_environment.py",
+        "tools/ai/python/tests/test_tool_help.py",
+        "deploy/tests/test_runtime_release.py"
+      ],
+      "external_consumers": "Known repository consumers import launch helpers through this facade, including controller injection points and Agent Codex runtime/settings. Constant and error aliases have no direct repository importer; supported downstream imports still require migration confirmation. Imported implementation dependencies and underscore helpers are not additional public APIs.",
+      "evidence": [
+        "tools/ai/python/tests/test_launch_boundaries.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_agent_executable.py",
+        "tools/ai/python/tests/test_codex_selection.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_terminal_environment.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported controller, CLI, Agent runtime/settings, test and external imports to their responsibility owners. Remove these same-object aliases only at the next incompatible API version after consumer migration; preserve call-time filesystem/probe/gateway behavior and controller injection hooks."
+    },
+    {
+      "legacy": "cadai.launch exports from cadai.codex_selection",
+      "source": "tools/ai/python/cadai/launch.py",
+      "replacement": "tools/ai/python/cadai/codex_selection.py",
+      "owner": "tools/ai/python/cadai/codex_selection.py",
+      "exports": {
+        "CodexConfigurationError": "CodexConfigurationError"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/cadai/controller.py",
+        "tools/sico/python/sico/codex/runtime.py",
+        "tools/sico/python/sico/codex/settings.py",
+        "tools/ai/python/tests/controller_launch_cases.py",
+        "tools/ai/python/tests/test_agent_executable.py",
+        "tools/ai/python/tests/test_circuit_tools.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_codex_e2e.py",
+        "tools/ai/python/tests/test_codex_integration.py",
+        "tools/ai/python/tests/test_codex_selection.py",
+        "tools/ai/python/tests/test_entry_context.py",
+        "tools/ai/python/tests/test_inspection.py",
+        "tools/ai/python/tests/test_model_environment.py",
+        "tools/ai/python/tests/test_production_feedback.py",
+        "tools/ai/python/tests/test_python_selection.py",
+        "tools/ai/python/tests/test_search_launch.py",
+        "tools/ai/python/tests/test_skill_preflight_transport.py",
+        "tools/ai/python/tests/test_template_library_launch.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_terminal_environment.py",
+        "tools/ai/python/tests/test_tool_help.py",
+        "deploy/tests/test_runtime_release.py"
+      ],
+      "external_consumers": "Known repository consumers import launch helpers through this facade, including controller injection points and Agent Codex runtime/settings. Constant and error aliases have no direct repository importer; supported downstream imports still require migration confirmation. Imported implementation dependencies and underscore helpers are not additional public APIs.",
+      "evidence": [
+        "tools/ai/python/tests/test_launch_boundaries.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_agent_executable.py",
+        "tools/ai/python/tests/test_codex_selection.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_terminal_environment.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported controller, CLI, Agent runtime/settings, test and external imports to their responsibility owners. Remove these same-object aliases only at the next incompatible API version after consumer migration; preserve call-time filesystem/probe/gateway behavior and controller injection hooks."
+    },
+    {
+      "legacy": "cadai.launch exports from cadai.launch_bootstrap",
+      "source": "tools/ai/python/cadai/launch.py",
+      "replacement": "tools/ai/python/cadai/launch_bootstrap.py",
+      "owner": "tools/ai/python/cadai/launch_bootstrap.py",
+      "exports": {
+        "install_packaged_codex_skills": "install_packaged_codex_skills",
+        "private_codex_home": "private_codex_home"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/cadai/controller.py",
+        "tools/sico/python/sico/codex/runtime.py",
+        "tools/sico/python/sico/codex/settings.py",
+        "tools/ai/python/tests/controller_launch_cases.py",
+        "tools/ai/python/tests/test_agent_executable.py",
+        "tools/ai/python/tests/test_circuit_tools.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_codex_e2e.py",
+        "tools/ai/python/tests/test_codex_integration.py",
+        "tools/ai/python/tests/test_codex_selection.py",
+        "tools/ai/python/tests/test_entry_context.py",
+        "tools/ai/python/tests/test_inspection.py",
+        "tools/ai/python/tests/test_model_environment.py",
+        "tools/ai/python/tests/test_production_feedback.py",
+        "tools/ai/python/tests/test_python_selection.py",
+        "tools/ai/python/tests/test_search_launch.py",
+        "tools/ai/python/tests/test_skill_preflight_transport.py",
+        "tools/ai/python/tests/test_template_library_launch.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_terminal_environment.py",
+        "tools/ai/python/tests/test_tool_help.py",
+        "deploy/tests/test_runtime_release.py"
+      ],
+      "external_consumers": "Known repository consumers import launch helpers through this facade, including controller injection points and Agent Codex runtime/settings. Constant and error aliases have no direct repository importer; supported downstream imports still require migration confirmation. Imported implementation dependencies and underscore helpers are not additional public APIs.",
+      "evidence": [
+        "tools/ai/python/tests/test_launch_boundaries.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_agent_executable.py",
+        "tools/ai/python/tests/test_codex_selection.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_terminal_environment.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported controller, CLI, Agent runtime/settings, test and external imports to their responsibility owners. Remove these same-object aliases only at the next incompatible API version after consumer migration; preserve call-time filesystem/probe/gateway behavior and controller injection hooks."
+    },
+    {
+      "legacy": "cadai.launch exports from cadai.launch_environment",
+      "source": "tools/ai/python/cadai/launch.py",
+      "replacement": "tools/ai/python/cadai/launch_environment.py",
+      "owner": "tools/ai/python/cadai/launch_environment.py",
+      "exports": {
+        "prepare_terminal_environment": "prepare_terminal_environment",
+        "sanitized_terminal_environment": "sanitized_terminal_environment"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/cadai/controller.py",
+        "tools/sico/python/sico/codex/runtime.py",
+        "tools/sico/python/sico/codex/settings.py",
+        "tools/ai/python/tests/controller_launch_cases.py",
+        "tools/ai/python/tests/test_agent_executable.py",
+        "tools/ai/python/tests/test_circuit_tools.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_codex_e2e.py",
+        "tools/ai/python/tests/test_codex_integration.py",
+        "tools/ai/python/tests/test_codex_selection.py",
+        "tools/ai/python/tests/test_entry_context.py",
+        "tools/ai/python/tests/test_inspection.py",
+        "tools/ai/python/tests/test_model_environment.py",
+        "tools/ai/python/tests/test_production_feedback.py",
+        "tools/ai/python/tests/test_python_selection.py",
+        "tools/ai/python/tests/test_search_launch.py",
+        "tools/ai/python/tests/test_skill_preflight_transport.py",
+        "tools/ai/python/tests/test_template_library_launch.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_terminal_environment.py",
+        "tools/ai/python/tests/test_tool_help.py",
+        "deploy/tests/test_runtime_release.py"
+      ],
+      "external_consumers": "Known repository consumers import launch helpers through this facade, including controller injection points and Agent Codex runtime/settings. Constant and error aliases have no direct repository importer; supported downstream imports still require migration confirmation. Imported implementation dependencies and underscore helpers are not additional public APIs.",
+      "evidence": [
+        "tools/ai/python/tests/test_launch_boundaries.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_agent_executable.py",
+        "tools/ai/python/tests/test_codex_selection.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_terminal_environment.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported controller, CLI, Agent runtime/settings, test and external imports to their responsibility owners. Remove these same-object aliases only at the next incompatible API version after consumer migration; preserve call-time filesystem/probe/gateway behavior and controller injection hooks."
+    },
+    {
+      "legacy": "cadai.launch exports from cadai.launch_executable",
+      "source": "tools/ai/python/cadai/launch.py",
+      "replacement": "tools/ai/python/cadai/launch_executable.py",
+      "owner": "tools/ai/python/cadai/launch_executable.py",
+      "exports": {
+        "production_python": "production_python",
+        "prepare_agent_runtime_environment": "prepare_agent_runtime_environment",
+        "resolve_agent_executable": "resolve_agent_executable",
+        "resolve_executable": "resolve_executable"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/cadai/controller.py",
+        "tools/sico/python/sico/codex/runtime.py",
+        "tools/sico/python/sico/codex/settings.py",
+        "tools/ai/python/tests/controller_launch_cases.py",
+        "tools/ai/python/tests/test_agent_executable.py",
+        "tools/ai/python/tests/test_circuit_tools.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_codex_e2e.py",
+        "tools/ai/python/tests/test_codex_integration.py",
+        "tools/ai/python/tests/test_codex_selection.py",
+        "tools/ai/python/tests/test_entry_context.py",
+        "tools/ai/python/tests/test_inspection.py",
+        "tools/ai/python/tests/test_model_environment.py",
+        "tools/ai/python/tests/test_production_feedback.py",
+        "tools/ai/python/tests/test_python_selection.py",
+        "tools/ai/python/tests/test_search_launch.py",
+        "tools/ai/python/tests/test_skill_preflight_transport.py",
+        "tools/ai/python/tests/test_template_library_launch.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_terminal_environment.py",
+        "tools/ai/python/tests/test_tool_help.py",
+        "deploy/tests/test_runtime_release.py"
+      ],
+      "external_consumers": "Known repository consumers import launch helpers through this facade, including controller injection points and Agent Codex runtime/settings. Constant and error aliases have no direct repository importer; supported downstream imports still require migration confirmation. Imported implementation dependencies and underscore helpers are not additional public APIs.",
+      "evidence": [
+        "tools/ai/python/tests/test_launch_boundaries.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_agent_executable.py",
+        "tools/ai/python/tests/test_codex_selection.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_terminal_environment.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported controller, CLI, Agent runtime/settings, test and external imports to their responsibility owners. Remove these same-object aliases only at the next incompatible API version after consumer migration; preserve call-time filesystem/probe/gateway behavior and controller injection hooks."
+    },
+    {
+      "legacy": "cadai.launch exports from cadai.launch_policy",
+      "source": "tools/ai/python/cadai/launch.py",
+      "replacement": "tools/ai/python/cadai/launch_policy.py",
+      "owner": "tools/ai/python/cadai/launch_policy.py",
+      "exports": {
+        "SKILL_PREFLIGHT_INSTRUCTIONS": "SKILL_PREFLIGHT_INSTRUCTIONS",
+        "LOCAL_HELP_INSTRUCTIONS": "LOCAL_HELP_INSTRUCTIONS",
+        "assistant_instructions": "assistant_instructions"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/cadai/controller.py",
+        "tools/sico/python/sico/codex/runtime.py",
+        "tools/sico/python/sico/codex/settings.py",
+        "tools/ai/python/tests/controller_launch_cases.py",
+        "tools/ai/python/tests/test_agent_executable.py",
+        "tools/ai/python/tests/test_circuit_tools.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_codex_e2e.py",
+        "tools/ai/python/tests/test_codex_integration.py",
+        "tools/ai/python/tests/test_codex_selection.py",
+        "tools/ai/python/tests/test_entry_context.py",
+        "tools/ai/python/tests/test_inspection.py",
+        "tools/ai/python/tests/test_model_environment.py",
+        "tools/ai/python/tests/test_production_feedback.py",
+        "tools/ai/python/tests/test_python_selection.py",
+        "tools/ai/python/tests/test_search_launch.py",
+        "tools/ai/python/tests/test_skill_preflight_transport.py",
+        "tools/ai/python/tests/test_template_library_launch.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_terminal_environment.py",
+        "tools/ai/python/tests/test_tool_help.py",
+        "deploy/tests/test_runtime_release.py"
+      ],
+      "external_consumers": "Known repository consumers import launch helpers through this facade, including controller injection points and Agent Codex runtime/settings. Constant and error aliases have no direct repository importer; supported downstream imports still require migration confirmation. Imported implementation dependencies and underscore helpers are not additional public APIs.",
+      "evidence": [
+        "tools/ai/python/tests/test_launch_boundaries.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_agent_executable.py",
+        "tools/ai/python/tests/test_codex_selection.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_terminal_environment.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported controller, CLI, Agent runtime/settings, test and external imports to their responsibility owners. Remove these same-object aliases only at the next incompatible API version after consumer migration; preserve call-time filesystem/probe/gateway behavior and controller injection hooks."
+    },
+    {
+      "legacy": "cadai.controller exports from cadai.controller_live",
+      "source": "tools/ai/python/cadai/controller.py",
+      "replacement": "tools/ai/python/cadai/controller_live.py",
+      "owner": "tools/ai/python/cadai/controller_live.py",
+      "exports": {
+        "_send_transport_event": "send_transport_event",
+        "_snapshot_binding_from_aivw": "snapshot_binding_from_aivw"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/tests/circuit_create_support.py",
+        "tools/ai/python/tests/controller_launch_cases.py",
+        "tools/ai/python/tests/controller_request_cases.py",
+        "tools/ai/python/tests/controller_snapshot_cases.py",
+        "tools/ai/python/tests/pdk_ipc_worker.py",
+        "tools/ai/python/tests/pdk_pool_native_worker.py",
+        "tools/ai/python/tests/template_smic28_support.py",
+        "tools/ai/python/tests/template_symbol_fixture.py",
+        "tools/ai/python/tests/test_circuit_gate_gui.py",
+        "tools/ai/python/tests/test_circuit_matrix_gui.py",
+        "tools/ai/python/tests/test_circuit_native_transport.py",
+        "tools/ai/python/tests/test_circuit_opamp_gui.py",
+        "tools/ai/python/tests/test_circuit_rc_gui.py",
+        "tools/ai/python/tests/test_circuit_rebuild_gui.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_controller_boundaries.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_live_ipc.py",
+        "tools/ai/python/tests/test_production_feedback.py",
+        "tools/ai/python/tests/test_result_gui.py",
+        "tools/ai/python/tests/test_skill_preflight_transport.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_terminal_override.py"
+      ],
+      "external_consumers": "Known direct module consumers include dispatcher imports, controller injection tests and CLI run_session. The wheel-only _session_roots string consumer remains supported but was not executed in this source-only batch. Repository import discovery does not establish downstream migration. Other imported helpers are current orchestration dependencies, not additional facade APIs.",
+      "evidence": [
+        "tools/ai/python/tests/test_controller.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_controller_boundaries.py",
+        "tools/ai/python/tests/test_terminal_override.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports of these aliases and their controller patch targets to the named owner; remove only the aliases in an incompatible API version after downstream confirmation. RequestDispatcher, its methods, run_session and call-time controller dependency hooks remain current."
+    },
+    {
+      "legacy": "cadai.controller exports from cadai.controller_paths",
+      "source": "tools/ai/python/cadai/controller.py",
+      "replacement": "tools/ai/python/cadai/controller_paths.py",
+      "owner": "tools/ai/python/cadai/controller_paths.py",
+      "exports": {
+        "_session_roots": "session_roots",
+        "_session_install_roots": "session_install_roots"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/tests/circuit_create_support.py",
+        "tools/ai/python/tests/controller_launch_cases.py",
+        "tools/ai/python/tests/controller_request_cases.py",
+        "tools/ai/python/tests/controller_snapshot_cases.py",
+        "tools/ai/python/tests/pdk_ipc_worker.py",
+        "tools/ai/python/tests/pdk_pool_native_worker.py",
+        "tools/ai/python/tests/template_smic28_support.py",
+        "tools/ai/python/tests/template_symbol_fixture.py",
+        "tools/ai/python/tests/test_circuit_gate_gui.py",
+        "tools/ai/python/tests/test_circuit_matrix_gui.py",
+        "tools/ai/python/tests/test_circuit_native_transport.py",
+        "tools/ai/python/tests/test_circuit_opamp_gui.py",
+        "tools/ai/python/tests/test_circuit_rc_gui.py",
+        "tools/ai/python/tests/test_circuit_rebuild_gui.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_controller_boundaries.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_live_ipc.py",
+        "tools/ai/python/tests/test_production_feedback.py",
+        "tools/ai/python/tests/test_result_gui.py",
+        "tools/ai/python/tests/test_skill_preflight_transport.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_terminal_override.py"
+      ],
+      "external_consumers": "Known direct module consumers include dispatcher imports, controller injection tests and CLI run_session. The wheel-only _session_roots string consumer remains supported but was not executed in this source-only batch. Repository import discovery does not establish downstream migration. Other imported helpers are current orchestration dependencies, not additional facade APIs.",
+      "evidence": [
+        "tools/ai/python/tests/test_controller.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_controller_boundaries.py",
+        "tools/ai/python/tests/test_terminal_override.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports of these aliases and their controller patch targets to the named owner; remove only the aliases in an incompatible API version after downstream confirmation. RequestDispatcher, its methods, run_session and call-time controller dependency hooks remain current."
+    },
+    {
+      "legacy": "cadai.controller exports from cadai.codex_launch",
+      "source": "tools/ai/python/cadai/controller.py",
+      "replacement": "tools/ai/python/cadai/codex_launch.py",
+      "owner": "tools/ai/python/cadai/codex_launch.py",
+      "exports": {
+        "build_codex_command": "build_codex_command"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/tests/circuit_create_support.py",
+        "tools/ai/python/tests/controller_launch_cases.py",
+        "tools/ai/python/tests/controller_request_cases.py",
+        "tools/ai/python/tests/controller_snapshot_cases.py",
+        "tools/ai/python/tests/pdk_ipc_worker.py",
+        "tools/ai/python/tests/pdk_pool_native_worker.py",
+        "tools/ai/python/tests/template_smic28_support.py",
+        "tools/ai/python/tests/template_symbol_fixture.py",
+        "tools/ai/python/tests/test_circuit_gate_gui.py",
+        "tools/ai/python/tests/test_circuit_matrix_gui.py",
+        "tools/ai/python/tests/test_circuit_native_transport.py",
+        "tools/ai/python/tests/test_circuit_opamp_gui.py",
+        "tools/ai/python/tests/test_circuit_rc_gui.py",
+        "tools/ai/python/tests/test_circuit_rebuild_gui.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_controller_boundaries.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_live_ipc.py",
+        "tools/ai/python/tests/test_production_feedback.py",
+        "tools/ai/python/tests/test_result_gui.py",
+        "tools/ai/python/tests/test_skill_preflight_transport.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_terminal_override.py"
+      ],
+      "external_consumers": "Known direct module consumers include dispatcher imports, controller injection tests and CLI run_session. The wheel-only _session_roots string consumer remains supported but was not executed in this source-only batch. Repository import discovery does not establish downstream migration. Other imported helpers are current orchestration dependencies, not additional facade APIs.",
+      "evidence": [
+        "tools/ai/python/tests/test_controller.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_controller_boundaries.py",
+        "tools/ai/python/tests/test_terminal_override.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports of these aliases and their controller patch targets to the named owner; remove only the aliases in an incompatible API version after downstream confirmation. RequestDispatcher, its methods, run_session and call-time controller dependency hooks remain current."
+    },
+    {
+      "legacy": "cadai.controller exports from cadai.launch_bootstrap",
+      "source": "tools/ai/python/cadai/controller.py",
+      "replacement": "tools/ai/python/cadai/launch_bootstrap.py",
+      "owner": "tools/ai/python/cadai/launch_bootstrap.py",
+      "exports": {
+        "private_codex_home": "private_codex_home"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/tests/circuit_create_support.py",
+        "tools/ai/python/tests/controller_launch_cases.py",
+        "tools/ai/python/tests/controller_request_cases.py",
+        "tools/ai/python/tests/controller_snapshot_cases.py",
+        "tools/ai/python/tests/pdk_ipc_worker.py",
+        "tools/ai/python/tests/pdk_pool_native_worker.py",
+        "tools/ai/python/tests/template_smic28_support.py",
+        "tools/ai/python/tests/template_symbol_fixture.py",
+        "tools/ai/python/tests/test_circuit_gate_gui.py",
+        "tools/ai/python/tests/test_circuit_matrix_gui.py",
+        "tools/ai/python/tests/test_circuit_native_transport.py",
+        "tools/ai/python/tests/test_circuit_opamp_gui.py",
+        "tools/ai/python/tests/test_circuit_rc_gui.py",
+        "tools/ai/python/tests/test_circuit_rebuild_gui.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_controller_boundaries.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_live_ipc.py",
+        "tools/ai/python/tests/test_production_feedback.py",
+        "tools/ai/python/tests/test_result_gui.py",
+        "tools/ai/python/tests/test_skill_preflight_transport.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_terminal_override.py"
+      ],
+      "external_consumers": "Known direct module consumers include dispatcher imports, controller injection tests and CLI run_session. The wheel-only _session_roots string consumer remains supported but was not executed in this source-only batch. Repository import discovery does not establish downstream migration. Other imported helpers are current orchestration dependencies, not additional facade APIs.",
+      "evidence": [
+        "tools/ai/python/tests/test_controller.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_controller_boundaries.py",
+        "tools/ai/python/tests/test_terminal_override.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports of these aliases and their controller patch targets to the named owner; remove only the aliases in an incompatible API version after downstream confirmation. RequestDispatcher, its methods, run_session and call-time controller dependency hooks remain current."
+    },
+    {
+      "legacy": "cadai.controller exports from cadai.launch_environment",
+      "source": "tools/ai/python/cadai/controller.py",
+      "replacement": "tools/ai/python/cadai/launch_environment.py",
+      "owner": "tools/ai/python/cadai/launch_environment.py",
+      "exports": {
+        "sanitized_terminal_environment": "sanitized_terminal_environment"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/tests/circuit_create_support.py",
+        "tools/ai/python/tests/controller_launch_cases.py",
+        "tools/ai/python/tests/controller_request_cases.py",
+        "tools/ai/python/tests/controller_snapshot_cases.py",
+        "tools/ai/python/tests/pdk_ipc_worker.py",
+        "tools/ai/python/tests/pdk_pool_native_worker.py",
+        "tools/ai/python/tests/template_smic28_support.py",
+        "tools/ai/python/tests/template_symbol_fixture.py",
+        "tools/ai/python/tests/test_circuit_gate_gui.py",
+        "tools/ai/python/tests/test_circuit_matrix_gui.py",
+        "tools/ai/python/tests/test_circuit_native_transport.py",
+        "tools/ai/python/tests/test_circuit_opamp_gui.py",
+        "tools/ai/python/tests/test_circuit_rc_gui.py",
+        "tools/ai/python/tests/test_circuit_rebuild_gui.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_controller_boundaries.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_live_ipc.py",
+        "tools/ai/python/tests/test_production_feedback.py",
+        "tools/ai/python/tests/test_result_gui.py",
+        "tools/ai/python/tests/test_skill_preflight_transport.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_terminal_override.py"
+      ],
+      "external_consumers": "Known direct module consumers include dispatcher imports, controller injection tests and CLI run_session. The wheel-only _session_roots string consumer remains supported but was not executed in this source-only batch. Repository import discovery does not establish downstream migration. Other imported helpers are current orchestration dependencies, not additional facade APIs.",
+      "evidence": [
+        "tools/ai/python/tests/test_controller.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_controller_boundaries.py",
+        "tools/ai/python/tests/test_terminal_override.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports of these aliases and their controller patch targets to the named owner; remove only the aliases in an incompatible API version after downstream confirmation. RequestDispatcher, its methods, run_session and call-time controller dependency hooks remain current."
+    },
+    {
+      "legacy": "cadai.controller._snapshot_generation_from_aivw hash-only accessor",
+      "source": "tools/ai/python/cadai/controller.py:_snapshot_generation_from_aivw",
+      "replacement": "tools/ai/python/cadai/controller_live.py:snapshot_binding_from_aivw",
+      "owner": "tools/ai/python/cadai/controller_live.py",
+      "consumers": [
+        "tools/ai/python/tests/test_controller_boundaries.py"
+      ],
+      "external_consumers": "No production repository caller of the hash-only accessor was found. Preserve the existing binding-hook dispatch for supported external consumers until they migrate.",
+      "evidence": [
+        "tools/ai/python/tests/test_controller_boundaries.py",
+        "tools/ai/python/tests/test_controller_live_recipe.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate hash-only callers to the authoritative target/view binding result and explicitly read source_generation when appropriate. Remove this legacy accessor only after supported callers no longer depend on its old controller path and binding-hook semantics; keep the full binding validator."
+    },
+    {
+      "legacy": "normalize_manifest exports from rnm_inspection",
+      "source": "tools/ai/skills/schematic-to-rnm/scripts/normalize_manifest.py",
+      "replacement": "tools/ai/skills/schematic-to-rnm/scripts/rnm_inspection.py",
+      "owner": "tools/ai/skills/schematic-to-rnm/scripts/rnm_inspection.py",
+      "exports": {
+        "SCHEMA_VERSION": "SCHEMA_VERSION",
+        "TOOL_VERSION": "TOOL_VERSION",
+        "REQUIRED_SCHEMATIC_KEYS": "REQUIRED_SCHEMATIC_KEYS",
+        "REQUIRED_SYMBOL_KEYS": "REQUIRED_SYMBOL_KEYS",
+        "BlockedInput": "BlockedInput",
+        "_read_json": "_read_json",
+        "_unwrap_mcp": "_unwrap_mcp",
+        "_require_ok": "_require_ok",
+        "_text": "_text",
+        "_integer": "_integer",
+        "_as_dicts": "_as_dicts",
+        "_cellview": "_cellview"
+      },
+      "consumers": [
+        "tools/ai/skills/schematic-to-rnm/tests/test_normalize_manifest.py",
+        "tools/aivw/python/aivworkbench/executors/virtuoso_support.py"
+      ],
+      "external_consumers": "Known Python imports use BlockedInput and normalize; the AIVW executor runs the original script path. Preserve the remaining helper/hash/constant imports for supported private downstream scripts until confirmed migrated. No runtime payload exposure is authorized.",
+      "evidence": [
+        "tools/ai/skills/schematic-to-rnm/tests/test_normalize_manifest.py",
+        "tools/aivw/tests/test_virtuoso_snapshot.py",
+        "tools/utility/tests/test_compatibility_source_exports.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported private Python helper imports to the named responsibility owner, verify exact identity and CLI/AIVW behavior, then remove only the aliases in an incompatible script API version. Keep normalize and main at the original script entry; this tool and its helpers remain excluded from runtime distribution."
+    },
+    {
+      "legacy": "normalize_manifest exports from rnm_symbol",
+      "source": "tools/ai/skills/schematic-to-rnm/scripts/normalize_manifest.py",
+      "replacement": "tools/ai/skills/schematic-to-rnm/scripts/rnm_symbol.py",
+      "owner": "tools/ai/skills/schematic-to-rnm/scripts/rnm_symbol.py",
+      "exports": {
+        "_ordered_symbol_terminals": "_ordered_symbol_terminals",
+        "_normalize_symbol": "_normalize_symbol"
+      },
+      "consumers": [
+        "tools/ai/skills/schematic-to-rnm/tests/test_normalize_manifest.py",
+        "tools/aivw/python/aivworkbench/executors/virtuoso_support.py"
+      ],
+      "external_consumers": "Known Python imports use BlockedInput and normalize; the AIVW executor runs the original script path. Preserve the remaining helper/hash/constant imports for supported private downstream scripts until confirmed migrated. No runtime payload exposure is authorized.",
+      "evidence": [
+        "tools/ai/skills/schematic-to-rnm/tests/test_normalize_manifest.py",
+        "tools/aivw/tests/test_virtuoso_snapshot.py",
+        "tools/utility/tests/test_compatibility_source_exports.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported private Python helper imports to the named responsibility owner, verify exact identity and CLI/AIVW behavior, then remove only the aliases in an incompatible script API version. Keep normalize and main at the original script entry; this tool and its helpers remain excluded from runtime distribution."
+    },
+    {
+      "legacy": "normalize_manifest exports from rnm_connectivity",
+      "source": "tools/ai/skills/schematic-to-rnm/scripts/normalize_manifest.py",
+      "replacement": "tools/ai/skills/schematic-to-rnm/scripts/rnm_connectivity.py",
+      "owner": "tools/ai/skills/schematic-to-rnm/scripts/rnm_connectivity.py",
+      "exports": {
+        "_is_schematic_pin_marker": "_is_schematic_pin_marker",
+        "_normalize_schematic": "_normalize_schematic"
+      },
+      "consumers": [
+        "tools/ai/skills/schematic-to-rnm/tests/test_normalize_manifest.py",
+        "tools/aivw/python/aivworkbench/executors/virtuoso_support.py"
+      ],
+      "external_consumers": "Known Python imports use BlockedInput and normalize; the AIVW executor runs the original script path. Preserve the remaining helper/hash/constant imports for supported private downstream scripts until confirmed migrated. No runtime payload exposure is authorized.",
+      "evidence": [
+        "tools/ai/skills/schematic-to-rnm/tests/test_normalize_manifest.py",
+        "tools/aivw/tests/test_virtuoso_snapshot.py",
+        "tools/utility/tests/test_compatibility_source_exports.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported private Python helper imports to the named responsibility owner, verify exact identity and CLI/AIVW behavior, then remove only the aliases in an incompatible script API version. Keep normalize and main at the original script entry; this tool and its helpers remain excluded from runtime distribution."
+    },
+    {
+      "legacy": "normalize_manifest exports from rnm_provenance",
+      "source": "tools/ai/skills/schematic-to-rnm/scripts/normalize_manifest.py",
+      "replacement": "tools/ai/skills/schematic-to-rnm/scripts/rnm_provenance.py",
+      "owner": "tools/ai/skills/schematic-to-rnm/scripts/rnm_provenance.py",
+      "exports": {
+        "_canonical_json": "_canonical_json",
+        "sha256_json": "sha256_json",
+        "sha256_file": "sha256_file",
+        "build_manifest": "build_manifest"
+      },
+      "consumers": [
+        "tools/ai/skills/schematic-to-rnm/tests/test_normalize_manifest.py",
+        "tools/aivw/python/aivworkbench/executors/virtuoso_support.py"
+      ],
+      "external_consumers": "Known Python imports use BlockedInput and normalize; the AIVW executor runs the original script path. Preserve the remaining helper/hash/constant imports for supported private downstream scripts until confirmed migrated. No runtime payload exposure is authorized.",
+      "evidence": [
+        "tools/ai/skills/schematic-to-rnm/tests/test_normalize_manifest.py",
+        "tools/aivw/tests/test_virtuoso_snapshot.py",
+        "tools/utility/tests/test_compatibility_source_exports.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported private Python helper imports to the named responsibility owner, verify exact identity and CLI/AIVW behavior, then remove only the aliases in an incompatible script API version. Keep normalize and main at the original script entry; this tool and its helpers remain excluded from runtime distribution."
+    },
+    {
+      "legacy": "check_rnm exports from rnm_module",
+      "source": "tools/ai/skills/schematic-to-rnm/scripts/check_rnm.py",
+      "replacement": "tools/ai/skills/schematic-to-rnm/scripts/rnm_module.py",
+      "owner": "tools/ai/skills/schematic-to-rnm/scripts/rnm_module.py",
+      "exports": {
+        "BLOCK_COMMENT_RE": "BLOCK_COMMENT_RE",
+        "LINE_COMMENT_RE": "LINE_COMMENT_RE",
+        "MODULE_RE": "MODULE_RE",
+        "DIRECTION_RE": "DIRECTION_RE",
+        "NET_TYPE_RE": "NET_TYPE_RE",
+        "NET_DECL_RE": "NET_DECL_RE",
+        "PARAM_DECL_RE": "PARAM_DECL_RE",
+        "IDENT_RE": "IDENT_RE",
+        "strip_comments": "strip_comments",
+        "declared_identifiers": "declared_identifiers",
+        "ModuleFacts": "ModuleFacts",
+        "parse_module": "parse_module"
+      },
+      "consumers": [
+        "tools/aivw/tests/test_m1ai_rnm.py",
+        "tools/aivw/python/aivworkbench/m1ai_rnm.py",
+        "tools/aivw/python/aivworkbench/executors/xcelium.py",
+        "tools/ai/skills/schematic-to-rnm/tests/test_check_rnm.py",
+        "tools/ai/skills/schematic-to-rnm/tests/test_rnm_compile.py"
+      ],
+      "external_consumers": "Known preexisting Python imports use parse_module; both AIVW paths execute the original CLI. Remaining function/class/constant aliases preserve supported private downstream imports, whose migration cannot be certified by repository search. No repository consumer replaces the moved helper globals; main still resolves checker hooks at call time. Standard-library imports are implementation dependencies, not compatibility APIs. No runtime payload exposure is authorized.",
+      "evidence": [
+        "tools/ai/skills/schematic-to-rnm/tests/test_check_rnm.py",
+        "tools/ai/skills/schematic-to-rnm/tests/test_rnm_compile.py",
+        "tools/aivw/tests/test_m1ai_rnm.py",
+        "tools/aivw/tests/test_executor.py",
+        "tools/utility/tests/test_compatibility_source_exports.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports of these helper/class/constant aliases to the named owner; retire only these aliases at an incompatible private script API version after downstream confirmation. Keep main, load_netlist_cell and the standalone CLI as current orchestration. Private skill scripts remain excluded from runtime distribution."
+    },
+    {
+      "legacy": "check_rnm exports from rnm_findings",
+      "source": "tools/ai/skills/schematic-to-rnm/scripts/check_rnm.py",
+      "replacement": "tools/ai/skills/schematic-to-rnm/scripts/rnm_findings.py",
+      "owner": "tools/ai/skills/schematic-to-rnm/scripts/rnm_findings.py",
+      "exports": {
+        "SEVERITY_ORDER": "SEVERITY_ORDER",
+        "Finding": "Finding"
+      },
+      "consumers": [
+        "tools/aivw/tests/test_m1ai_rnm.py",
+        "tools/aivw/python/aivworkbench/m1ai_rnm.py",
+        "tools/aivw/python/aivworkbench/executors/xcelium.py",
+        "tools/ai/skills/schematic-to-rnm/tests/test_check_rnm.py",
+        "tools/ai/skills/schematic-to-rnm/tests/test_rnm_compile.py"
+      ],
+      "external_consumers": "Known preexisting Python imports use parse_module; both AIVW paths execute the original CLI. Remaining function/class/constant aliases preserve supported private downstream imports, whose migration cannot be certified by repository search. No repository consumer replaces the moved helper globals; main still resolves checker hooks at call time. Standard-library imports are implementation dependencies, not compatibility APIs. No runtime payload exposure is authorized.",
+      "evidence": [
+        "tools/ai/skills/schematic-to-rnm/tests/test_check_rnm.py",
+        "tools/ai/skills/schematic-to-rnm/tests/test_rnm_compile.py",
+        "tools/aivw/tests/test_m1ai_rnm.py",
+        "tools/aivw/tests/test_executor.py",
+        "tools/utility/tests/test_compatibility_source_exports.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports of these helper/class/constant aliases to the named owner; retire only these aliases at an incompatible private script API version after downstream confirmation. Keep main, load_netlist_cell and the standalone CLI as current orchestration. Private skill scripts remain excluded from runtime distribution."
+    },
+    {
+      "legacy": "check_rnm exports from rnm_conformance",
+      "source": "tools/ai/skills/schematic-to-rnm/scripts/check_rnm.py",
+      "replacement": "tools/ai/skills/schematic-to-rnm/scripts/rnm_conformance.py",
+      "owner": "tools/ai/skills/schematic-to-rnm/scripts/rnm_conformance.py",
+      "exports": {
+        "REAL_NET_TYPES": "REAL_NET_TYPES",
+        "check_ports": "check_ports",
+        "check_spec": "check_spec",
+        "check_modeling_style": "check_modeling_style"
+      },
+      "consumers": [
+        "tools/aivw/tests/test_m1ai_rnm.py",
+        "tools/aivw/python/aivworkbench/m1ai_rnm.py",
+        "tools/aivw/python/aivworkbench/executors/xcelium.py",
+        "tools/ai/skills/schematic-to-rnm/tests/test_check_rnm.py",
+        "tools/ai/skills/schematic-to-rnm/tests/test_rnm_compile.py"
+      ],
+      "external_consumers": "Known preexisting Python imports use parse_module; both AIVW paths execute the original CLI. Remaining function/class/constant aliases preserve supported private downstream imports, whose migration cannot be certified by repository search. No repository consumer replaces the moved helper globals; main still resolves checker hooks at call time. Standard-library imports are implementation dependencies, not compatibility APIs. No runtime payload exposure is authorized.",
+      "evidence": [
+        "tools/ai/skills/schematic-to-rnm/tests/test_check_rnm.py",
+        "tools/ai/skills/schematic-to-rnm/tests/test_rnm_compile.py",
+        "tools/aivw/tests/test_m1ai_rnm.py",
+        "tools/aivw/tests/test_executor.py",
+        "tools/utility/tests/test_compatibility_source_exports.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports of these helper/class/constant aliases to the named owner; retire only these aliases at an incompatible private script API version after downstream confirmation. Keep main, load_netlist_cell and the standalone CLI as current orchestration. Private skill scripts remain excluded from runtime distribution."
+    },
+    {
+      "legacy": "check_rnm exports from rnm_compile",
+      "source": "tools/ai/skills/schematic-to-rnm/scripts/check_rnm.py",
+      "replacement": "tools/ai/skills/schematic-to-rnm/scripts/rnm_compile.py",
+      "owner": "tools/ai/skills/schematic-to-rnm/scripts/rnm_compile.py",
+      "exports": {
+        "ENVIRONMENT_NOISE_RE": "ENVIRONMENT_NOISE_RE",
+        "CASCADED_AMS_ERROR_RE": "CASCADED_AMS_ERROR_RE",
+        "compile_check": "compile_check"
+      },
+      "consumers": [
+        "tools/aivw/tests/test_m1ai_rnm.py",
+        "tools/aivw/python/aivworkbench/m1ai_rnm.py",
+        "tools/aivw/python/aivworkbench/executors/xcelium.py",
+        "tools/ai/skills/schematic-to-rnm/tests/test_check_rnm.py",
+        "tools/ai/skills/schematic-to-rnm/tests/test_rnm_compile.py"
+      ],
+      "external_consumers": "Known preexisting Python imports use parse_module; both AIVW paths execute the original CLI. Remaining function/class/constant aliases preserve supported private downstream imports, whose migration cannot be certified by repository search. No repository consumer replaces the moved helper globals; main still resolves checker hooks at call time. Standard-library imports are implementation dependencies, not compatibility APIs. No runtime payload exposure is authorized.",
+      "evidence": [
+        "tools/ai/skills/schematic-to-rnm/tests/test_check_rnm.py",
+        "tools/ai/skills/schematic-to-rnm/tests/test_rnm_compile.py",
+        "tools/aivw/tests/test_m1ai_rnm.py",
+        "tools/aivw/tests/test_executor.py",
+        "tools/utility/tests/test_compatibility_source_exports.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports of these helper/class/constant aliases to the named owner; retire only these aliases at an incompatible private script API version after downstream confirmation. Keep main, load_netlist_cell and the standalone CLI as current orchestration. Private skill scripts remain excluded from runtime distribution."
+    },
+    {
+      "legacy": "sico_ui.chrome exports from sico_ui.window_policy",
+      "source": "tools/sico/python/sico_ui/chrome.py",
+      "replacement": "tools/sico/python/sico_ui/window_policy.py",
+      "owner": "tools/sico/python/sico_ui/window_policy.py",
+      "exports": {
+        "half_screen_rect": "half_screen_rect",
+        "main_window_frameless_flags": "main_window_frameless_flags",
+        "apply_main_window_frameless": "apply_main_window_frameless",
+        "dialog_frameless_flags": "dialog_frameless_flags",
+        "apply_dialog_frameless": "apply_dialog_frameless"
+      },
+      "consumers": [
+        "tools/sico/python/sico_ui/composer.py",
+        "tools/sico/python/sico_ui/event_detail.py",
+        "tools/sico/python/sico_ui/resources.py",
+        "tools/sico/python/sico_ui/startup.py",
+        "tools/sico/python/sico_ui/target_picker.py",
+        "tools/sico/python/sico_ui/terminal_tool.py",
+        "tools/sico/python/sico_ui/thread_controls.py",
+        "tools/sico/python/sico_ui/turn_composer.py",
+        "tools/sico/python/sico_ui/turn_input_detail.py",
+        "tools/sico/python/sico_ui/workspace.py",
+        "tools/ai/python/tests/test_agent_gui.py",
+        "tools/ai/python/tests/test_window_chrome.py"
+      ],
+      "external_consumers": "Known direct callers use the chrome window classes, half_screen_rect and WINDOW_STYLESHEET. Preserve other moved class/helper/constant imports for supported downstream callers; repository discovery cannot certify their migration. No repository consumer patches moved module globals. Existing per-window method overrides, chrome composition dependencies and signal-time maximize/close hooks remain supported. Standard-library, Qt and branding/theme import attributes are implementation dependencies, not new compatibility contracts.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_gui.py",
+        "tools/ai/python/tests/test_agent_composer.py",
+        "tools/ai/python/tests/test_window_chrome.py",
+        "tools/ai/python/tests/test_agent_terminal_tool.py",
+        "tools/utility/tests/test_compatibility_source_exports.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports of the listed helper/class/constant aliases to the named owner; remove only these aliases at an incompatible API version after downstream confirmation. SiWindowMixin, SiMainWindow, SiWidget and SiDialog remain canonical chrome composition entrypoints with the existing inheritance and event override contract. Do not retire these current window APIs."
+    },
+    {
+      "legacy": "sico_ui.chrome exports from sico_ui.window_frameless",
+      "source": "tools/sico/python/sico_ui/chrome.py",
+      "replacement": "tools/sico/python/sico_ui/window_frameless.py",
+      "owner": "tools/sico/python/sico_ui/window_frameless.py",
+      "exports": {
+        "EdgeGrip": "EdgeGrip",
+        "FramelessWindowMixin": "FramelessWindowMixin"
+      },
+      "consumers": [
+        "tools/sico/python/sico_ui/composer.py",
+        "tools/sico/python/sico_ui/event_detail.py",
+        "tools/sico/python/sico_ui/resources.py",
+        "tools/sico/python/sico_ui/startup.py",
+        "tools/sico/python/sico_ui/target_picker.py",
+        "tools/sico/python/sico_ui/terminal_tool.py",
+        "tools/sico/python/sico_ui/thread_controls.py",
+        "tools/sico/python/sico_ui/turn_composer.py",
+        "tools/sico/python/sico_ui/turn_input_detail.py",
+        "tools/sico/python/sico_ui/workspace.py",
+        "tools/ai/python/tests/test_agent_gui.py",
+        "tools/ai/python/tests/test_window_chrome.py"
+      ],
+      "external_consumers": "Known direct callers use the chrome window classes, half_screen_rect and WINDOW_STYLESHEET. Preserve other moved class/helper/constant imports for supported downstream callers; repository discovery cannot certify their migration. No repository consumer patches moved module globals. Existing per-window method overrides, chrome composition dependencies and signal-time maximize/close hooks remain supported. Standard-library, Qt and branding/theme import attributes are implementation dependencies, not new compatibility contracts.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_gui.py",
+        "tools/ai/python/tests/test_agent_composer.py",
+        "tools/ai/python/tests/test_window_chrome.py",
+        "tools/ai/python/tests/test_agent_terminal_tool.py",
+        "tools/utility/tests/test_compatibility_source_exports.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports of the listed helper/class/constant aliases to the named owner; remove only these aliases at an incompatible API version after downstream confirmation. SiWindowMixin, SiMainWindow, SiWidget and SiDialog remain canonical chrome composition entrypoints with the existing inheritance and event override contract. Do not retire these current window APIs."
+    },
+    {
+      "legacy": "sico_ui.chrome exports from sico_ui.window_titlebar",
+      "source": "tools/sico/python/sico_ui/chrome.py",
+      "replacement": "tools/sico/python/sico_ui/window_titlebar.py",
+      "owner": "tools/sico/python/sico_ui/window_titlebar.py",
+      "exports": {
+        "CHROME_STYLESHEET": "CHROME_STYLESHEET",
+        "WINDOW_STYLESHEET": "WINDOW_STYLESHEET",
+        "WINDOW_BUTTONS": "WINDOW_BUTTONS",
+        "WINDOW_CONTROLS": "WINDOW_CONTROLS",
+        "SiTitleBar": "SiTitleBar"
+      },
+      "consumers": [
+        "tools/sico/python/sico_ui/composer.py",
+        "tools/sico/python/sico_ui/event_detail.py",
+        "tools/sico/python/sico_ui/resources.py",
+        "tools/sico/python/sico_ui/startup.py",
+        "tools/sico/python/sico_ui/target_picker.py",
+        "tools/sico/python/sico_ui/terminal_tool.py",
+        "tools/sico/python/sico_ui/thread_controls.py",
+        "tools/sico/python/sico_ui/turn_composer.py",
+        "tools/sico/python/sico_ui/turn_input_detail.py",
+        "tools/sico/python/sico_ui/workspace.py",
+        "tools/ai/python/tests/test_agent_gui.py",
+        "tools/ai/python/tests/test_window_chrome.py"
+      ],
+      "external_consumers": "Known direct callers use the chrome window classes, half_screen_rect and WINDOW_STYLESHEET. Preserve other moved class/helper/constant imports for supported downstream callers; repository discovery cannot certify their migration. No repository consumer patches moved module globals. Existing per-window method overrides, chrome composition dependencies and signal-time maximize/close hooks remain supported. Standard-library, Qt and branding/theme import attributes are implementation dependencies, not new compatibility contracts.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_gui.py",
+        "tools/ai/python/tests/test_agent_composer.py",
+        "tools/ai/python/tests/test_window_chrome.py",
+        "tools/ai/python/tests/test_agent_terminal_tool.py",
+        "tools/utility/tests/test_compatibility_source_exports.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports of the listed helper/class/constant aliases to the named owner; remove only these aliases at an incompatible API version after downstream confirmation. SiWindowMixin, SiMainWindow, SiWidget and SiDialog remain canonical chrome composition entrypoints with the existing inheritance and event override contract. Do not retire these current window APIs."
+    },
+    {
+      "legacy": "sico_ui.transcript exports from sico_ui.transcript_render",
+      "source": "tools/sico/python/sico_ui/transcript.py",
+      "replacement": "tools/sico/python/sico_ui/transcript_render.py",
+      "owner": "tools/sico/python/sico_ui/transcript_render.py",
+      "exports": {
+        "TRIANGLE_COLLAPSED": "TRIANGLE_COLLAPSED",
+        "TRIANGLE_EXPANDED": "TRIANGLE_EXPANDED",
+        "SafeDocument": "SafeDocument"
+      },
+      "consumers": [
+        "tools/sico/python/sico_ui/session_presentation.py",
+        "tools/sico/python/sico_ui/workbench_view.py",
+        "tools/ai/python/tests/agent_service_scale_fixtures.py",
+        "tools/ai/python/tests/test_agent_chat_tables.py",
+        "tools/ai/python/tests/test_agent_display_scheduling.py",
+        "tools/ai/python/tests/test_agent_event_contract.py",
+        "tools/ai/python/tests/test_agent_event_scale.py",
+        "tools/ai/python/tests/test_agent_gui.py",
+        "tools/ai/python/tests/test_agent_render_incremental.py",
+        "tools/ai/python/tests/test_agent_service_frontend_scale.py",
+        "tools/ai/python/tests/test_codex_elicitation.py",
+        "tools/ai/python/tests/test_codex_native_a2_gui.py",
+        "tools/ai/python/tests/test_codex_native_evidence_gui.py",
+        "tools/ai/python/tests/test_codex_steering.py",
+        "tools/ai/python/tests/test_pdk_notice.py",
+        "tools/ai/python/tests/test_transcript_projection.py"
+      ],
+      "external_consumers": "Existing same-object renderer aliases predate this split: GUI tests import triangle values and workbench_view imports SafeDocument. Preserve downstream imports until their migration is confirmed. Transcript/system_user_name and existing instance/static method hooks remain current APIs, not deprecated forwarding state. No repository caller replaces the extracted projection-module globals.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_gui.py",
+        "tools/ai/python/tests/test_transcript_projection.py",
+        "tools/ai/python/tests/test_agent_event_contract.py",
+        "tools/ai/python/tests/test_agent_render_incremental.py",
+        "tools/ai/python/tests/test_codex_native_evidence_gui.py",
+        "tools/utility/tests/test_compatibility_source_exports.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports of only these three renderer aliases to transcript_render; remove those aliases at an incompatible API version after downstream confirmation. Keep Transcript, system_user_name, its event methods and override hooks as the canonical state API."
+    },
+    {
+      "legacy": "sico_ui.workspace exports from sico_ui.workspace_tabs",
+      "source": "tools/sico/python/sico_ui/workspace.py",
+      "replacement": "tools/sico/python/sico_ui/workspace_tabs.py",
+      "owner": "tools/sico/python/sico_ui/workspace_tabs.py",
+      "exports": {
+        "EqualTabBar": "EqualTabBar",
+        "EvenTabWidget": "EvenTabWidget",
+        "EvenTabPanel": "EvenTabPanel"
+      },
+      "consumers": [
+        "tools/sico/python/sico_ui/centers.py",
+        "tools/sico/python/sico_ui/navigation.py",
+        "tools/sico/python/sico_ui/tool_results.py",
+        "tools/sico/python/sico_ui/window.py",
+        "tools/ai/python/tests/agent_gui_contract_theme_menu_cases.py",
+        "tools/ai/python/tests/test_agent_panel_rail.py"
+      ],
+      "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_gui.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate the listed symbol imports in supported consumers to their named owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. The original orchestration entry remains supported."
+    },
+    {
+      "legacy": "sico_ui.workspace exports from sico_ui.workspace_closing",
+      "source": "tools/sico/python/sico_ui/workspace.py",
+      "replacement": "tools/sico/python/sico_ui/workspace_closing.py",
+      "owner": "tools/sico/python/sico_ui/workspace_closing.py",
+      "exports": {
+        "ClosingMenuEntry": "ClosingMenuEntry"
+      },
+      "consumers": [
+        "tools/sico/python/sico_ui/centers.py",
+        "tools/sico/python/sico_ui/navigation.py",
+        "tools/sico/python/sico_ui/tool_results.py",
+        "tools/sico/python/sico_ui/window.py",
+        "tools/ai/python/tests/agent_gui_contract_theme_menu_cases.py",
+        "tools/ai/python/tests/test_agent_panel_rail.py"
+      ],
+      "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_gui.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate the listed symbol imports in supported consumers to their named owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. The original orchestration entry remains supported."
+    },
+    {
+      "legacy": "sico.storage.history exports from sico.storage.history_reader",
+      "source": "tools/sico/python/sico/storage/history.py",
+      "replacement": "tools/sico/python/sico/storage/history_reader.py",
+      "owner": "tools/sico/python/sico/storage/history_reader.py",
+      "exports": {
+        "TailWindow": "TailWindow",
+        "owned_directory": "owned_directory",
+        "validate_event": "validate_event",
+        "SessionReader": "SessionReader"
+      },
+      "consumers": [
+        "tools/sico/python/sico/service/catalog.py",
+        "tools/sico/python/sico/service/lsf_bundle.py",
+        "tools/sico/python/sico/service/lsf_evidence.py",
+        "tools/sico/python/sico/service/recovery_facts.py",
+        "tools/sico/python/sico/service/replay.py",
+        "tools/sico/python/sico/storage/host_routes.py",
+        "tools/sico/python/sico/storage/inbox_records.py",
+        "tools/sico/python/sico/storage/session_snapshot.py",
+        "tools/ai/python/tests/agent_lsf_live_site.py",
+        "tools/ai/python/tests/agent_service_matrix_fixtures.py",
+        "tools/ai/python/tests/agent_sessions_harness.py",
+        "tools/ai/python/tests/test_agent_catalog.py",
+        "tools/ai/python/tests/test_agent_desktop.py",
+        "tools/ai/python/tests/test_agent_event_contract.py",
+        "tools/ai/python/tests/test_agent_history.py",
+        "tools/ai/python/tests/test_agent_processes.py",
+        "tools/ai/python/tests/test_agent_session_load_scale.py",
+        "tools/ai/python/tests/test_agent_session_names.py",
+        "tools/ai/python/tests/test_agent_session_names_native.py",
+        "tools/ai/python/tests/test_agent_workbench.py",
+        "tools/ai/python/tests/test_agent_workbench_query_boundary.py",
+        "tools/ai/python/tests/test_codex_native_a2.py"
+      ],
+      "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_history.py",
+        "tools/ai/python/tests/test_agent_catalog.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate the listed symbol imports in supported consumers to their named owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. The original orchestration entry remains supported."
+    },
+    {
+      "legacy": "cadai.template_placement exports from cadai.template_placement_schema",
+      "source": "tools/ai/python/cadai/template_placement.py",
+      "replacement": "tools/ai/python/cadai/template_placement_schema.py",
+      "owner": "tools/ai/python/cadai/template_placement_schema.py",
+      "exports": {
+        "TOOL_NAME": "TOOL_NAME",
+        "MAX_RESPONSE_BYTES": "MAX_RESPONSE_BYTES",
+        "POSITIVE": "POSITIVE",
+        "OPTIONS": "OPTIONS",
+        "DEVICE_MAP": "DEVICE_MAP",
+        "TOOLS": "TOOLS",
+        "TOOL_NAMES": "TOOL_NAMES"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/mcp_bindings.py",
+        "tools/ai/python/cadai/mcp_definitions.py",
+        "tools/ai/python/cadai/mcp_template_handler.py",
+        "tools/ai/python/tests/test_template_placement.py"
+      ],
+      "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_template_placement.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate the listed symbol imports in supported consumers to their named owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. The original orchestration entry remains supported."
+    },
+    {
+      "legacy": "cadai.template_placement exports from cadai.template_placement_layout",
+      "source": "tools/ai/python/cadai/template_placement.py",
+      "replacement": "tools/ai/python/cadai/template_placement_layout.py",
+      "owner": "tools/ai/python/cadai/template_placement_layout.py",
+      "exports": {
+        "PLACEMENT_SCHEMA": "PLACEMENT_SCHEMA",
+        "MAX_INSTANCES": "MAX_INSTANCES",
+        "LOOSE_MIN_GAP": "LOOSE_MIN_GAP"
+      },
+      "consumers": [
+        "tools/ai/python/cadai/mcp_bindings.py",
+        "tools/ai/python/cadai/mcp_definitions.py",
+        "tools/ai/python/cadai/mcp_template_handler.py",
+        "tools/ai/python/tests/test_template_placement.py"
+      ],
+      "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_template_placement.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate the listed symbol imports in supported consumers to their named owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. The original orchestration entry remains supported."
+    },
+    {
+      "legacy": "sico.transport.relay exports from sico.transport.relay_stdio",
+      "source": "tools/sico/python/sico/transport/relay.py",
+      "replacement": "tools/sico/python/sico/transport/relay_stdio.py",
+      "owner": "tools/sico/python/sico/transport/relay_stdio.py",
+      "exports": {
+        "SkillResponseTimeout": "SkillResponseTimeout",
+        "SkillReplyWriteFailed": "SkillReplyWriteFailed",
+        "StdioLines": "StdioLines"
+      },
+      "consumers": [
+        "tools/sico/python/sico/cli.py",
+        "tools/sico/python/sico/service/background_worker.py",
+        "tools/sico/python/sico/service/composer.py",
+        "tools/sico/python/sico/service/desktop.py",
+        "tools/sico/python/sico/service/launch.py",
+        "tools/sico/python/sico/transport/bindings.py",
+        "tools/sico/python/sico/transport/broker.py",
+        "tools/sico/python/sico/transport/broker_peer.py",
+        "tools/sico/python/sico/transport/broker_registration.py",
+        "tools/sico/python/sico/transport/instance_bridge.py",
+        "tools/sico/python/sico/transport/router.py",
+        "tools/sico/python/sico/transport/skill_diagnostics.py",
+        "tools/ai/python/tests/agent_transport_contract_wire_cases.py",
+        "tools/ai/python/tests/test_agent_bridge_control.py",
+        "tools/ai/python/tests/test_agent_circuit_errors.py",
+        "tools/ai/python/tests/test_agent_notice_backpressure.py",
+        "tools/ai/python/tests/test_agent_router_durable.py",
+        "tools/ai/python/tests/test_circuit_output_capture.py"
+      ],
+      "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_transport.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate the listed symbol imports in supported consumers to their named owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. The original orchestration entry remains supported."
+    },
+    {
+      "legacy": "sico.transport.router_archive exports from sico.transport.router_archive_records",
+      "source": "tools/sico/python/sico/transport/router_archive.py",
+      "replacement": "tools/sico/python/sico/transport/router_archive_records.py",
+      "owner": "tools/sico/python/sico/transport/router_archive_records.py",
+      "exports": {
+        "PROTOCOL": "PROTOCOL",
+        "SEAL_PROTOCOL": "SEAL_PROTOCOL",
+        "IDENTITY": "IDENTITY",
+        "DIAGNOSTICS": "DIAGNOSTICS",
+        "PRESERVED": "PRESERVED",
+        "FILES": "FILES",
+        "_directory": "_directory",
+        "_json": "_json",
+        "_atomic_json": "_atomic_json",
+        "_source": "_source",
+        "_stamp": "_stamp",
+        "_manifest": "_manifest",
+        "_save_manifest": "_save_manifest",
+        "_verify_stream": "_verify_stream",
+        "_compressed": "_compressed",
+        "archived_journal": "archived_journal",
+        "_validate_archive": "_validate_archive"
+      },
+      "consumers": [
+        "tools/sico/python/sico/cli.py",
+        "tools/sico/python/sico/service/launch.py",
+        "tools/sico/python/sico/transport/instance_bridge.py",
+        "tools/sico/python/sico/transport/router_journal.py",
+        "tools/ai/python/tests/router_project_scenario.py",
+        "tools/ai/python/tests/test_agent_router_archive.py",
+        "tools/ai/python/tests/test_agent_router_ic231.py",
+        "tools/ai/python/tests/test_agent_router_project_ic231.py"
+      ],
+      "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_router_archive.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate the listed symbol imports in supported consumers to their named owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. The original orchestration entry remains supported."
+    },
+    {
+      "legacy": "sico.service.audit exports from sico.service.audit_questions",
+      "source": "tools/sico/python/sico/service/audit.py",
+      "replacement": "tools/sico/python/sico/service/audit_questions.py",
+      "owner": "tools/sico/python/sico/service/audit_questions.py",
+      "exports": {
+        "NEW_WINDOW_OPTION": "NEW_WINDOW_OPTION",
+        "QUESTION": "QUESTION",
+        "bounded": "bounded",
+        "questions": "questions",
+        "same_host_questions": "same_host_questions"
+      },
+      "consumers": [
+        "tools/sico/python/sico/adapters/circuit.py",
+        "tools/sico/python/sico/codex/backend.py",
+        "tools/sico/python/sico/service/workbench.py",
+        "tools/sico/python/sico_ui/target_picker.py",
+        "tools/ai/python/tests/agent_transport_contract_wire_cases.py",
+        "tools/ai/python/tests/test_agent_target_decision.py",
+        "tools/ai/python/tests/test_pdk_choice.py"
+      ],
+      "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_audit_lifecycle.py",
+        "tools/ai/python/tests/test_agent_pdk_choice.py",
+        "tools/ai/python/tests/test_agent_target_choice.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate the listed symbol imports in supported consumers to their named owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. The original orchestration entry remains supported."
+    },
+    {
+      "legacy": "sico.service.audit exports from sico.service.audit_instructions",
+      "source": "tools/sico/python/sico/service/audit.py",
+      "replacement": "tools/sico/python/sico/service/audit_instructions.py",
+      "owner": "tools/sico/python/sico/service/audit_instructions.py",
+      "exports": {
+        "INSTRUCTIONS": "INSTRUCTIONS"
+      },
+      "consumers": [
+        "tools/sico/python/sico/adapters/circuit.py",
+        "tools/sico/python/sico/codex/backend.py",
+        "tools/sico/python/sico/service/workbench.py",
+        "tools/sico/python/sico_ui/target_picker.py",
+        "tools/ai/python/tests/agent_transport_contract_wire_cases.py",
+        "tools/ai/python/tests/test_agent_target_decision.py",
+        "tools/ai/python/tests/test_pdk_choice.py"
+      ],
+      "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_audit_lifecycle.py",
+        "tools/ai/python/tests/test_agent_pdk_choice.py",
+        "tools/ai/python/tests/test_agent_target_choice.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate the listed symbol imports in supported consumers to their named owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. The original orchestration entry remains supported."
+    },
+    {
+      "legacy": "sico.transport.broker exports from sico.transport.broker_peer",
+      "source": "tools/sico/python/sico/transport/broker.py",
+      "replacement": "tools/sico/python/sico/transport/broker_peer.py",
+      "owner": "tools/sico/python/sico/transport/broker_peer.py",
+      "exports": {
+        "Peer": "Peer"
+      },
+      "consumers": [
+        "tools/sico/python/sico/cli.py",
+        "tools/sico/python/sico/codex/tool_dispatch.py",
+        "tools/sico/python/sico/core/loop.py",
+        "tools/sico/python/sico/core/tools.py",
+        "tools/sico/python/sico/service/background_worker.py",
+        "tools/sico/python/sico/service/frontend_attach.py",
+        "tools/sico/python/sico/service/session_recovery.py",
+        "tools/sico/python/sico/service/targets.py",
+        "tools/sico/python/sico/transport/bridge_client.py",
+        "tools/sico/python/sico/transport/instance_bridge.py",
+        "tools/sico/python/sico/transport/reconciliation.py",
+        "tools/ai/python/tests/agent_gui_contract_history_replay_cases.py",
+        "tools/ai/python/tests/agent_local_harness.py",
+        "tools/ai/python/tests/agent_native_binding_contract_admission_cases.py",
+        "tools/ai/python/tests/agent_native_binding_contract_lifecycle_cases.py",
+        "tools/ai/python/tests/agent_service_boundary_fixtures.py",
+        "tools/ai/python/tests/agent_transport_contract_admission_cases.py",
+        "tools/ai/python/tests/agent_transport_contract_cancellation_cases.py",
+        "tools/ai/python/tests/agent_transport_contract_connection_cases.py",
+        "tools/ai/python/tests/agent_transport_contract_relay_process_cases.py",
+        "tools/ai/python/tests/router_project_scenario.py",
+        "tools/ai/python/tests/test_agent_ade.py",
+        "tools/ai/python/tests/test_agent_anthropic.py",
+        "tools/ai/python/tests/test_agent_binding_events.py",
+        "tools/ai/python/tests/test_agent_binding_reconciliation.py",
+        "tools/ai/python/tests/test_agent_binding_ui.py",
+        "tools/ai/python/tests/test_agent_bridge.py",
+        "tools/ai/python/tests/test_agent_circuit_bridge_errors.py",
+        "tools/ai/python/tests/test_agent_circuit_errors.py",
+        "tools/ai/python/tests/test_agent_circuit_gui.py",
+        "tools/ai/python/tests/test_agent_f3_ic231.py",
+        "tools/ai/python/tests/test_agent_ic231.py",
+        "tools/ai/python/tests/test_agent_loader_ic231.py",
+        "tools/ai/python/tests/test_agent_m3_ic231.py",
+        "tools/ai/python/tests/test_agent_openai.py",
+        "tools/ai/python/tests/test_agent_operation_events.py",
+        "tools/ai/python/tests/test_agent_project.py",
+        "tools/ai/python/tests/test_agent_project_gui.py",
+        "tools/ai/python/tests/test_agent_quick_routing.py",
+        "tools/ai/python/tests/test_agent_results_gui.py",
+        "tools/ai/python/tests/test_agent_router_ic231.py",
+        "tools/ai/python/tests/test_agent_router_project_ic231.py",
+        "tools/ai/python/tests/test_agent_router_setup_ic231.py",
+        "tools/ai/python/tests/test_agent_router_status.py",
+        "tools/ai/python/tests/test_agent_session_bindings.py",
+        "tools/ai/python/tests/test_agent_session_controller.py",
+        "tools/ai/python/tests/test_agent_task_shutdown.py",
+        "tools/ai/python/tests/test_cdf_callbacks_native.py",
+        "tools/ai/python/tests/test_circuit_output_capture.py",
+        "tools/ai/python/tests/test_circuit_output_capture_gui.py",
+        "tools/ai/python/tests/test_entry_context.py",
+        "tools/ai/python/tests/test_entry_context_gui.py",
+        "tools/ai/python/tests/test_pdk_pool.py",
+        "tools/ai/python/tests/test_wait_read_bridge.py"
+      ],
+      "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_transport.py",
+        "tools/ai/python/tests/test_agent_native_bindings.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate the listed symbol imports in supported consumers to their named owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. The original orchestration entry remains supported."
+    },
+    {
+      "legacy": "sico.transport.broker exports from sico.transport.broker_scope",
+      "source": "tools/sico/python/sico/transport/broker.py",
+      "replacement": "tools/sico/python/sico/transport/broker_scope.py",
+      "owner": "tools/sico/python/sico/transport/broker_scope.py",
+      "exports": {
+        "_CALL_CONTEXT": "_CALL_CONTEXT",
+        "skill_call_context": "skill_call_context"
+      },
+      "consumers": [
+        "tools/sico/python/sico/cli.py",
+        "tools/sico/python/sico/codex/tool_dispatch.py",
+        "tools/sico/python/sico/core/loop.py",
+        "tools/sico/python/sico/core/tools.py",
+        "tools/sico/python/sico/service/background_worker.py",
+        "tools/sico/python/sico/service/frontend_attach.py",
+        "tools/sico/python/sico/service/session_recovery.py",
+        "tools/sico/python/sico/service/targets.py",
+        "tools/sico/python/sico/transport/bridge_client.py",
+        "tools/sico/python/sico/transport/instance_bridge.py",
+        "tools/sico/python/sico/transport/reconciliation.py",
+        "tools/ai/python/tests/agent_gui_contract_history_replay_cases.py",
+        "tools/ai/python/tests/agent_local_harness.py",
+        "tools/ai/python/tests/agent_native_binding_contract_admission_cases.py",
+        "tools/ai/python/tests/agent_native_binding_contract_lifecycle_cases.py",
+        "tools/ai/python/tests/agent_service_boundary_fixtures.py",
+        "tools/ai/python/tests/agent_transport_contract_admission_cases.py",
+        "tools/ai/python/tests/agent_transport_contract_cancellation_cases.py",
+        "tools/ai/python/tests/agent_transport_contract_connection_cases.py",
+        "tools/ai/python/tests/agent_transport_contract_relay_process_cases.py",
+        "tools/ai/python/tests/router_project_scenario.py",
+        "tools/ai/python/tests/test_agent_ade.py",
+        "tools/ai/python/tests/test_agent_anthropic.py",
+        "tools/ai/python/tests/test_agent_binding_events.py",
+        "tools/ai/python/tests/test_agent_binding_reconciliation.py",
+        "tools/ai/python/tests/test_agent_binding_ui.py",
+        "tools/ai/python/tests/test_agent_bridge.py",
+        "tools/ai/python/tests/test_agent_circuit_bridge_errors.py",
+        "tools/ai/python/tests/test_agent_circuit_errors.py",
+        "tools/ai/python/tests/test_agent_circuit_gui.py",
+        "tools/ai/python/tests/test_agent_f3_ic231.py",
+        "tools/ai/python/tests/test_agent_ic231.py",
+        "tools/ai/python/tests/test_agent_loader_ic231.py",
+        "tools/ai/python/tests/test_agent_m3_ic231.py",
+        "tools/ai/python/tests/test_agent_openai.py",
+        "tools/ai/python/tests/test_agent_operation_events.py",
+        "tools/ai/python/tests/test_agent_project.py",
+        "tools/ai/python/tests/test_agent_project_gui.py",
+        "tools/ai/python/tests/test_agent_quick_routing.py",
+        "tools/ai/python/tests/test_agent_results_gui.py",
+        "tools/ai/python/tests/test_agent_router_ic231.py",
+        "tools/ai/python/tests/test_agent_router_project_ic231.py",
+        "tools/ai/python/tests/test_agent_router_setup_ic231.py",
+        "tools/ai/python/tests/test_agent_router_status.py",
+        "tools/ai/python/tests/test_agent_session_bindings.py",
+        "tools/ai/python/tests/test_agent_session_controller.py",
+        "tools/ai/python/tests/test_agent_task_shutdown.py",
+        "tools/ai/python/tests/test_cdf_callbacks_native.py",
+        "tools/ai/python/tests/test_circuit_output_capture.py",
+        "tools/ai/python/tests/test_circuit_output_capture_gui.py",
+        "tools/ai/python/tests/test_entry_context.py",
+        "tools/ai/python/tests/test_entry_context_gui.py",
+        "tools/ai/python/tests/test_pdk_pool.py",
+        "tools/ai/python/tests/test_wait_read_bridge.py"
+      ],
+      "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_transport.py",
+        "tools/ai/python/tests/test_agent_native_bindings.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate the listed symbol imports in supported consumers to their named owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. The original orchestration entry remains supported."
+    },
+    {
+      "legacy": "sico.codex.backend exports from sico.codex.backend_instructions",
+      "source": "tools/sico/python/sico/codex/backend.py",
+      "replacement": "tools/sico/python/sico/codex/backend_instructions.py",
+      "owner": "tools/sico/python/sico/codex/backend_instructions.py",
+      "exports": {
+        "INSTRUCTIONS": "INSTRUCTIONS"
+      },
+      "consumers": [
+        "tools/sico/python/sico/service/backend.py",
+        "tools/ai/python/tests/test_agent_audit_lifecycle.py",
+        "tools/ai/python/tests/test_agent_circuit_codex.py",
+        "tools/ai/python/tests/test_agent_circuit_errors.py",
+        "tools/ai/python/tests/test_agent_codex_environment.py",
+        "tools/ai/python/tests/test_agent_codex_gateway.py",
+        "tools/ai/python/tests/test_agent_codex_native.py",
+        "tools/ai/python/tests/test_agent_codex_usage.py",
+        "tools/ai/python/tests/test_agent_processes_native.py",
+        "tools/ai/python/tests/test_agent_project.py",
+        "tools/ai/python/tests/test_agent_project_codex.py",
+        "tools/ai/python/tests/test_agent_session_names.py",
+        "tools/ai/python/tests/test_agent_session_names_gui.py",
+        "tools/ai/python/tests/test_agent_session_names_native.py",
+        "tools/ai/python/tests/test_agent_task_shutdown.py",
+        "tools/ai/python/tests/test_circuit_library.py",
+        "tools/ai/python/tests/test_codex_child_input.py",
+        "tools/ai/python/tests/test_codex_elicitation.py",
+        "tools/ai/python/tests/test_codex_native_a2.py",
+        "tools/ai/python/tests/test_codex_native_a2_runtime.py",
+        "tools/ai/python/tests/test_codex_native_evidence.py",
+        "tools/ai/python/tests/test_codex_native_projection.py",
+        "tools/ai/python/tests/test_codex_resources.py",
+        "tools/ai/python/tests/test_codex_resources_gui.py",
+        "tools/ai/python/tests/test_codex_resources_runtime.py",
+        "tools/ai/python/tests/test_codex_review_runtime.py",
+        "tools/ai/python/tests/test_codex_steering.py",
+        "tools/ai/python/tests/test_codex_steering_composer_runtime.py",
+        "tools/ai/python/tests/test_codex_steering_gui.py",
+        "tools/ai/python/tests/test_codex_steering_runtime.py",
+        "tools/ai/python/tests/test_codex_thread_connection.py",
+        "tools/ai/python/tests/test_codex_thread_operations_runtime.py",
+        "tools/ai/python/tests/test_codex_turn_inputs.py",
+        "tools/ai/python/tests/test_codex_turn_inputs_gui.py",
+        "tools/ai/python/tests/test_codex_turn_inputs_runtime.py",
+        "tools/ai/python/tests/test_copilot_feedback.py",
+        "tools/ai/python/tests/wait_reads_fixture.py",
+        "deploy/tests/fixtures/agent_thread_native_probe.py"
+      ],
+      "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_codex_thread_connection.py",
+        "tools/ai/python/tests/test_agent_codex_native.py",
+        "tools/ai/python/tests/test_codex_wait_reads_lifecycle.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate the listed symbol imports in supported consumers to their named owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. The original orchestration entry remains supported."
+    },
+    {
+      "legacy": "sico_ui.transcript_audit exports from sico.service.chat_audit",
+      "source": "tools/sico/python/sico_ui/transcript_audit.py",
+      "replacement": "tools/sico/python/sico/service/chat_audit.py",
+      "owner": "tools/sico/python/sico/service/chat_audit.py",
+      "exports": {
+        "audit_text": "audit_text"
+      },
+      "consumers": [
+        "tools/ai/python/tests/test_transcript_projection.py"
+      ],
+      "external_consumers": "Existing UI projection helper imports remain supported during migration; archive and live transcript use the service implementation.",
+      "evidence": [
+        "tools/ai/python/tests/test_transcript_projection.py",
+        "tools/ai/python/tests/test_chat_archive.py",
+        "tools/ai/python/tests/test_chat_scroll.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports to the service chat module, verify downstream callers no longer use this UI helper module, then remove this alias-only module at the next incompatible API version. No duplicate projection implementation is retained."
+    },
+    {
+      "legacy": "sico_ui.transcript_history exports from sico.service.chat_retention",
+      "source": "tools/sico/python/sico_ui/transcript_history.py",
+      "replacement": "tools/sico/python/sico/service/chat_retention.py",
+      "owner": "tools/sico/python/sico/service/chat_retention.py",
+      "exports": {
+        "TranscriptHistory": "TranscriptHistory"
+      },
+      "consumers": [
+        "tools/ai/python/tests/test_transcript_projection.py"
+      ],
+      "external_consumers": "Existing UI projection helper imports remain supported during migration; archive and live transcript use the service implementation.",
+      "evidence": [
+        "tools/ai/python/tests/test_transcript_projection.py",
+        "tools/ai/python/tests/test_chat_archive.py",
+        "tools/ai/python/tests/test_chat_scroll.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports to the service chat module, verify downstream callers no longer use this UI helper module, then remove this alias-only module at the next incompatible API version. No duplicate projection implementation is retained."
+    },
+    {
+      "legacy": "sico_ui.transcript_reconcile exports from sico.service.chat_reconcile",
+      "source": "tools/sico/python/sico_ui/transcript_reconcile.py",
+      "replacement": "tools/sico/python/sico/service/chat_reconcile.py",
+      "owner": "tools/sico/python/sico/service/chat_reconcile.py",
+      "exports": {
+        "reconcile_notice": "reconcile_notice"
+      },
+      "consumers": [
+        "tools/ai/python/tests/test_transcript_projection.py"
+      ],
+      "external_consumers": "Existing UI projection helper imports remain supported during migration; archive and live transcript use the service implementation.",
+      "evidence": [
+        "tools/ai/python/tests/test_transcript_projection.py",
+        "tools/ai/python/tests/test_chat_archive.py",
+        "tools/ai/python/tests/test_chat_scroll.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports to the service chat module, verify downstream callers no longer use this UI helper module, then remove this alias-only module at the next incompatible API version. No duplicate projection implementation is retained."
+    },
+    {
+      "legacy": "sico_ui.transcript_text exports from sico.service.chat_text",
+      "source": "tools/sico/python/sico_ui/transcript_text.py",
+      "replacement": "tools/sico/python/sico/service/chat_text.py",
+      "owner": "tools/sico/python/sico/service/chat_text.py",
+      "exports": {
+        "activity_text": "activity_text",
+        "resource_notice": "resource_notice",
+        "tool_result_text": "tool_result_text"
+      },
+      "consumers": [
+        "tools/ai/python/tests/test_transcript_projection.py"
+      ],
+      "external_consumers": "Existing UI projection helper imports remain supported during migration; archive and live transcript use the service implementation.",
+      "evidence": [
+        "tools/ai/python/tests/test_transcript_projection.py",
+        "tools/ai/python/tests/test_chat_archive.py",
+        "tools/ai/python/tests/test_chat_scroll.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports to the service chat module, verify downstream callers no longer use this UI helper module, then remove this alias-only module at the next incompatible API version. No duplicate projection implementation is retained."
+    },
+    {
+      "legacy": "sico_ui.transcript_tools exports from sico.service.chat_tools",
+      "source": "tools/sico/python/sico_ui/transcript_tools.py",
+      "replacement": "tools/sico/python/sico/service/chat_tools.py",
+      "owner": "tools/sico/python/sico/service/chat_tools.py",
+      "exports": {
+        "TranscriptTools": "TranscriptTools"
+      },
+      "consumers": [
+        "tools/ai/python/tests/test_transcript_projection.py"
+      ],
+      "external_consumers": "Existing UI projection helper imports remain supported during migration; archive and live transcript use the service implementation.",
+      "evidence": [
+        "tools/ai/python/tests/test_transcript_projection.py",
+        "tools/ai/python/tests/test_chat_archive.py",
+        "tools/ai/python/tests/test_chat_scroll.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported imports to the service chat module, verify downstream callers no longer use this UI helper module, then remove this alias-only module at the next incompatible API version. No duplicate projection implementation is retained."
+    }
+  ]
+}

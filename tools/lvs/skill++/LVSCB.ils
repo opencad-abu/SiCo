@@ -1,0 +1,384 @@
+unless(and(isCallable('SICO_tomlRevision)
+             SICO_tomlRevision()=="20260922.sico.temp.v6"
+             isCallable('SICO_tomlString) isCallable('SICO_shellQuote)
+             isCallable('SICO_absolutePath) isCallable('SICO_fileStem)
+             isCallable('SICO_tempPath))
+  cond(
+    (and(boundp('lvsCommonRoot) lvsCommonRoot)
+      load(strcat(lvsCommonRoot "/skill/SICO_toml.il")))
+    (isCallable('cadLoadRelative)
+      cadLoadRelative("common/skill/SICO_toml.il"))
+    (t
+      warn("LVSCB requires LVS.ils or a configured SICO_HOME.\n"))
+  )
+)
+
+procedure(lvsFrontendRevision()
+  "20260924.flow.environment.v3"
+)
+
+; HI form objects outlive a Close action.  Keep callbacks harmless when a
+; stale handle is delivered by a queued field/LSF event.
+procedure(lvsFormValidP(form)
+  SICO_lsfFormValidP(form)
+)
+
+procedure(lvsFormDoneCB(form)
+  when(lvsFormValidP(form)
+    SICO_lsfCancelFormDiscovery(form))
+  t
+)
+
+procedure(lvsRunCB(form)
+  when(lvsFormValidP(form)
+    cadBatchDispatchStart(form 'lvsStart 'lvsBatchStart))
+  t
+)
+
+procedure(lvsRunCloseCB(form)
+  when(lvsFormValidP(form)
+    when(cadBatchDispatchStart(form 'lvsStart 'lvsBatchStart)
+      hiFormClose(form)))
+  t
+)
+
+procedure(lvsReportCB(form)
+  when(lvsFormValidP(form)
+    lvsReport(form))
+  t
+)
+
+procedure(lvsCustomSvrfRevision()
+  "20260813.custom.svrf.common.v1"
+)
+
+procedure(lvsCdlIncludeRevision()
+  "20260812.cdl.include.v2"
+)
+
+procedure(lvsAbsolutePathRevision()
+  "20260812.toml.absolute.paths.v1"
+)
+
+procedure(lvsInputSyncRevision()
+  "20260817.input.sync.v1"
+)
+
+procedure(lvsRunModeCB(form)
+  let((hier)
+    hier=form~>lvsRunMode~>value=="Hier"
+    unless(hier
+      form~>lvsCpu~>value="1"
+      form~>lvsHcellBtn~>value=nil)
+    form~>lvsCpu~>enabled=hier
+    form~>lvsHcellBtn~>enabled=hier
+    form~>lvsHcellFile~>enabled=and(hier form~>lvsHcellBtn~>value)
+  )
+)
+
+procedure(lvsInpCB(form)
+  let(()
+    when(form->inputSync
+      form->inputSync->invisible=(form->inpType->value!="OA")
+    )
+    cadCdlIncludeInputTypeCB(form)
+    case(form->inpType->value
+      ("OA"
+        form->schInp->invisible=nil
+        form->layInp->invisible=nil
+        form->cdlInp->invisible=t
+        form->gdsInp->invisible=t)
+      ("CDL+GDS"
+        form->schInp->invisible=t
+        form->layInp->invisible=t
+        form->cdlInp->invisible=nil
+        form->gdsInp->invisible=nil)
+      ("CDL+LAY"
+        form->schInp->invisible=t
+        form->layInp->invisible=nil
+        form->cdlInp->invisible=nil
+        form->gdsInp->invisible=t)
+      ("SCH+GDS"
+        form->schInp->invisible=nil
+        form->layInp->invisible=t
+        form->cdlInp->invisible=t
+        form->gdsInp->invisible=nil)
+    )
+  )
+)
+
+procedure(lvsSyncInputNames(form source)
+  let((normalized libName cellName viewName)
+    normalized=lowerCase(or(source ""))
+    case(normalized
+      ("schematic"
+        libName=or(form~>schLib~>value "")
+        cellName=or(form~>schCell~>value "")
+        viewName=or(form~>layView~>value "")
+        form~>layLib~>value=libName
+        form~>layCell~>value=cellName
+        form~>layView~>value=viewName
+      )
+      ("layout"
+        libName=or(form~>layLib~>value "")
+        cellName=or(form~>layCell~>value "")
+        viewName=or(form~>schView~>value "")
+        form~>schLib~>value=libName
+        form~>schCell~>value=cellName
+        form~>schView~>value=viewName
+      )
+      (t
+        warn("LVS input-name synchronization source is invalid: %L\n" source)
+        nil
+      )
+    )
+    member(normalized '("schematic" "layout"))
+  )
+)
+
+procedure(lvsCdlFileCB(form)
+  let(()
+    form~>cdlCell~>value=SICO_fileStem(form~>cdlFile~>value)
+  )
+)
+
+procedure(lvsGdsFileCB(form)
+  let(()
+    form~>gdsCell~>value=SICO_fileStem(form~>gdsFile~>value)
+  )
+)
+
+procedure(lvsOutDirCB(form)
+  let((dir)
+    case(form~>outDirType~>value
+      ("Current Directory" || "Project Directory"
+        form~>outDirPath~>editable=nil
+        form~>outDirPath~>enabled=nil)
+      ("Customize Directory"
+        form~>outDirPath~>editable=t
+        form~>outDirPath~>enabled=t)
+    )
+    case(form~>outDirType~>value
+      ("Current Directory"
+        form~>outDirPath~>value=strcat(pwd()))
+      ("Project Directory"
+        if(dir=SICO_envValue("LVS_DB_DIR") then
+          if(or(isDir(dir) cadOutDirUsableP(dir)) then
+            form~>outDirPath~>value=dir
+          else
+            GUI_messageApp('w "LVS" lvsMsgStruc->projShellNotSet)
+            form~>outDirPath~>value=strcat(pwd()))
+        else
+          GUI_messageApp('w "LVS" lvsMsgStruc->projShellNotSet)
+          form~>outDirType~>value="Current Directory"
+          form~>outDirPath~>value=strcat(pwd())))
+      ("Customize Directory"
+        form~>outDirPath~>value="Please select a directory...")
+    )
+  )
+)
+
+procedure(lvsRunsetCB(form)
+  let(()
+    form~>lvsRunsetFile~>value=SICO_envPairValue(
+      "LVS_FILE" form~>lvsRunsetName~>value)
+  )
+)
+
+procedure(lvsHcellCB(form)
+  let(()
+    form~>lvsHcellFile~>enabled=form~>lvsHcellBtn~>value
+  )
+)
+
+procedure(lvsVirtualConnCB(form)
+  let((nameEnabled)
+    nameEnabled=cadr(form->lvsVirtualConn->value)
+    if(nameEnabled then
+      form->lvsVirtualConnName->invisible=nil
+      when(or(!form->lvsVirtualConnName->value
+                blankstrp(form->lvsVirtualConnName->value))
+        form->lvsVirtualConnName->value="?"
+      )
+    else
+      form->lvsVirtualConnName->invisible=t)
+  )
+)
+
+procedure(lvsLsfChoicesCB(form)
+  SICO_lsfChoicesCB(form)
+)
+
+procedure(lvsRunDirFromForm(form)
+  let((runBase inputType schlib schcell laylib laycell gdscell cdlcell)
+    runBase=form~>outDirPath~>value
+    inputType=form~>inpType~>value
+    schlib=form~>schLib~>value
+    schcell=form~>schCell~>value
+    laylib=form~>layLib~>value
+    laycell=form~>layCell~>value
+    gdscell=form~>gdsCell~>value
+    cdlcell=form~>cdlCell~>value
+    case(inputType
+      ("OA"      strcat(runBase "/" laylib "." laycell))
+      ("SCH+GDS" strcat(runBase "/" schlib "." schcell))
+      ("CDL+LAY" strcat(runBase "/" laylib "." laycell))
+      ("CDL+GDS" strcat(runBase "/" "CDLGDS" "." gdscell))
+      (t         strcat(runBase "/" "LVS" "." cdlcell)))
+  )
+)
+
+procedure(lvsWriteToml(form)
+  prog((runBase runDir tempFile cmdFile cdslib outFile inputType
+         schlib schcell schview laylib laycell layview cdl cdlcell gds gdscell
+         hcellFile cdlIncludeFile runsetFile layerMap lvsVirtualConn svdbQuery)
+    unless(SICO_lsfValidateSelection(form "LVS")
+      return(nil))
+    when(or(!form~>outDirPath~>value
+            form~>outDirPath~>value==""
+            form~>outDirPath~>value=="Please select a directory...")
+      GUI_messageApp('e "LVS" lvsMsgStruc->dirAccess)
+      return(nil))
+    cdslib=SICO_absolutePath(
+             or(getShellEnvVar("CDS_LIB") strcat(pwd() "/cds.lib")))
+    tempFile=SICO_tempPath("lvsXXXX")
+    unless(tempFile
+      GUI_messageApp('e "LVS" lvsMsgStruc->noConfig)
+      return(nil))
+    tempFile=makeTempFileName(tempFile)
+    runBase=form~>outDirPath~>value
+    inputType=form~>inpType~>value
+    schlib=form~>schLib~>value
+    schcell=form~>schCell~>value
+    schview=form~>schView~>value
+    laylib=form~>layLib~>value
+    laycell=form~>layCell~>value
+    layview=form~>layView~>value
+    cdl=form~>cdlFile~>value
+    cdlcell=form~>cdlCell~>value
+    gds=form~>gdsFile~>value
+    gdscell=form~>gdsCell~>value
+    runsetFile=SICO_absolutePath(form~>lvsRunsetFile~>value)
+    layerMap=SICO_absolutePath(getShellEnvVar("TECH_LAYER_MAP"))
+
+    case(inputType
+      ("OA"
+        when(schlib=="" || ! schlib || schcell=="" || ! schcell || schview=="" || ! schview
+          GUI_messageApp('e "LVS" lvsMsgStruc->inputOaSch) return(nil))
+        when(laylib=="" || ! laylib || laycell=="" || ! laycell || layview=="" || ! layview
+          GUI_messageApp('e "LVS" lvsMsgStruc->inputOaLay) return(nil))
+        runDir=strcat(runBase "/" laylib "." laycell))
+      ("SCH+GDS"
+        when(schlib=="" || ! schlib || schcell=="" || ! schcell || schview=="" || ! schview
+          GUI_messageApp('e "LVS" lvsMsgStruc->inputOaSch) return(nil))
+        when(! isFile(gds) GUI_messageApp('e "LVS" lvsMsgStruc->gdsFile) return(nil))
+        gds=SICO_absolutePath(gds)
+        when(gdscell=="" || ! gdscell GUI_messageApp('e "LVS" lvsMsgStruc->gdsCell) return(nil))
+        runDir=strcat(runBase "/" schlib "." schcell))
+      ("CDL+LAY"
+        when(! isFile(cdl) GUI_messageApp('e "LVS" lvsMsgStruc->cdlFile) return(nil))
+        cdl=SICO_absolutePath(cdl)
+        when(cdlcell=="" || ! cdlcell GUI_messageApp('e "LVS" lvsMsgStruc->cdlCell) return(nil))
+        when(laylib=="" || ! laylib || laycell=="" || ! laycell || layview=="" || ! layview
+          GUI_messageApp('e "LVS" lvsMsgStruc->inputOaLay) return(nil))
+        runDir=strcat(runBase "/" laylib "." laycell))
+      ("CDL+GDS"
+        when(! isFile(cdl) GUI_messageApp('e "LVS" lvsMsgStruc->cdlFile) return(nil))
+        cdl=SICO_absolutePath(cdl)
+        when(cdlcell=="" || ! cdlcell GUI_messageApp('e "LVS" lvsMsgStruc->cdlCell) return(nil))
+        when(! isFile(gds) GUI_messageApp('e "LVS" lvsMsgStruc->gdsFile) return(nil))
+        gds=SICO_absolutePath(gds)
+        when(gdscell=="" || ! gdscell GUI_messageApp('e "LVS" lvsMsgStruc->gdsCell) return(nil))
+        runDir=strcat(runBase "/" "CDLGDS" "." gdscell))
+    )
+
+    runDir=simplifyFilename(runDir t)
+    cmdFile=strcat(runDir "/lvs.toml")
+
+    hcellFile=""
+    when(form~>lvsHcellBtn~>value
+      hcellFile=form~>lvsHcellFile~>value
+      unless(and(hcellFile isFile(hcellFile))
+        GUI_messageApp('e "LVS" lvsMsgStruc->hcellFile)
+        return(nil))
+      hcellFile=SICO_absolutePath(hcellFile)
+    )
+
+    cdlIncludeFile=""
+    when(and(member(inputType '("OA" "SCH+GDS"))
+             form~>cdlIncludeBtn~>value)
+      cdlIncludeFile=form~>cdlIncludeFile~>value
+      unless(and(cdlIncludeFile isFile(cdlIncludeFile))
+        GUI_messageApp('e "LVS" lvsMsgStruc->cdlIncludeFile)
+        return(nil))
+      cdlIncludeFile=SICO_absolutePath(cdlIncludeFile)
+    )
+
+    when(! isDir(runDir)
+      info(strcat("<INFO> LVS::" lvsMsgStruc->dirExist "\n"))
+      unless(system(strcat("mkdir -p " SICO_shellQuote(runDir)))==0
+        GUI_messageApp('e "LVS" lvsMsgStruc->dirAccess)
+        return(nil)))
+
+    outFile=outfile(tempFile)
+    SICO_tomlWriteSection(outFile "run")
+    SICO_tomlWriteString(outFile "run_dir" runDir)
+    SICO_tomlWriteString(outFile "cds_lib" cdslib)
+    SICO_tomlWriteString(outFile "run_type" form~>runType~>value)
+    SICO_tomlWriteString(outFile "queue_name" form~>queueName~>value)
+    SICO_tomlWriteString(
+      outFile "server_name" SICO_lsfSelectedHost(form~>srvName~>value))
+
+    SICO_tomlWriteSection(outFile "input")
+    SICO_tomlWriteString(outFile "type" inputType)
+
+    SICO_tomlWriteSection(outFile "input.schematic")
+    SICO_tomlWriteString(outFile "lib" schlib)
+    SICO_tomlWriteString(outFile "cell" schcell)
+    SICO_tomlWriteString(outFile "view" schview)
+    SICO_tomlWriteString(outFile "cdl_header_file" cdlIncludeFile)
+
+    SICO_tomlWriteSection(outFile "input.layout")
+    SICO_tomlWriteString(outFile "lib" laylib)
+    SICO_tomlWriteString(outFile "cell" laycell)
+    SICO_tomlWriteString(outFile "view" layview)
+    SICO_tomlWriteString(outFile "layer_map" layerMap)
+
+    SICO_tomlWriteSection(outFile "input.cdl")
+    SICO_tomlWriteString(outFile "file" cdl)
+    SICO_tomlWriteString(outFile "cell" cdlcell)
+
+    SICO_tomlWriteSection(outFile "input.gds")
+    SICO_tomlWriteString(outFile "file" gds)
+    SICO_tomlWriteString(outFile "cell" gdscell)
+
+    SICO_tomlWriteSection(outFile "lvs")
+    SICO_tomlWriteString(outFile "tool" form~>lvsTool~>value)
+    SICO_tomlWriteString(outFile "runset_name" form~>lvsRunsetName~>value)
+    SICO_tomlWriteString(outFile "runset_file" runsetFile)
+    SICO_tomlWriteString(outFile "run_mode" form~>lvsRunMode~>value)
+    SICO_tomlWriteBool(outFile "hcell_enable" form~>lvsHcellBtn~>value)
+    SICO_tomlWriteString(outFile "hcell_file" hcellFile)
+    SICO_tomlWriteBool(outFile "ignore_error" nil)
+    SICO_tomlWriteBool(outFile "case_sensitive" form~>lvsCaseBtn~>value)
+    SICO_tomlWriteString(outFile "recognize_gates" form~>lvsRecognizeGates~>value)
+    SICO_tomlWriteBool(outFile "custom_svrf_enable" form~>customSvrfEnable~>value)
+    SICO_tomlWriteString(outFile "custom_svrf_command"
+                        or(form~>customSvrfCommand~>value ""))
+    svdbQuery=lvsSvdbQueryFromForm(form)
+    SICO_tomlWriteStringList(outFile "svdb_query" svdbQuery)
+    when(lvsVirtualConn=form~>lvsVirtualConn~>value
+      SICO_tomlWriteString(outFile "virtual_connect" sprintf(nil "%L" lvsVirtualConn)))
+    SICO_tomlWriteString(outFile "virtual_connect_names" form~>lvsVirtualConnName~>value)
+
+    SICO_tomlWriteSection(outFile "runtime")
+    SICO_tomlWriteString(outFile "lvs_cpus" form~>lvsCpu~>value)
+
+    close(outFile)
+    unless(system(strcat("mv " SICO_shellQuote(tempFile) " "
+                         SICO_shellQuote(cmdFile)))==0
+      GUI_messageApp('e "LVS" lvsMsgStruc->noConfig)
+      return(nil))
+    return(cmdFile)
+  )
+)

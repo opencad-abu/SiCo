@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "description": "Reviewed compatibility entries. Each replacement is one concrete authoritative reference. Candidate scanning reports unregistered facades for further T12 review; canonical orchestration APIs are not scheduled for deletion.",
+  "includes": ["tools/utility/compatibility/sico-skill.json", "tools/utility/compatibility/sico-loaders.json", "tools/utility/compatibility/sico-environment.json", "tools/utility/compatibility/ai.json", "tools/utility/compatibility/aivw-agent.json", "tools/utility/compatibility/aivw-domain.json", "tools/utility/compatibility/aivw-executors.json", "tools/utility/compatibility/aivw-ldo.json", "tools/utility/compatibility/aivw-plugins.json", "tools/utility/compatibility/common-cadgui.json", "tools/utility/compatibility/common-cadlsf.json", "tools/utility/compatibility/common-cadprofile.json", "tools/utility/compatibility/common-cadview.json", "tools/utility/compatibility/drc.json", "tools/utility/compatibility/mts-core.json", "tools/utility/compatibility/mts-flow.json"],
+  "search_paths": ["tools/sico/python", "tools/aivw/python", "tools/ai/python", "tools/common/python", "tools/drc/python", "tools/rce/python", "tools/lvs/python", "tools/lef/python", "tools/mtsnl/python", "tools/ai/terminal/pyqt", "tools/ai/skills/schematic-to-rnm/scripts"],
+  "compatibility": [
+    {
+      "legacy": "rcepy.config_legacy.adapt_legacy",
+      "source": "tools/rce/python/rcepy/config_legacy.py:adapt_legacy",
+      "replacement": "tools/rce/python/rcepy/config.py:RceConfig",
+      "consumers": ["tools/rce/python/rcepy/config.py", "tools/rce/python/rcepy/cli.py", "tools/drc/python/drcpy/cli.py", "tools/lvs/python/lvspy/cli.py"],
+      "owner": "tools/rce/python/rcepy/config.py",
+      "exit_condition": "All supported site execution templates use typed booleans and named parasitic flags; config acceptance emits no LegacyConfigWarning. Remove --legacy-config and this adapter at the next incompatible CLI version.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["tools/common/python/tests/test_config_contract.py", "tools/rce/python/tests/test_parasitic_info_config.py"]
+    },
+    {
+      "legacy": "mtsnetlistor.NetlistRequest top-level single-cell fields",
+      "source": "tools/mtsnl/python/mtsnetlistor/model_request.py:NetlistRequest",
+      "replacement": "tools/mtsnl/python/mtsnetlistor/model_request.py:NetlistRequest.selected_cells",
+      "consumers": ["tools/mtsnl/python/mtsnetlistor/request_data.py", "tools/mtsnl/python/mtsnetlistor/request_input.py", "tools/mtsnl/python/mtsnetlistor/gui/draft_requests.py"],
+      "owner": "tools/mtsnl/python/mtsnetlistor/model_request.py",
+      "exit_condition": "All supported producers emit explicit cell_specs and workers consume selected_cells; migrate persisted schema v1 requests before removing top-level single-cell aliases in schema v2.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["tools/mtsnl/tests/test_model.py", "tools/mtsnl/tests/config_serialization_cases.py"]
+    },
+    {
+      "legacy": "MTS ProcessPage._cell_states compatibility mapping",
+      "source": "tools/mtsnl/python/mtsnetlistor/gui/process_page.py",
+      "replacement": "tools/mtsnl/python/mtsnetlistor/gui/cell_drafts.py:CellDraftStore",
+      "consumers": ["tools/mtsnl/python/mtsnetlistor/gui/process_page.py"],
+      "owner": "tools/mtsnl/python/mtsnetlistor/gui/cell_drafts.py",
+      "exit_condition": "The two writable historical mappings have already been removed by T04. Keep test_gui_draft_ownership.py proving cell publication is stored once across dialects; remove this retirement record only after every supported script migrates to CellDraftStore. CellDraft is a valid transient immutable value, not a deprecated API.",
+      "status": "removed",
+      "allow_exposure": false,
+      "evidence": ["tools/mtsnl/tests/test_gui_draft_ownership.py"]
+    },
+    {
+      "legacy": "MtsMainWindow active-page compatibility attributes",
+      "source": "tools/mtsnl/python/mtsnetlistor/gui/main_window.py",
+      "replacement": "tools/mtsnl/python/mtsnetlistor/gui/process_page.py:ProcessPage",
+      "consumers": ["tools/mtsnl/tests/gui_result_cases.py", "tools/mtsnl/tests/gui_defaults_values_cases.py"],
+      "owner": "tools/mtsnl/python/mtsnetlistor/gui/process_page.py",
+      "exit_condition": "GUI integration scripts and fixtures address an explicit ProcessPage and its components; remove host active-page forwarding once those callers stop reading or writing page attributes through the host.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["tools/mtsnl/tests/test_gui_composition.py"]
+    },
+    {
+      "legacy": "ProcessPage simulator form compatibility properties",
+      "source": "tools/mtsnl/python/mtsnetlistor/gui/process_page.py",
+      "replacement": "tools/mtsnl/python/mtsnetlistor/gui/simulator_form.py:SimulatorForm",
+      "consumers": ["tools/mtsnl/tests/gui_result_cases.py", "tools/mtsnl/tests/gui_defaults_values_cases.py"],
+      "owner": "tools/mtsnl/python/mtsnetlistor/gui/simulator_form.py",
+      "exit_condition": "Migrate consumers of gmin/options_table/reltol/scale/scalem/simulator/temp/temperature_mode/tnom to the single SimulatorForm component; remove each alias after its caller fixtures migrate. Other ProcessPage aliases remain compatibility review candidates.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["tools/mtsnl/tests/test_gui_composition.py"]
+    },
+    {
+      "legacy": "aivworkbench.agent.runtime.RuntimeConfig",
+      "source": "tools/aivw/python/aivworkbench/agent/runtime.py",
+      "replacement": "tools/aivw/python/aivworkbench/agent/runtime_contract.py:RuntimeConfig",
+      "consumers": ["tools/aivw/python/aivworkbench/agent/__init__.py", "tools/aivw/tests/agent_runtime_cases.py"],
+      "owner": "tools/aivw/python/aivworkbench/agent/runtime_contract.py",
+      "exit_condition": "Migrate the listed consumers and supported external callers to the replacement owner; confirm no imports of these compatibility exports remain, then remove them in the next incompatible API version. The canonical operations still defined by this module remain supported.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["tools/aivw/tests/test_agent_m0.py"]
+    },
+    {
+      "legacy": "aivworkbench.agent.runtime.RuntimeResult",
+      "source": "tools/aivw/python/aivworkbench/agent/runtime.py",
+      "replacement": "tools/aivw/python/aivworkbench/agent/runtime_contract.py:RuntimeResult",
+      "consumers": ["tools/aivw/python/aivworkbench/agent/__init__.py"],
+      "owner": "tools/aivw/python/aivworkbench/agent/runtime_contract.py",
+      "exit_condition": "Migrate the listed consumers and supported external callers to the replacement owner; confirm no imports of these compatibility exports remain, then remove them in the next incompatible API version. The canonical operations still defined by this module remain supported.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["tools/aivw/tests/test_agent_m0.py"]
+    },
+    {
+      "legacy": "aivworkbench.agent.runtime.AgentState",
+      "source": "tools/aivw/python/aivworkbench/agent/runtime.py",
+      "replacement": "tools/aivw/python/aivworkbench/agent/runtime_contract.py:AgentState",
+      "consumers": ["tools/aivw/python/aivworkbench/agent/__init__.py", "tools/aivw/tests/agent_runtime_cases.py"],
+      "owner": "tools/aivw/python/aivworkbench/agent/runtime_contract.py",
+      "exit_condition": "Migrate the listed consumers and supported external callers to the replacement owner; confirm no imports of these compatibility exports remain, then remove them in the next incompatible API version. The canonical operations still defined by this module remain supported.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["tools/aivw/tests/test_agent_m0.py"]
+    },
+    {
+      "legacy": "aivworkbench.agent.tool_broker.ToolSpec",
+      "source": "tools/aivw/python/aivworkbench/agent/tool_broker.py",
+      "replacement": "tools/aivw/python/aivworkbench/agent/broker_contract.py:ToolSpec",
+      "consumers": ["tools/aivw/python/aivworkbench/agent/tool_broker.py"],
+      "owner": "tools/aivw/python/aivworkbench/agent/broker_contract.py",
+      "exit_condition": "Migrate the listed consumers and supported external callers to the replacement owner; confirm no imports of these compatibility exports remain, then remove them in the next incompatible API version. The canonical operations still defined by this module remain supported.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["tools/aivw/tests/test_agent_m0.py"]
+    },
+    {
+      "legacy": "aivworkbench.agent.tool_broker.ToolResult",
+      "source": "tools/aivw/python/aivworkbench/agent/tool_broker.py",
+      "replacement": "tools/aivw/python/aivworkbench/agent/broker_contract.py:ToolResult",
+      "consumers": ["tools/aivw/python/aivworkbench/agent/fake_tools.py", "tools/aivw/tests/agent_broker_cases.py"],
+      "owner": "tools/aivw/python/aivworkbench/agent/broker_contract.py",
+      "exit_condition": "Migrate the listed consumers and supported external callers to the replacement owner; confirm no imports of these compatibility exports remain, then remove them in the next incompatible API version. The canonical operations still defined by this module remain supported.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["tools/aivw/tests/test_agent_m0.py"]
+    },
+    {
+      "legacy": "aivworkbench.agent.tool_broker.BrokerResult",
+      "source": "tools/aivw/python/aivworkbench/agent/tool_broker.py",
+      "replacement": "tools/aivw/python/aivworkbench/agent/broker_contract.py:BrokerResult",
+      "consumers": ["tools/aivw/python/aivworkbench/agent/runtime_policy.py"],
+      "owner": "tools/aivw/python/aivworkbench/agent/broker_contract.py",
+      "exit_condition": "Migrate the listed consumers and supported external callers to the replacement owner; confirm no imports of these compatibility exports remain, then remove them in the next incompatible API version. The canonical operations still defined by this module remain supported.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["tools/aivw/tests/test_agent_m0.py"]
+    },
+    {
+      "legacy": "aivworkbench.agent.providers.bundle.build_relocatable_bundle",
+      "source": "tools/aivw/python/aivworkbench/agent/providers/bundle.py:build_relocatable_bundle",
+      "replacement": "deploy/package_runtime_release.py:package",
+      "consumers": ["tools/aivw/tests/test_bundle_release_boundary.py"],
+      "owner": "deploy/package_runtime_release.py",
+      "exit_condition": "Supported release callers use the runtime packager with qualified native artifacts; remove the fail-closed tombstone in the next incompatible provider API version. Never restore source bundle construction.",
+      "status": "tombstone",
+      "allow_exposure": false,
+      "evidence": ["tools/aivw/tests/test_bundle_release_boundary.py"]
+    },
+    {
+      "legacy": "aivworkbench.executors.virtuoso.run_snapshot",
+      "source": "tools/aivw/python/aivworkbench/executors/virtuoso.py",
+      "replacement": "tools/aivw/python/aivworkbench/executors/virtuoso_snapshot.py:run_snapshot",
+      "consumers": ["tools/aivw/python/aivworkbench/registry.py", "tools/aivw/python/aivworkbench/executors/cadence_si.py", "tools/aivw/tests/test_virtuoso_snapshot.py"],
+      "owner": "tools/aivw/python/aivworkbench/executors/virtuoso_snapshot.py",
+      "exit_condition": "Migrate the listed consumers and supported external callers to the replacement owner; confirm no imports of these compatibility exports remain, then remove them in the next incompatible API version. The canonical operations still defined by this module remain supported.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["tools/aivw/tests/test_virtuoso_snapshot.py"]
+    },
+    {
+      "legacy": "aivworkbench.executors.virtuoso.run_config_binding",
+      "source": "tools/aivw/python/aivworkbench/executors/virtuoso.py",
+      "replacement": "tools/aivw/python/aivworkbench/executors/virtuoso_config.py:run_config_binding",
+      "consumers": ["tools/aivw/python/aivworkbench/registry.py", "tools/aivw/tests/test_ldo_recipe_binding.py"],
+      "owner": "tools/aivw/python/aivworkbench/executors/virtuoso_config.py",
+      "exit_condition": "Migrate the listed consumers and supported external callers to the replacement owner; confirm no imports of these compatibility exports remain, then remove them in the next incompatible API version. The canonical operations still defined by this module remain supported.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["tools/aivw/tests/test_virtuoso_snapshot.py"]
+    },
+    {
+      "legacy": "cadai.env_names CAD_AGENT_* fallback",
+      "source": "tools/ai/python/cadai/env_names.py:value",
+      "replacement": "tools/ai/python/cadai/env_names.py:name",
+      "consumers": ["tools/sico/python/sico/providers/config.py", "tools/sico/python/sico/codex/settings.py"],
+      "owner": "tools/ai/python/cadai/env_names.py",
+      "exit_condition": "Supported site profiles use SICO_* variables and provider acceptance has no legacy-only environment. Retire fallback in the next incompatible configuration version; until then preserve new-name precedence including empty strings.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["tools/ai/python/tests/test_agent_provider_config.py"]
+    },
+    {
+      "legacy": "cadai.env_names pre-SICO catalog/template path variables",
+      "source": "tools/ai/python/cadai/env_names.py:resolved_name",
+      "replacement": "tools/ai/python/cadai/env_names.py",
+      "consumers": ["tools/ai/python/cadai/template_locations.py", "tools/ai/python/cadai/device_catalog.py"],
+      "owner": "tools/ai/python/cadai/env_names.py",
+      "exit_condition": "All supported site profiles use SICO_CIRCUIT_TEMPLATES_DIR and SICO_AI_DEVICE_CATALOG; tests no longer require CAD_CIRCUIT_TEMPLATES_DIR/CAD_AI_TEMPLATE_ROOT/CAD_AI_DEVICE_CATALOG. Preserve empty-value precedence until this migration is complete.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["tools/ai/python/tests/test_template_catalog.py"]
+    },
+    {
+      "legacy": "AssistantWindow(controller, sessions=...)",
+      "source": "tools/sico/python/sico_ui/window.py:AssistantWindow",
+      "replacement": "tools/sico/python/sico/service/frontend_session.py:FrontendSession",
+      "consumers": ["tools/ai/python/tests/test_agent_frontend_boundary.py"],
+      "owner": "tools/sico/python/sico/service/frontend_session.py",
+      "exit_condition": "The production constructor already requires FrontendSession. Migrate the stale frontend-boundary fixture that still passes controller/sessions; keep backend rejection covered.",
+      "status": "removed",
+      "allow_exposure": false,
+      "evidence": ["tools/ai/python/tests/test_agent_frontend_port.py"]
+    },
+    {
+      "legacy": "loadThisFirst.il",
+      "source": "loadThisFirst.il",
+      "replacement": "scripts/sicoAutoLoad.il",
+      "consumers": [
+        "tools/rce/python/tests/test_menu_bootstrap.py"
+      ],
+      "owner": "scripts/sicoAutoLoad.il",
+      "exit_condition": "P7: removed after migration release v0.0.1; current sites load scripts/sicoAutoLoad.il.",
+      "status": "removed",
+      "allow_exposure": false,
+      "evidence": [
+        "tools/rce/python/tests/test_menu_bootstrap.py",
+        "deploy/context_bootstrap.il"
+      ]
+    },
+    {
+      "legacy": "cadbatch.compat.tomllib Python 3.9 adapter",
+      "source": "tools/common/python/cadbatch/compat.py",
+      "replacement": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/__init__.py",
+      "consumers": ["tools/common/python/cadbatch/manifest.py"],
+      "owner": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/__init__.py",
+      "exit_condition": "Retain while production supports Python 3.9; after every supported interpreter is Python >=3.11 and TOML regression tests pass using stdlib tomllib, remove this tomli fallback. This adapter does not authorize source distribution.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["deploy/tests/test_flow_config_inventory.py"]
+    },
+    {
+      "legacy": "cadprofile.compat.tomllib Python 3.9 adapter",
+      "source": "tools/common/python/cadprofile/compat.py",
+      "replacement": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/__init__.py",
+      "consumers": ["tools/common/python/cadprofile/model.py"],
+      "owner": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/__init__.py",
+      "exit_condition": "Retain while production supports Python 3.9; after every supported interpreter is Python >=3.11 and TOML regression tests pass using stdlib tomllib, remove this tomli fallback. This adapter does not authorize source distribution.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["deploy/tests/test_flow_config_inventory.py"]
+    },
+    {
+      "legacy": "rcepy.compat.tomllib Python 3.9 adapter",
+      "source": "tools/rce/python/rcepy/compat.py",
+      "replacement": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/__init__.py",
+      "consumers": ["tools/rce/python/rcepy/config.py"],
+      "owner": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/__init__.py",
+      "exit_condition": "Retain while production supports Python 3.9; after every supported interpreter is Python >=3.11 and TOML regression tests pass using stdlib tomllib, remove this tomli fallback. This adapter does not authorize source distribution.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["deploy/tests/test_flow_config_inventory.py"]
+    },
+    {
+      "legacy": "lefpy.compat.tomllib Python 3.9 adapter",
+      "source": "tools/lef/python/lefpy/compat.py",
+      "replacement": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/__init__.py",
+      "consumers": ["tools/lef/python/lefpy/config.py"],
+      "owner": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/__init__.py",
+      "exit_condition": "Retain while production supports Python 3.9; after every supported interpreter is Python >=3.11 and TOML regression tests pass using stdlib tomllib, remove this tomli fallback. This adapter does not authorize source distribution.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": ["deploy/tests/test_flow_config_inventory.py"]
+    }
+  ]
+}

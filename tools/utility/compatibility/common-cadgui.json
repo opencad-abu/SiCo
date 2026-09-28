@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "compatibility": [
+    {
+      "legacy": "cadgui.library_browser exports from cadgui.category_tree",
+      "source": "tools/common/python/cadgui/library_browser.py",
+      "replacement": "tools/common/python/cadgui/category_tree.py",
+      "owner": "tools/common/python/cadgui/category_tree.py",
+      "exports": {"CategoryTreeWidget": "CategoryTreeWidget", "CategoryTreeItem": "CategoryTreeItem"},
+      "consumers": ["tools/common/python/cadgui/__init__.py", "tools/common/python/cadgui/library_manager.py", "tools/common/python/tests/cadgui_library_browser_fixtures.py", "tools/mtsnl/python/mtsnetlistor/gui/process_surface.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/common/python/tests/test_cadgui_library_browser_tree.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cadgui.library_browser exports from cadgui.library_categories",
+      "source": "tools/common/python/cadgui/library_browser.py",
+      "replacement": "tools/common/python/cadgui/library_categories.py",
+      "owner": "tools/common/python/cadgui/library_categories.py",
+      "exports": {"CategoryIdentity": "CategoryIdentity", "_CATEGORY_ALL": "_CATEGORY_ALL", "_CATEGORY_UNCATEGORIZED": "_CATEGORY_UNCATEGORIZED", "_CategoryNode": "_CategoryNode", "_MutableCategoryNode": "_MutableCategoryNode", "_category_legacy_name": "_category_legacy_name"},
+      "consumers": ["tools/common/python/cadgui/__init__.py", "tools/common/python/cadgui/library_manager.py", "tools/common/python/tests/cadgui_library_browser_fixtures.py", "tools/mtsnl/python/mtsnetlistor/gui/process_surface.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/common/python/tests/test_cadgui_library_browser_tree.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cadgui.library_browser exports from cadgui.library_groups",
+      "source": "tools/common/python/cadgui/library_browser.py",
+      "replacement": "tools/common/python/cadgui/library_groups.py",
+      "owner": "tools/common/python/cadgui/library_groups.py",
+      "exports": {"_LibraryLeaf": "_LibraryLeaf", "_LibraryGroup": "_LibraryGroup", "_LibraryNode": "_LibraryNode"},
+      "consumers": ["tools/common/python/cadgui/__init__.py", "tools/common/python/cadgui/library_manager.py", "tools/common/python/tests/cadgui_library_browser_fixtures.py", "tools/mtsnl/python/mtsnetlistor/gui/process_surface.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/common/python/tests/test_cadgui_library_browser_tree.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cadgui.library_browser exports from cadgui.library_sources",
+      "source": "tools/common/python/cadgui/library_browser.py",
+      "replacement": "tools/common/python/cadgui/library_sources.py",
+      "owner": "tools/common/python/cadgui/library_sources.py",
+      "exports": {"CatalogSelection": "CatalogSelection", "_PartialSelection": "_PartialSelection", "_ObjectSelection": "_ObjectSelection", "_CellSource": "_CellSource", "_ViewSource": "_ViewSource"},
+      "consumers": ["tools/common/python/cadgui/__init__.py", "tools/common/python/cadgui/library_manager.py", "tools/common/python/tests/cadgui_library_browser_fixtures.py", "tools/mtsnl/python/mtsnetlistor/gui/process_surface.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/common/python/tests/test_cadgui_library_browser_tree.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cadgui.library_browser exports from cadgui.library_tree",
+      "source": "tools/common/python/cadgui/library_browser.py",
+      "replacement": "tools/common/python/cadgui/library_tree.py",
+      "owner": "tools/common/python/cadgui/library_tree.py",
+      "exports": {"LibraryTreeWidget": "LibraryTreeWidget"},
+      "consumers": ["tools/common/python/cadgui/__init__.py", "tools/common/python/cadgui/library_manager.py", "tools/common/python/tests/cadgui_library_browser_fixtures.py", "tools/mtsnl/python/mtsnetlistor/gui/process_surface.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/common/python/tests/test_cadgui_library_browser_tree.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cadgui.library_browser exports from cadgui.tree_item",
+      "source": "tools/common/python/cadgui/library_browser.py",
+      "replacement": "tools/common/python/cadgui/tree_item.py",
+      "owner": "tools/common/python/cadgui/tree_item.py",
+      "exports": {"LibraryTreeItem": "LibraryTreeItem"},
+      "consumers": ["tools/common/python/cadgui/__init__.py", "tools/common/python/cadgui/library_manager.py", "tools/common/python/tests/cadgui_library_browser_fixtures.py", "tools/mtsnl/python/mtsnetlistor/gui/process_surface.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/common/python/tests/test_cadgui_library_browser_tree.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    },
+    {
+      "legacy": "cadgui.library_browser_controller exports from cadgui.library_browser_controller",
+      "source": "tools/common/python/cadgui/library_browser_controller.py",
+      "replacement": "tools/common/python/cadgui/library_browser_controller.py",
+      "owner": "tools/common/python/cadgui/library_browser_controller.py",
+      "exports": {"LibraryBrowserController": "CatalogController", "LibraryCatalogController": "CatalogController"},
+      "consumers": ["tools/common/python/cadgui/__init__.py", "tools/common/python/cadgui/library_manager.py", "tools/common/python/tests/test_cadgui_library_browser_controller.py", "tools/common/python/tests/test_cadgui_library_manager.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/common/python/tests/test_cadgui_library_browser_controller.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    }
+  ]
+}

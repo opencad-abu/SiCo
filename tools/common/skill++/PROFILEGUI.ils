@@ -1,0 +1,55 @@
+;------------------------------------------------------------------------------
+; Shared configuration-profile controls for CAD flow forms.
+;------------------------------------------------------------------------------
+
+defclass(PROFILEGUI ()
+  (
+    (profileFlow   @initform "" @initarg profileFlow)
+    (profileFile   @initform nil)
+    (profileLoad   @initform nil)
+    (profileSave   @initform nil)
+    (profileSaveAs @initform nil)
+    (profileLay    @initform nil)
+  )
+)
+
+defmethod(makeProfileControls ((inst PROFILEGUI))
+  let((callbackPrefix)
+    callbackPrefix=strcat("SICO_profile" inst->profileFlow)
+    inst->profileFile=hiCreateFileSelectorField(
+      ?name     'profileFile
+      ?mode     'anyFile
+      ?prompt   "Config File:"
+      ?defValue SICO_profileDefaultPath(inst->profileFlow)
+      ?editable t
+    )
+    inst->profileLoad=hiCreateButton(
+      ?name       'profileLoad
+      ?buttonText "Load"
+      ?callback   strcat("SICO_profileLoadCB(hiGetCurrentForm() \""
+                           inst->profileFlow "\")")
+    )
+    inst->profileSave=hiCreateButton(
+      ?name       'profileSave
+      ?buttonText "Save"
+      ?callback   strcat("SICO_profileSaveCB(hiGetCurrentForm() \""
+                           inst->profileFlow "\")")
+    )
+    inst->profileSaveAs=hiCreateButton(
+      ?name       'profileSaveAs
+      ?buttonText "Save As..."
+      ?callback   strcat("SICO_profileSaveAsCB(hiGetCurrentForm() \""
+                           inst->profileFlow "\")")
+    )
+    inst->profileLay=makehbl(
+      concat(callbackPrefix "Layout")
+      list(list(inst->profileFile 'stretch 1)
+           inst->profileLoad inst->profileSave
+           inst->profileSaveAs)
+      ?a left ?s 6)
+  )
+)
+
+procedure(SICO_profileGuiRevision()
+  "20260818.profile.gui.v2"
+)

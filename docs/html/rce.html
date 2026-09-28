@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SiCo 使用手册：RCE 寄生提取。安装、环境变量、Virtuoso 集成与 CAD flow 配置。">
+<title>RCE 寄生提取 · SiCo 使用手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b4543a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='sans-serif' font-size='24' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/manual.css">
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
+  <span class="edition">使用手册 / 2026.09</span>
+  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+</header>
+<noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="手册目录">
+<p class="rail-label">SICO DOCUMENTATION</p>
+<a href="index.html">开始阅读</a>
+<p class="nav-group">开始使用</p>
+<a href="installation.html">01 · 安装</a>
+<a href="environment.html">02 · 环境变量</a>
+<a href="virtuoso.html">03 · Virtuoso 集成</a>
+<a href="flows.html">04 · CAD flows</a>
+<p class="nav-group">流程指南</p>
+<a href="drc.html">DRC · 规则检查</a>
+<a href="lvs.html">LVS · 连接检查</a>
+<a href="rce.html" aria-current="page">RCE · 寄生提取</a>
+<a href="mts.html">MTS · 多工艺网表</a>
+<a href="utilities.html">LEF / GDS / CDL</a>
+<a href="lsf.html">LSF · 运行与资源</a>
+<p class="nav-group">参考附录</p>
+<a href="environment-internal.html">环境接口附录</a>
+<div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
+</nav>
+<div class="reading">
+<main id="main">
+<p class="eyebrow">CAD FLOW / PARASITIC EXTRACTION</p>
+<h1>RCE · 寄生参数提取</h1>
+<p class="lead">在同一表单中配置 Quantus、StarRC 或 Calibre XRC，选择工艺角、温度与输出形式。输入连接与工艺数据需要先确认正确。</p>
+<h2 id="engine">先选择提取引擎</h2>
+<div class="table-wrap"><table class="engine-table"><thead><tr><th>GUI 引擎</th><th>工艺目录变量</th><th>有效 corner 的识别文件</th><th>前置条件</th></tr></thead><tbody>
+<tr><td>QRC</td><td><code>QUANTUS_TECH_DIR</code></td><td><code>qrcTechFile</code>、<code>qrc.tch</code> 或 <code>cap_coeff.dat</code></td><td>Quantus 与 Calibre；正常 OA/CDL/GDS 流程使用 RCE_LVS_FILE。</td></tr>
+<tr><td>StarRC</td><td><code>STARRC_TECH_DIR</code></td><td>配对的 NXTGRD 与 mapping 文件</td><td>StarXtract 与 Calibre；正常流程使用 RCE_LVS_FILE。</td></tr>
+<tr><td>CalXRC</td><td><code>CALXRC_TECH_DIR</code></td><td><code>xrc.cal</code></td><td>Calibre XRC；独立 LVS runset 与 corner 的 xrc.cal 配套使用。</td></tr>
+</tbody></table></div>
+<div class="code-block"><div class="code-label">Bash · 按已安装的引擎启用相应项</div><pre><code>export RCE_DB_DIR="$PROJECT_ROOT/runs/rce"
+export RCE_LVS_FILE="default,$PDK_ROOT/pv/lvs-rc.cal"
+export QUANTUS_TECH_DIR="default,$PDK_ROOT/rc/quantus"
+export STARRC_TECH_DIR="default,$PDK_ROOT/rc/starrc"
+export CALXRC_TECH_DIR="default,$PDK_ROOT/rc/calibre-xrc"
+export RCE_DEF_TOOL="StarRC"
+export RCE_CORNER="Typ"
+export RCE_DEF_TEMP="25"
+export RCE_TEMP_LIST="125,85,25"
+export RCE_OUTPUT_CHOICES="dspf,spf,spef,view"
+export SICO_FLOW_CPU_ALLOW="1,2,4,8"</code></pre></div>
+<p>上面把温度显式改为 25°C；未配置时默认是 125°C。工艺目录推荐指向包含各 corner 子目录的根，表单只显示其中有效的 corner，名称大小写保留。也可直接指向有效 corner。可选输出由引擎能力约束，环境列表不能启用引擎不支持的格式。</p>
+<h2 id="techdirs">Techdir 与 corner 目录怎么组织</h2>
+<p>每个提取引擎使用自己的 techdir。同一 techdir 对应一套工艺版本和金属栈，其下一级才是各个 RC corner。<strong>Process Directory 填 techdir，Process Corner 选择其直接子目录</strong>；SiCo 不会递归跨过金属栈目录寻找 corner。</p>
+<div class="code-block"><div class="code-label">目录层次 · 工艺版本 → 金属栈 → 引擎 → corner</div><pre><code>$PDK_ROOT/                         # 已选定的工艺版本
+└── rc/
+    └── stack_A/                    # 当前设计采用的金属栈
+        ├── quantus/                # QUANTUS_TECH_DIR 的路径部分
+        │   ├── Typ/
+        │   ├── Cmax/
+        │   ├── Cmin/
+        │   ├── RCmax/
+        │   └── RCmin/
+        ├── starrc/                 # STARRC_TECH_DIR 的路径部分
+        │   └── 各 corner/          # 每个 corner 直接放配套文件
+        └── calibre-xrc/            # CALXRC_TECH_DIR 的路径部分
+            └── 各 corner/</code></pre></div>
+<p><code>stack_A</code> 是金属栈占位名；只有一种金属栈时可省略这一层。<code>Typ</code>、<code>Cmax</code>、<code>Cmin</code>、<code>RCmax</code>、<code>RCmin</code> 是示例角名，应按 PDK 实际提供的角建立目录，并保持文件与角的对应关系。创建不同名字的目录不会生成不同工艺角。</p>
+<div class="code-block"><div class="code-label">Bash · 对应上面的目录，已有配置中替换这三项</div><pre><code>export QUANTUS_TECH_DIR="stack_A,$PDK_ROOT/rc/stack_A/quantus"
+export STARRC_TECH_DIR="stack_A,$PDK_ROOT/rc/stack_A/starrc"
+export CALXRC_TECH_DIR="stack_A,$PDK_ROOT/rc/stack_A/calibre-xrc"
+export RCE_CORNER="Typ"</code></pre></div>
+<p>有多种金属栈时，用分号增加 <code>显示名,路径</code>，例如 <code>stack_A,路径A;stack_B,路径B</code>。GUI 中先选择 Process Directory 的金属栈，再选择该目录中的 corner。</p>
+<h3 id="techdir-proj2">proj2 的目录对照</h3>
+<p>下面选取 <code>/workarea/projs/proj2/common/pdk</code> 中的一个金属栈，展示原始工艺文件的位置。<code>1p9m_6X1Z1U</code> 是金属栈名称；该目录中的 typical 模型对应典型角。整理时把金属栈与 RC corner 分成两级，便于以后增加其他角：</p>
+<div class="code-block"><div class="code-label">proj2 · 原始 PDK 文件节选</div><pre><code>$PROJ_PDK_HOME/
+├── Assura/online/1p9m_6X1Z1U/       # Quantus / Assura 侧的工艺数据
+│   ├── qrcTechFile
+│   ├── RCXspiceINIT
+│   ├── RCXdspfINIT
+│   ├── lvsfile
+│   ├── cap_coeff.dat, caps2d, capsw3d
+│   └── rcxfs.dat, paxfile_coeff
+├── CCI/online/1p9m_6X1Z1U/          # StarRC / CCI 侧的工艺数据
+│   ├── starrcxt.nxtgrd
+│   ├── starrcxt_mapping
+│   ├── starrcxt_mapping_1p9m
+│   └── *.itf                         # 建模输入，不直接替代 nxtgrd
+└── Calibre/
+    ├── online/rcx_online/1p9m_6X1Z1U/
+    │   ├── calibre.rcx               # 原始 Calibre RCX 规则入口
+    │   └── rules                     # 由 calibre.rcx 引用的规则数据
+    └── rcx/calview.cellmap           # Calibre View 的 OA cell map</code></pre></div>
+<p>例如，可将已确认的 typical StarRC 文件通过软链接组织到 <code>rc/1p9m_6X1Z1U/starrc/Typ/nxtgrd</code> 和 <code>tran.map</code>，再把 Process Directory 指向 <code>rc/1p9m_6X1Z1U/starrc</code>。其他角使用各自的模型。Quantus 的 Calibre 适配文件、CalXRC 的规则入口按下面各节准备。</p>
+<p>核对时，proj2 modulefile 中的 <code>$PROJ_PDK_HOME/QRC</code>、<code>StarRC</code>、<code>CalXRC</code> 尚无对应目录。这里展示的是整理方法与原始文件对照，不表示该项目已经具有可直接运行的完整 corner 配置。</p>
+<div class="notice"><strong>识别文件用于列出 corner；运行还需要完整的配套文件。</strong> 下表分别标出必需、按功能必需和 PDK 配套项。文件可以是有效软链接；引用目标及其依赖必须在执行节点可读。目录示例用于说明组织方式，规则和工艺数据应来自同一套已确认的 PDK。</div>
+<h3 id="techdir-qrc">示例一 · Quantus / QRC</h3>
+<div class="code-block"><div class="code-label">Quantus · Calibre LVS 输入的晶体管级提取</div><pre><code>quantus/
+├── Typ/
+│   ├── qrcTechFile                 # 必需：对应角的完整工艺文件
+│   ├── RCXspiceINIT                # 必需：配套运行初始化脚本
+│   ├── RCXdspfINIT -&gt; RCXspiceINIT # 必需：常见形式为此软链接
+│   ├── lvsfile                     # 必需：Calibre 接口配套文件
+│   └── fabBlockCells.list          # 按配置：foundry blocking 清单
+├── Cmax/                           # 同样四项必需文件，各用自己的角数据
+├── Cmin/
+├── RCmax/
+└── RCmin/</code></pre></div>
+<div class="table-wrap"><table class="tech-files"><thead><tr><th>文件</th><th>需要条件</th><th>作用与配置</th></tr></thead><tbody>
+<tr><td><code>qrcTechFile</code></td><td>上述 Quantus 流程必需</td><td>包含该角的 RC 工艺模型与提取所需数据，应已完成适配 Calibre LVS 输入的 Techgen compilation；只有仿真模型、尚未完成配套编译的文件不能视为就绪。</td></tr>
+<tr><td><code>RCXspiceINIT</code><br><code>RCXdspfINIT</code></td><td>上述 Quantus 流程必需</td><td>与 qrcTechFile 配套的晶体管级运行初始化入口，包含工具调用、层映射和 blocking 等设置。RCXdspfINIT 常由 PDK 提供为指向 RCXspiceINIT 的软链接；保留有效的配套文件或链接。</td></tr>
+<tr><td><code>lvsfile</code></td><td>Calibre–Quantus 流程必需</td><td>供 Quantus 使用的 Calibre LVS 接口数据，与工艺文件和前置 LVS 规则匹配。它与 <code>RCE_LVS_FILE</code> 指向的 Calibre SVRF runset 用途不同，不能相互替代。</td></tr>
+<tr><td><code>fabBlockCells.list</code></td><td>配置 blocking 文件时必需</td><td>foundry 提供的寄生 blocking 器件清单。示例文件名可自定；设置 <code>RCE_QUANTUS_BLOCK_CELL_FILE="fabBlockCells.list"</code> 时，相对当前有效 corner 解析。多角运行只取所选首角的文件，作为本次运行的共有清单；未配置时不自动读取它。</td></tr>
+<tr><td>其他 PDK 配套文件</td><td>按该工艺包要求</td><td>初始化脚本或工艺配置引用的外部文件也必须保留。不能根据此处的最小清单删除工艺包中的其他依赖。</td></tr>
+</tbody></table></div>
+<p>SiCo 扫描时只检查是否存在 <code>qrcTechFile</code>、<code>qrc.tch</code> 或 <code>cap_coeff.dat</code> 中的任意一项；这是兼容不同目录格式的识别条件，并不表示这三个文件可以在 Quantus 运行中任意互换。上面的四项清单针对当前 Calibre–Quantus 晶体管级流程。</p>
+<p>已有 PDK 可能同时保留 <code>cap_coeff.dat</code>、<code>caps2d</code>、<code>capsw3d</code>、<code>paxfile_coeff</code>、<code>rcxfs.dat</code> 等历史 capgen/RCX 模型数据。它们属于原工艺包的配套或历史格式；是否在运行时需要，应以该包的初始化脚本和工具版本说明为准。不要从 Assura 目录只取一个 qrcTechFile 就当作已适配 Calibre 的完整目录。</p>
+<p>多角运行所需的 <code>corner.defs</code> 和技术库定义由 SiCo 在运行日志目录生成，不要求用户把它们预先放进每个 corner。</p>
+<h3 id="techdir-starrc">示例二 · StarRC</h3>
+<div class="code-block"><div class="code-label">StarRC · 各角自带 grid 与 mapping 的推荐结构</div><pre><code>starrc/
+├── Typ/
+│   ├── nxtgrd                      # 必需：该角的 NXTGRD 工艺模型
+│   ├── tran.map                    # 必需：匹配该金属栈的层映射
+│   ├── common.opt                  # 可选：PDK 附加命令
+│   ├── OA_DEVICE_MAP               # OA view 输出时必需
+│   └── OA_LAYER_MAP                # OA view 输出时必需
+├── Cmax/                           # 同样具备 grid / mapping
+├── Cmin/
+├── RCmax/
+└── RCmin/</code></pre></div>
+<div class="table-wrap"><table class="tech-files"><thead><tr><th>文件</th><th>需要条件</th><th>作用与配置</th></tr></thead><tbody>
+<tr><td><code>nxtgrd</code></td><td>每个 corner 必需</td><td>StarRC 使用的工艺网格与 RC 模型，生成命令中的 <code>TCAD_GRD_FILE</code> 指向它。可用同名软链接指向该角的原始 NXTGRD 文件。</td></tr>
+<tr><td><code>tran.map</code></td><td>每个 corner 必须能解析到一份</td><td>将 Calibre/CCI 的提取层与 StarRC 工艺层对应，生成命令中的 <code>MAPPING_FILE</code> 指向它。必须与 LVS 规则、金属栈和 grid 配套；可以按下述规则共享。</td></tr>
+<tr><td><code>common.opt</code></td><td>可选</td><td>PDK 附加 StarRC 命令，存在时自动追加到生成命令末尾。单角使用当前角的文件；多角只使用所选第一个 corner 的文件，因此多角共有设置应保持一致。</td></tr>
+<tr><td><code>OA_DEVICE_MAP</code></td><td>输出原生 OA view 时必需</td><td>把提取器件及相关信息映射到目标 OA/PDK 器件。可放在 corner 中供自动发现，或由 <code>RCE_STARRC_OA_DEVICE_MAP</code> 指定其他位置。</td></tr>
+<tr><td><code>OA_LAYER_MAP</code></td><td>输出原生 OA view 时必需</td><td>把提取层映射到 OA 层用途。可由 <code>RCE_STARRC_OA_LAYER_MAP</code> 指定；它与上面的 tran.map、stream-out 的 <code>TECH_LAYER_MAP</code> 用途不同。</td></tr>
+</tbody></table></div>
+<p><strong>文件名查找顺序：</strong>grid 优先取 <code>nxtgrd</code>，否则要求本角中只有一个 <code>*.nxtgrd</code>；mapping 依次找 <code>tran.map</code>、<code>map</code>、<code>MAPPING_FILE</code>、<code>mapping_file</code>，再尝试唯一的 <code>*.map</code>。多个后缀候选会产生歧义，推荐用上面两个固定名称明确选择。</p>
+<p>若所有角确实共用同一映射，可以只在 <code>starrc/</code> 根放 <code>MAPPING_FILE</code> 或 <code>mapping_file</code>；本角没有 mapping 候选时才回退到根目录。仅有根目录的 <code>tran.map</code> 不会按此规则共享。多角运行仍须为每个角准备各自的 grid。</p>
+<p>例如已有 PDK 使用 <code>starrcxt.nxtgrd</code>、<code>starrcxt_mapping</code> 等原始名称时，可在 corner 中建立 <code>nxtgrd</code>、<code>tran.map</code> 入口指向配套文件。<code>*.itf</code> 是工艺建模输入，SiCo 提取时读取准备好的 NXTGRD；它不能直接替代 nxtgrd。</p>
+<h3 id="techdir-calxrc">示例三 · Calibre XRC</h3>
+<div class="code-block"><div class="code-label">Calibre XRC · LVS 规则与各 corner 的提取规则分开配置</div><pre><code>$PDK_ROOT/
+├── pv/
+│   └── lvs-rc.cal                  # 必需：独立的 RCE LVS runset
+└── rc/stack_A/calibre-xrc/
+    ├── Typ/
+    │   ├── xrc.cal                 # 必需：本角的 XRC 规则入口
+    │   ├── rules                   # 按规则依赖：此处仅作文件名示例
+    │   ├── hcell_list              # 启用 hcell 时需要
+    │   ├── xcell_list              # 可选：PDK 提供的 xcell/blocking 清单
+    │   └── calview.cellmap         # 输出 Calibre View 时需要
+    ├── Cmax/                       # 各角都有自己的 xrc.cal
+    ├── Cmin/
+    ├── RCmax/
+    └── RCmin/</code></pre></div>
+<div class="table-wrap"><table class="tech-files"><thead><tr><th>文件</th><th>需要条件</th><th>作用与配置</th></tr></thead><tbody>
+<tr><td><code>xrc.cal</code></td><td>每个 corner 必需</td><td>本角的 XRC 提取规则入口，负责选取该角的模型、规则与工艺设置。可为 PDK 规则文件或站点配套包装文件；此名称用于 GUI 识别 corner。</td></tr>
+<tr><td>规则引用的文件<br>如 <code>rules</code></td><td>被规则引用时必需</td><td>提供实际提取模型或其他 SVRF 规则。例如原始工艺包含 rules、DFM 等依赖时应保持完整引用。<code>rules</code> 不是 SiCo 强制的固定文件名。</td></tr>
+<tr><td><code>hcell_list</code></td><td>启用 LVS hcell 时必需</td><td>指定版图与源网表的层次 cell 对应，用于 XRC LVS 的 <code>-hcell</code>。GUI 启用 hcell 后须在表单中填写文件路径；手写 TOML 未指定 hcell 路径时，才回退到本角 hcell_list。</td></tr>
+<tr><td><code>xcell_list</code></td><td>可选的 PDK 基础清单</td><td>XRC 层次抽取/blocking 的 cell 清单，用于 PDB 阶段的 <code>-xcell</code>。本角存在时会自动读取，也可显式指定。仅使用用户 Block Cells 时可由 SiCo 在运行目录生成清单，不要求预置此文件；两种方式都要求启用 hcell，并保持 cell 映射相符。</td></tr>
+<tr><td><code>calview.cellmap</code></td><td>输出 Calibre View 时必需</td><td>将提取网表中的器件映射到 Virtuoso 库/cell 及参数。默认取当前角此文件，也可用 <code>RCE_CALIBRE_VIEW_CELLMAP</code> 指向共享文件；普通 DSPF/SPICE 输出不要求它。</td></tr>
+<tr><td>独立 LVS runset<br>示例：<code>pv/lvs-rc.cal</code></td><td>XRC 运行必需，可放在 corner 外</td><td>由 RCE 表单中的 LVS Runset（环境候选 <code>RCE_LVS_FILE</code>）写入 <code>lvs.runset_file</code>。SiCo 先 include 这份文件，再 include xrc.cal；两者必须是不同文件，并使用配套且不重复定义的规则。</td></tr>
+</tbody></table></div>
+<p>GUI 会明确保存 hcell 开关；手写 XRC TOML 若省略 <code>lvs.hcell_enable</code>，默认按启用处理，无显式路径时会要求 corner 下存在 <code>hcell_list</code>。不使用层次 cell 清单的流程应按工艺要求关闭该选项；不要用空目录冒充清单文件。</p>
+<p>将原始 <code>calibre.rcx</code> 整理成 <code>xrc.cal</code> 时，还要核对它的 include、工艺角开关和 LVS 内容。SiCo 从运行目录启动 Calibre，简单改名或建立软链接不会自动修复规则里的 <code>./rules</code>、<code>./DFM/…</code> 等相对路径。应由站点提供路径完整、适合该角的规则入口。</p>
+<p><strong>运行前核对：</strong>三个 techdir 都应能列出期望的角；各角文件使用对应的工艺版本、金属栈和 RC 模型；所有软链接和规则引用在实际执行节点可读；需要 OA view 或 blocking 时已补齐相应映射和清单。随后按下面的步骤配置提取。</p>
+<h2 id="run">配置一次提取</h2>
+<ol class="steps"><li>选择 <strong>SiCo → RCE</strong>，加载 RCE Profile 或填写输入。支持 OA、CDL+GDS、CDL+LAY、SCH+GDS；使用 SVDB 或 CCI 时必须确认它们来自匹配且已通过 LVS 的设计。</li><li>选择 EXT Engine 和 Process Directory，确认 Process Corner。选择与提取引擎配套的 LVS runset；CalXRC 同样需要独立 LVS runset，另由当前 corner 提供 xrc.cal。</li><li>设置提取温度、RC 类型、top cell 来源和命名来源。常见完整寄生选项为 <strong>R+Cg+Cc</strong>；其他模式按设计目标与引擎支持选择。</li><li>选择输出格式与必要的 view 目标；按需设置 Nets、Block Cells、寄生过滤和 pin order。</li><li>确认运行目录、LVS CPU / EXT CPU 和主机，运行后检查各阶段日志与实际输出。</li></ol>
+<div class="notice">正式后仿输入应建立在已确认的连接结果上。<strong>Ignore LVS Error</strong> 可能生成错误连接的寄生网表；不能用该选项代替 LVS 问题处理。</div>
+<h2 id="corners">单角与多角</h2>
+<p><strong>Single Corner</strong> 使用一个工艺角与温度；<strong>Multiple Corners</strong> 逐行勾选工艺角，并为每行设置温度。StarRC 同时最多选择 15 个 corner；StarRC 和 Calibre XRC 多角只支持文件网表输出。GUI 多角列表最多展示 32 个有效 corner，工艺目录过大时应缩小范围。</p>
+<p>CLI TOML 用 <code>extract.corners</code> 和 <code>extract.corner_temperatures</code> 保存完整选择，两者一一对应。不要只修改首个兼容字段 <code>corner</code> 或 <code>temperature</code> 就认为已经改变全部多角配置。</p>
+<h2 id="formats">各引擎支持的输出格式</h2>
+<div class="table-wrap"><table><thead><tr><th>引擎</th><th>文件输出</th><th>原生 OA 输出</th></tr></thead><tbody>
+<tr><td>QRC</td><td><code>sp</code>（spice/hspice 为别名）、<code>dspf</code>、<code>spef</code></td><td><code>view</code> → Smart / Extracted</td></tr>
+<tr><td>StarRC</td><td><code>dspf</code> / <code>spf</code>、<code>spef</code></td><td><code>view</code> → OpenAccess Parasitic View</td></tr>
+<tr><td>CalXRC</td><td><code>dspf</code>、<code>sp</code> / <code>spice</code></td><td><code>view</code> → Calibre View</td></tr>
+</tbody></table></div>
+<p>为默认引擎设置对应的 <code>RCE_OUTPUT_CHOICES</code>：例如 QRC 用 <code>sp,dspf,spef,view</code>，CalXRC 用 <code>dspf,spice,view</code>。旧运行配置仍可能出现 <code>extview</code> / <code>smartview</code>（QRC）、<code>calibreview</code>（Calibre）、<code>starrcview</code>（StarRC）；新 Profile 统一使用 <code>view</code> 与 <code>extract.view.kind</code>。</p>
+<h2 id="oa-view">输出原生 OA 寄生 view</h2>
+<div class="table-wrap"><table><thead><tr><th>引擎 / View</th><th>默认 view 名称</th><th>额外配置</th></tr></thead><tbody>
+<tr><td>QRC Smart / Extracted View</td><td><code>av_extracted</code></td><td>有效 OA 目标、对应 layout view；原生输出使用 schematic 命名空间。</td></tr>
+<tr><td>Calibre View</td><td><code>calibre</code></td><td><code>RCE_CALIBRE_VIEW_CELLMAP</code> 或当前 corner 的 calview.cellmap；需 Calibre–Virtuoso 集成。</td></tr>
+<tr><td>StarRC OpenAccess Parasitic View</td><td><code>starrc</code></td><td><code>RCE_STARRC_OA_DEVICE_MAP</code> 和 <code>RCE_STARRC_OA_LAYER_MAP</code>，或 corner 中可识别的配套映射。</td></tr>
+</tbody></table></div>
+<p>Output Type 选择统一的 <code>view</code>，再选择 View Kind。OA 输入从选定设计解析目标；非 OA 输入需要明确的 <code>lib/cell/view</code>。StarRC 的 OA device/layer mapping 不能用 stream-out 的 <code>TECH_LAYER_MAP</code> 替代。</p>
+<div class="code-block"><div class="code-label">TOML · QRC Smart View 配置片段</div><pre><code>[extract]
+tool = "QRC"
+tech_dir = "${PDK_ROOT}/rc/quantus"
+corner = "Typ"
+corners = ["Typ"]
+temperature = "25"
+corner_temperatures = ["25"]
+output_type = "view"
+
+[extract.view]
+kind = "smart"
+library = "my_design"
+cell = "amplifier"
+name = "av_extracted"
+layout_view = "layout"</code></pre></div>
+<p>这是完整运行 TOML 的局部示例，还需配置 run、input、LVS 与 runtime 等内容。推荐先在 GUI 填好并运行生成完整文件。</p>
+<h2 id="selection">选择性抽取与 blocking</h2>
+<p>Nets 与 Cells 可填写空格分隔的名称，或一个可访问文件的路径。Profile 加载时，只有实际存在的文件才按文件路径解析；例如 <code>VDD VSS</code> 保持内联网络名。</p>
+<p>QRC foundry blocking 文件由 <code>RCE_QUANTUS_BLOCK_CELL_FILE</code> 指定。相对路径基于当前有效 corner（多角时为所选首角），例如 <code>fabBlockCells.list</code>；未配置时只使用用户 Block Cells，不猜测 foundry 文件名。设置后文件缺失会在启动 Quantus 前报错。</p>
+<h2 id="cli">命令行与运行记录</h2>
+<div class="code-block"><div class="code-label">Shell · 使用完整运行 TOML</div><pre><code>rce run /path/to/run/rce.toml --dry-run
+rce generate /path/to/run/rce.toml
+rce run /path/to/run/rce.toml
+# 打开已经生成的 DSPF 文件进行分析。
+dspfana /path/to/output/amplifier.dspf</code></pre></div>
+<p>QRC / StarRC 常见阶段为 CDL、GDS、LVS、query、extract；输入 SVDB / CCI 时会复用已有阶段数据。Calibre XRC 使用其自身 LVS / PDB / FMT 阶段。失败时先定位具体阶段，再核对输入、许可证和工具日志。</p>
+<p>XRC 在非空 <code>MGC_HOME</code> 下使用 <code>$MGC_HOME/bin/calibre</code>；未设置时查 PATH。普通 DRC / LVS / RCE 前置 Calibre 阶段仍查 PATH。流程默认命令维护方式见<a href="flows.html#defaults">公共默认项</a>。</p>
+
+<footer class="page-footer"><span>内容基线 d48ccb31 · 核对 2026-09-28</span><a href="mts.html">MTS 多工艺网表 →</a></footer>
+</main>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#engine">先选择提取引擎</a><a href="#techdirs">Techdir 目录层次</a><a href="#techdir-proj2">proj2 目录对照</a><a href="#techdir-qrc">Quantus 文件清单</a><a href="#techdir-starrc">StarRC 文件清单</a><a href="#techdir-calxrc">Calibre XRC 文件清单</a><a href="#run">配置一次提取</a><a href="#corners">单角与多角</a><a href="#formats">各引擎支持的输出格式</a><a href="#oa-view">输出原生 OA 寄生 view</a><a href="#selection">选择性抽取与 blocking</a><a href="#cli">命令行与运行记录</a></aside>
+</div></div>
+</body>
+</html>

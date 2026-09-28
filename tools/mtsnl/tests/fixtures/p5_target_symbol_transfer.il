@@ -1,0 +1,33 @@
+; P5 target-side symbol transfer probe.
+; The launcher supplies MTS_TARGET_LIB, MTS_TARGET_CELL,
+; MTS_TRANSFER_LIB, MTS_TRANSFER_CELL, and MTS_TRANSFER_REPORT.
+let((targetLib targetCell transferLib transferCell reportPort srcCV dstCV)
+  targetLib = getShellEnvVar("MTS_TARGET_LIB")
+  targetCell = getShellEnvVar("MTS_TARGET_CELL")
+  transferLib = getShellEnvVar("MTS_TRANSFER_LIB")
+  transferCell = getShellEnvVar("MTS_TRANSFER_CELL")
+  reportPort = outfile(getShellEnvVar("MTS_TRANSFER_REPORT") "w")
+  fprintf(reportPort "stage=target\n")
+  fprintf(reportPort "pid=%L\n" getShellEnvVar("MTS_PROCESS_PID"))
+  fprintf(reportPort "cds_lib=%s\n" getShellEnvVar("CDS_LIB"))
+  fprintf(reportPort "target=%s/%s/symbol\n" targetLib targetCell)
+  fprintf(reportPort "transfer=%s/%s/symbol\n" transferLib transferCell)
+  srcCV = dbOpenCellViewByType(transferLib transferCell "symbol" "schematicSymbol" "r")
+  unless(srcCV
+    close(reportPort)
+    error("MTS transfer symbol cannot be opened")
+  )
+  fprintf(reportPort "transfer_terminals=%L\n" foreach(mapcar terminal srcCV~>terminals terminal~>name))
+  dstCV = dbCopyCellView(srcCV targetLib targetCell "symbol" nil nil nil)
+  unless(dstCV
+    dbClose(srcCV)
+    close(reportPort)
+    error("MTS target symbol copy failed")
+  )
+  fprintf(reportPort "target_terminals=%L\n" foreach(mapcar terminal dstCV~>terminals terminal~>name))
+  fprintf(reportPort "copy_result=t\n")
+  dbClose(dstCV)
+  dbClose(srcCV)
+  close(reportPort)
+)
+exit()

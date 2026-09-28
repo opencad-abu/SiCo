@@ -1,0 +1,169 @@
+; Construct output paths and parasitic view import requests. SKILL++ lexical scope.
+
+procedure(rceNetlistViewInputSupported(form)
+  if(rceNetlistViewTarget(form) then t else nil)
+)
+
+procedure(rceParasiticNetlistOutputP(outputType)
+  if(member(lowerCase(or(outputType "")) '("dspf" "sp" "spice" "spef")) then
+    t
+  else
+    nil
+  )
+)
+
+procedure(rceParasiticViewSpec(outputType)
+  case(lowerCase(or(outputType ""))
+    ("dspf" list("dspfText" "DSPF"))
+    (("sp" "spice") list("spiceText" "Spice"))
+    ("spef" list("spef"
+                 if(ddMapGetViewTypeFileName("SPEF") then "SPEF" else "text")))
+    (t nil)
+  )
+)
+
+procedure(rceReducedParasiticViewName(outputType tag)
+  let((viewSpec)
+    viewSpec=rceParasiticViewSpec(outputType)
+    when(and(viewSpec stringp(tag) strlen(tag)>0)
+      strcat(car(viewSpec) "_" tag))
+  )
+)
+
+procedure(rceTextViewRequest(viewTarget sourceFile outputType cdsLib
+                             @optional viewName)
+  when(and(viewTarget stringp(sourceFile) strlen(sourceFile)>0)
+    if(and(stringp(viewName) strlen(viewName)>0) then
+      list("text" car(viewTarget) cadr(viewTarget) sourceFile outputType
+           cdsLib viewName)
+    else
+      list("text" car(viewTarget) cadr(viewTarget) sourceFile outputType cdsLib))
+  )
+)
+
+procedure(rceNetlistViewRequest(form viewTarget outputPaths finalOutputPaths
+                                outputType)
+  let((cdsLib originalRequest reducedRequest reducedPath reducedView
+        corners viewSpec requests cornerIndex)
+    when(and(viewTarget form~>createNetlistView~>value
+             rceParasiticNetlistOutputP(outputType))
+      cdsLib=rceCdsLibPath(form)
+      if(length(outputPaths)>1 then
+        corners=rceSelectedProcessCorners(form)
+        viewSpec=rceParasiticViewSpec(outputType)
+        requests=nil
+        ; Output paths follow the selected corner order from Run time.
+        for(cornerIndex 0 sub1(length(outputPaths))
+          requests=append1(requests rceTextViewRequest(
+            viewTarget nth(cornerIndex outputPaths) outputType cdsLib
+            strcat(car(viewSpec) "_" nth(cornerIndex corners)))))
+        originalRequest=cons("group" requests)
+      else
+        originalRequest=rceTextViewRequest(
+          viewTarget car(outputPaths) outputType cdsLib))
+      when(and(originalRequest rceReductionEnabledP(form)
+               rceReductionFileOutputP(outputType))
+        reducedPath=car(finalOutputPaths)
+        reducedView=rceReducedParasiticViewName(
+          outputType form~>reductionOutputTag~>value)
+        when(and(reducedPath reducedView reducedPath!=car(outputPaths))
+          reducedRequest=rceTextViewRequest(
+            viewTarget reducedPath outputType cdsLib reducedView)))
+      if(reducedRequest then
+        list("group" originalRequest reducedRequest)
+      else
+        originalRequest)
+    )
+  )
+)
+
+procedure(rceSyncCreateNetlistView(form)
+  let((supported)
+    when(form~>createNetlistView
+      ; This boolean describes the requested post-extraction action.  Keep it
+      ; selectable before the user has finished choosing an OA destination;
+      ; rcePrint validates that destination when Run is pressed.  In
+      ; particular, Reduction state must never control this field.
+      supported=rceParasiticNetlistOutputP(form~>outType~>value)
+      form~>createNetlistView~>invisible=!supported
+      form~>createNetlistView~>enabled=supported
+      unless(supported
+        form~>createNetlistView~>value=nil
+      )
+    )
+  )
+)
+
+procedure(rceSyncStartRve(form)
+  let((visible)
+    when(form~>startRve
+      visible=(form~>extTool~>value=="CalXRC")
+      form~>startRve~>invisible=!visible
+      form~>startRve~>enabled=visible
+      unless(visible
+        form~>startRve~>value=nil
+      )
+    )
+  )
+)
+
+procedure(rceNetlistViewTarget(form)
+  let((source target)
+    source=form~>topCellSource~>value
+    target=case(form~>inpType~>value
+      ("OA"
+        if(source=="Schematic" then
+          list(form~>schLib~>value form~>schCell~>value form~>schCell~>value)
+        else
+          list(form~>layLib~>value form~>layCell~>value form~>layCell~>value)
+        )
+      )
+      ("SCH+GDS"
+        if(source=="Schematic" then
+          list(form~>schLib~>value form~>schCell~>value form~>schCell~>value)
+        else
+          when(form~>schCell~>value==form~>gdsCell~>value
+            list(form~>schLib~>value form~>schCell~>value form~>gdsCell~>value)
+          )
+        )
+      )
+      ("CDL+LAY"
+        if(source=="Layout" then
+          list(form~>layLib~>value form~>layCell~>value form~>layCell~>value)
+        else
+          when(form~>cdlCell~>value==form~>layCell~>value
+            list(form~>layLib~>value form~>layCell~>value form~>cdlCell~>value)
+          )
+        )
+      )
+      (t nil)
+    )
+    when(and(target
+               car(target) strlen(car(target))>0
+               cadr(target) strlen(cadr(target))>0
+               ddGetObj(car(target) cadr(target)))
+      target
+    )
+  )
+)
+
+procedure(rceExpectedOutputPaths(runDir cell outputType tool corners)
+  let((base normalized paths corner)
+    base=RCE_tomlDefaultOutput(runDir cell outputType)
+    normalized=lowerCase(or(outputType ""))
+    cond(
+      (or(strlen(base)==0 length(corners)<=1) when(strlen(base)>0 list(base)))
+      (and(member(tool '("QRC" "Quantus"))
+             member(normalized '("sp" "spice" "hspice"))) list(base))
+      (t
+        paths=nil
+        foreach(corner corners
+          paths=append1(paths
+                        RCE_tomlDefaultOutput(
+                          runDir strcat(cell "_" corner) outputType))
+        )
+        paths
+      )
+    )
+  )
+)

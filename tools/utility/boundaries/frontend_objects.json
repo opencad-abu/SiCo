@@ -1,0 +1,379 @@
+{
+ "schema_version": 1,
+ "objects": [
+  {
+   "id": "frontend-SessionToken",
+   "source": "tools/sico/python/sico/service/frontend_session.py:SessionToken",
+   "public": [
+    "runtime_id",
+    "session_id"
+   ],
+   "forbid_attributes": [
+    "owner",
+    "sessions",
+    "controller",
+    "journal",
+    "loop",
+    "worker",
+    "reader",
+    "events",
+    "service",
+    "publisher",
+    "_owner",
+    "_request"
+   ],
+   "rationale": "Only the reviewed identity, view or limited capability surface crosses the frontend boundary.",
+   "evidence": [
+    "tools/ai/python/tests/test_agent_frontend_port.py",
+    "tools/ai/python/tests/test_agent_frontend_fake.py"
+   ],
+   "frozen": true,
+   "fields": [
+    "session_id",
+    "runtime_id"
+   ]
+  },
+  {
+   "id": "frontend-SessionView",
+   "source": "tools/sico/python/sico/service/frontend_session.py:SessionView",
+   "public": [
+    "base",
+    "context",
+    "label",
+    "model",
+    "resources",
+    "runtime_id",
+    "session_id"
+   ],
+   "forbid_attributes": [
+    "owner",
+    "sessions",
+    "controller",
+    "journal",
+    "loop",
+    "worker",
+    "reader",
+    "events",
+    "service",
+    "publisher",
+    "_owner",
+    "_request"
+   ],
+   "rationale": "Only the reviewed identity, view or limited capability surface crosses the frontend boundary.",
+   "evidence": [
+    "tools/ai/python/tests/test_agent_frontend_port.py",
+    "tools/ai/python/tests/test_agent_frontend_fake.py"
+   ],
+   "frozen": true,
+   "fields": [
+    "session_id",
+    "runtime_id",
+    "context",
+    "label",
+    "base",
+    "model",
+    "resources"
+   ]
+  },
+  {
+   "id": "frontend-FrontendSession",
+   "source": "tools/sico/python/sico/service/frontend_session.py:FrontendSession",
+   "public": [
+    "api",
+    "session"
+   ],
+   "forbid_attributes": [
+    "owner",
+    "sessions",
+    "controller",
+    "journal",
+    "loop",
+    "worker",
+    "reader",
+    "events",
+    "service",
+    "publisher",
+    "_owner",
+    "_request"
+   ],
+   "rationale": "Only the reviewed identity, view or limited capability surface crosses the frontend boundary.",
+   "evidence": [
+    "tools/ai/python/tests/test_agent_frontend_port.py",
+    "tools/ai/python/tests/test_agent_frontend_fake.py"
+   ],
+   "frozen": true,
+   "fields": [
+    "api",
+    "session"
+   ]
+  },
+  {
+   "id": "frontend-QuickReceipt",
+   "source": "tools/ai/python/tests/agent_frontend_harness.py:QuickReceipt",
+   "public": [
+    "accepted",
+    "created",
+    "session"
+   ],
+   "forbid_attributes": [
+    "owner",
+    "sessions",
+    "controller",
+    "journal",
+    "loop",
+    "worker",
+    "reader",
+    "events",
+    "service",
+    "publisher",
+    "_owner",
+    "_request"
+   ],
+   "rationale": "Only the reviewed identity, view or limited capability surface crosses the frontend boundary.",
+   "evidence": [
+    "tools/ai/python/tests/test_agent_frontend_port.py",
+    "tools/ai/python/tests/test_agent_frontend_fake.py"
+   ],
+   "frozen": true,
+   "fields": [
+    "session",
+    "created",
+    "accepted"
+   ]
+  },
+  {
+   "id": "frontend-FrontendPort",
+   "source": "tools/ai/python/tests/agent_frontend_harness.py:FrontendPort",
+   "public": [
+    "accept_quick",
+    "activity",
+    "background_request",
+    "catalog_snapshot",
+    "close_desktop",
+    "command",
+    "connection",
+    "create_session",
+    "delete_session",
+    "desktop_busy",
+    "display_name",
+    "event_batch",
+    "event_detail",
+    "chat_page",
+    "handle",
+    "initial_id",
+    "input_detail",
+    "interrupt",
+    "is_closing",
+    "launch_directory",
+    "layout_path",
+    "open_session",
+    "opened_sessions",
+    "owns",
+    "prepare_replay",
+    "preview_matches",
+    "preview_session",
+    "preview_source",
+    "released_targets",
+    "rename_session",
+    "replay_matches",
+    "session",
+    "source",
+    "target_source",
+    "tool_result",
+    "view",
+    "wait_desktop"
+   ],
+   "forbid_attributes": [
+    "owner",
+    "sessions",
+    "controller",
+    "journal",
+    "loop",
+    "worker",
+    "reader",
+    "events",
+    "service",
+    "publisher",
+    "_owner",
+    "_request"
+   ],
+   "rationale": "Only the reviewed identity, view or limited capability surface crosses the frontend boundary.",
+   "evidence": [
+    "tools/ai/python/tests/test_agent_frontend_port.py",
+    "tools/ai/python/tests/test_agent_frontend_fake.py"
+   ]
+  },
+  {
+   "id": "frontend-CursorPosition",
+   "source": "tools/sico/python/sico/service/replay_view.py:CursorPosition",
+   "public": [
+    "sequence"
+   ],
+   "forbid_attributes": [
+    "owner",
+    "sessions",
+    "controller",
+    "journal",
+    "loop",
+    "worker",
+    "reader",
+    "events",
+    "service",
+    "publisher",
+    "_owner",
+    "_request"
+   ],
+   "rationale": "Only the reviewed identity, view or limited capability surface crosses the frontend boundary.",
+   "evidence": [
+    "tools/ai/python/tests/test_agent_frontend_port.py",
+    "tools/ai/python/tests/test_agent_frontend_fake.py"
+   ],
+   "frozen": true,
+   "fields": [
+    "sequence"
+   ]
+  },
+  {
+   "id": "frontend-EventFeed",
+   "source": "tools/ai/python/tests/agent_query_harness.py:EventFeed",
+   "public": [
+    "activation",
+    "close",
+    "cursor",
+    "identity",
+    "received",
+    "validate_current"
+   ],
+   "forbid_attributes": [
+    "owner",
+    "sessions",
+    "controller",
+    "journal",
+    "loop",
+    "worker",
+    "reader",
+    "events",
+    "service",
+    "publisher",
+    "_owner",
+    "_request"
+   ],
+   "rationale": "Only the reviewed identity, view or limited capability surface crosses the frontend boundary.",
+   "evidence": [
+    "tools/ai/python/tests/test_agent_frontend_port.py",
+    "tools/ai/python/tests/test_agent_frontend_fake.py"
+   ]
+  },
+  {
+   "id": "frontend-ReplayView",
+   "source": "tools/sico/python/sico/service/replay_view.py:ReplayView",
+   "public": [
+    "committed_sequence",
+    "context",
+    "stream"
+   ],
+   "forbid_attributes": [
+    "owner",
+    "sessions",
+    "controller",
+    "journal",
+    "loop",
+    "worker",
+    "reader",
+    "events",
+    "service",
+    "publisher",
+    "_owner",
+    "_request"
+   ],
+   "rationale": "Only the reviewed identity, view or limited capability surface crosses the frontend boundary.",
+   "evidence": [
+    "tools/ai/python/tests/test_agent_frontend_port.py",
+    "tools/ai/python/tests/test_agent_frontend_fake.py"
+   ],
+   "frozen": true,
+   "fields": [
+    "stream",
+    "committed_sequence",
+    "context"
+   ]
+  },
+  {
+   "id": "frontend-WorkbenchPort",
+   "source": "tools/ai/python/tests/agent_query_harness.py:WorkbenchPort",
+   "public": [
+    "close",
+    "detail",
+    "empty_query",
+    "identity",
+    "live_processes",
+    "processes",
+    "query_pages",
+    "scope",
+    "session_id",
+    "validate_current"
+   ],
+   "forbid_attributes": [
+    "owner",
+    "sessions",
+    "controller",
+    "journal",
+    "loop",
+    "worker",
+    "reader",
+    "events",
+    "service",
+    "publisher",
+    "_owner",
+    "_request"
+   ],
+   "rationale": "Only the reviewed identity, view or limited capability surface crosses the frontend boundary.",
+   "evidence": [
+    "tools/ai/python/tests/test_agent_frontend_port.py",
+    "tools/ai/python/tests/test_agent_frontend_fake.py"
+   ]
+  }
+ ],
+ "compositions": [
+  {
+   "id": "assistant-window-composition",
+   "ui_module": "sico_ui",
+   "forbid_attributes": [
+    "controller",
+    "sessions",
+    "journal",
+    "owner",
+    "_owner"
+   ],
+   "backend_types": [
+    "SessionController",
+    "DesktopSessions",
+    "SessionJournal",
+    "AgentLoop",
+    "WorkerApi",
+    "WorkbenchService",
+    "EventService",
+    "CatalogService",
+    "DesktopStartup",
+    "LocalStartup",
+    "SessionTokens",
+    "WorkbenchSource",
+    "EventStream",
+    "FrontendQueries",
+    "ProjectSessionOwner",
+    "ProjectWorkspace",
+    "FrontendHub",
+    "SessionInbox",
+    "sico.service.session_recovery.SessionRecovery",
+    "SessionEnd",
+    "FrontendPort",
+    "FrontendLane",
+    "ServiceClient"
+   ],
+   "rationale": "The real decorated window and stored UI collaborators must work with only frontend products, without backend objects in their stored graph.",
+   "evidence": [
+    "tools/ai/python/tests/test_agent_frontend_fake.py:test_window_runs_switches_and_closes_with_only_frontend_contract"
+   ]
+  }
+ ]
+}

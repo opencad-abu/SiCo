@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "compatibility": [
+    {
+      "legacy": "aivworkbench.executors.virtuoso exports from aivworkbench.executors.virtuoso_support",
+      "source": "tools/aivw/python/aivworkbench/executors/virtuoso.py",
+      "replacement": "tools/aivw/python/aivworkbench/executors/virtuoso_support.py",
+      "owner": "tools/aivw/python/aivworkbench/executors/virtuoso_support.py",
+      "exports": {"_blocked": "_blocked", "_call_snapshot_tools": "_call_snapshot_tools", "_digest": "_digest", "_run_normalizer": "_run_normalizer", "_write_raw_payloads": "_write_raw_payloads"},
+      "consumers": ["tools/aivw/python/aivworkbench/executors/cadence_si.py", "tools/aivw/python/aivworkbench/executors/ldo_snapshot.py", "tools/aivw/python/aivworkbench/registry.py"],
+      "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
+      "evidence": ["tools/aivw/tests/test_executor.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
+    }
+  ]
+}

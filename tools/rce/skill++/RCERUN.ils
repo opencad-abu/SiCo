@@ -1,0 +1,133 @@
+; Start the prepared RCE backend and register its completion receipt. SKILL++ lexical scope.
+
+procedure(rceBackupRunData(runDir @optional reservation)
+  let((cmd)
+    cmd=strcat("env -u PYTHONHOME -u PYTHONPATH LD_LIBRARY_PATH="
+      SICO_shellQuote(SICO_pythonLibraryPath()) " "
+      SICO_backendCommand("rce" RCE_pythonExe() RCE_pythonEntry()) " prepare "
+      SICO_shellQuote(strcat(runDir "/rce.toml"))
+      if(reservation then strcat(" --lock-token " SICO_shellQuote(cadr(reservation)))
+        else ""))
+    system(cmd)
+  )
+)
+
+procedure(rceStart(form)
+  let((reservation started)
+    reservation=rceReserveRun(form)
+    when(reservation
+      unwindProtect(
+        started=rceStartReserved(form reservation)
+        unless(started rceReleaseRun(reservation))))
+    started
+  )
+)
+
+procedure(rceStartReserved(form reservation)
+  prog((logo cmdFile pid pidPostfix tmp user lib cell
+         logDir launchLog launchCmd cid out runPathParts runPathPrefix
+         viewRequest viewTarget outputType setupPath oldStamp
+         outputPaths finalOutputPaths corners resultMeta flowLogRequest)
+    logo=SICO_logo()
+    user=getLogin()
+    info(strcat("<INFO> RCE::Start to run progress [" logo "::RCE]...\n"))
+    cmdFile=rcePrint(form reservation)
+    when(! cmdFile
+      return(nil)
+    )
+    runPathParts=parseString(cmdFile "/")
+    pidPostfix=nth(length(runPathParts)-2 runPathParts)
+
+    tmp=parseString(pidPostfix ".")
+    lib=nth(0 tmp)
+    cell=nth(1 tmp)
+    pid=SICO_tempPath(strcat("rce.pid." user "." lib "." cell))
+    unless(pid
+      warn("<WARN> RCE::Cannot create the PID file path.\n")
+      return(nil))
+    runPathPrefix=substring(cmdFile 1 (strlen(cmdFile)-9))
+    viewRequest=nil
+    outputType=lowerCase(form~>outType~>value)
+    corners=rceSelectedProcessCorners(form)
+    outputPaths=rceExpectedOutputPaths(runPathPrefix
+                                       rceSyncExtractTopCell(form)
+                                       outputType form~>extTool~>value corners)
+    finalOutputPaths=rceFinalOutputPaths(form outputPaths outputType)
+    cond(
+      (rceNativeViewOutputP(outputType)
+        viewTarget=rceReductionViewTarget(form rceNativeViewTarget(form))
+        when(viewTarget
+          setupPath=if(member(form~>extTool~>value '("CalXRC" "XRC")) then
+            strcat(runPathPrefix "/log/calibreview.setup")
+          else
+            nil
+          )
+          oldStamp=rceNativeViewStamp(car(viewTarget)
+                                      cadr(viewTarget)
+                                      caddr(viewTarget))
+          viewRequest=list("native" form~>extTool~>value
+                           car(viewTarget) cadr(viewTarget) caddr(viewTarget)
+                           setupPath oldStamp)
+        )
+      )
+      (and(form~>createNetlistView~>value
+            rceParasiticNetlistOutputP(outputType))
+        viewTarget=rceNetlistViewTarget(form)
+        when(viewTarget
+          viewRequest=rceNetlistViewRequest(
+            form viewTarget outputPaths finalOutputPaths outputType)
+        )
+      )
+    )
+    when((rceBackupRunData(runPathPrefix reservation) != 0)
+      warn(strcat("<WARN> RCE::Failed to back up existing run data in "
+                    runPathPrefix "\n"))
+      return(nil)
+    )
+    logDir=strcat(runPathPrefix "/log")
+    launchLog=strcat(logDir "/rce.launch.log")
+    launchCmd=strcat("env -u PYTHONHOME -u PYTHONPATH "
+                      SICO_tempEnvironment()
+                      "RCE_BACKUP_DONE=1 "
+                      "RCE_ORIG_LD_LIBRARY_PATH="
+                      SICO_shellQuote(or(getShellEnvVar("LD_LIBRARY_PATH") ""))
+                      " LD_LIBRARY_PATH="
+                      SICO_shellQuote(SICO_pythonLibraryPath())
+                      " "
+                      SICO_backendCommand("rce" RCE_pythonExe() RCE_pythonEntry()) " run "
+                      SICO_shellQuote(cmdFile) " --lock-token "
+                      SICO_shellQuote(cadr(reservation)))
+    launchCmd=SICO_lsfWrapCommand(
+      launchCmd form~>runType~>value form~>queueName~>value
+      form~>srvName~>value
+      SICO_lsfMaxCpu(list(form~>lvsCpu~>value form~>extCpu~>value))
+      nil launchLog)
+    info(strcat("<INFO> RCE::LOG=\"" launchLog "\"\n"))
+    system(strcat("mkdir -p " SICO_shellQuote(logDir)))
+    ; Legacy call shape retained for downstream source probes:
+    ; rceSummaryCaptureRun(form runPathPrefix finalOutputPaths outputType
+    resultMeta=rceSummaryCaptureRun(
+      form runPathPrefix outputPaths outputType launchLog viewRequest
+      when(and(rceReductionEnabledP(form)
+                 rceReductionFileOutputP(outputType))
+        finalOutputPaths))
+    flowLogRequest=GUI_flowLogOpen("RCE" launchLog)
+    resultMeta['flowLogRequest]=flowLogRequest
+    cid=ipcBeginProcess(launchCmd "" 'rceIpcDataHandler 'rceIpcErrHandler 'rceIpcPostFunc launchLog)
+    when(! cid
+      warn(strcat("<WARN> RCE::Failed to start IPC process.\n"))
+      rceAppendLaunchLog(launchLog "RCE failed to start IPC process.")
+      errset(rceSummaryDisplay(resultMeta -1 nil) t)
+      return(nil)
+    )
+    rceIpcSetMeta(cid list(pid launchLog cmdFile viewRequest resultMeta
+                           flowLogRequest reservation))
+    out=outfile(pid "w")
+    when(out
+      fprintf(out "%L\n" cid)
+      close(out)
+    )
+    ipcActivateBatch(cid)
+    return(t)
+  );prog
+)

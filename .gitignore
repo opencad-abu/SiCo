@@ -1,0 +1,38 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+# Private Python runtime payload for distribution; keep recipes in deploy/.
+/runtime/python/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Runtime output
+.cad/
+.sico/
+.sico-evidence/
+*.log
+*.pid
+*.tmp
+*.bak
+
+# Editor and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Installation-owned third-party shared libraries are private payloads.
+/lib/*.so*

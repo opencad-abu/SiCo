@@ -1,0 +1,325 @@
+;------------------------------------------------------------------------------
+; Standalone PyQt5 rule-group/check selector for Calibre DRC.
+;------------------------------------------------------------------------------
+
+defvar(drcRuleSelectIpcTable makeTable("drcRuleSelectIpcTable" nil))
+
+unless(boundp('drcRuleSelectExitCleanupRegistered)
+  drcRuleSelectExitCleanupRegistered=nil
+)
+
+procedure(drcRuleSelectRegisterState(cid state)
+  drcRuleSelectIpcTable[cid]=state
+)
+
+procedure(drcRuleSelectLookupState(cid)
+  drcRuleSelectIpcTable[cid]
+)
+
+procedure(drcRuleSelectRemoveState(cid)
+  remove(cid drcRuleSelectIpcTable)
+)
+
+procedure(drcRuleSelectRevision()
+  "20260902.rule.select.pyqt.v6"
+)
+
+procedure(drcRuleSelectUsesCadTempPath()
+  t
+)
+
+procedure(drcRuleSelectSetSummary(form text)
+  form~>drcRuleSelectSummary~>value=text
+  form~>drcRuleSelectSummary~>_labelOnly=text
+  text
+)
+
+procedure(drcRuleSelectSummary(form)
+  let((checkCount groupCount text)
+    groupCount=length(or(form~>drcRuleSelectGroups nil))
+    checkCount=length(or(form~>drcRuleSelectChecks nil))
+    text=cond(
+      (and(groupCount>0 checkCount>0)
+        sprintf(nil "%d groups, %d checks selected" groupCount checkCount))
+      (groupCount>0 sprintf(nil "%d rule groups selected" groupCount))
+      (checkCount>0 sprintf(nil "%d checks selected" checkCount))
+      (t "No rules selected"))
+    drcRuleSelectSetSummary(form text)
+    t
+  )
+)
+
+procedure(drcRuleSelectEnableCB(form)
+  form~>drcRuleSelectOpen~>enabled=
+    and(form~>drcRuleSelectEnable~>value !form~>drcRuleSelectCid)
+  drcRuleSelectSummary(form)
+  t
+)
+
+procedure(drcRuleSelectBind(form)
+  form~>drcRuleSelectGroups=nil
+  form~>drcRuleSelectChecks=nil
+  form~>drcRuleSelectRuleFile=""
+  form~>drcRuleSelectCid=nil
+  form~>drcRuleSelectRequestToken=0
+  drcRuleSelectEnableCB(form)
+  t
+)
+
+procedure(drcRuleSelectDeleteFile(path)
+  when(and(path isFile(path))
+    errset(deleteFile(path) nil))
+  nil
+)
+
+procedure(drcRuleSelectCleanupStateFiles(state)
+  when(state
+    drcRuleSelectDeleteFile(state['initialFile])
+    drcRuleSelectDeleteFile(state['outputFile]))
+  nil
+)
+
+procedure(drcRuleSelectCancelDiscovery(form)
+  if(and(form hiIsForm(form)) then
+    let((cid state)
+      cid=form~>drcRuleSelectCid
+      when(cid
+        state=drcRuleSelectLookupState(cid)
+        when(state
+          state['cancelled]=t)
+        when(ipcIsAliveProcess(cid)
+          errset(ipcKillProcess(cid) nil))
+        when(state
+          drcRuleSelectCleanupStateFiles(state))
+        form~>drcRuleSelectCid=nil
+        form~>drcRuleSelectOpen~>enabled=
+          form~>drcRuleSelectEnable~>value
+        drcRuleSelectSummary(form))
+      t)
+    else nil)
+)
+
+procedure(drcRuleSelectInvalidate(form)
+  let((current selectionStale state)
+    current=SICO_absolutePath(form~>drcRunsetFile~>value)
+    when(form~>drcRuleSelectCid
+      state=drcRuleSelectLookupState(form~>drcRuleSelectCid)
+      when(and(state state['ruleFile]!=current)
+        drcRuleSelectCancelDiscovery(form)))
+    selectionStale=or(
+      and(or(form~>drcRuleSelectGroups form~>drcRuleSelectChecks)
+          form~>drcRuleSelectRuleFile=="")
+      and(form~>drcRuleSelectRuleFile!=""
+          form~>drcRuleSelectRuleFile!=current))
+    when(selectionStale
+      form~>drcRuleSelectGroups=nil
+      form~>drcRuleSelectChecks=nil
+      form~>drcRuleSelectRuleFile=""
+      drcRuleSelectSummary(form))
+    t
+  )
+)
+
+procedure(drcRuleSelectStopAll()
+  let((cid cids state)
+    foreach(cid drcRuleSelectIpcTable
+      cids=cons(cid cids))
+    foreach(cid cids
+      state=drcRuleSelectLookupState(cid)
+      when(state
+        state['cancelled]=t)
+      when(ipcIsAliveProcess(cid)
+        errset(ipcKillProcess(cid) nil))
+      when(state
+        drcRuleSelectCleanupStateFiles(state))
+      drcRuleSelectRemoveState(cid))
+    nil
+  )
+)
+
+procedure(drcRuleSelectExitCleanup()
+  drcRuleSelectStopAll()
+  t
+)
+
+procedure(drcRuleSelectRegisterExitCleanup()
+  unless(drcRuleSelectExitCleanupRegistered
+    regExitBefore('drcRuleSelectExitCleanup)
+    drcRuleSelectExitCleanupRegistered=t)
+  drcRuleSelectExitCleanupRegistered
+)
+
+procedure(drcRuleSelectFormDone(form)
+  ; Form callbacks run while HI still owns the form.  Cancel asynchronous
+  ; work only; the form itself is closed by the HI button action and remains
+  ; reusable for the next invocation.
+  when(and(form hiIsForm(form))
+    drcRuleSelectCancelDiscovery(form)
+    SICO_lsfCancelFormDiscovery(form))
+  t
+)
+
+procedure(drcRuleSelectWriteInitial(path groups checks)
+  let((name records)
+    foreach(name or(groups nil)
+      records=append1(records list("GROUP" name)))
+    foreach(name or(checks nil)
+      records=append1(records list("CHECK" name)))
+    SICO_guiProtocolWrite(path records)
+  )
+)
+
+procedure(drcRuleSelectReadResult(path)
+  let((checks document groups record records valid)
+    document=SICO_guiProtocolRead(path list("GROUP" "CHECK") "applied")
+    valid=car(document)
+    records=cadr(document)
+    foreach(record records
+      case(car(record)
+        ("GROUP" groups=append1(groups cadr(record)))
+        ("CHECK" checks=append1(checks cadr(record)))))
+    list(and(valid or(groups checks)) groups checks)
+  )
+)
+
+procedure(drcRuleSelectDataHandler(cid data)
+  let((state)
+    state=drcRuleSelectLookupState(cid)
+    when(state
+      state['output]=strcat(or(state['output] "") data))
+  )
+)
+
+procedure(drcRuleSelectErrHandler(cid data)
+  let((state)
+    state=drcRuleSelectLookupState(cid)
+    when(state
+      state['errors]=strcat(or(state['errors] "") data))
+  )
+)
+
+procedure(drcRuleSelectPostFunc(cid exitStatus)
+  let((checks currentRuleFile form groups hadResult result state validRequest
+        warningText)
+    state=drcRuleSelectLookupState(cid)
+    drcRuleSelectRemoveState(cid)
+    when(state
+      form=state['form]
+      hadResult=and(state['outputFile] isFile(state['outputFile]))
+      result=drcRuleSelectReadResult(state['outputFile])
+      groups=cadr(result)
+      checks=caddr(result)
+      drcRuleSelectCleanupStateFiles(state)
+      when(and(form hiIsForm(form))
+        currentRuleFile=SICO_absolutePath(form~>drcRunsetFile~>value)
+        validRequest=and(!state['cancelled]
+                         hiIsFormDisplayed(form)
+                         form~>drcRuleSelectCid==cid
+                         form~>drcRuleSelectRequestToken==state['token]
+                         currentRuleFile==state['ruleFile]))
+      when(validRequest
+        form~>drcRuleSelectCid=nil
+        form~>drcRuleSelectOpen~>enabled=form~>drcRuleSelectEnable~>value
+        if(car(result) then
+          form~>drcRuleSelectGroups=groups
+          form~>drcRuleSelectChecks=checks
+          form~>drcRuleSelectRuleFile=state['ruleFile]
+          drcRuleSelectSummary(form)
+          info("<INFO> DRC Rule Select applied %d groups and %d checks.\n"
+            length(or(groups nil)) length(or(checks nil)))
+        else
+          drcRuleSelectSummary(form)
+          when(or(exitStatus!=0 hadResult)
+            warningText=cond(
+              (and(state['errors] state['errors]!="") state['errors])
+              (and(state['output] state['output]!="") state['output])
+              (hadResult "DRC Rule Select returned an invalid result file.")
+              (t sprintf(nil "DRC Rule Select exited with status %L."
+                   exitStatus)))
+            GUI_messageApp('e "DRC Rule Select" warningText))))
+    )
+  )
+)
+
+procedure(drcRuleSelectPythonExe()
+  or(SICO_envValue("DRC_RULE_SELECT_PYTHON") DRC_pythonExe())
+)
+
+procedure(drcRuleSelectLaunchCommand(args)
+  SICO_guiPythonLaunchCommand(args "DRC_ORIG_LD_LIBRARY_PATH")
+)
+
+procedure(drcRuleSelectOpenCB(form)
+  prog((cid command initialFile outputFile parentPid ruleFile state token)
+    ruleFile=SICO_absolutePath(form~>drcRunsetFile~>value)
+    unless(and(ruleFile ruleFile!="" isFile(ruleFile))
+      GUI_messageApp('e "DRC Rule Select" drcMsgStruc->runsetFile)
+      return(nil))
+    parentPid=ipcGetPid()
+    unless(and(integerp(parentPid) parentPid>1)
+      GUI_messageApp('e "DRC Rule Select"
+        "Cannot determine the owning Virtuoso process ID.")
+      return(nil))
+    drcRuleSelectInvalidate(form)
+    when(form~>drcRuleSelectCid
+      drcRuleSelectCancelDiscovery(form))
+    token=form~>drcRuleSelectRequestToken+1
+    form~>drcRuleSelectRequestToken=token
+    initialFile=SICO_tempPath("drc-rule-select-inputXXXX")
+    outputFile=SICO_tempPath("drc-rule-select-resultXXXX")
+    unless(and(initialFile outputFile)
+      GUI_messageApp('e "DRC Rule Select"
+        "Cannot create the Rule Select transfer paths.")
+      return(nil))
+    initialFile=makeTempFileName(initialFile)
+    outputFile=makeTempFileName(outputFile)
+    unless(drcRuleSelectWriteInitial(initialFile
+             form~>drcRuleSelectGroups form~>drcRuleSelectChecks)
+      drcRuleSelectDeleteFile(initialFile)
+      GUI_messageApp('e "DRC Rule Select"
+        "Cannot write the current Rule Select settings.")
+      return(nil))
+    command=drcRuleSelectLaunchCommand(
+      strcat(SICO_backendCommand("drc" drcRuleSelectPythonExe() DRC_pythonEntry()) " rule-select-gui "
+             "--initial " SICO_shellQuote(initialFile) " "
+             "--output " SICO_shellQuote(outputFile) " "
+             "--parent-pid " sprintf(nil "%d" parentPid) " "
+             SICO_shellQuote(ruleFile)))
+    unless(command
+      drcRuleSelectDeleteFile(initialFile)
+      GUI_messageApp('e "DRC Rule Select"
+        "Cannot prepare the Rule Select launch environment.")
+      return(nil))
+    form~>drcRuleSelectOpen~>enabled=nil
+    drcRuleSelectSetSummary(form "Rule Select window is open...")
+    cid=ipcBeginProcess(command "" 'drcRuleSelectDataHandler
+          'drcRuleSelectErrHandler 'drcRuleSelectPostFunc)
+    unless(cid
+      drcRuleSelectDeleteFile(initialFile)
+      form~>drcRuleSelectOpen~>enabled=t
+      drcRuleSelectSummary(form)
+      GUI_messageApp('e "DRC Rule Select" "Cannot start the PyQt5 selector.")
+      return(nil))
+    state=makeTable("drcRuleSelectIpc" nil)
+    state['form]=form
+    state['ruleFile]=ruleFile
+    state['initialFile]=initialFile
+    state['outputFile]=outputFile
+    state['token]=token
+    state['cancelled]=nil
+    state['output]=""
+    state['errors]=""
+    drcRuleSelectRegisterState(cid state)
+    form~>drcRuleSelectCid=cid
+    info("<INFO> DRC Rule Select window started.\n")
+    return(cid)
+  )
+)
+
+unless(getShellEnvVar("VIRTUOSO_CONTEXT_BUILD")=="1"
+  drcRuleSelectRegisterExitCleanup()
+)
+
+procedure(drcRuleSelectInitializeRuntime()
+  drcRuleSelectRegisterExitCleanup()
+)

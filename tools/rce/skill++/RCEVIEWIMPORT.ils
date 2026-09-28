@@ -1,0 +1,176 @@
+; Complete parasitic text or native OA view imports. SKILL++ lexical scope.
+
+procedure(rceSessionLibraryPath(libName)
+  let((libObj protected path)
+    libObj=when(and(libName strlen(libName)>0) ddGetObj(libName))
+    when(libObj
+      protected=errset(ddGetObjWritePath(libObj) nil)
+      path=when(and(protected car(protected)) car(protected))
+      unless(path
+        protected=errset(ddGetObjReadPath(libObj) nil)
+        path=when(and(protected car(protected)) car(protected))
+      )
+    )
+    when(path simplifyFilename(path t))
+  )
+)
+
+procedure(rceCreateNetlistViewFromRequest(request launchLog)
+  let((libName cellName sourceFile outputType cdsLib viewSpec viewName viewType
+        requestedViewName logSuffix importLog formatName importer command status
+        message result libraryPath)
+    libName=car(request)
+    cellName=cadr(request)
+    sourceFile=caddr(request)
+    outputType=nth(3 request)
+    cdsLib=nth(4 request)
+    viewSpec=rceParasiticViewSpec(outputType)
+    requestedViewName=nth(5 request)
+    viewName=or(when(and(stringp(requestedViewName)
+                         strlen(requestedViewName)>0)
+                  requestedViewName)
+                car(viewSpec))
+    viewType=cadr(viewSpec)
+    formatName=upperCase(or(outputType ""))
+    logSuffix=if(and(stringp(requestedViewName)
+                     strlen(requestedViewName)>0)
+                then strcat("." viewName) else "")
+    importLog=if(and(launchLog strlen(launchLog)>0) then
+      strcat(launchLog ".nl2view" logSuffix)
+    else
+      SICO_tempPath(strcat("nl2view" logSuffix ".log")))
+    libraryPath=rceSessionLibraryPath(libName)
+    importer=when(SICO_toolsRoot()
+      simplifyFilename(strcat(SICO_toolsRoot() "/../bin/nl2view") t))
+    cond(
+      (member(lowerCase(or(outputType "")) '("dspf" "sp" "spice"))
+        when(and(lowerCase(or(outputType ""))!="dspf" viewSpec)
+          viewType="Spice")
+        when(and(importer isExecutable(importer) viewSpec
+                 ddGetObj(libName cellName) libraryPath isFile(sourceFile)
+                 fileLength(sourceFile)>0 isFile(cdsLib))
+          command=strcat(
+            "exec env -u PYTHONHOME -u PYTHONPATH " SICO_tempEnvironment()
+            "NL2VIEW_ORIG_LD_LIBRARY_PATH="
+            SICO_shellQuote(or(getShellEnvVar("LD_LIBRARY_PATH") "")) " "
+            "SICO_SYSTEM_LD_LIBRARY_PATH="
+            SICO_shellQuote(SICO_pythonLibraryPath()) " "
+            "LD_LIBRARY_PATH=" SICO_shellQuote(SICO_pythonLibraryPath()) " "
+            SICO_shellQuote(importer) " --format "
+            SICO_shellQuote(if(lowerCase(or(outputType ""))=="dspf"
+                             then "dspf" else "spice"))
+            " --library " SICO_shellQuote(libName)
+            " --cell " SICO_shellQuote(cellName)
+            " --view " SICO_shellQuote(viewName)
+            " --cdslib " SICO_shellQuote(cdsLib)
+            " --expected-library-path " SICO_shellQuote(libraryPath)
+            " --log " SICO_shellQuote(importLog)
+            " --copy " SICO_shellQuote(sourceFile))
+          status=system(command)
+          when(status==0
+            when(isCallable('ddUpdateLibList) ddUpdateLibList())
+            result=ddGetObj(libName cellName viewName))))
+      (t
+        when(and(viewSpec isCallable('SICO_importTextCellView)
+                 ddGetObj(libName cellName) isFile(sourceFile)
+                 fileLength(sourceFile)>0)
+          result=SICO_importTextCellView(
+            libName cellName viewName sourceFile viewType)))
+    )
+    if(result then
+      message=strcat("[RCE] Created " formatName " view " libName "/"
+                      cellName "/" viewName " from " sourceFile)
+      info(strcat("<INFO> " message "\n"))
+    else
+      message=strcat("[RCE][WARN] Failed to create " formatName " view "
+                      libName "/" cellName "/" or(viewName "parasitic")
+                      " from " sourceFile)
+      warn(strcat("<WARN> " message "\n"))
+    )
+    rceAppendLaunchLog(launchLog message)
+    result
+  )
+)
+
+procedure(rceNativeViewStamp(libName cellName viewName)
+  let((viewObj fileObj stamps name modified)
+    viewObj=ddGetObj(libName cellName viewName)
+    when(and(viewObj isCallable('ddGetObjLastModify))
+      stamps=list(sprintf(nil "__view__:%L" ddGetObjLastModify(viewObj)))
+      when(and(isCallable('ddGetObjFiles) isCallable('ddGetObjName))
+        foreach(fileObj ddGetObjFiles(viewObj)
+          name=or(ddGetObjName(fileObj) "")
+          modified=ddGetObjLastModify(fileObj)
+          stamps=cons(sprintf(nil "%s:%L" name modified) stamps)
+        )
+      )
+      sort(stamps 'alphalessp)
+    )
+  )
+)
+
+procedure(rceCreateNativeViewFromRequest(request launchLog)
+  let((tool libName cellName viewName setupFile oldStamp protected
+        importResult refreshResult refreshOk newStamp fresh message)
+    tool=nth(1 request)
+    libName=nth(2 request)
+    cellName=nth(3 request)
+    viewName=nth(4 request)
+    setupFile=nth(5 request)
+    oldStamp=nth(6 request)
+    importResult=t
+
+    when(member(tool '("CalXRC" "XRC"))
+      if(and(setupFile isFile(setupFile)
+               isCallable('mgc_rve_load_setup_file)) then
+        protected=errset(mgc_rve_load_setup_file(setupFile) t)
+        ; The Calibre manual does not define a return value.  A non-nil
+        ; errset result means the call completed; the OA stamp verifies output.
+        importResult=if(protected then t else nil)
+      else
+        importResult=nil
+      )
+    )
+
+    refreshOk=nil
+    when(isCallable('ddUpdateLibList)
+      refreshResult=errset(ddUpdateLibList() t)
+      refreshOk=and(refreshResult car(refreshResult))
+    )
+    newStamp=rceNativeViewStamp(libName cellName viewName)
+    fresh=and(newStamp
+               or(!oldStamp not(equal(oldStamp newStamp))))
+    if(and(importResult refreshOk fresh) then
+      message=strcat("[RCE] Created native " tool " OA view "
+                      libName "/" cellName "/" viewName)
+      info(strcat("<INFO> " message "\n"))
+    else
+      message=strcat("[RCE][ERROR] Native " tool " OA view was not created "
+                      "or updated: " libName "/" cellName "/" viewName
+                      if(and(setupFile strlen(setupFile)>0)
+                        then strcat("; setup=" setupFile) else "")
+                      if(importResult then "" else "; import failed")
+                      if(refreshOk then "" else "; library refresh failed")
+                      if(fresh then "" else "; OA data is missing or stale"))
+      warn(strcat("<WARN> " message "\n"))
+    )
+    rceAppendLaunchLog(launchLog message)
+    and(importResult refreshOk fresh)
+  )
+)
+
+procedure(rceCompleteViewRequest(request launchLog)
+  case(car(request)
+    ("native" rceCreateNativeViewFromRequest(request launchLog))
+    ("text" rceCreateNetlistViewFromRequest(cdr(request) launchLog))
+    ("group"
+      let((allCreated childRequest)
+        allCreated=t
+        foreach(childRequest cdr(request)
+          unless(rceCompleteViewRequest(childRequest launchLog)
+            allCreated=nil))
+        allCreated)
+    )
+    (t rceCreateNetlistViewFromRequest(request launchLog))
+  )
+)

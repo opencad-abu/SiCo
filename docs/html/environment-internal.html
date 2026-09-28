@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SiCo 使用手册：环境接口附录。安装、环境变量、Virtuoso 集成与 CAD flow 配置。">
+<title>环境接口附录 · SiCo 使用手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b4543a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='sans-serif' font-size='24' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/manual.css">
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
+  <span class="edition">使用手册 / 2026.09</span>
+  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+</header>
+<noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="手册目录">
+<p class="rail-label">SICO DOCUMENTATION</p>
+<a href="index.html">开始阅读</a>
+<p class="nav-group">开始使用</p>
+<a href="installation.html">01 · 安装</a>
+<a href="environment.html">02 · 环境变量</a>
+<a href="virtuoso.html">03 · Virtuoso 集成</a>
+<a href="flows.html">04 · CAD flows</a>
+<p class="nav-group">流程指南</p>
+<a href="drc.html">DRC · 规则检查</a>
+<a href="lvs.html">LVS · 连接检查</a>
+<a href="rce.html">RCE · 寄生提取</a>
+<a href="mts.html">MTS · 多工艺网表</a>
+<a href="utilities.html">LEF / GDS / CDL</a>
+<a href="lsf.html">LSF · 运行与资源</a>
+<p class="nav-group">参考附录</p>
+<a href="environment-internal.html" aria-current="page">环境接口附录</a>
+<div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
+</nav>
+<div class="reading">
+<main id="main">
+<p class="eyebrow">CONFIGURATION / APPENDIX</p>
+<h1>环境接口附录</h1>
+<p class="lead">查阅自动传递的进程变量与已登记的旧名。日常安装从<a href="environment.html">环境变量速查</a>开始；此处用来识别日志中的名称和排查遗留配置。</p>
+<div class="notice">以下运行字段由启动器、宿主或任务产生。除标明可覆盖的项目外，没有可供用户统一设置的固定值；会话端口、token、PID 和任务路径不能复制到另一会话。</div>
+<h2 id="handoff">SiCo 会话与调度传递</h2>
+<div class="table-wrap"><table><thead><tr><th>名称</th><th>值的形式</th><th>默认 / 来源</th><th>作用</th></tr></thead><tbody>
+<tr id="SICO_AI_RUNTIME"><td><code>SICO_AI_RUNTIME</code></td><td>会话目录</td><td>启动器分配</td><td>Assistant 当前会话运行根。</td></tr>
+<tr id="SICO_AI_SOCKET"><td><code>SICO_AI_SOCKET</code></td><td>Unix socket 路径</td><td>启动器分配</td><td>Assistant MCP 与 controller 的通信端点。</td></tr>
+<tr id="SICO_AI_SPOOL"><td><code>SICO_AI_SPOOL</code></td><td>目录</td><td>启动器分配</td><td>较大工具输入/结果的会话传递位置。</td></tr>
+<tr id="SICO_AI_TOKEN"><td><code>SICO_AI_TOKEN</code></td><td>私有随机凭据</td><td>启动器生成</td><td>Assistant 会话认证；不手工设置或写入共享文件。</td></tr>
+<tr id="SICO_AI_WORKSPACE"><td><code>SICO_AI_WORKSPACE</code></td><td>工程绝对目录</td><td>当前会话工程</td><td>Assistant 工作目录。</td></tr>
+<tr id="SICO_AI_PROFILE"><td><code>SICO_AI_PROFILE</code></td><td>interactive / verification</td><td>interactive（会话 CLI）</td><td>会话能力范围，由启动器传递。</td></tr>
+<tr id="SICO_AI_CONTROL_FD"><td><code>SICO_AI_CONTROL_FD</code></td><td>非负整数文件描述符</td><td>启动器分配</td><td>终端控制通道；不可在新进程中复用旧值。</td></tr>
+<tr id="SICO_MCP_PORT"><td><code>SICO_MCP_PORT</code></td><td>本机端口整数</td><td>服务分配</td><td>主界面 Codex MCP 桥端口，不是用户服务器监听配置。</td></tr>
+<tr id="SICO_MCP_TOKEN"><td><code>SICO_MCP_TOKEN</code></td><td>私有随机凭据</td><td>服务生成</td><td>MCP 桥认证。</td></tr>
+<tr id="SICO_MODEL_KEY"><td><code>SICO_MODEL_KEY</code></td><td>私有凭据</td><td>网关传给专用子进程</td><td>Codex 请求本地网关使用的凭据引用，不是共享 SICO_API_KEY 配置入口。</td></tr>
+<tr id="SICO_AI_LSF_HANDOFF"><td><code>SICO_AI_LSF_HANDOFF</code></td><td>1</td><td>本机启动时未设置</td><td>标记已完成完整 Assistant 的远程交接。</td></tr>
+<tr id="SICO_AI_LSF_SUBMIT_DISPLAY"><td><code>SICO_AI_LSF_SUBMIT_DISPLAY</code></td><td>X11 display</td><td>提交端显示环境</td><td>检查远程显示交接。</td></tr>
+<tr id="SICO_AI_LSF_XFORWARD"><td><code>SICO_AI_LSF_XFORWARD</code></td><td>交接模式标记</td><td>launcher 设置</td><td>标识 X11 转发准备结果。</td></tr>
+<tr id="RCE_DSPF_LAYOUT_LIB"><td><code>RCE_DSPF_LAYOUT_LIB</code></td><td>OA library 名</td><td>从宿主目标获取</td><td>DSPF Analyzer 关联版图。</td></tr>
+<tr id="RCE_DSPF_LAYOUT_CELL"><td><code>RCE_DSPF_LAYOUT_CELL</code></td><td>OA cell 名</td><td>从宿主目标获取</td><td>DSPF Analyzer 关联版图。</td></tr>
+<tr id="RCE_DSPF_LAYOUT_VIEW"><td><code>RCE_DSPF_LAYOUT_VIEW</code></td><td>OA view 名</td><td>从宿主目标获取</td><td>DSPF Analyzer 关联版图。</td></tr>
+<tr id="RCE_DSPF_PARENT_PID"><td><code>RCE_DSPF_PARENT_PID</code></td><td>进程 ID</td><td>宿主 Virtuoso PID</td><td>随宿主生命周期管理 Analyzer。</td></tr>
+<tr id="DRC_RULE_SELECT_PARENT_PID"><td><code>DRC_RULE_SELECT_PARENT_PID</code></td><td>进程 ID</td><td>宿主 Virtuoso PID</td><td>Rule Select 子窗口生命周期。</td></tr>
+<tr id="DRC_BACKUP_DONE"><td><code>DRC_BACKUP_DONE</code></td><td>1</td><td>未设置</td><td>前端已经完成运行目录备份，backend 避免重复备份。</td></tr>
+<tr id="LVS_BACKUP_DONE"><td><code>LVS_BACKUP_DONE</code></td><td>1</td><td>未设置</td><td>LVS / 导出前端已完成备份。</td></tr>
+<tr id="RCE_BACKUP_DONE"><td><code>RCE_BACKUP_DONE</code></td><td>1</td><td>未设置</td><td>RCE 前端已完成备份。</td></tr>
+<tr id="LEF_BACKUP_DONE"><td><code>LEF_BACKUP_DONE</code></td><td>1</td><td>未设置</td><td>LEF 前端已完成备份。</td></tr>
+</tbody></table></div>
+<h2 id="worker">MTS 与库查询 worker</h2>
+<div class="table-wrap"><table><thead><tr><th>名称</th><th>值的形式</th><th>默认 / 来源</th><th>作用</th></tr></thead><tbody>
+<tr id="MTS_NETLISTOR_ROOT"><td><code>MTS_NETLISTOR_ROOT</code></td><td>目录</td><td>本安装 tools/mtsnl</td><td>旧 launcher 覆盖的一致性检查；设置时必须等于当前安装工具根。</td></tr>
+<tr id="MTS_NETLISTOR_CDSLIB"><td><code>MTS_NETLISTOR_CDSLIB</code></td><td>cds.lib 文件</td><td>任务源项目</td><td>隔离 worker 的源库定义。</td></tr>
+<tr id="MTS_NETLISTOR_WORKDIR"><td><code>MTS_NETLISTOR_WORKDIR</code></td><td>绝对目录</td><td>任务工作目录</td><td>隔离 worker 工作位置。</td></tr>
+<tr id="MTS_NETLISTOR_DEFAULTS_OUTPUT"><td><code>MTS_NETLISTOR_DEFAULTS_OUTPUT</code></td><td>文件路径</td><td>当前 defaults 请求分配</td><td>PDK 默认值读取结果。</td></tr>
+<tr id="MTS_NETLISTOR_PROBE_PROJECT"><td><code>MTS_NETLISTOR_PROBE_PROJECT</code></td><td>目录</td><td>当前请求分配</td><td>默认值查询的项目位置。</td></tr>
+<tr id="MTS_NETLISTOR_PROBE_RESULTS"><td><code>MTS_NETLISTOR_PROBE_RESULTS</code></td><td>目录</td><td>当前请求分配</td><td>默认值查询结果位置。</td></tr>
+<tr id="MTS_SOURCE_LIB"><td><code>MTS_SOURCE_LIB</code></td><td>OA library 名</td><td>当前任务</td><td>symbol 传输源库。</td></tr>
+<tr id="MTS_SOURCE_CELL"><td><code>MTS_SOURCE_CELL</code></td><td>OA cell 名</td><td>当前任务</td><td>symbol 传输源 cell。</td></tr>
+<tr id="MTS_TARGET_LIB"><td><code>MTS_TARGET_LIB</code></td><td>OA library 名</td><td>当前任务</td><td>发布目标库。</td></tr>
+<tr id="MTS_TARGET_CELL"><td><code>MTS_TARGET_CELL</code></td><td>OA cell 名</td><td>当前任务</td><td>发布目标 cell。</td></tr>
+<tr id="MTS_TARGET_ROOT"><td><code>MTS_TARGET_ROOT</code></td><td>目录</td><td>当前任务</td><td>目标库物理目录。</td></tr>
+<tr id="MTS_TARGET_OVERWRITE"><td><code>MTS_TARGET_OVERWRITE</code></td><td>1 表示启用</td><td>未设置时 false</td><td>目标发布覆盖状态，由已确认的任务设置生成。</td></tr>
+<tr id="MTS_TRANSFER_LIB"><td><code>MTS_TRANSFER_LIB</code></td><td>OA library 名</td><td>当前任务分配</td><td>中转库标识。</td></tr>
+<tr id="MTS_TRANSFER_CELL"><td><code>MTS_TRANSFER_CELL</code></td><td>OA cell 名</td><td>当前任务分配</td><td>中转 cell 标识。</td></tr>
+<tr id="MTS_TRANSFER_ROOT"><td><code>MTS_TRANSFER_ROOT</code></td><td>目录</td><td>当前任务分配</td><td>中转库目录。</td></tr>
+<tr id="MTS_TRANSFER_REPORT"><td><code>MTS_TRANSFER_REPORT</code></td><td>文件路径</td><td>当前任务分配</td><td>中转/发布结果报告。</td></tr>
+<tr id="MTS_PROCESS_PID"><td><code>MTS_PROCESS_PID</code></td><td>进程 ID</td><td>任务拥有者设置</td><td>worker 身份记录。</td></tr>
+<tr id="CADVIEW_CATALOG_OUTPUT"><td><code>CADVIEW_CATALOG_OUTPUT</code></td><td>文件路径</td><td>库查询任务分配</td><td>公共 OA catalog 的结构化结果。</td></tr>
+<tr id="CDS_CDSLIB"><td><code>CDS_CDSLIB</code></td><td>cds.lib 文件路径</td><td>隔离 worker 使用本次源定义</td><td>与 CDS_LIB 配套设置。</td></tr>
+<tr id="CDS_NOCDSINIT"><td><code>CDS_NOCDSINIT</code></td><td>1</td><td>隔离 worker 设置</td><td>后台 worker 使用明确初始化，不继承宿主 .cdsinit。</td></tr>
+<tr id="CDS5X_NOLINK"><td><code>CDS5X_NOLINK</code></td><td>1</td><td>Netlist to View 复制模式设置</td><td>要求导入时复制源文件。</td></tr>
+</tbody></table></div>
+<h2 id="process">子进程环境与输入法</h2>
+<div class="table-wrap"><table><thead><tr><th>名称</th><th>值的形式</th><th>默认 / 来源</th><th>作用</th></tr></thead><tbody>
+<tr id="PYTHONNOUSERSITE"><td><code>PYTHONNOUSERSITE</code></td><td>1</td><td>SiCo launcher 设置</td><td>隔离用户 site-packages。</td></tr>
+<tr id="PYTHONDONTWRITEBYTECODE"><td><code>PYTHONDONTWRITEBYTECODE</code></td><td>1</td><td>SiCo launcher 设置</td><td>避免向安装树或运行目录写入 Python bytecode。</td></tr>
+<tr id="PYTHONHOME"><td><code>PYTHONHOME</code></td><td>目录</td><td>SiCo 启动边界清除</td><td>不使用宿主 Python 根替代所选安装。</td></tr>
+<tr id="PYTHONPATH"><td><code>PYTHONPATH</code></td><td>模块路径列表</td><td>SiCo 启动边界重建</td><td>按当前安装组装源码入口，避免混用另一套包。</td></tr>
+<tr id="LD_PRELOAD"><td><code>LD_PRELOAD</code></td><td>动态库列表</td><td>SiCo 启动边界清除</td><td>防止宿主注入影响运行环境。</td></tr>
+<tr id="LD_AUDIT"><td><code>LD_AUDIT</code></td><td>动态库列表</td><td>SiCo 启动边界清除</td><td>运行库隔离。</td></tr>
+<tr id="QT_PLUGIN_PATH"><td><code>QT_PLUGIN_PATH</code></td><td>Qt 插件目录</td><td>终端先清除，再由 SICO_AI_QT_PLUGIN_PATH 按需设置</td><td>避免混用宿主 Qt 插件。</td></tr>
+<tr id="QT_QPA_PLATFORM_PLUGIN_PATH"><td><code>QT_QPA_PLATFORM_PLUGIN_PATH</code></td><td>Qt 平台插件目录</td><td>终端启动时清除宿主覆盖</td><td>保持当前安装 Qt 一致。</td></tr>
+<tr id="QT_XCB_GL_INTEGRATION"><td><code>QT_XCB_GL_INTEGRATION</code></td><td>none</td><td>Assistant 终端设置</td><td>使用 raster 终端，避免远端 GLX 探测。</td></tr>
+<tr id="QT_IM_MODULE"><td><code>QT_IM_MODULE</code></td><td>ibus（LSF 私有会话）</td><td>本机保留桌面值</td><td>SiCo 为 LSF GUI 准备私有输入法。</td></tr>
+<tr id="XMODIFIERS"><td><code>XMODIFIERS</code></td><td>输入法修饰串</td><td>本机保留；私有会话按需清除</td><td>避免继承不适用的桌面输入法端点。</td></tr>
+<tr id="DBUS_SESSION_BUS_ADDRESS"><td><code>DBUS_SESSION_BUS_ADDRESS</code></td><td>D-Bus 地址</td><td>本机继承；LSF 私有会话独立准备</td><td>输入法会话总线。</td></tr>
+<tr id="IBUS_ADDRESS"><td><code>IBUS_ADDRESS</code></td><td>IBus 地址</td><td>私有会话重新发现</td><td>不用手工复制桌面地址到 LSF 节点。</td></tr>
+<tr id="IBUS_ADDRESS_FILE"><td><code>IBUS_ADDRESS_FILE</code></td><td>文件路径</td><td>私有会话生成</td><td>IBus 地址传递文件。</td></tr>
+<tr id="IBUS_USE_PORTAL"><td><code>IBUS_USE_PORTAL</code></td><td>IBus portal 选项</td><td>私有会话清除继承值</td><td>由 SiCo 管理远端输入法连接。</td></tr>
+<tr id="XDG_CONFIG_HOME"><td><code>XDG_CONFIG_HOME</code></td><td>配置目录</td><td>私有输入法会话独立目录</td><td>使 D-Bus/IBus 配置使用同一私有根。</td></tr>
+<tr id="GSETTINGS_BACKEND"><td><code>GSETTINGS_BACKEND</code></td><td>dconf</td><td>私有 IBus 子进程设置</td><td>节点输入法的设置存储。</td></tr>
+<tr id="CODEX_HOME"><td><code>CODEX_HOME</code></td><td>目录</td><td>SiCo 为 agent 子进程设置</td><td>主界面使用会话私有目录；Assistant 来自 SICO_CODEX_HOME 解析结果。</td></tr>
+<tr id="CLAUDE_CODE_NO_FLICKER"><td><code>CLAUDE_CODE_NO_FLICKER</code></td><td>1</td><td>Claude 子进程未设置时补 1</td><td>仅 Claude 终端显示选项。</td></tr>
+<tr id="MCP_TIMEOUT"><td><code>MCP_TIMEOUT</code></td><td>毫秒整数</td><td>Claude 子进程未设置时补 10000</td><td>Claude MCP 初始化预算；与 SICO_MCP_TIMEOUT 秒值不同。</td></tr>
+</tbody></table></div>
+<h2 id="provenance">原始环境快照</h2>
+<div class="table-wrap"><table><thead><tr><th>名称</th><th>值的形式</th><th>默认 / 来源</th><th>作用</th></tr></thead><tbody>
+<tr id="SICO_ORIG_TMPDIR"><td><code>SICO_ORIG_TMPDIR</code></td><td>原始环境文本</td><td>进入 SiCo 前捕获</td><td>启动 EDA 时恢复 TMPDIR。</td></tr>
+<tr id="SICO_ORIG_TMPDIR_SET"><td><code>SICO_ORIG_TMPDIR_SET</code></td><td>0 / 1</td><td>根据原变量是否存在生成</td><td>记录 TMPDIR 是否曾设置。</td></tr>
+<tr id="SICO_ORIG_TMP"><td><code>SICO_ORIG_TMP</code></td><td>原始环境文本</td><td>进入 SiCo 前捕获</td><td>启动 EDA 时恢复 TMP。</td></tr>
+<tr id="SICO_ORIG_TMP_SET"><td><code>SICO_ORIG_TMP_SET</code></td><td>0 / 1</td><td>根据原变量是否存在生成</td><td>记录 TMP 是否曾设置。</td></tr>
+<tr id="SICO_ORIG_TEMP"><td><code>SICO_ORIG_TEMP</code></td><td>原始环境文本</td><td>进入 SiCo 前捕获</td><td>启动 EDA 时恢复 TEMP。</td></tr>
+<tr id="SICO_ORIG_TEMP_SET"><td><code>SICO_ORIG_TEMP_SET</code></td><td>0 / 1</td><td>根据原变量是否存在生成</td><td>记录 TEMP 是否曾设置。</td></tr>
+<tr id="SICO_ORIG_SQLITE_TMPDIR"><td><code>SICO_ORIG_SQLITE_TMPDIR</code></td><td>原始环境文本</td><td>进入 SiCo 前捕获</td><td>启动 EDA 时恢复 SQLITE_TMPDIR。</td></tr>
+<tr id="SICO_ORIG_SQLITE_TMPDIR_SET"><td><code>SICO_ORIG_SQLITE_TMPDIR_SET</code></td><td>0 / 1</td><td>根据原变量是否存在生成</td><td>记录 SQLITE_TMPDIR 是否曾设置。</td></tr>
+<tr id="SICO_ORIG_XDG_CACHE_HOME"><td><code>SICO_ORIG_XDG_CACHE_HOME</code></td><td>原始环境文本</td><td>进入 SiCo 前捕获</td><td>启动 EDA 时恢复 XDG_CACHE_HOME。</td></tr>
+<tr id="SICO_ORIG_XDG_CACHE_HOME_SET"><td><code>SICO_ORIG_XDG_CACHE_HOME_SET</code></td><td>0 / 1</td><td>根据原变量是否存在生成</td><td>记录 XDG_CACHE_HOME 是否曾设置。</td></tr>
+<tr id="SICO_ORIG_XDG_RUNTIME_DIR"><td><code>SICO_ORIG_XDG_RUNTIME_DIR</code></td><td>原始环境文本</td><td>进入 SiCo 前捕获</td><td>启动 EDA 时恢复 XDG_RUNTIME_DIR。</td></tr>
+<tr id="SICO_ORIG_XDG_RUNTIME_DIR_SET"><td><code>SICO_ORIG_XDG_RUNTIME_DIR_SET</code></td><td>0 / 1</td><td>根据原变量是否存在生成</td><td>记录 XDG_RUNTIME_DIR 是否曾设置。</td></tr>
+<tr id="SICO_VIRTUOSO_PATH"><td><code>SICO_VIRTUOSO_PATH</code></td><td>原始环境文本</td><td>启动器捕获</td><td>EDA 工作环境中的 PATH 快照。</td></tr>
+<tr id="SICO_VIRTUOSO_LD_LIBRARY_PATH"><td><code>SICO_VIRTUOSO_LD_LIBRARY_PATH</code></td><td>原始环境文本</td><td>启动器捕获</td><td>EDA 工作环境中的 LD_LIBRARY_PATH 快照。</td></tr>
+<tr id="SICO_VIRTUOSO_PYTHONPATH"><td><code>SICO_VIRTUOSO_PYTHONPATH</code></td><td>原始环境文本</td><td>启动器捕获</td><td>EDA 工作环境中的 PYTHONPATH 快照。</td></tr>
+<tr id="SICO_VIRTUOSO_MODULEPATH"><td><code>SICO_VIRTUOSO_MODULEPATH</code></td><td>原始环境文本</td><td>启动器捕获</td><td>EDA 工作环境中的 MODULEPATH 快照。</td></tr>
+<tr id="SICO_VIRTUOSO_LOADEDMODULES"><td><code>SICO_VIRTUOSO_LOADEDMODULES</code></td><td>原始环境文本</td><td>启动器捕获</td><td>EDA 工作环境中的 LOADEDMODULES 快照。</td></tr>
+<tr id="SICO_VIRTUOSO__LMFILES_"><td><code>SICO_VIRTUOSO__LMFILES_</code></td><td>原始环境文本</td><td>启动器捕获</td><td>EDA 工作环境中的 _LMFILES_ 快照。</td></tr>
+<tr id="SICO_VIRTUOSO_MODULESHOME"><td><code>SICO_VIRTUOSO_MODULESHOME</code></td><td>原始环境文本</td><td>启动器捕获</td><td>EDA 工作环境中的 MODULESHOME 快照。</td></tr>
+<tr id="SICO_VIRTUOSO_LMOD_CMD"><td><code>SICO_VIRTUOSO_LMOD_CMD</code></td><td>原始环境文本</td><td>启动器捕获</td><td>EDA 工作环境中的 LMOD_CMD 快照。</td></tr>
+<tr id="DRC_ORIG_LD_LIBRARY_PATH"><td><code>DRC_ORIG_LD_LIBRARY_PATH</code></td><td>动态库路径文本</td><td>launcher 捕获</td><td>恢复相应工具启动前的 EDA 动态库环境。</td></tr>
+<tr id="LVS_ORIG_LD_LIBRARY_PATH"><td><code>LVS_ORIG_LD_LIBRARY_PATH</code></td><td>动态库路径文本</td><td>launcher 捕获</td><td>恢复相应工具启动前的 EDA 动态库环境。</td></tr>
+<tr id="RCE_ORIG_LD_LIBRARY_PATH"><td><code>RCE_ORIG_LD_LIBRARY_PATH</code></td><td>动态库路径文本</td><td>launcher 捕获</td><td>恢复相应工具启动前的 EDA 动态库环境。</td></tr>
+<tr id="LEF_ORIG_LD_LIBRARY_PATH"><td><code>LEF_ORIG_LD_LIBRARY_PATH</code></td><td>动态库路径文本</td><td>launcher 捕获</td><td>恢复相应工具启动前的 EDA 动态库环境。</td></tr>
+<tr id="MTS_NETLISTOR_ORIG_LD_LIBRARY_PATH"><td><code>MTS_NETLISTOR_ORIG_LD_LIBRARY_PATH</code></td><td>动态库路径文本</td><td>launcher 捕获</td><td>恢复相应工具启动前的 EDA 动态库环境。</td></tr>
+<tr id="SICO_LSF_MONITOR_ORIG_LD_LIBRARY_PATH"><td><code>SICO_LSF_MONITOR_ORIG_LD_LIBRARY_PATH</code></td><td>动态库路径文本</td><td>launcher 捕获</td><td>恢复相应工具启动前的 EDA 动态库环境。</td></tr>
+</tbody></table></div>
+<h2 id="aivw">AIVW 验证任务传递</h2>
+<div class="table-wrap"><table><thead><tr><th>名称</th><th>值的形式</th><th>默认 / 来源</th><th>作用</th></tr></thead><tbody>
+<tr id="AIVW_CATALOG_OUTPUT"><td><code>AIVW_CATALOG_OUTPUT</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_CONFIG_CELL"><td><code>AIVW_CONFIG_CELL</code></td><td>OA 对象名或名称列表</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_CONFIG_LIB"><td><code>AIVW_CONFIG_LIB</code></td><td>OA 对象名或名称列表</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_CONFIG_VIEW"><td><code>AIVW_CONFIG_VIEW</code></td><td>OA 对象名或名称列表</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_CONTRACT_OUTPUT"><td><code>AIVW_CONTRACT_OUTPUT</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_DETAIL_CSV"><td><code>AIVW_DETAIL_CSV</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_HED_OUTPUT"><td><code>AIVW_HED_OUTPUT</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_LDO_AI_ROOT"><td><code>AIVW_LDO_AI_ROOT</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_LDO_CATALOG_OUTPUT"><td><code>AIVW_LDO_CATALOG_OUTPUT</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_LDO_CELL"><td><code>AIVW_LDO_CELL</code></td><td>OA 对象名或名称列表</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_LDO_CELLS"><td><code>AIVW_LDO_CELLS</code></td><td>OA 对象名或名称列表</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_LDO_CONFIG_CELL"><td><code>AIVW_LDO_CONFIG_CELL</code></td><td>OA 对象名或名称列表</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_LDO_CONFIG_LIBRARY"><td><code>AIVW_LDO_CONFIG_LIBRARY</code></td><td>OA 对象名或名称列表</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_LDO_CONFIG_VIEW"><td><code>AIVW_LDO_CONFIG_VIEW</code></td><td>OA 对象名或名称列表</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_LDO_HED_OUTPUT"><td><code>AIVW_LDO_HED_OUTPUT</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_LDO_LIBRARY"><td><code>AIVW_LDO_LIBRARY</code></td><td>OA 对象名或名称列表</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_LDO_SNAPSHOT_OUTPUT"><td><code>AIVW_LDO_SNAPSHOT_OUTPUT</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_LDO_SOURCE_GENERATION"><td><code>AIVW_LDO_SOURCE_GENERATION</code></td><td>任务标识/路径/参数</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_M1_OUTPUT"><td><code>AIVW_M1_OUTPUT</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_MAX_JOBS"><td><code>AIVW_MAX_JOBS</code></td><td>任务并发数文本</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_NOMINAL_OUTPUT"><td><code>AIVW_NOMINAL_OUTPUT</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_PROBE_CELL"><td><code>AIVW_PROBE_CELL</code></td><td>OA 对象名或名称列表</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_PROBE_LIBRARY"><td><code>AIVW_PROBE_LIBRARY</code></td><td>OA 对象名或名称列表</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_PROBE_LIBRARY_PATH"><td><code>AIVW_PROBE_LIBRARY_PATH</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_PROBE_PRIMARY"><td><code>AIVW_PROBE_PRIMARY</code></td><td>OA 对象名或名称列表</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_PROBE_REPORT"><td><code>AIVW_PROBE_REPORT</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_PROBE_VIEW"><td><code>AIVW_PROBE_VIEW</code></td><td>OA 对象名或名称列表</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_PROBE_VIEW_TYPE"><td><code>AIVW_PROBE_VIEW_TYPE</code></td><td>OA 对象名或名称列表</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_PROJECT_DIR"><td><code>AIVW_PROJECT_DIR</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_PROVENANCE_PATH"><td><code>AIVW_PROVENANCE_PATH</code></td><td>任务文件或目录路径</td><td>未设置时无附加记录</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_PVT_OUTPUT"><td><code>AIVW_PVT_OUTPUT</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_REBIND_OUTPUT"><td><code>AIVW_REBIND_OUTPUT</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_RESULTS_LOCATION"><td><code>AIVW_RESULTS_LOCATION</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_RUN_ID"><td><code>AIVW_RUN_ID</code></td><td>任务标识/路径/参数</td><td>未设置时 aivw-&lt;当前 runtime 目录名&gt;</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_SCRATCH_SARADC"><td><code>AIVW_SCRATCH_SARADC</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_SETUP_DB_DIR"><td><code>AIVW_SETUP_DB_DIR</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_SOURCE_GENERATION"><td><code>AIVW_SOURCE_GENERATION</code></td><td>任务标识/路径/参数</td><td>未设置时无附加记录</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+<tr id="AIVW_SUMMARY_CSV"><td><code>AIVW_SUMMARY_CSV</code></td><td>任务文件或目录路径</td><td>由验证任务提供；无通用默认值</td><td>AIVW 验证 worker 的任务输入或结果位置；不作为普通 flow 的项目配置。</td></tr>
+</tbody></table></div>
+<h2 id="retired-list">完整的已登记旧名索引</h2>
+<p>下表旧名不作为新的配置输入；旧名没有可用默认值。“对应新名”用于迁移用途。新名的含义以速查表为准，不能机械复制旧安装路径。会话传递旧名应由当前启动器重新生成。</p>
+<div class="table-wrap"><table><thead><tr><th>已退出的名称</th><th>对应新名 / 处理方式</th></tr></thead><tbody>
+<tr><td><code>CAD_AGENT_API_BASE_URL</code></td><td><code>SICO_API_BASE_URL</code></td></tr>
+<tr><td><code>CAD_AGENT_API_KEY</code></td><td><code>SICO_API_KEY</code></td></tr>
+<tr><td><code>CAD_AGENT_API_URL</code></td><td><code>SICO_API_URL</code></td></tr>
+<tr><td><code>CAD_AGENT_BACKEND</code></td><td><code>SICO_BACKEND</code></td></tr>
+<tr><td><code>CAD_AGENT_CODEX_CLI</code></td><td><code>SICO_CODEX_CLI</code></td></tr>
+<tr><td><code>CAD_AGENT_EXTERNAL_RESOURCES</code></td><td><code>SICO_EXTERNAL_RESOURCES</code></td></tr>
+<tr><td><code>CAD_AGENT_LEGACY_0114</code></td><td><code>SICO_LEGACY_0114</code></td></tr>
+<tr><td><code>CAD_AGENT_LINUX_SANDBOX</code></td><td><code>SICO_LINUX_SANDBOX</code></td></tr>
+<tr><td><code>CAD_AGENT_MCP_TIMEOUT</code></td><td><code>SICO_MCP_TIMEOUT</code></td></tr>
+<tr><td><code>CAD_AGENT_MODEL</code></td><td><code>SICO_MODEL</code></td></tr>
+<tr><td><code>CAD_AGENT_MODEL_IDLE_TIMEOUT</code></td><td><code>SICO_MODEL_IDLE_TIMEOUT</code></td></tr>
+<tr><td><code>CAD_AGENT_PDK_DATA</code></td><td><code>SICO_PDK_DATA</code></td></tr>
+<tr><td><code>CAD_AGENT_PDK_DBACCESS</code></td><td><code>SICO_PDK_DBACCESS</code></td></tr>
+<tr><td><code>CAD_AGENT_PDK_WORKERS</code></td><td><code>SICO_PDK_WORKERS</code></td></tr>
+<tr><td><code>CAD_AGENT_PDK_WORKER_CONTEXT</code></td><td><code>SICO_PDK_WORKER_CONTEXT</code></td></tr>
+<tr><td><code>CAD_AGENT_PDK_WORKER_INIT</code></td><td><code>SICO_PDK_WORKER_INIT</code></td></tr>
+<tr><td><code>CAD_AGENT_PDK_WORKER_TIMEOUT</code></td><td><code>SICO_PDK_WORKER_TIMEOUT</code></td></tr>
+<tr><td><code>CAD_AGENT_PDK_WORKFLOW</code></td><td><code>SICO_PDK_WORKFLOW</code></td></tr>
+<tr><td><code>CAD_AGENT_PROVIDER</code></td><td><code>SICO_PROVIDER</code></td></tr>
+<tr><td><code>CAD_AGENT_PROVIDER_CONFIG</code></td><td><code>SICO_PROVIDER_CONFIG</code></td></tr>
+<tr><td><code>CAD_AGENT_ROOT</code></td><td><code>SICO_HOME</code></td></tr>
+<tr><td><code>CAD_AGENT_SKILL_TIMEOUT</code></td><td><code>SICO_SKILL_TIMEOUT</code></td></tr>
+<tr><td><code>CAD_AGENT_TOOL_FORMAT</code></td><td><code>SICO_TOOL_FORMAT</code></td></tr>
+<tr><td><code>CAD_AI_CONTEXT</code></td><td><code>SICO_AI_CONTEXT</code></td></tr>
+<tr><td><code>CAD_AI_DEVICE_CATALOG</code></td><td><code>SICO_AI_DEVICE_CATALOG</code></td></tr>
+<tr><td><code>CAD_AI_DIAGNOSTIC_LOG</code></td><td><code>SICO_AI_DIAGNOSTIC_LOG</code></td></tr>
+<tr><td><code>CAD_AI_MCP_TIMEOUT</code></td><td><code>SICO_AI_MCP_TIMEOUT</code></td></tr>
+<tr><td><code>CAD_AI_OS_RELEASE_FILE</code></td><td><code>SICO_AI_OS_RELEASE_FILE</code></td></tr>
+<tr><td><code>CAD_AI_PLATFORM</code></td><td><code>SICO_AI_PLATFORM</code></td></tr>
+<tr><td><code>CAD_AI_PROFILE</code></td><td><code>SICO_AI_PROFILE</code></td></tr>
+<tr><td><code>CAD_AI_PYQT_ROOT</code></td><td><code>SICO_AI_PYQT_ROOT</code></td></tr>
+<tr><td><code>CAD_AI_PYTHON_ENTRY</code></td><td><code>SICO_AI_PYTHON_ENTRY</code></td></tr>
+<tr><td><code>CAD_AI_PYTHON_LIBRARY_PATH</code></td><td><code>SICO_AI_PYTHON_LIBRARY_PATH</code></td></tr>
+<tr><td><code>CAD_AI_QTERMWIDGET_DATA_PATH</code></td><td><code>SICO_AI_QTERMWIDGET_DATA_PATH</code></td></tr>
+<tr><td><code>CAD_AI_QTERMWIDGET_RUNTIME</code></td><td><code>SICO_AI_QTERMWIDGET_RUNTIME</code></td></tr>
+<tr><td><code>CAD_AI_QT_PLUGIN_PATH</code></td><td><code>SICO_AI_QT_PLUGIN_PATH</code></td></tr>
+<tr><td><code>CAD_AI_RELEASE_ROOT</code></td><td><code>SICO_AI_RELEASE_ROOT</code></td></tr>
+<tr><td><code>CAD_AI_REQUEST_TIMEOUT</code></td><td><code>SICO_AI_REQUEST_TIMEOUT</code></td></tr>
+<tr><td><code>CAD_AI_ROUTER_DIAGNOSTIC_LOG</code></td><td><code>SICO_AI_ROUTER_DIAGNOSTIC_LOG</code></td></tr>
+<tr><td><code>CAD_AI_RUNTIME</code></td><td><code>SICO_AI_RUNTIME</code></td></tr>
+<tr><td><code>CAD_AI_SKILL_REFERENCE_ROOT</code></td><td><code>SICO_AI_SKILL_REFERENCE_ROOT</code></td></tr>
+<tr><td><code>CAD_AI_SOCKET</code></td><td><code>SICO_AI_SOCKET</code></td></tr>
+<tr><td><code>CAD_AI_SPOOL</code></td><td><code>SICO_AI_SPOOL</code></td></tr>
+<tr><td><code>CAD_AI_TEMPLATE_ROOT</code></td><td><code>SICO_CIRCUIT_TEMPLATES_DIR</code></td></tr>
+<tr><td><code>CAD_AI_TERMINAL</code></td><td><code>SICO_AI_TERMINAL</code></td></tr>
+<tr><td><code>CAD_AI_TERMINAL_COLOR_SCHEME</code></td><td><code>SICO_AI_TERMINAL_COLOR_SCHEME</code></td></tr>
+<tr><td><code>CAD_AI_TEST_OUTPUT</code></td><td><code>SICO_AI_TEST_OUTPUT</code></td></tr>
+<tr><td><code>CAD_AI_TOKEN</code></td><td><code>SICO_AI_TOKEN</code></td></tr>
+<tr><td><code>CAD_AI_UTF8_LOCALE</code></td><td><code>SICO_AI_UTF8_LOCALE</code></td></tr>
+<tr><td><code>CAD_AI_WORKSPACE</code></td><td><code>SICO_AI_WORKSPACE</code></td></tr>
+<tr><td><code>CAD_BATCH_PYTHON_ENTRY</code></td><td><code>SICO_BATCH_PYTHON_ENTRY</code></td></tr>
+<tr><td><code>CAD_CIRCUIT_TEMPLATES_DIR</code></td><td><code>SICO_CIRCUIT_TEMPLATES_DIR</code></td></tr>
+<tr><td><code>CAD_CLAUDE_CLI</code></td><td><code>SICO_CLAUDE_CLI</code></td></tr>
+<tr><td><code>CAD_CLAUDE_MODEL</code></td><td><code>SICO_CLAUDE_MODEL</code></td></tr>
+<tr><td><code>CAD_CODEX_API_BASE_URL</code></td><td><code>SICO_CODEX_API_BASE_URL</code></td></tr>
+<tr><td><code>CAD_CODEX_API_KEY</code></td><td><code>SICO_CODEX_API_KEY</code></td></tr>
+<tr><td><code>CAD_CODEX_CLI</code></td><td><code>SICO_CODEX_CLI</code></td></tr>
+<tr><td><code>CAD_CODEX_HOME</code></td><td><code>SICO_CODEX_HOME</code></td></tr>
+<tr><td><code>CAD_CODEX_MCP_TIMEOUT</code></td><td><code>SICO_AI_MCP_TIMEOUT</code></td></tr>
+<tr><td><code>CAD_CODEX_MODEL</code></td><td><code>SICO_CODEX_MODEL</code></td></tr>
+<tr><td><code>CAD_CODEX_PROFILE</code></td><td><code>SICO_AI_PROFILE</code></td></tr>
+<tr><td><code>CAD_CODEX_PYTHON_ENTRY</code></td><td><code>SICO_AI_PYTHON_ENTRY</code></td></tr>
+<tr><td><code>CAD_CODEX_PYTHON_LIBRARY_PATH</code></td><td><code>SICO_AI_PYTHON_LIBRARY_PATH</code></td></tr>
+<tr><td><code>CAD_CODEX_QT_PLUGIN_PATH</code></td><td><code>SICO_AI_QT_PLUGIN_PATH</code></td></tr>
+<tr><td><code>CAD_CODEX_REQUEST_TIMEOUT</code></td><td><code>SICO_AI_REQUEST_TIMEOUT</code></td></tr>
+<tr><td><code>CAD_CODEX_RUNTIME</code></td><td><code>SICO_AI_RUNTIME</code></td></tr>
+<tr><td><code>CAD_CODEX_SOCKET</code></td><td><code>SICO_AI_SOCKET</code></td></tr>
+<tr><td><code>CAD_CODEX_SPOOL</code></td><td><code>SICO_AI_SPOOL</code></td></tr>
+<tr><td><code>CAD_CODEX_TERMINAL</code></td><td><code>SICO_AI_TERMINAL</code></td></tr>
+<tr><td><code>CAD_CODEX_TOKEN</code></td><td><code>SICO_AI_TOKEN</code></td></tr>
+<tr><td><code>CAD_CODEX_WORKSPACE</code></td><td><code>SICO_AI_WORKSPACE</code></td></tr>
+<tr><td><code>CAD_COPILOT_MCP_PORT</code></td><td><code>SICO_MCP_PORT</code></td></tr>
+<tr><td><code>CAD_COPILOT_MCP_TIMEOUT</code></td><td><code>SICO_MCP_TIMEOUT</code></td></tr>
+<tr><td><code>CAD_COPILOT_MCP_TOKEN</code></td><td><code>SICO_MCP_TOKEN</code></td></tr>
+<tr><td><code>CAD_HOME</code></td><td><code>SICO_HOME</code></td></tr>
+<tr><td><code>CAD_LSF_PYTHON</code></td><td><code>SICO_LSF_PYTHON</code></td></tr>
+<tr><td><code>CAD_LSF_PYTHON_ENTRY</code></td><td><code>SICO_LSF_PYTHON_ENTRY</code></td></tr>
+<tr><td><code>CAD_PROFILE_PYTHON_ENTRY</code></td><td><code>SICO_PROFILE_PYTHON_ENTRY</code></td></tr>
+<tr><td><code>CAD_PYTHON</code></td><td><code>SICO_PYTHON</code></td></tr>
+<tr><td><code>CAD_PYTHON_ROOT</code></td><td><code>SICO_PYTHON_ROOT</code></td></tr>
+<tr><td><code>CAD_RUNTIME_NO_MENU</code></td><td><code>SICO_RUNTIME_NO_MENU</code></td></tr>
+<tr><td><code>CAD_RUNTIME_TOOLS</code></td><td><code>SICO_RUNTIME_TOOLS</code></td></tr>
+<tr><td><code>CAD_STUDIO_MCP_PORT</code></td><td><code>SICO_MCP_PORT</code></td></tr>
+<tr><td><code>CAD_STUDIO_MCP_TIMEOUT</code></td><td><code>SICO_MCP_TIMEOUT</code></td></tr>
+<tr><td><code>CAD_STUDIO_MCP_TOKEN</code></td><td><code>SICO_MCP_TOKEN</code></td></tr>
+<tr><td><code>CAD_SYSTEM_LD_LIBRARY_PATH</code></td><td><code>SICO_SYSTEM_LD_LIBRARY_PATH</code></td></tr>
+<tr><td><code>CAD_TEMP_DIR</code></td><td><code>SICO_TEMP_DIR</code></td></tr>
+<tr><td><code>EXT_CORNER</code></td><td><code>RCE_CORNER</code></td></tr>
+<tr><td><code>EXT_CPU_ALLOW</code></td><td><code>SICO_FLOW_CPU_ALLOW</code></td></tr>
+<tr><td><code>EXT_DEF_TEMP</code></td><td><code>RCE_DEF_TEMP</code></td></tr>
+<tr><td><code>EXT_DEF_TOOL</code></td><td><code>RCE_DEF_TOOL</code></td></tr>
+<tr><td><code>EXT_LSF_BKILL</code></td><td><code>SICO_LSF_BKILL</code></td></tr>
+<tr><td><code>EXT_LSF_BQUEUES</code></td><td><code>SICO_LSF_BQUEUES</code></td></tr>
+<tr><td><code>EXT_LSF_BSUB</code></td><td><code>SICO_LSF_BSUB</code></td></tr>
+<tr><td><code>EXT_OUTPUT_CHOICES</code></td><td><code>RCE_OUTPUT_CHOICES</code></td></tr>
+<tr><td><code>EXT_TEMP_LIST</code></td><td><code>RCE_TEMP_LIST</code></td></tr>
+<tr><td><code>PROJ_CALXRC_TECH_DIR</code></td><td><code>CALXRC_TECH_DIR</code></td></tr>
+<tr><td><code>PROJ_CDL_DB_DIR</code></td><td><code>CDL_DB_DIR</code></td></tr>
+<tr><td><code>PROJ_DRC_CONFIG</code></td><td><code>DRC_CONFIG</code></td></tr>
+<tr><td><code>PROJ_DRC_DB_DIR</code></td><td><code>DRC_DB_DIR</code></td></tr>
+<tr><td><code>PROJ_DRC_FILE</code></td><td><code>DRC_FILE</code></td></tr>
+<tr><td><code>PROJ_GDS_DB_DIR</code></td><td><code>GDS_DB_DIR</code></td></tr>
+<tr><td><code>PROJ_HCELL_FILE</code></td><td><code>HCELL_FILE</code></td></tr>
+<tr><td><code>PROJ_LEF_CELL_LIST</code></td><td><code>LEF_CELL_LIST</code></td></tr>
+<tr><td><code>PROJ_LEF_CONFIG</code></td><td><code>LEF_CONFIG</code></td></tr>
+<tr><td><code>PROJ_LEF_DB_DIR</code></td><td><code>LEF_DB_DIR</code></td></tr>
+<tr><td><code>PROJ_LVS_CONFIG</code></td><td><code>LVS_CONFIG</code></td></tr>
+<tr><td><code>PROJ_LVS_DB_DIR</code></td><td><code>LVS_DB_DIR</code></td></tr>
+<tr><td><code>PROJ_LVS_FILE</code></td><td><code>LVS_FILE</code></td></tr>
+<tr><td><code>PROJ_LEFGEN_OPT_FILE</code></td><td><code>LEFGEN_OPT_FILE</code></td></tr>
+<tr><td><code>PROJ_LVS_RUNSET</code></td><td><code>按用途分别设置 LVS_FILE / RCE_LVS_FILE</code></td></tr>
+<tr><td><code>PROJ_QUANTUS_TECH_DIR</code></td><td><code>QUANTUS_TECH_DIR</code></td></tr>
+<tr><td><code>PROJ_RCE_CONFIG</code></td><td><code>RCE_CONFIG</code></td></tr>
+<tr><td><code>PROJ_RCE_DB_DIR</code></td><td><code>RCE_DB_DIR</code></td></tr>
+<tr><td><code>PROJ_RCE_LVS_FILE</code></td><td><code>RCE_LVS_FILE</code></td></tr>
+<tr><td><code>PROJ_STARRC_TECH_DIR</code></td><td><code>STARRC_TECH_DIR</code></td></tr>
+<tr><td><code>SICO_CODEX_API_BASE_URL</code></td><td><code>SICO_API_BASE_URL</code></td></tr>
+<tr><td><code>SICO_CODEX_API_KEY</code></td><td><code>SICO_API_KEY</code></td></tr>
+<tr><td><code>SICO_CODEX_MODEL</code></td><td><code>SICO_MODEL</code></td></tr>
+<tr><td><code>SICO_ROOT</code></td><td><code>SICO_HOME</code></td></tr>
+</tbody></table></div>
+<p>原始环境快照的 CAD_ORIG_* / CAD_VIRTUOSO_* 旧前缀分别改为 SICO_ORIG_* / SICO_VIRTUOSO_*，由新启动器重新捕获。SICO_CODEX_RUNTIME / SICO_CODEX_SOCKET / SICO_CODEX_SPOOL / SICO_CODEX_TOKEN 仅在历史验证桥中兼容读取，新会话使用 SICO_AI_*。</p>
+<h2 id="reserved">保留与隔离的名称</h2>
+<p><code>CDS_MPS_*</code> 是 Cadence 多进程会话标识。MTS 与独立 worker 启动时清除这些宿主标识，避免源项目加入目标 Virtuoso 会话。<code>MTS_NETLISTOR_TARGET_CDSLIB</code>、<code>SICO_TARGET_CDSLIB</code>、<code>CADENCE_TARGET_CDSLIB</code> 是隔离边界会清除的目标选择遗留字段，不是项目配置入口。</p>
+<p><code>SICO_SOCKET</code> / <code>SICO_TOKEN</code> 也是 PDK worker 会清除的旧会话字段。<code>VIRTUOSO_CONTEXT_BUILD</code>、<code>RCE_VIRTUOSO</code> 以及终端 build/smoke 脚本变量属于编译或验收工具，不应进入日常安装环境。<code>PROJ_AMS_DB_DIR</code> 是 AIVW 输出布局中沿用的站点术语，具体路径由验证工作区配置提供，不是 DRC/LVS/RCE/MTS 的输出变量。</p>
+
+<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="index.html">使用手册 →</a></footer>
+</main>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#handoff">SiCo 会话与调度传递</a><a href="#worker">MTS 与库查询 worker</a><a href="#process">子进程环境与输入法</a><a href="#provenance">原始环境快照</a><a href="#aivw">AIVW 验证任务传递</a><a href="#retired-list">完整的已登记旧名索引</a><a href="#reserved">保留与隔离的名称</a></aside>
+</div></div>
+</body>
+</html>

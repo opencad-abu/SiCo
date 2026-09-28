@@ -1,0 +1,44 @@
+#!/bin/sh
+set -eu
+
+program=rce
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+product_root=$(CDPATH='' cd -- "$script_dir/../../.." && pwd -P)
+. "$product_root/tools/common/sh/sico-installation.sh"
+sico_installation "$product_root" || exit 2
+sico_launcher_environment || exit 2
+flow_root=$(CDPATH= cd -- "$script_dir/.." && pwd -P)
+entry=$flow_root/python/rce
+
+if [ ! -f "$entry" ]; then
+    echo "$program: Python entry is unavailable: $entry" >&2
+    exit 2
+fi
+
+python=${RCE_PYTHON-}
+if [ -z "$python" ]; then
+    python=${SICO_PYTHON-}
+fi
+if [ -z "$python" ] && [ -n "${SICO_PYTHON_ROOT-}" ]; then
+    python=${SICO_PYTHON_ROOT%/}/bin/python3
+fi
+if [ -z "$python" ]; then
+    python=python3
+fi
+
+case $python in
+    */*) [ -f "$python" ] && [ -x "$python" ] ;;
+    *) command -v "$python" >/dev/null 2>&1 ;;
+esac || {
+    echo "$program: Python is not executable: $python" >&2
+    exit 2
+}
+
+if [ -z "${RCE_ORIG_LD_LIBRARY_PATH+x}" ]; then
+    export RCE_ORIG_LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}
+fi
+export LD_LIBRARY_PATH=${SICO_SYSTEM_LD_LIBRARY_PATH-}
+export PYTHONDONTWRITEBYTECODE=1
+export PYTHONNOUSERSITE=1
+unset PYTHONHOME PYTHONPATH LD_PRELOAD LD_AUDIT
+exec "$python" -s "$entry" "$@"

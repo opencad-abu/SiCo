@@ -1,0 +1,146 @@
+; Shared LVS rule and extraction options.
+
+defclass(LVSOPTGUI (CUSTOMSVRFGUI)
+  (;slot start
+    (lvsRunsetChoices   @initform list("")
+                         @initarg  lvsRunsetChoices
+    )
+    (lvsRunsetEnvName   @initform "LVS_FILE"
+                         @initarg  lvsRunsetEnvName
+    )
+    (lvsRunsetCB        @initform infoStruc->noCB
+                         @initarg  lvsRunsetCB
+    )
+    (lvsHcellCB        @initform infoStruc->noCB
+                         @initarg  lvsHcellCB
+    )
+    (lvsIgnoreErrorCB    @initform infoStruc->noCB
+                         @initarg  lvsIgnoreErrorCB
+    )
+    (lvsVirtualConnCB    @initform list(infoStruc->noCB)
+                         @initarg  lvsVirtualConnCB
+    )
+
+    (lvsRunsetName      @initform nil)
+    (lvsRunsetFile      @initform nil)
+    (lvsRunset          @initform nil)
+    (lvsHcellBtn        @initform nil)
+    (lvsHcellFile       @initform nil)
+    (lvsHcell           @initform nil)
+    (lvsIgnoreError      @initform nil)
+    (lvsCaseBtn          @initform nil)
+    (lvsRecognizeGates   @initform nil)
+    (lvsVirtualConn      @initform nil)
+    (lvsVirtualConnName  @initform nil)
+    (lvsBasicOpt         @initform nil)
+    (lvsExtOpt           @initform nil)
+  );slot end
+)
+
+defmethod(makeLvsRunset ((inst LVSOPTGUI))
+  inst->lvsRunsetName=hiCreateComboField(
+    ?name     'lvsRunsetName
+    ?prompt   "Rule File:"
+    ?items    inst->lvsRunsetChoices
+    ?defValue car(inst->lvsRunsetChoices)
+    ?editable nil
+    ?callback inst->lvsRunsetCB
+  )
+  inst->lvsRunsetFile=hiCreateFileSelectorField(
+    ?name     'lvsRunsetFile
+    ?mode     'existingFile
+    ?defValue SICO_envPairValue(inst->lvsRunsetEnvName
+                                car(inst->lvsRunsetChoices))
+  )
+  inst->lvsRunset=makehbl('lvsRunset list(inst->lvsRunsetName inst->lvsRunsetFile) ?a left)
+);defmethod makeLvsRunset
+
+defmethod(makeLvsHcell ((inst LVSOPTGUI))
+  let((hcellFile hcellEnable)
+    hcellFile=SICO_envValue("HCELL_FILE")
+    hcellEnable=and(hcellFile strlen(hcellFile)>0)
+    inst->lvsHcellBtn=hiCreateBooleanButton(
+      ?name           'lvsHcellBtn
+      ?buttonText     "Hcell File: "
+      ?buttonLocation 'left
+      ?defValue       hcellEnable
+      ?callback       inst->lvsHcellCB
+    )
+    inst->lvsHcellFile=hiCreateFileSelectorField(
+      ?name     'lvsHcellFile
+      ?mode     'existingFile
+      ?defValue or(hcellFile "")
+      ?enabled  hcellEnable
+    )
+    inst->lvsHcell=makehbl('lvsHcell list(inst->lvsHcellBtn inst->lvsHcellFile) ?a left)
+  )
+);defmethod makeLvsHcell
+
+defmethod(makeLvsIgnoreError ((inst LVSOPTGUI))
+   inst->lvsIgnoreError=hiCreateBooleanButton(
+     ?name           'lvsIgnoreError
+     ?buttonText     "Ignore LVS Error"
+     ?defValue       nil
+     ?buttonLocation 'left
+     ?callback       inst->lvsIgnoreErrorCB
+   )
+);defmethod makeLvsIgnoreError
+
+defmethod(makeLvsCase ((inst LVSOPTGUI))
+   inst->lvsCaseBtn=hiCreateBooleanButton(
+     ?name           'lvsCaseBtn
+     ?buttonText     "Case Sensitive"
+     ?defValue       t
+     ?buttonLocation 'left
+   )
+);defmethod makeLvsCase
+
+defmethod(makeLvsVirtualConn ((inst LVSOPTGUI))
+  inst->lvsVirtualConn=hiCreateToggleField(
+    ?name     'lvsVirtualConn
+    ?prompt   "Virtual Connect By:"
+    ?choices  list(list('\: "Colon(:)") '(Name))
+    ?value    '(nil t)
+    ?defValue '(nil t)
+    ?callback inst->lvsVirtualConnCB
+  )
+);defmethod makeLvsVirtualConn
+
+defmethod(makeLvsVirtualConnName ((inst LVSOPTGUI))
+  inst->lvsVirtualConnName=hiCreateStringField(
+    ?name      'lvsVirtualConnName
+    ?value     "?"
+    ?defValue  "?"
+    ?invisible nil
+  )
+);demethod makeLvsVirtualconnName
+
+defmethod(makeLvsRecognizeGates ((inst LVSOPTGUI))
+  inst->lvsRecognizeGates=hiCreateCyclicField(
+    ?name     'lvsRecognizeGates
+    ?prompt   "Recognize Logic Gate:"
+    ?choices  '("NONE" "ALL" "SIMPLE")
+    ?defValue "NONE"
+  )
+)
+
+defmethod(makeLvsExtOpt ((inst LVSOPTGUI))
+  makeLvsRunset(inst)
+  makeLvsHcell(inst)
+  makeLvsIgnoreError(inst)
+  makeLvsCase(inst)
+  makeLvsVirtualConn(inst)
+  makeLvsVirtualConnName(inst)
+  makeLvsRecognizeGates(inst)
+  makeCustomSvrf(inst)
+  inst->lvsBasicOpt=makehbl('lvsBasicOpt list(inst->lvsIgnoreError inst->lvsCaseBtn inst->lvsVirtualConn inst->lvsVirtualConnName))
+  inst->lvsExtOpt=makevbl('lvsExtOpt list(inst->lvsRunset inst->lvsHcell inst->lvsBasicOpt inst->lvsRecognizeGates inst->customSvrf) ?f "LVS Options")
+);defmethod makeLvsExtopt
+
+procedure(cadBaseLvsOptionsRevision()
+  "20260908.recognize.gates.v1"
+)
+
+procedure(cadBaseRuleFileLabelRevision()
+  "20260812.rule.file.label.v1"
+)

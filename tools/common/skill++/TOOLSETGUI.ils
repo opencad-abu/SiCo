@@ -1,0 +1,52 @@
+; Shared LVS/extraction tool selection controls.
+
+defclass(TOOLSETGUI ()
+  (;slot start
+    (lvsToolChoices  @initform list("Calibre" "PVS")
+                     @initarg  lvsToolChoices
+    )
+    (lvsToolDefValue @initform "Calibre"
+                     @initarg  lvsToolDefValue
+    )
+    (extToolChoices  @initform list("StarRC" "QRC")
+                     @initarg  extToolChoices
+    )
+    (extToolDefValue @initform "StarRC"
+                     @initarg  extToolDefValue
+    )
+    (extToolCB       @initform list(infoStruc->noCB)
+                     @initarg  extToolCB
+    )
+    (lvsTool   @initform nil)
+    (lvsEngine @initform nil)
+    (extTool   @initform nil)
+    (extEngine @initform nil)
+  );slot end
+)
+
+defmethod(makeLvsTool ((inst TOOLSETGUI))
+  inst->lvsTool=hiCreateRadioField(
+    ?name     'lvsTool
+    ?choices  inst->lvsToolChoices
+    ?defValue inst->lvsToolDefValue
+  )
+  inst->lvsEngine=makevbl('lvsEngine list(inst->lvsTool) ?f "LVS Engine ")
+);defmethod makeLvsTool
+
+defmethod(makeExtTool ((inst TOOLSETGUI))
+  inst->extTool=hiCreateRadioField(
+    ?name     'extTool
+    ?choices  inst->extToolChoices
+    ?defValue inst->extToolDefValue
+    ?callback inst->extToolCB
+  )
+  inst->extEngine=makevbl('extEngine list(inst->extTool) ?f "EXT Engine ")
+);defmethod makeExtTool
+
+procedure(cadBaseGuiRevision()
+  "20260721.case.sensitive.v2"
+)
+
+procedure(cadCommonGuiModulesRevision()
+  "20260924.common.environment.v3"
+)

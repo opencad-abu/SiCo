@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "description": "Source-only closures; matches existing deploy inventory tests and checks complete AIVW/AI/terminal library packages. Nonliteral dynamic imports remain explicit review clues.",
+  "inventories": [
+    {
+      "path": "deploy/aivw_native_build.json",
+      "search_paths": [
+        "tools/aivw/python",
+        "tools/common/python"
+      ],
+      "entries": [
+        "aivworkbench.cli"
+      ],
+      "complete_packages": [
+        "aivworkbench"
+      ],
+      "development_entries": [
+        "aivworkbench.__main__"
+      ]
+    },
+    {
+      "path": "deploy/python_native_build.json",
+      "search_paths": [
+        "tools/ai/python",
+        "tools/sico/python",
+        "tools/common/python"
+      ],
+      "entries": [
+        "cadai.mcp",
+        "sico.cli",
+        "sico.service.local_startup",
+        "sico.transport.relay",
+        "sicotemp_cli"
+      ],
+      "complete_packages": [
+        "cadai",
+        "sico",
+        "sico_ui"
+      ],
+      "development_entries": [
+        "cadai.__main__",
+        "sico.__main__"
+      ]
+    },
+    {
+      "path": "deploy/flow_config_native_build.json",
+      "search_paths": [
+        "tools/common/python",
+        "tools/rce/python",
+        "tools/drc/python",
+        "tools/lvs/python",
+        "tools/lef/python",
+        "tools/mtsnl/python/mtsnetlistor/_vendor"
+      ],
+      "entries": [
+        "cadprofile.cli",
+        "rcepy.cli",
+        "drcpy.cli",
+        "lvspy.cli",
+        "lefpy.cli",
+        "cadbatch.cli",
+        "sicotemp_cli"
+      ],
+      "complete_packages": [],
+      "development_entries": []
+    },
+    {
+      "path": "deploy/lsf_native_build.json",
+      "search_paths": [
+        "tools/common/python"
+      ],
+      "entries": [
+        "cadlsf.cli",
+        "cadlsf.gui.app",
+        "sicotemp_cli"
+      ],
+      "complete_packages": [],
+      "development_entries": []
+    },
+    {
+      "path": "deploy/mts_gui_native_build.json",
+      "search_paths": [
+        "tools/mtsnl/python",
+        "tools/common/python"
+      ],
+      "entries": [
+        "mtsnetlistor.cli",
+        "mtsnetlistor.gui.app",
+        "mtsnetlistor.gui.main_window",
+        "sicotemp_cli"
+      ],
+      "complete_packages": [],
+      "development_entries": []
+    },
+    {
+      "path": "deploy/terminal_native_build.json",
+      "search_paths": [
+        "tools/ai/terminal/pyqt",
+        "tools/common/python"
+      ],
+      "entries": [
+        "cad_ai_terminal.main"
+      ],
+      "complete_packages": [
+        "cad_ai_terminal"
+      ],
+      "development_entries": []
+    }
+  ]
+}

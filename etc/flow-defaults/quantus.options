@@ -1,0 +1,62 @@
+# Quantus defaults: one native option per line. GUI options are generated.
+[process_technology.multi_corner]
+# Also used to name the generated technology library definition.
+-technology_name RCE_MPC
+
+[capacitance]
+-max_checking_distance extended
+-decoupling_factor 1.0
+-ground_net 0
+
+[filter_cap]
+-exclude_self_cap true
+
+[filter_res]
+-merge_parallel_res false
+
+[extraction_setup]
+-parasitic_res_width_change_percentage 0.0000001
+-array_vias_spacing auto
+-max_fracture_length infinite
+-max_fracture_length_unit "MICRONS"
+-max_via_array_size "auto"
+# Extraction namespace default. GUI "Use Name From" controls output_setup instead.
+-net_name_space "SCHEMATIC"
+
+[extraction_setup.block_cells]
+# Used only when a foundry or GUI blocking-cell list is present.
+-parasitic_blocking_device_cells_type white
+
+[input_db]
+# The Calibre query writer reads these same property numbers.
+-net_property_value 5
+-instance_property_value 6
+-device_property_value 7
+-hierarchy_delimiter "/"
+
+[output_db]
+-add_explicit_vias true
+
+[output_db.file]
+-device_finger_delimiter "@"
+-sub_node_char "#"
+# Replaced by the GUI value when the custom delimiter is enabled.
+-hierarchy_delimiter "/"
+
+[output_db.smart_view]
+-res_component "presistor"
+
+[output_db.extracted_view]
+-cap_component "pcapacitor"
+-cap_property_name "c"
+-res_component "presistor"
+-res_property_name "r"
+-enable_cellview_check true
+
+[output_setup]
+# -net_name_space is generated from GUI "Use Name From"; OA views require SCHEMATIC.
+-temporary_directory_name "qrcTemp"
+
+[extract]
+-extract_via_cap true
+-extract_gate_diffusion_fringing_cap true

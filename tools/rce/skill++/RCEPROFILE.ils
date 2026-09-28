@@ -1,0 +1,400 @@
+;------------------------------------------------------------------------------
+; RCE adapter for the shared versioned configuration-profile bridge.
+;------------------------------------------------------------------------------
+
+procedure(rceProfileFieldSpecs()
+  '(
+    ("run.root_type" outDirType "Customize Directory" nil)
+    ("run.root" outDirPath "" t)
+    ("run.run_type" runType "Current Host" nil)
+    ("run.queue_name" queueName "" nil)
+    ("run.server_name" srvName "" nil)
+    ("input.type" inpType "OA" nil)
+    ("input.schematic.lib" schLib "" nil)
+    ("input.schematic.cell" schCell "" nil)
+    ("input.schematic.view" schView "schematic" nil)
+    ("input.schematic.cdl_header_file" cdlIncludeFile "" t)
+    ("input.layout.lib" layLib "" nil)
+    ("input.layout.cell" layCell "" nil)
+    ("input.layout.view" layView "layout" nil)
+    ("input.cdl.run_directory" cdlRunDirectory "" t)
+    ("input.cdl.file" cdlFile "" t)
+    ("input.cdl.cell" cdlCell "" nil)
+    ("input.gds.file" gdsFile "" t)
+    ("input.gds.cell" gdsCell "" nil)
+    ("input.svdb.dir" svdbDir "" t)
+    ("input.svdb.cell" svdbCell "" nil)
+    ("input.cci.dir" cciDir "" t)
+    ("input.cci.cell" cciCell "" nil)
+    ("lvs.tool" lvsTool "Calibre" nil)
+    ("lvs.runset_name" lvsRunsetName "" nil)
+    ("lvs.runset_file" lvsRunsetFile "" t)
+    ("lvs.hcell_enable" lvsHcellBtn nil nil)
+    ("lvs.hcell_file" lvsHcellFile "" t)
+    ("lvs.ignore_error" lvsIgnoreError nil nil)
+    ("lvs.case_sensitive" lvsCaseBtn t nil)
+    ("lvs.recognize_gates" lvsRecognizeGates "NONE" nil)
+    ("lvs.virtual_connect_names" lvsVirtualConnName "?" nil)
+    ("lvs.custom_svrf_enable" customSvrfEnable nil nil)
+    ("lvs.custom_svrf_command" customSvrfCommand "" nil)
+    ("extract.tool" extTool "StarRC" nil)
+    ("extract.tech_name" rcTechDirName "" nil)
+    ("extract.tech_dir" rcTechDirPath "" t)
+    ("extract.corner_scope" cornerType "Single Corner" nil)
+    ("extract.corner" corner "" nil)
+    ("extract.temperature" temp "25" nil)
+    ("extract.rc_type" rcType "R+Cg+Cc" nil)
+    ("extract.top_cell_source" topCellSource "Schematic" nil)
+    ("extract.name_source" nameSource "Schematic" nil)
+    ("extract.start_rve" startRve nil nil)
+    ("extract.view.name" viewName "av_extracted" nil)
+    ("extract.view.layer_mapping_file" viewLayerMap "" t)
+    ("reduction.enabled" reductionEnable nil nil)
+    ("reduction.mode" reductionMode "Default" nil)
+    ("reduction.output_tag" reductionOutputTag "reduced" nil)
+    ("reduction.control" reductionControl "0.5" nil)
+    ("reduction.delay_rel" reductionDelayRel "0.05" nil)
+    ("reduction.delay_abs" reductionDelayAbs "1e-12" nil)
+    ("reduction.frequency" reductionFrequency "20" nil)
+    ("reduction.temperature" reductionTemperature "" nil)
+    ("reduction.ground" reductionGround "" nil)
+    ("reduction.reduce_negative" reductionNegative nil nil)
+    ("reduction.selection_file" reductionSelectionFile "" t)
+    ("reduction.canonical_device_file" reductionCanonicalDeviceFile "" t)
+    ("runtime.lvs_cpus" lvsCpu "1" nil)
+    ("runtime.ext_cpus" extCpu "1" nil)
+    ("selection.net_enable" netSelBtn nil nil)
+    ("selection.net_type" netSelChoices "Include Nets" nil)
+    ("selection.nets" netSelFile "" nil)
+    ("selection.cell_enable" cellSelBtn nil nil)
+    ("selection.cells" cellSelFile "" nil)
+    ("filter.cap_percentage" relFilterCapValue "0.1" nil)
+    ("filter.cap_value" absFilterCapValue "0.01" nil)
+    ("filter.res_value" absFilterResValue "0.001" nil)
+    ("netlist.create_view" createNetlistView nil nil)
+    ("netlist.pin_order_enable" pinOrderBtn t nil)
+    ("netlist.pin_order_type" pinOrderType "CDL Netlist File" nil)
+    ("netlist.pin_order_file" pinOrderFile "" t)
+    ("netlist.brackets_replace" bracketBtn nil nil)
+    ("netlist.brackets_replace_type" bracketChoices "<> ===> []" nil)
+    ("netlist.hierarchy_delimiter_enable" hierDeliBtn nil nil)
+    ("netlist.hierarchy_delimiter" hierDeliChoices "/" nil)
+    ("netlist.dspf_remove_instances" nlRmInst "FALSE" nil)
+    ("batch.scope" batchRunScope "Single Cell" nil)
+    ("batch.parallel_cells" batchParallelCells "2" nil)
+  )
+)
+
+procedure(rceProfileCollect(form)
+  let((entries serverEntry values viewKind nativeTarget nativeOutput
+        libraryPath cellPath)
+    entries=SICO_profileCollectFields(form rceProfileFieldSpecs())
+    serverEntry=assoc("run.server_name" entries)
+    when(serverEntry
+      setcar(cdr(serverEntry) SICO_lsfSelectedHost(cadr(serverEntry))))
+    values=or(form~>lvsVirtualConn~>value '(nil t))
+    viewKind=if(form~>extTool~>value=="QRC" then
+      form~>viewKind~>value else form~>viewKindFixed~>value)
+    nativeOutput=nil
+    when(isCallable('rceNativeViewOutputP)
+      nativeOutput=rceNativeViewOutputP(form~>outType~>value))
+    when(and(nativeOutput isCallable('rceNativeViewTarget))
+      nativeTarget=rceNativeViewTarget(form))
+    libraryPath="extract.view.library"
+    cellPath="extract.view.cell"
+    entries=append(entries list(
+      list("input.cdl_include_enable" and(form~>cdlIncludeBtn~>value t))
+      list("lvs.virtual_connect_enable" and(car(values) t))
+      list("lvs.virtual_connect_name_enable" and(cadr(values) t))
+      list("extract.output_type" or(form~>outType~>value "dspf"))
+      list("extract.corners" SICO_profileStringList(rceSelectedProcessCorners(form)))
+      list("extract.corner_temperatures"
+           SICO_profileStringList(rceSelectedCornerTemperatures(form)))
+      list("extract.view.kind" viewKind)
+      list(libraryPath if(nativeTarget then car(nativeTarget) else ""))
+      list(cellPath if(nativeTarget then cadr(nativeTarget) else ""))
+      list("filter.cap_percentage_enable" and(form~>relFilterCapBtn~>value t))
+      list("filter.cap_value_enable" and(form~>absFilterCapBtn~>value t))
+      list("filter.res_value_enable" and(form~>absFilterResBtn~>value t))
+      list("netlist.parasitic_coordinates" nth(0 form~>nlParInfo~>value))
+      list("netlist.parasitic_res_layer" nth(1 form~>nlParInfo~>value))
+      list("netlist.parasitic_res_dimensions" nth(2 form~>nlParInfo~>value))
+      list("batch.tasks" or(form~>cadBatchTasks nil))))
+    entries=append1(entries
+      if(form~>extTool~>value=="CalXRC" then
+        list("extract.view.cellmap_file" or(form~>viewDeviceMap~>value ""))
+      else
+        list("extract.view.device_mapping_file"
+             or(form~>viewDeviceMap~>value ""))))
+    entries
+  )
+)
+
+procedure(rceProfileRestoreCorners(form corners temperatures scope)
+  prog((available normalized index nameField selectField tempField corner
+        matched record records requested selectedScope)
+    rceRefreshProcessCorners(form)
+    available=or(form~>rceAvailableCorners nil)
+    normalized=nil
+    foreach(requested corners
+      matched=rceMatchingProcessCorner(requested available)
+      unless(matched return(nil))
+      normalized=append1(normalized matched))
+    corners=normalized
+    selectedScope=or(scope
+      if(length(corners)>1 then "Multiple Corners" else "Single Corner"))
+    unless(member(selectedScope '("Single Corner" "Multiple Corners"))
+      return(nil))
+    when(and(selectedScope=="Multiple Corners" !corners)
+      return(nil))
+    records=nil
+    for(index 0 sub1(length(corners))
+      records=append1(records
+        list(nth(index corners) or(nth(index temperatures) form~>temp~>value) t)))
+    form~>cornerType~>value=selectedScope
+    for(index 0 sub1(length(form~>rceCornerNameFields))
+      nameField=nth(index form~>rceCornerNameFields)
+      selectField=nth(index form~>rceCornerSelectFields)
+      tempField=nth(index form~>rceCornerTempFields)
+      corner=when(nameField nameField~>value)
+      matched=when(corner rceMatchingProcessCorner(corner corners))
+      selectField~>value=list(and(matched t))
+      when(matched
+        record=rceMatchingCornerRecord(matched records)
+        tempField~>value=if(record then cadr(record) else form~>temp~>value)))
+    when(corners
+      form~>corner~>value=car(corners)
+      form~>temp~>value=or(car(temperatures) form~>temp~>value))
+    rceCornerTypeCB(form)
+    return(t)
+  )
+)
+
+procedure(rceProfileViewKindLabel(value)
+  case(lowerCase(or(value ""))
+    ("smart" || "smart_view" || "smartview" "Smart View")
+    ("extracted" || "extracted_view" || "extview" "Extracted View")
+    ("calibre" || "calibre_view" || "calibreview" "Calibre View")
+    ("oa" || "oa_view" || "openaccess" || "openaccess_parasitic"
+      "OpenAccess Parasitic View")
+    (t value)
+  )
+)
+
+procedure(rceProfileOutputViewKind(outputType configuredKind)
+  case(lowerCase(or(outputType ""))
+    ("smartview" "Smart View")
+    ("extview" "Extracted View")
+    ("calibreview" "Calibre View")
+    ("starrcview" "OpenAccess Parasitic View")
+    (t rceProfileViewKindLabel(configuredKind))
+  )
+)
+
+procedure(rceProfileSelectionValue(data path)
+  let((candidate profilePath resolved value)
+    resolved=SICO_profileDataValue(data strcat(path ".resolved") nil)
+    value=SICO_profileDataValue(data path "")
+    cond(
+      (and(stringp(resolved) resolved!="" isFile(resolved))
+        simplifyFilename(resolved t))
+      (!stringp(value) value)
+      (value=="" value)
+      (and(substring(value 1 1)=="/" isFile(value))
+        simplifyFilename(value t))
+      (t
+        profilePath=SICO_profileDataValue(data "profile.path" nil)
+        when(and(stringp(profilePath) profilePath!="" isFile(profilePath))
+          candidate=simplifyFilename(
+            strcat(profilePath "/../" value) t))
+        if(and(candidate isFile(candidate)) then candidate else value))
+    )
+  )
+)
+
+procedure(rceProfileSetChoice(field value)
+  let((choice choices normalized)
+    choices=or(field~>choices nil)
+    choice=when(and(stringp(value) member(value choices)) value)
+    unless(choice
+      normalized=lowerCase(or(value ""))
+      when(and(member(normalized
+                      '("extview" "smartview" "calibreview" "starrcview"))
+               member("view" choices))
+        choice="view"))
+    when(choice
+      field~>value=choice
+      t)
+  )
+)
+
+procedure(rceProfileApply(form data)
+  prog((corners inputType nameConnect root rootType scope temperatures
+         virtualConnect savedCreateView savedFilters savedMaps savedNetlist
+         savedSelection savedStartRve savedViewKind savedViewName cornerScope
+         outputType savedViewLibrary savedViewCell savedNativeTarget fieldSpecs)
+    inputType=SICO_profileDataValue(data "input.type" "OA")
+    outputType=SICO_profileDataValue(data "extract.output_type" "dspf")
+    scope=SICO_profileDataValue(data "batch.scope" "Single Cell")
+    when(and(scope=="Multiple Cells" inputType!="OA") return(nil))
+
+    savedSelection=list(
+      SICO_profileDataValue(data "selection.net_enable" nil)
+      SICO_profileDataValue(data "selection.net_type" "Include Nets")
+      rceProfileSelectionValue(data "selection.nets")
+      SICO_profileDataValue(data "selection.cell_enable" nil)
+      rceProfileSelectionValue(data "selection.cells"))
+    savedFilters=list(
+      SICO_profileDataValue(data "filter.cap_percentage_enable"
+        SICO_profileDataValue(data "filter.cap_percentage" "")!="")
+      SICO_profileDataValue(data "filter.cap_percentage" "0.1")
+      SICO_profileDataValue(data "filter.cap_value_enable"
+        SICO_profileDataValue(data "filter.cap_value" "")!="")
+      SICO_profileDataValue(data "filter.cap_value" "0.01")
+      SICO_profileDataValue(data "filter.res_value_enable"
+        SICO_profileDataValue(data "filter.res_value" "")!="")
+      SICO_profileDataValue(data "filter.res_value" "0.001"))
+    savedNetlist=list(
+      SICO_profileDataValue(data "netlist.pin_order_enable" t)
+      SICO_profileDataValue(data "netlist.pin_order_type" "CDL Netlist File")
+      SICO_profilePathValue(data "netlist.pin_order_file" "")
+      SICO_profileDataValue(data "netlist.brackets_replace" nil)
+      SICO_profileDataValue(data "netlist.brackets_replace_type" "<> ===> []")
+      SICO_profileDataValue(data "netlist.hierarchy_delimiter_enable" nil)
+      SICO_profileDataValue(data "netlist.hierarchy_delimiter" "/")
+      SICO_profileDataValue(data "netlist.dspf_remove_instances" "FALSE")
+      SICO_profileDataValue(data "netlist.parasitic_coordinates" nil)
+      SICO_profileDataValue(data "netlist.parasitic_res_layer" nil)
+      SICO_profileDataValue(data "netlist.parasitic_res_dimensions" nil))
+    ; Restore pin controls together after input/output callbacks have settled.
+    ; Applying them individually could validate a stale file or assign a source
+    ; that is not in the current SVDB/CCI dropdown.
+    fieldSpecs=setof(spec rceProfileFieldSpecs()
+      !member(cadr(spec) '(pinOrderBtn pinOrderType pinOrderFile)))
+    savedCreateView=SICO_profileDataValue(data "netlist.create_view" nil)
+    savedStartRve=SICO_profileDataValue(data "extract.start_rve" nil)
+    savedViewKind=rceProfileOutputViewKind(outputType
+      SICO_profileDataValue(data "extract.view.kind" "Smart View"))
+    savedViewName=SICO_profileDataValue(data "extract.view.name" "av_extracted")
+    savedViewLibrary=SICO_profileDataValue(data "extract.view.library" "")
+    savedViewCell=SICO_profileDataValue(data "extract.view.cell" "")
+    cornerScope=SICO_profileDataValue(data "extract.corner_scope" "Single Corner")
+    savedMaps=list(
+      SICO_profilePathValue(data "extract.view.cellmap_file" "")
+      SICO_profilePathValue(data "extract.view.device_mapping_file" "")
+      SICO_profilePathValue(data "extract.view.layer_mapping_file" ""))
+
+    form~>batchRunScope~>value="Single Cell"
+    cadBatchScopeCB(form)
+
+    root=SICO_profilePathValue(data "run.root" form~>outDirPath~>value)
+    rootType=SICO_profileDataValue(data "run.root_type" "Customize Directory")
+    unless(member(rootType
+                  '("Project Directory" "Current Directory"
+                    "Customize Directory"))
+      return(nil))
+    form~>outDirType~>value=rootType
+    rceOutDirCB(form)
+    when(form~>outDirType~>value=="Customize Directory"
+      form~>outDirPath~>value=or(root ""))
+
+    form~>inpType~>value=inputType
+    SICO_profileApplyFields(form data fieldSpecs)
+    form~>cdlIncludeBtn~>value=SICO_profileDataValue(
+      data "input.cdl_include_enable" nil)
+    rceInpCB(form)
+    cadCdlIncludeCB(form)
+
+    rceLvsHcellCB(form)
+    virtualConnect=SICO_profileDataValue(
+      data "lvs.virtual_connect_enable" nil)
+    nameConnect=SICO_profileDataValue(
+      data "lvs.virtual_connect_name_enable" t)
+    form~>lvsVirtualConn~>value=list(virtualConnect nameConnect)
+    rceLvsVirtualConnCB(form)
+    cadCustomSvrfCB(form)
+
+    rceExtToolCB(form)
+    SICO_profileApplyFields(form data fieldSpecs)
+    form~>outDirType~>value=rootType
+    rceOutDirCB(form)
+    when(form~>outDirType~>value=="Customize Directory"
+      form~>outDirPath~>value=or(root ""))
+    corners=SICO_profileStringList(
+      SICO_profileDataValue(data "extract.corners" nil))
+    temperatures=SICO_profileStringList(
+      SICO_profileDataValue(data "extract.corner_temperatures" nil))
+    unless(corners
+      corners=list(SICO_profileDataValue(data "extract.corner" ""))
+      temperatures=list(SICO_profileDataValue(data "extract.temperature" "25")))
+    unless(rceProfileRestoreCorners(form corners temperatures cornerScope)
+      return(nil))
+    rceRcTypeCB(form)
+    form~>viewKind~>value=savedViewKind
+    form~>viewKindFixed~>value=savedViewKind
+    unless(rceProfileSetChoice(form~>outType outputType)
+      return(nil))
+    rceOutTypeCB(form)
+
+    form~>netSelBtn~>value=nth(0 savedSelection)
+    form~>netSelChoices~>value=nth(1 savedSelection)
+    form~>netSelFile~>value=nth(2 savedSelection)
+    form~>cellSelBtn~>value=nth(3 savedSelection)
+    form~>cellSelFile~>value=nth(4 savedSelection)
+    rceNetSelBtnCB(form)
+    rceCellSelBtnCB(form)
+    form~>relFilterCapBtn~>value=nth(0 savedFilters)
+    form~>relFilterCapValue~>value=nth(1 savedFilters)
+    form~>absFilterCapBtn~>value=nth(2 savedFilters)
+    form~>absFilterCapValue~>value=nth(3 savedFilters)
+    form~>absFilterResBtn~>value=nth(4 savedFilters)
+    form~>absFilterResValue~>value=nth(5 savedFilters)
+    rceRestorePinOrder(form nth(0 savedNetlist) nth(1 savedNetlist)
+                           nth(2 savedNetlist))
+    form~>bracketBtn~>value=nth(3 savedNetlist)
+    form~>bracketChoices~>value=nth(4 savedNetlist)
+    form~>hierDeliBtn~>value=nth(5 savedNetlist)
+    form~>hierDeliChoices~>value=nth(6 savedNetlist)
+    form~>nlRmInst~>value=nth(7 savedNetlist)
+    form~>nlParInfo~>value=list(
+      nth(8 savedNetlist) nth(9 savedNetlist) nth(10 savedNetlist))
+    form~>createNetlistView~>value=savedCreateView
+    form~>startRve~>value=savedStartRve
+    form~>viewName~>value=savedViewName
+    savedNativeTarget=when(and(savedViewLibrary savedViewCell)
+      list(savedViewLibrary savedViewCell savedViewName))
+    when(savedNativeTarget
+      form~>viewTarget~>value=rceNativeViewTargetString(savedNativeTarget)
+      putpropq(form rceNativeViewTargetString(savedNativeTarget)
+               rceNativeViewTargetExplicitValue))
+    form~>viewDeviceMap~>value=if(form~>extTool~>value=="CalXRC" then
+      nth(0 savedMaps) else nth(1 savedMaps))
+    form~>viewLayerMap~>value=nth(2 savedMaps)
+    rceSyncExtractTopCell(form)
+    rceSyncNativeView(form)
+    rceSyncNetlistCustomize(form)
+    rceSyncStartRve(form)
+    rceSyncReduction(form)
+    form~>createNetlistView~>value=savedCreateView
+    form~>startRve~>value=savedStartRve
+
+    form~>cadBatchTasks=SICO_profileDataValue(data "batch.tasks" nil)
+    form~>cadBatchEditIndex=nil
+    form~>batchRunScope~>value=scope
+    cadBatchScopeCB(form)
+    cadBatchSetEditorValues(form cadBatchDesignValues(form))
+    cadBatchRefreshReport(form)
+
+    SICO_lsfSetPreferredValues(
+      form SICO_profileDataValue(data "run.queue_name" "")
+      SICO_profileDataValue(data "run.server_name" ""))
+    SICO_lsfChoicesCB(form)
+    return(t)
+  )
+)
+
+procedure(rceProfileRevision()
+  "20260909.pin.order.v1"
+)
+
+SICO_profileRegisterAdapter("RCE" 'rceProfileCollect 'rceProfileApply)

@@ -1,0 +1,6 @@
+printf("MTS_ENV_CDS_LIB=%s\n" getShellEnvVar("CDS_LIB"))
+printf("MTS_ENV_CDS_CDSLIB=%s\n" getShellEnvVar("CDS_CDSLIB"))
+printf("MTS_ENV_CDSINIT=%s\n" getShellEnvVar("CDSINIT"))
+printf("MTS_DD_STARTUP=%L\n" ddGetStartup("cds.lib"))
+printf("MTS_DD_LIBS=%L\n" foreach(mapcar lib ddGetLibList() lib~>name))
+exit()

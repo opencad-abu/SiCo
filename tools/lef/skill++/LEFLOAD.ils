@@ -1,0 +1,53 @@
+lefFormLoadDataState=nil
+lefLoadedInlineCellsState=nil
+lefLoadedExecutableState=nil
+
+procedure(lefLoadUsesCadTempPath()
+  t
+)
+
+procedure(lefSetFormLoadData(data)
+  lefFormLoadDataState=data
+)
+
+procedure(lefGetFormLoadData()
+  lefFormLoadDataState
+)
+
+procedure(lefSetLoadedInlineCells(cells)
+  lefLoadedInlineCellsState=cells
+)
+
+procedure(lefLoadedInlineCellNames()
+  lefLoadedInlineCellsState
+)
+
+procedure(lefSetLoadedExecutable(executable)
+  lefLoadedExecutableState=executable
+)
+
+procedure(lefLoadedAbstractExecutable()
+  lefLoadedExecutableState
+)
+
+procedure(lefResetLoadedFormState()
+  lefSetFormLoadData(nil)
+  lefSetLoadedInlineCells(nil)
+  lefSetLoadedExecutable(nil)
+  lefResetLoadedBinOptions()
+)
+
+procedure(lefFormDataValue(data name)
+  let((pair)
+    pair=assoc(name data)
+    if(pair then cadr(pair) else nil)
+  )
+)
+
+procedure(lefApplyFormData(form data)
+  lefProfileApplyForm(form data)
+)
+
+procedure(lefLoadConfigCB(form)
+  SICO_profileLoadCB(form "LEF")
+)

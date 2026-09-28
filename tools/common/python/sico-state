@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+"""Development entry; runtime installs use the compiled sico-state launcher."""
+
+from sicotemp_cli import main
+
+if __name__ == "__main__":
+    raise SystemExit(main())

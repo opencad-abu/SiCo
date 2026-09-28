@@ -1,0 +1,39 @@
+;------------------------------------------------------------------------------
+; Shared multi-cell controls for the DRC, LVS, and RCE layout forms.
+;------------------------------------------------------------------------------
+
+defclass(BATCHGUI ()
+  (
+    (batchFlow          @initform "DRC" @initarg batchFlow)
+    (batchRunScope      @initform nil)
+    (batchTaskLay       @initform nil)
+    (batchParallelCells @initform nil)
+  )
+)
+
+defmethod(makeBatchControls ((inst BATCHGUI))
+  inst->batchRunScope=hiCreateRadioField(
+    ?name        'batchRunScope
+    ?prompt      "Run Scope:"
+    ?choices     '("Single Cell" "Multiple Cells")
+    ?defValue    "Single Cell"
+    ?itemsPerRow 2
+    ?callback    list("cadBatchScopeCB(hiGetCurrentForm())")
+  )
+  inst->batchTaskLay=cadBatchCreateTaskLayout(inst->batchFlow)
+)
+
+defmethod(makeBatchParallelCells ((inst BATCHGUI))
+  inst->batchParallelCells=hiCreateComboField(
+    ?name      'batchParallelCells
+    ?prompt    "Parallel Cells:"
+    ?items     '("1" "2" "4" "8" "16")
+    ?defValue  "2"
+    ?editable  nil
+    ?invisible t
+  )
+)
+
+procedure(cadBatchGuiRevision()
+  "20260812.common.v1"
+)

@@ -1,0 +1,359 @@
+; Development source bootstrap; protected runtimes use SICO_toolsInitialize.
+let((commonSkill)
+  commonSkill=strcat("/" buildString(reverse(cdr(reverse(
+    parseString(simplifyFilename(get_filename(piport) t) "/")))) "/")
+    "/../../common/skill/")
+  load(strcat(commonSkill "SICO_environment.il"))
+  load(strcat(commonSkill "SICO_installation.il")))
+
+;------------------------------------------------------------------------------
+; LVS frontend loader.
+;------------------------------------------------------------------------------
+
+unless(and(isCallable('cadCommonGuiModulesRevision)
+             cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
+             isCallable('SICO_lsfModulesRevision)
+             SICO_lsfModulesRevision()=="20260924.flow.environment.v3"
+             isCallable('lvsLoaderRevision)
+             lvsLoaderRevision()=="20260924.flow.environment.v3"
+             isCallable('SICO_tomlRevision)
+             SICO_tomlRevision()=="20260922.sico.temp.v6"
+             isCallable('SICO_profileRevision)
+             SICO_profileRevision()=="20260924.profile.environment.v4"
+             isCallable('SICO_profileGuiRevision)
+             SICO_profileGuiRevision()=="20260818.profile.gui.v2"
+             isCallable('lvsProfileRevision)
+             lvsProfileRevision()=="20260820.rce.live.log.v4"
+             isCallable('SICO_profileAdapter)
+             SICO_profileAdapter("LVS")
+             isCallable('SICO_guiProtocolRevision)
+             SICO_guiProtocolRevision()=="20260814.cadgui.v1"
+             isCallable('lvsCustomSvrfRevision)
+             lvsCustomSvrfRevision()=="20260813.custom.svrf.common.v1"
+             isCallable('lvsCustomSvrfGuiRevision)
+             lvsCustomSvrfGuiRevision()=="20260813.custom.svrf.common.v1"
+             isCallable('cadBaseLvsOptionsRevision)
+             cadBaseLvsOptionsRevision()=="20260908.recognize.gates.v1"
+             isCallable('cadBaseLvsCustomSvrfRevision)
+             cadBaseLvsCustomSvrfRevision()=="20260812.custom.svrf.align.v2"
+             isCallable('cadBaseCustomSvrfRevision)
+             cadBaseCustomSvrfRevision()=="20260813.custom.svrf.common.v1"
+             isCallable('cadBaseRuleFileLabelRevision)
+             cadBaseRuleFileLabelRevision()=="20260812.rule.file.label.v1"
+             isCallable('cadBaseCdlIncludeRevision)
+             cadBaseCdlIncludeRevision()=="20260812.cdl.include.v2"
+             isCallable('cadBaseInputRevision)
+             cadBaseInputRevision()=="20260716.input.sync.v1"
+             isCallable('lvsCdlIncludeRevision)
+             lvsCdlIncludeRevision()=="20260812.cdl.include.v2"
+             isCallable('lvsCdlIncludeConfigRevision)
+             lvsCdlIncludeConfigRevision()=="20260812.cdl.include.v2"
+             isCallable('lvsCdlIncludeGuiRevision)
+             lvsCdlIncludeGuiRevision()=="20260812.cdl.include.layout.v3"
+             isCallable('lvsCdlIncludeBatchRevision)
+             lvsCdlIncludeBatchRevision()=="20260812.cdl.include.v2"
+             isCallable('lvsAbsolutePathRevision)
+             lvsAbsolutePathRevision()=="20260812.toml.absolute.paths.v1"
+             isCallable('lvsInputSyncRevision)
+             lvsInputSyncRevision()=="20260817.input.sync.v1"
+             isCallable('lvsInputSyncGuiRevision)
+             lvsInputSyncGuiRevision()=="20260817.input.sync.v1"
+             isCallable('lvsAdvancedOptionsGuiRevision)
+             lvsAdvancedOptionsGuiRevision()=="20260817.advanced.options.v1"
+             isCallable('lvsStageCdlIncludeRevision)
+             lvsStageCdlIncludeRevision()=="20260812.cdl.include.v2"
+             isCallable('lvsStageAbsolutePathRevision)
+             lvsStageAbsolutePathRevision()=="20260812.toml.absolute.paths.v1"
+             isCallable('lvsStageUsesCadTempPath)
+             lvsStageUsesCadTempPath()
+             isCallable('lvsStageRunRootRevision)
+             lvsStageRunRootRevision()=="20260924.flow.environment.v3"
+             isCallable('lvsStageCdlIncludeConfigRevision)
+             lvsStageCdlIncludeConfigRevision()=="20260812.cdl.include.v2"
+             isCallable('lvsStageCdlIncludeGuiRevision)
+             lvsStageCdlIncludeGuiRevision()=="20260812.cdl.include.v2"
+             isCallable('lvsRunUsesCadTempPath)
+             lvsRunUsesCadTempPath()
+             isCallable('lvsLogDirRevision)
+             lvsLogDirRevision()=="20260817.log.artifacts.v1"
+             isCallable('lvsRveLauncherRevision)
+             lvsRveLauncherRevision()=="20260828.prompt.return.v1"
+             isCallable('lvsOpenRve)
+             isCallable('lvsShowCompletionSummary)
+             isCallable('cadBatchCoreRevision)
+             cadBatchCoreRevision()=="20260923.batch.commands.v3"
+             isCallable('cadCommonGuiModulesRevision)
+           cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
+           isCallable('cadBaseHardwareRevision)
+             cadBaseHardwareRevision()=="20260820.lsf.monitor.v7"
+             isCallable('SICO_lsfModulesRevision)
+           SICO_lsfModulesRevision()=="20260924.flow.environment.v3"
+           isCallable('SICO_lsfRevision)
+             SICO_lsfRevision()=="20260901.form.lifecycle.v1"
+             isCallable('SICO_lsfMonitorRevision)
+             SICO_lsfMonitorRevision()=="20260924.sico.monitor.environment.v3")
+
+procedure(lvsLoaderRevision()
+  "20260924.flow.environment.v3"
+)
+
+procedure(lvsResolveToolsRoot()
+  SICO_installationPath(SICO_installationRoot() "tools"))
+
+procedure(lvsLoadFile(path)
+  if(and(path isFile(path)) then
+    load(path)
+  else
+    warn("LVS loader cannot find: %L\n" path)
+    nil
+  )
+)
+
+procedure(lvsLoadBaseGui()
+  if(and(isCallable('cadBaseGuiRevision)
+           cadBaseGuiRevision()=="20260721.case.sensitive.v2"
+           isCallable('cadCommonGuiModulesRevision)
+           cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
+           isCallable('cadBaseHardwareRevision)
+           cadBaseHardwareRevision()=="20260820.lsf.monitor.v7"
+           isCallable('cadBaseLvsOptionsRevision)
+           cadBaseLvsOptionsRevision()=="20260908.recognize.gates.v1"
+           isCallable('cadBaseLvsCustomSvrfRevision)
+           cadBaseLvsCustomSvrfRevision()=="20260812.custom.svrf.align.v2"
+           isCallable('cadBaseRuleFileLabelRevision)
+           cadBaseRuleFileLabelRevision()=="20260812.rule.file.label.v1"
+           isCallable('cadBaseCdlIncludeRevision)
+           cadBaseCdlIncludeRevision()=="20260812.cdl.include.v2"
+           isCallable('cadBaseInputRevision)
+           cadBaseInputRevision()=="20260716.input.sync.v1"
+           isCallable('makeLayInp) isCallable('makeOutDir)
+           isCallable('makeRunCpus) isCallable('makeLvsHcell)
+           isCallable('makeLvsCustomSvrf) isCallable('makeCustomSvrf)
+           isCallable('cadCustomSvrfBind) isCallable('makeCdlInclude)
+           isCallable('cadCdlIncludeCB) isCallable('cadCdlIncludeInputTypeCB)
+           isCallable('makeNlOpt)) then
+    t
+  else
+    and(lvsLoadFile(strcat(lvsCommonRoot "/skill++/BASEGUI.ils"))
+          lvsLoadFile(strcat(lvsCommonRoot "/skill++/INPUTGUI.ils"))
+          lvsLoadFile(strcat(lvsCommonRoot "/skill++/OUTPUTGUI.ils"))
+          lvsLoadFile(strcat(lvsCommonRoot "/skill++/CUSTOMSVRFGUI.ils"))
+          lvsLoadFile(strcat(lvsCommonRoot "/skill++/LVSOPTGUI.ils"))
+          lvsLoadFile(strcat(lvsCommonRoot "/skill++/HARDWAREGUI.ils"))
+          lvsLoadFile(strcat(lvsCommonRoot "/skill++/TOOLSETGUI.ils")))
+  )
+)
+
+procedure(lvsLoadBatchSupport()
+  if(and(isCallable('cadBatchAdapterRevision)
+           cadBatchAdapterRevision()=="20260812.common.v1"
+           isCallable('cadBatchGuiSharedRevision)
+           cadBatchGuiSharedRevision()=="20260812.common.v1"
+           isCallable('cadBatchRowsRevision)
+           cadBatchRowsRevision()=="20260812.common.v1"
+           isCallable('cadBatchCoreRevision)
+           cadBatchCoreRevision()=="20260923.batch.commands.v3"
+           isCallable('cadBatchMonitorRevision)
+           cadBatchMonitorRevision()=="20260902.form.lifecycle.v1"
+           isCallable('cadBatchGuiRevision)
+           cadBatchGuiRevision()=="20260812.common.v1") then
+    t
+  else
+    let((ok)
+      ok=t
+      foreach(path
+        list(
+          strcat(lvsCommonRoot "/skill/SICO_batchAdapter.il")
+          strcat(lvsCommonRoot "/skill/SICO_batchGui.il")
+          strcat(lvsCommonRoot "/skill/SICO_batchRows.il")
+          strcat(lvsCommonRoot "/skill/SICO_batchCore.il")
+          strcat(lvsCommonRoot "/skill/SICO_batchMonitor.il")
+          strcat(lvsCommonRoot "/skill++/BATCHGUI.ils"))
+        when(ok
+          unless(lvsLoadFile(path)
+            ok=nil)))
+      ok
+    )
+  )
+)
+
+procedure(lvsLoadFrontend()
+  if(and(isCallable('lvsFrontendRevision)
+           lvsFrontendRevision()==lvsLoaderRevision()
+           isCallable('SICO_tomlRevision)
+           SICO_tomlRevision()=="20260922.sico.temp.v6"
+           isCallable('SICO_profileRevision)
+           SICO_profileRevision()=="20260924.profile.environment.v4"
+           isCallable('SICO_profileGuiRevision)
+           SICO_profileGuiRevision()=="20260818.profile.gui.v2"
+           isCallable('lvsProfileRevision)
+           lvsProfileRevision()=="20260820.rce.live.log.v4"
+           isCallable('SICO_profileAdapter)
+           SICO_profileAdapter("LVS")
+           isCallable('SICO_guiProtocolRevision)
+           SICO_guiProtocolRevision()=="20260814.cadgui.v1"
+           isCallable('lvsCustomSvrfRevision)
+           lvsCustomSvrfRevision()=="20260813.custom.svrf.common.v1"
+           isCallable('lvsCustomSvrfGuiRevision)
+           lvsCustomSvrfGuiRevision()=="20260813.custom.svrf.common.v1"
+           isCallable('cadBaseLvsOptionsRevision)
+           cadBaseLvsOptionsRevision()=="20260908.recognize.gates.v1"
+           isCallable('cadBaseLvsCustomSvrfRevision)
+           cadBaseLvsCustomSvrfRevision()=="20260812.custom.svrf.align.v2"
+           isCallable('cadBaseCustomSvrfRevision)
+           cadBaseCustomSvrfRevision()=="20260813.custom.svrf.common.v1"
+           isCallable('cadBaseRuleFileLabelRevision)
+           cadBaseRuleFileLabelRevision()=="20260812.rule.file.label.v1"
+           isCallable('cadBaseCdlIncludeRevision)
+           cadBaseCdlIncludeRevision()=="20260812.cdl.include.v2"
+           isCallable('cadBaseInputRevision)
+           cadBaseInputRevision()=="20260716.input.sync.v1"
+           isCallable('lvsCdlIncludeRevision)
+           lvsCdlIncludeRevision()=="20260812.cdl.include.v2"
+           isCallable('lvsCdlIncludeConfigRevision)
+           lvsCdlIncludeConfigRevision()=="20260812.cdl.include.v2"
+           isCallable('lvsCdlIncludeGuiRevision)
+           lvsCdlIncludeGuiRevision()=="20260812.cdl.include.layout.v3"
+           isCallable('lvsCdlIncludeBatchRevision)
+           lvsCdlIncludeBatchRevision()=="20260812.cdl.include.v2"
+           isCallable('lvsAbsolutePathRevision)
+           lvsAbsolutePathRevision()=="20260812.toml.absolute.paths.v1"
+           isCallable('lvsInputSyncRevision)
+           lvsInputSyncRevision()=="20260817.input.sync.v1"
+           isCallable('lvsInputSyncGuiRevision)
+           lvsInputSyncGuiRevision()=="20260817.input.sync.v1"
+           isCallable('lvsAdvancedOptionsGuiRevision)
+           lvsAdvancedOptionsGuiRevision()=="20260817.advanced.options.v1"
+           isCallable('lvsStageCdlIncludeRevision)
+           lvsStageCdlIncludeRevision()=="20260812.cdl.include.v2"
+           isCallable('lvsStageAbsolutePathRevision)
+           lvsStageAbsolutePathRevision()=="20260812.toml.absolute.paths.v1"
+           isCallable('lvsStageUsesCadTempPath)
+           lvsStageUsesCadTempPath()
+           isCallable('lvsStageRunRootRevision)
+           lvsStageRunRootRevision()=="20260924.flow.environment.v3"
+           isCallable('lvsStageCdlIncludeConfigRevision)
+           lvsStageCdlIncludeConfigRevision()=="20260812.cdl.include.v2"
+           isCallable('lvsStageCdlIncludeGuiRevision)
+           lvsStageCdlIncludeGuiRevision()=="20260812.cdl.include.v2"
+           isCallable('cadDisplayLvsForm)
+           isCallable('cadDisplayStreamGdsForm)
+           isCallable('cadDisplayExportCdlForm)
+           isCallable('SICO_windowIconRevision)
+           SICO_windowIconRevision()=="20260921.sico.flow.icon.v1"
+           isCallable('SICO_setWindowIcon)
+           isCallable('GUI_flowLogOpen)
+           isCallable('SICO_lsfModulesRevision)
+           SICO_lsfModulesRevision()=="20260924.flow.environment.v3"
+           isCallable('SICO_lsfRevision)
+           SICO_lsfRevision()=="20260901.form.lifecycle.v1"
+           isCallable('SICO_lsfMonitorRevision)
+           SICO_lsfMonitorRevision()=="20260924.sico.monitor.environment.v3"
+           isCallable('cadCommonGuiModulesRevision)
+           cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
+           isCallable('cadBaseHardwareRevision)
+           cadBaseHardwareRevision()=="20260820.lsf.monitor.v7"
+           isCallable('SICO_lsfStartQueueDiscovery)
+           isCallable('SICO_lsfValidateSelection)
+           isCallable('SICO_lsfWrapCommand)
+           isCallable('SICO_lsfCancelCommand)
+           isCallable('cadBatchCoreRevision)
+           cadBatchCoreRevision()=="20260923.batch.commands.v3"
+           isCallable('cadBatchFlowAdapter)
+           cadBatchFlowAdapter("LVS")
+           isCallable('lvsStageProjectDir)
+           isCallable('SICO_absolutePath)
+           isCallable('SICO_fileStem)
+           isCallable('SICO_tempDir)
+           isCallable('SICO_tempPath)
+           isCallable('SICO_tempEnvironment)
+           isCallable('lvsRunModeCB)
+           isCallable('lvsSyncInputNames)
+           isCallable('lvsRunUsesCadTempPath)
+           lvsRunUsesCadTempPath()
+           isCallable('lvsLogDirRevision)
+           lvsLogDirRevision()=="20260817.log.artifacts.v1"
+           isCallable('lvsRveLauncherRevision)
+           lvsRveLauncherRevision()=="20260828.prompt.return.v1"
+           isCallable('lvsBatchStart)
+           isCallable('lvsOpenRve)
+           isCallable('lvsShowCompletionSummary)
+           isCallable('lvsCdlIncludeBatchRevision)
+           isCallable('lvsPromptOpenRve)
+           isCallable('lvsHcellCB)
+           isCallable('cadCdlIncludeCB)
+           isCallable('cadCdlIncludeInputTypeCB)
+           isCallable('cadLvsCustomSvrfCB)
+           isCallable('cadLvsCustomSvrfBind)
+           isCallable('cadCustomSvrfCB)
+           isCallable('cadCustomSvrfBind)) then
+    lvsFrontendLoaded=t
+    t
+  else
+    let((ok)
+      ok=and(lvsLoadFile(strcat(lvsCommonRoot "/skill/SICO_environment.il"))
+        lvsLoadFile(strcat(lvsCommonRoot "/skill/SICO_installation.il"))
+        lvsLoadFile(strcat(lvsCommonRoot "/skill/SICO_toml.il")))
+      when(ok
+        ok=lvsLoadFile(strcat(lvsCommonRoot "/skill/SICO_profile.il")))
+      when(ok
+        ok=lvsLoadFile(strcat(lvsCommonRoot "/skill++/PROFILEGUI.ils")))
+      when(ok
+        ok=lvsLoadFile(strcat(lvsCommonRoot "/skill/SICO_guiProtocol.il")))
+      when(ok
+        ok=and(lvsLoadFile(strcat(lvsCommonRoot "/skill/SICO_lsf.il"))
+          lvsLoadFile(strcat(lvsCommonRoot "/skill/SICO_lsfSelection.il"))
+          lvsLoadFile(strcat(lvsCommonRoot "/skill/SICO_lsfProtocol.il"))
+          lvsLoadFile(strcat(lvsCommonRoot "/skill/SICO_lsfProcess.il"))
+          lvsLoadFile(strcat(lvsCommonRoot "/skill/SICO_lsfCommands.il"))
+          lvsLoadFile(strcat(lvsCommonRoot "/skill/SICO_lsfHosts.il"))
+          lvsLoadFile(strcat(lvsCommonRoot "/skill/SICO_lsfQueues.il"))
+          lvsLoadFile(strcat(lvsCommonRoot "/skill/SICO_lsfChoices.il"))))
+      when(ok
+        ok=lvsLoadFile(strcat(lvsCommonRoot "/skill/SICO_lsfMonitor.il")))
+      when(ok
+        ok=lvsLoadFile(strcat(lvsCommonRoot "/skill/SICO_envOptions.il")))
+      when(ok
+        ok=lvsLoadBaseGui())
+      when(ok
+        ok=lvsLoadBatchSupport())
+      when(ok
+        foreach(path
+          list(
+            strcat(lvsUtilityRoot "/skill/UI_messageApp.il")
+            strcat(lvsUtilityRoot "/skill/UI_askApp.il")
+            strcat(lvsUtilityRoot "/skill/UI_windowIcon.il")
+            strcat(lvsUtilityRoot "/skill/UI_flowLog.il")
+            strcat(lvsSkillRoot "/skill++/LVSCFG.ils")
+            strcat(lvsSkillRoot "/skill++/STAGECFG.ils")
+            strcat(lvsSkillRoot "/skill++/LVSCB.ils")
+            strcat(lvsSkillRoot "/skill++/LVSRUN.ils")
+            strcat(lvsSkillRoot "/skill++/STAGECB.ils")
+            strcat(lvsSkillRoot "/skill++/LVSPROFILE.ils")
+            strcat(lvsSkillRoot "/skill++/LVSGUI.ils")
+            strcat(lvsSkillRoot "/skill++/STAGEGUI.ils"))
+          when(ok
+            unless(lvsLoadFile(path)
+              ok=nil))))
+      when(ok
+        lvsFrontendLoaded=t)
+      ok
+    )
+  )
+)
+
+)
+
+lvsToolsRoot=lvsResolveToolsRoot()
+lvsSkillRoot=when(lvsToolsRoot
+  simplifyFilename(strcat(lvsToolsRoot "/lvs") t))
+lvsCommonRoot=when(lvsToolsRoot
+  simplifyFilename(strcat(lvsToolsRoot "/common") t))
+lvsUtilityRoot=when(lvsToolsRoot
+  simplifyFilename(strcat(lvsToolsRoot "/utility") t))
+
+if(and(lvsSkillRoot lvsCommonRoot lvsUtilityRoot) then
+  lvsLoadFrontend()
+else
+  warn("LVS root is not configured. Set SICO_HOME; tools are expected under SICO_HOME/tools.\n")
+)

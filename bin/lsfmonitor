@@ -1,0 +1,41 @@
+#!/bin/sh
+set -eu
+
+program=lsfmonitor
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+product_root=$(CDPATH= cd -- "$script_dir/.." && pwd -P)
+. "$product_root/tools/common/sh/sico-installation.sh"
+sico_installation "$product_root"
+sico_launcher_environment
+tools_root=$SICO_HOME/tools
+entry=$tools_root/common/python/sico-lsf
+
+if [ ! -f "$entry" ]; then
+    echo "$program: Python entry is unavailable: $entry" >&2
+    exit 2
+fi
+
+python=${SICO_PYTHON-}
+if [ -z "$python" ] && [ -n "${SICO_PYTHON_ROOT-}" ]; then
+    python=${SICO_PYTHON_ROOT%/}/bin/python3
+fi
+if [ -z "$python" ]; then
+    python=python3
+fi
+
+case $python in
+    */*) [ -f "$python" ] && [ -x "$python" ] ;;
+    *) command -v "$python" >/dev/null 2>&1 ;;
+esac || {
+    echo "$program: Python is not executable: $python" >&2
+    exit 2
+}
+
+if [ -z "${SICO_LSF_MONITOR_ORIG_LD_LIBRARY_PATH+x}" ]; then
+    export SICO_LSF_MONITOR_ORIG_LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}
+fi
+export LD_LIBRARY_PATH=${SICO_SYSTEM_LD_LIBRARY_PATH-}
+export PYTHONDONTWRITEBYTECODE=1
+export PYTHONNOUSERSITE=1
+unset PYTHONHOME PYTHONPATH LD_PRELOAD LD_AUDIT
+exec "$python" -s "$entry" monitor "$@"

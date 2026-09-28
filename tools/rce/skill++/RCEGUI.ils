@@ -1,0 +1,455 @@
+;==============================================================================
+;__Author__ : Sunny.Xia
+;__Date__   : 2023/08/28
+;__Version__: 0.01
+;__Coding__ : SKILL++ (Cadence algebraic syntax)
+;==============================================================================
+;Desicrption:
+;  RCE GUI class
+;==============================================================================
+; hiCreateLayoutForm publishes rceForm as a SKILL global value.  Import it so
+; SKILL++ lifecycle guards do not resolve a separate unbound lexical variable.
+importSkillVar(rceForm)
+
+when(and(boundp('rceForm) rceForm hiIsForm(rceForm)
+         getq(rceForm rceReductionFormVersion)!="20260909.pin.order.v1")
+  when(hiIsFormDisplayed(rceForm)
+    hiFormClose(rceForm))
+  unless(hiIsFormDisplayed(rceForm)
+    when(hiDeleteForm(rceForm)
+      rceForm=nil))
+)
+
+defclass(RCEGUI (PROFILEGUI INPUTGUI OUTPUTGUI LVSOPTGUI EXTOPTGUI HARDWARE
+                 TOOLSETGUI BATCHGUI RCEREDUCTIONGUI)
+  (;slot start
+    (title      @initform extstrStruc->title
+                @initarg  title
+    )
+    (cmd        @initform extstrStruc->runcmd
+                @initarg  cmd
+    )
+    (formdone   @initform extstrStruc->formdone
+                @initarg  formdone
+    )
+    (inpLay        @initform nil)
+    (inputSync     @initform nil)
+    (schToLay      @initform nil)
+    (layToSch      @initform nil)
+    (inputMore     @initform nil)
+    (inputMoreContents @initform nil)
+    (cdlRunDirectory @initform nil)
+    (outLay        @initform nil)
+    (outputActions @initform nil)
+    (createNetlistView @initform nil)
+    (startRve      @initform nil)
+    (nativeViewLay @initform nil)
+    (viewKind      @initform nil)
+    (viewKindFixed @initform nil)
+    (viewName      @initform nil)
+    (viewTarget    @initform nil)
+    (viewDeviceMap @initform nil)
+    (viewLayerMap  @initform nil)
+    (lvsOptLay     @initform nil)
+    (lvsMore       @initform nil)
+    (lvsMoreContents @initform nil)
+    (extOptLay     @initform nil)
+    (nlLay         @initfomr nil)
+    (cpus          @initform nil)
+    (hardwareLay   @initform nil)
+    (toolLay       @initform nil)
+    (mainLay       @initform nil)
+    (mainForm      @initform nil)
+  );slot end
+);defclass RCEGUI
+
+defmethod(makeInputNameSync ((inst RCEGUI))
+  inst->schToLay=hiCreateButton(
+    ?name       'schToLay
+    ?buttonText "->"
+    ?callback   "(rceSyncInputNames hiGetCurrentForm() \"Schematic\")"
+    ?toolTip    "Copy Schematic Library/Cell to Layout"
+  )
+  inst->layToSch=hiCreateButton(
+    ?name       'layToSch
+    ?buttonText "<-"
+    ?callback   "(rceSyncInputNames hiGetCurrentForm() \"Layout\")"
+    ?toolTip    "Copy Layout Library/Cell to Schematic"
+  )
+  inst->inputSync=makevbl('inputSync
+    list(list('stretch_item 1)
+          inst->schToLay
+          inst->layToSch
+          list('stretch_item 1))
+    ?s 2)
+);defmethod makeInputNameSync
+
+defmethod(makeInpLay  ((inst RCEGUI))
+  makeInpType(inst)
+  makeFrontendInp(inst)
+  makeBackendInp(inst)
+  makeInputNameSync(inst)
+  inst->designInp=makehbl('designInp
+    list(list(inst->frontendInp 'stretch 1)
+          inst->inputSync
+          list(inst->backendInp 'stretch 1)))
+  makeSvdbInp(inst)
+  makeCciInp(inst)
+  makeCdlInclude(inst)
+  inst->cdlRunDirectory=hiCreateFileSelectorField(
+    ?name 'cdlRunDirectory
+    ?prompt "CDL Run Directory:"
+    ?mode 'directoryOnly
+    ?invisible t
+  )
+  inst->inputMoreContents=makevbl(
+    'inputMoreContents list(inst->cdlInclude inst->cdlRunDirectory))
+  inst->inputMore=hiCreateDisclosureTriangle(
+    ?name        'inputMore
+    ?labelText   "More Input Options"
+    ?onFields    '(inputMoreContents)
+    ?offFields   '()
+    ?persistent  nil
+  )
+  inst->batchFlow="RCE"
+  makeBatchControls(inst)
+  inst->inpLay=makevbl(
+    'rceInp
+    list(inst->batchRunScope inst->inpType inst->designInp
+         inst->svdbInp inst->cciInp inst->batchTaskLay
+         inst->inputMore inst->inputMoreContents)
+    ?f "Input Configuration")
+);defmethod makeInpLay
+
+defmethod(makeLvsOptLay ((inst RCEGUI))
+  makeLvsRunset(inst)
+  makeLvsHcell(inst)
+  makeLvsIgnoreError(inst)
+  makeLvsCase(inst)
+  makeLvsVirtualConn(inst)
+  makeLvsVirtualConnName(inst)
+  makeLvsRecognizeGates(inst)
+  makeCustomSvrf(inst)
+  inst->lvsBasicOpt=makehbl(
+    'lvsBasicOpt
+    list(inst->lvsIgnoreError inst->lvsCaseBtn
+         inst->lvsVirtualConn inst->lvsVirtualConnName))
+  inst->lvsMoreContents=makevbl(
+    'lvsMoreContents list(inst->lvsRecognizeGates inst->customSvrf))
+  inst->lvsMore=hiCreateDisclosureTriangle(
+    ?name        'lvsMore
+    ?labelText   "More LVS Options"
+    ?onFields    '(lvsMoreContents)
+    ?offFields   '()
+    ?persistent  nil
+  )
+  inst->lvsOptLay=makevbl(
+    'lvsOptLay
+    list(inst->lvsRunset inst->lvsHcell inst->lvsBasicOpt
+         inst->lvsMore inst->lvsMoreContents)
+    ?f "LVS Options")
+  inst->lvsExtOpt=inst->lvsOptLay
+);defmethod makeLvsOptLay
+
+defmethod(makeExtOptLay ((inst RCEGUI))
+  makeExtopt(inst)
+  inst->extOptLay=inst->extOpt
+);defmethod makeExtOptLay
+
+defmethod(makeCreateNetlistView ((inst RCEGUI))
+  inst->createNetlistView=hiCreateBooleanButton(
+    ?name           'createNetlistView
+    ?buttonText     "Create Parasitic Netlist View"
+    ?buttonLocation 'left
+    ?defValue       nil
+  )
+);defmethod makeCreateNetlistView
+
+defmethod(makeStartRve ((inst RCEGUI))
+  inst->startRve=hiCreateBooleanButton(
+    ?name           'startRve
+    ?buttonText     "Start RVE"
+    ?buttonLocation 'left
+    ?defValue       nil
+    ?enabled        nil
+    ?invisible      t
+  )
+);defmethod makeStartRve
+
+defmethod(makeNativeViewOptions ((inst RCEGUI))
+  inst->viewKind=hiCreateComboField(
+    ?name     'viewKind
+    ?prompt   "View Type:"
+    ?items    '("Smart View" "Extracted View")
+    ?defValue "Smart View"
+    ?editable nil
+    ?callback "(rceViewKindCB hiGetCurrentForm())"
+  )
+  inst->viewKindFixed=hiCreateStringField(
+    ?name     'viewKindFixed
+    ?prompt   "View Type:"
+    ?defValue "Calibre View"
+    ?editable nil
+    ?invisible t
+  )
+  inst->viewName=hiCreateStringField(
+    ?name     'viewName
+    ?prompt   "View Name:"
+    ?defValue "calibre"
+    ; Keep the legacy callback spelling visible for older form probes.
+    ; rceSyncNativeView hiGetCurrentForm()
+    ?callback "(rceViewNameCB hiGetCurrentForm())"
+  )
+  inst->viewTarget=hiCreateStringField(
+    ?name     'viewTarget
+    ?prompt   "View Target:"
+    ?defValue "Unavailable"
+    ?editable nil
+    ?callback "(rceViewTargetCB hiGetCurrentForm())"
+  )
+  inst->viewDeviceMap=hiCreateFileSelectorField(
+    ?name 'viewDeviceMap
+    ?prompt "Device Mapping File:"
+    ?mode 'existingFile
+  )
+  inst->viewLayerMap=hiCreateFileSelectorField(
+    ?name 'viewLayerMap
+    ?prompt "Layer Mapping File:"
+    ?mode 'existingFile
+  )
+  inst->nativeViewLay=makevbl('nativeViewLay
+    list(inst->viewKind inst->viewKindFixed inst->viewName inst->viewTarget
+          inst->viewDeviceMap inst->viewLayerMap))
+  inst->nativeViewLay->invisible=t
+);defmethod makeNativeViewOptions
+
+defmethod(makeOutLay ((inst RCEGUI))
+  makeOutDir(inst)
+  makeExtOutType(inst)
+  makeCreateNetlistView(inst)
+  makeReductionOptions(inst)
+  makeStartRve(inst)
+  makeNativeViewOptions(inst)
+  inst->outputActions=makehbl('outputActions
+    list(inst->createNetlistView inst->startRve) ?a left)
+  inst->outLay=makevbl('outLay
+                        list(inst->outType
+                              inst->outputActions
+                              inst->nativeViewLay
+                              list(inst->reductionEnableLay
+                                   'horiz_align 'left)
+                              list(inst->reductionOptions
+                                   'horiz_align 'none)
+                              inst->outDir)
+                        ?f "Output Configature")
+);defmethod makeOutLay
+
+defmethod(makeNlLay ((inst RCEGUI))
+  makeNlOpt(inst)
+  inst->nlLay=makevbl('nlLay list(inst->nlOpt) ?f "Netlist Customize")
+)
+
+defmethod(makeToolLay ((inst RCEGUI))
+  makeLvsTool(inst)
+  makeExtTool(inst)
+  inst->toolLay=makehbl('toolLay list(inst->lvsEngine inst->extEngine) ?f "Tools Configature")
+)
+
+defmethod(makeHardwareLay ((inst RCEGUI))
+  makeServers(inst)
+  makeLvsCpus(inst)
+  makeExtCpus(inst)
+  makeBatchParallelCells(inst)
+  inst->cpus=makehbl('cpus list(inst->lvsCpu inst->extCpu))
+  inst->hardwareLay=makevbl(
+    'hardwareLay list(inst->servers inst->cpus inst->batchParallelCells)
+    ?f "Hardware Configuration")
+)
+defmethod(makeMainLay ((inst RCEGUI))
+  inst->profileFlow="RCE"
+  makeProfileControls(inst)
+  makeInpLay(inst)
+  makeOutLay(inst)
+  makeLvsOptLay(inst)
+  makeExtOptLay(inst)
+  makeNlLay(inst)
+  makeHardwareLay(inst)
+  makeToolLay(inst)
+  inst->mainLay=makevbl('mainLay
+                         list(inst->profileLay
+                               inst->inpLay
+                               inst->lvsOptLay
+                               inst->extOptLay
+                               inst->outLay
+                               inst->nlLay
+                               inst->toolLay
+                               inst->hardwareLay)
+  )
+);defmethod makeMainLay
+
+defmethod(makeForm ((inst RCEGUI))
+  if(and(boundp('rceForm) rceForm hiIsForm(rceForm)) then
+    inst->mainForm=rceForm
+  else
+    progn(
+      when(and(boundp('rceForm) rceForm !hiIsForm(rceForm))
+        rceForm=nil)
+      makeMainLay(inst)
+      inst->mainForm=hiCreateLayoutForm(
+        'rceForm
+        inst->title
+        inst->mainLay
+        ?callback      inst->formdone
+        ?sizePolicy    'expanding
+        ?initialSize   760:940
+        ?buttonLayout  list('Empty
+                             list('Run\+Close 'rceRunCloseCB)
+                             list('Run inst->cmd)
+                             list('Close 'hiFormClose)
+                       )
+      )
+    )
+  )
+  inst->mainForm
+);defmethod makeForm
+
+procedure(rceBindCornerRows(form capacity)
+  let((index suffix)
+    form~>rceCornerSelectFields=nil
+    form~>rceCornerNameFields=nil
+    form~>rceCornerTempFields=nil
+    form~>rceCornerRowLayouts=nil
+    for(index 1 capacity
+      suffix=sprintf(nil "%02d" index)
+      form~>rceCornerSelectFields=append1(
+        form~>rceCornerSelectFields
+        get(form concat("rceCornerSelect" suffix)))
+      form~>rceCornerNameFields=append1(
+        form~>rceCornerNameFields
+        get(form concat("rceCornerName" suffix)))
+      form~>rceCornerTempFields=append1(
+        form~>rceCornerTempFields
+        get(form concat("rceCornerTemp" suffix)))
+      form~>rceCornerRowLayouts=append1(
+        form~>rceCornerRowLayouts
+        get(form concat("rceCornerRow" suffix)))
+      hiSetFieldMinSize(form concat("rceCornerName" suffix)
+                         ?widgetWidth 100)
+      hiSetFieldMinSize(form concat("rceCornerTemp" suffix)
+                         ?widgetWidth 80)
+    )
+    form~>rceCornerRowLayouts
+  )
+)
+
+procedure(cadDisplayRceForm()
+  if(and(boundp('rceForm) rceForm hiIsForm(rceForm)) then
+    progn(
+      unless(hiIsFormDisplayed(rceForm)
+        SICO_lsfChoicesCB(rceForm)
+        hiDisplayForm(rceForm))
+      rceForm)
+  else
+    let((gui)
+      when(and(boundp('rceForm) rceForm !hiIsForm(rceForm))
+        rceForm=nil)
+      gui=makeInstance('RCEGUI)
+      gui->title                = extstrStruc->title
+      gui->cmd                  = extstrStruc->cmd
+      gui->formdone             = extstrStruc->formdone
+      gui->inpChoices           = extstrStruc->inpChoices
+      gui->inpCB                = extstrStruc->inpCB
+      gui->cellNameCB           = extstrStruc->cellNameCB
+      gui->cdlFileCB            = extstrStruc->cdlFileCB
+      gui->gdsFileCB            = extstrStruc->gdsFileCB
+      gui->svdbDirCB            = extstrStruc->svdbDirCB
+      gui->cciDirCB             = extstrStruc->cciDirCB
+      gui->outDirChoices        = extstrStruc->outDirChoices
+      gui->outDirCB             = extstrStruc->outDirCB
+      gui->defOutDir            = extstrStruc->defOutDir
+      gui->lvsRunsetEnvName     = extstrStruc->lvsRunsetEnvName
+      gui->lvsRunsetChoices     = extstrStruc->lvsRunsetChoices
+      gui->lvsRunsetCB          = extstrStruc->lvsRunsetCB
+      gui->lvsHcellCB           = extstrStruc->lvsHcellCB
+      gui->lvsIgnoreErrorCB     = extstrStruc->lvsIgnoreErrorCB
+      gui->lvsVirtualConnCB     = extstrStruc->lvsVirtualConnCB
+      gui->lsfChoicesCB         = extstrStruc->lsfChoicesCB
+      gui->queueCB              = extstrStruc->queueCB
+      gui->runTypeChoices       = extstrStruc->runTypeChoices
+      gui->defQueueName         = extstrStruc->defQueueName
+      gui->queueChoices         = extstrStruc->queueChoices
+      gui->defSrvName           = extstrStruc->defSrvName
+      gui->srvChoices           = extstrStruc->srvChoices
+      gui->cpuChoices           = extstrStruc->cpuChoices
+      gui->lvsToolChoices       = extstrStruc->lvsToolChoices
+      gui->lvsToolDefValue      = extstrStruc->lvsToolDefValue
+      gui->extToolChoices       = extstrStruc->extToolChoices
+      gui->extToolDefValue      = extstrStruc->extToolDefValue
+      gui->extToolCB            = extstrStruc->extToolCB
+      gui->cornerChoices        = extstrStruc->cornerChoices
+      gui->cornerTypeChoices    = extstrStruc->cornerTypeChoices
+      gui->rcTechDirChoices     = extstrStruc->rcTechDirChoices
+      gui->rcTechDirCB          = extstrStruc->rcTechDirCB
+      gui->rcTechDirPathCB      = extstrStruc->rcTechDirPathCB
+      gui->tempChoices          = extstrStruc->tempChoices
+      gui->rcTypeChoices        = extstrStruc->rcTypeChoices
+      gui->tempDefvalue         = extstrStruc->tempDefvalue
+      gui->outTypeChoices       = extstrStruc->outTypeChoices
+      gui->cornerCB             = extstrStruc->cornerCB
+      gui->cornerTypeCB         = extstrStruc->cornerTypeCB
+      gui->rcTypeCB             = extstrStruc->rcTypeCB
+      gui->topCellSourceCB      = extstrStruc->topCellSourceCB
+      gui->nameSourceCB         = extstrStruc->nameSourceCB
+      gui->netSelBtnCB          = extstrStruc->netSelBtnCB
+      gui->netSchSelBtnCB       = extstrStruc->netSchSelBtnCB
+      gui->cellSelBtnCB         = extstrStruc->cellSelBtnCB
+      gui->cellLibSelBtnCB      = extstrStruc->cellLibSelBtnCB
+      gui->relFilterCapBtnCB    = extstrStruc->relFilterCapBtnCB
+      gui->absFilterCapBtnCB    = extstrStruc->absFilterCapBtnCB
+      gui->absFilterResBtnCB    = extstrStruc->absFilterResBtnCB
+      gui->outTypeCB            = extstrStruc->outTypeCB
+      gui->pinOrderBtnCB        = extstrStruc->pinOrderBtnCB
+      gui->pinOrderTypeCB       = extstrStruc->pinOrderTypeCB
+      gui->bracketBtnCB         = extstrStruc->bracketBtnCB
+      gui->hierDeliBtnCB        = extstrStruc->hierDeliBtnCB
+      gui->nlParInfoCB          = extstrStruc->nlParInfoCB
+      makeForm(gui)
+
+      hiInstantiateForm(gui->mainForm)
+      rceAlignReductionPrompts(gui->mainForm)
+      putpropq(gui->mainForm "20260909.pin.order.v1" rceReductionFormVersion)
+      putpropq(gui->mainForm nil cadProfilePathStates)
+      putpropq(gui->mainForm nil cadProfileSourcePath)
+      cadCustomSvrfBind(gui->mainForm)
+      rceBindCornerRows(gui->mainForm length(gui->cornerRowNames))
+      ddHiLinkFields(gui->mainForm~>schLib gui->mainForm~>schCell gui->mainForm~>schView)
+      ddHiLinkFields(gui->mainForm~>layLib gui->mainForm~>layCell gui->mainForm~>layView)
+      cadBatchBindForm(gui->mainForm "RCE")
+      rceRefreshProcessCorners(gui->mainForm)
+      rceSyncStartRve(gui->mainForm)
+      rceSyncNativeView(gui->mainForm)
+      rceSyncExtractTopCell(gui->mainForm)
+      rceSyncNetlistCustomize(gui->mainForm)
+      rceSyncReduction(gui->mainForm)
+      SICO_lsfChoicesCB(gui->mainForm)
+      hiDisplayForm(gui->mainForm)
+      gui->mainForm
+    );let
+  )
+);defun rceDispalyForm
+
+procedure(rceGuiRevision()
+  "20260909.pin.order.v1"
+)
+
+procedure(rceCustomSvrfGuiRevision()
+  "20260813.custom.svrf.common.v1"
+)
+
+procedure(rceCdlIncludeGuiRevision()
+  "20260812.cdl.include.layout.v3"
+)
+
+procedure(rceAdvancedOptionsGuiRevision()
+  "20260817.advanced.options.v1"
+)

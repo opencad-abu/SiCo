@@ -1,0 +1,171 @@
+unless(boundp('lefIpcTable)
+  lefIpcTable=makeTable("lefIpcTable" nil)
+)
+
+procedure(LEF_pythonEntry()
+  let((toolsRoot)
+    toolsRoot=SICO_toolsRoot()
+    or(
+      SICO_nativeEntry("lefgen")
+      SICO_envValue("LEF_PYTHON_ENTRY")
+      if(toolsRoot then
+        simplifyFilename(strcat(toolsRoot "/lef/python/lef") t))
+    )
+  )
+)
+
+procedure(lefRunUsesCadTempPath()
+  t
+)
+
+procedure(LEF_pythonExe()
+  let((pythonRoot)
+    pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
+    or(SICO_envValue("LEF_PYTHON")
+       SICO_envValue("SICO_PYTHON")
+       when(pythonRoot
+         simplifyFilename(strcat(pythonRoot "/bin/python3") t))
+       "python3"))
+)
+
+procedure(LEF_launchEnvCommand(args)
+  strcat("env -u PYTHONHOME -u PYTHONPATH "
+          SICO_tempEnvironment()
+          "LEF_ORIG_LD_LIBRARY_PATH="
+          SICO_shellQuote(or(getShellEnvVar("LD_LIBRARY_PATH") ""))
+          " LD_LIBRARY_PATH="
+          SICO_shellQuote(SICO_pythonLibraryPath())
+          " " args)
+)
+
+procedure(lefBackupRunData(runDir form)
+  let((cmd path)
+    cmd=strcat(
+      "base=" SICO_shellQuote(runDir)
+      "; if [ -e \"$base\" ] || [ -L \"$base\" ]; then"
+      " [ -d \"$base\" ] || exit 2;"
+      " tag=$(date +%m-%d-%H-%M-%S); backup=\"${base}.${tag}\"; index=1;"
+      " while [ -e \"$backup\" ] || [ -L \"$backup\" ]; do"
+      " backup=\"${base}.${tag}.${index}\"; index=$((index + 1)); done;"
+      " mv \"$base\" \"$backup\" || exit $?;"
+      " mkdir -p \"$base\" || exit $?;")
+    foreach(path list(form~>cdsLib~>value form~>optionsFile~>value
+                      lefCellListValue(form))
+      when(and(path path!="")
+        cmd=strcat(cmd
+          " input=" SICO_shellQuote(simplifyFilename(path t)) ";"
+          " case \"$input\" in \"$base\"/*)"
+          " rel=${input#\"$base\"/}; source=\"$backup/$rel\";"
+          " if [ -f \"$source\" ]; then"
+          " mkdir -p \"$base/$(dirname \"$rel\")\" || exit $?;"
+          " cp -p \"$source\" \"$base/$rel\" || exit $?; fi;; esac;")))
+    cmd=strcat(cmd " fi")
+    system(cmd)
+  )
+)
+
+procedure(lefIpcDataHandler(cid data)
+  nil
+)
+
+procedure(lefIpcErrHandler(cid data)
+  nil
+)
+
+procedure(lefIpcPostFunc(cid exitStatus)
+  let((meta pidFile launchLog resultMeta flowLogRequest summaryResult)
+    meta=lefIpcTable[cid]
+    launchLog=""
+    when(meta
+      pidFile=car(meta)
+      launchLog=cadr(meta)
+      resultMeta=nth(2 meta)
+      flowLogRequest=nth(3 meta)
+      when(and(pidFile isFile(pidFile))
+        deleteFile(pidFile))
+      lefIpcTable[cid]=nil)
+    when(resultMeta
+      resultMeta['flowLogRequest]=flowLogRequest
+      summaryResult=errset(lefSummaryDisplay(resultMeta exitStatus) t))
+    when(and(summaryResult car(summaryResult) flowLogRequest)
+      GUI_flowLogClose(flowLogRequest))
+    if(and(summaryResult car(summaryResult)) then
+      info("<INFO> LEF::Finished. LOG=\"%s\"\n" launchLog)
+    else
+      warn("<WARN> LEF::Finished with errors or incomplete output. "
+            "EXIT=" sprintf(nil "%L" exitStatus)
+            " LOG=\"" launchLog "\"\n"))
+  )
+)
+
+procedure(lefStart(form)
+  prog((configFile runDir logDir launchLog user lib runTag pid inp running
+         childId launchCmd resultMeta flowLogRequest)
+    info("<INFO> LEF::Starting Abstract Generator flow...\n")
+    unless(lefFormValidP(form)
+      return(nil))
+    unless(lefValidateForm(form)
+      return(nil))
+    runDir=lefRunDirFromForm(form)
+    user=getLogin()
+    lib=form~>lefLib~>value
+    runTag=lefRunTagFromForm(form)
+    pid=SICO_tempPath(strcat("lef.pid." user "." lib "." runTag))
+    unless(pid
+      warn("<WARN> LEF::Cannot create the PID file path.\n")
+      return(nil))
+    running="YES"
+    when(isFile(pid)
+      inp=infile(pid)
+      gets(childId inp)
+      close(inp)
+      running=GUI_askApp("LEF"
+        sprintf(nil
+          "A LEF process is running for the same target. Start another anyway?\n\nPID: %s"
+          childId)))
+    when(running=="NO"
+      info("<INFO> LEF::User canceled flow.\n")
+      return(nil))
+
+    unless(lefBackupRunData(runDir form)==0
+      warn("<WARN> LEF::Failed to back up existing run directory: %s\n"
+            runDir)
+      return(nil))
+    configFile=lefWriteToml(form)
+    unless(configFile
+      return(nil))
+    logDir=strcat(runDir "/log")
+    launchLog=strcat(logDir "/lef.launch.log")
+
+    system(strcat("mkdir -p " SICO_shellQuote(logDir)))
+    resultMeta=lefSummaryCaptureRun(
+      form runDir form~>lefFile~>value launchLog nil)
+    flowLogRequest=GUI_flowLogOpen("LEF" launchLog)
+    launchCmd=LEF_launchEnvCommand(
+      strcat("LEF_BACKUP_DONE=1 "
+              SICO_backendCommand("lefgen" LEF_pythonExe() LEF_pythonEntry()) " run "
+              SICO_shellQuote(configFile)))
+    launchCmd=SICO_lsfWrapCommand(
+      launchCmd form~>runType~>value form~>queueName~>value
+      form~>srvName~>value
+      form~>runCpu~>value nil launchLog)
+    info("<INFO> LEF::CMD=\"%s\"\n" launchCmd)
+    info("<INFO> LEF::LOG=\"%s\"\n" launchLog)
+    childId=ipcBeginProcess(
+      launchCmd "" 'lefIpcDataHandler 'lefIpcErrHandler
+      'lefIpcPostFunc launchLog)
+    unless(childId
+      warn("<WARN> LEF::Failed to start IPC process.\n")
+      when(resultMeta
+        resultMeta['flowLogRequest]=flowLogRequest
+        errset(lefSummaryDisplay(resultMeta -1) t))
+      return(nil))
+    lefIpcTable[childId]=list(pid launchLog resultMeta flowLogRequest)
+    inp=outfile(pid "w")
+    when(inp
+      fprintf(inp "%L\n" childId)
+      close(inp))
+    ipcActivateBatch(childId)
+    return(t)
+  )
+)

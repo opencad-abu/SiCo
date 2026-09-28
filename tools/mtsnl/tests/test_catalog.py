@@ -1,0 +1,37 @@
+"""Legacy collector; remove after scripts migrate to catalog case modules."""
+
+import pytest
+
+from catalog_query_cases import (
+    test_source_catalog_does_not_return_cleaned_overlay_path,
+    test_target_catalog_does_not_return_cleaned_overlay_path,
+    test_source_catalog_forwards_cold_provider_output_only,
+    test_source_catalog_rejects_nonfinite_cache_ttl,
+    test_source_catalog_rejects_invalid_timeout,
+)
+
+from catalog_cache_cases import (
+    test_source_catalog_cache_hit_skips_provider_and_reports_timing,
+    test_source_catalog_force_refresh_bypasses_completed_cache,
+    test_source_catalog_cache_ttl_zero_disables_storage,
+    test_source_catalog_cache_invalidates_recursive_include_and_environment,
+    test_source_catalog_cache_separates_forbidden_target_context_without_reading_target,
+    test_source_catalog_cache_does_not_retain_failed_provider,
+)
+
+from catalog_sharing_cases import (
+    test_source_catalog_cache_single_flight_for_same_key,
+    test_source_catalog_single_flight_broadcasts_output_to_waiters,
+    test_source_catalog_waiter_retries_after_owner_is_canceled,
+    test_source_catalog_cleanup_failure_is_consistent_and_not_cached,
+)
+
+from catalog_refresh_cases import (
+    test_source_catalog_force_refresh_waits_for_inflight_then_starts_successor,
+    test_concurrent_force_refresh_requests_share_one_refresh_generation,
+    test_force_refresh_join_during_refresh_cleanup_preserves_cache,
+)
+
+pytestmark = pytest.mark.usefixtures("protected_worker_context")
+
+__all__ = ['test_source_catalog_does_not_return_cleaned_overlay_path', 'test_target_catalog_does_not_return_cleaned_overlay_path', 'test_source_catalog_forwards_cold_provider_output_only', 'test_source_catalog_rejects_nonfinite_cache_ttl', 'test_source_catalog_rejects_invalid_timeout', 'test_source_catalog_cache_hit_skips_provider_and_reports_timing', 'test_source_catalog_force_refresh_bypasses_completed_cache', 'test_source_catalog_cache_ttl_zero_disables_storage', 'test_source_catalog_cache_invalidates_recursive_include_and_environment', 'test_source_catalog_cache_separates_forbidden_target_context_without_reading_target', 'test_source_catalog_cache_does_not_retain_failed_provider', 'test_source_catalog_cache_single_flight_for_same_key', 'test_source_catalog_single_flight_broadcasts_output_to_waiters', 'test_source_catalog_waiter_retries_after_owner_is_canceled', 'test_source_catalog_cleanup_failure_is_consistent_and_not_cached', 'test_source_catalog_force_refresh_waits_for_inflight_then_starts_successor', 'test_concurrent_force_refresh_requests_share_one_refresh_generation', 'test_force_refresh_join_during_refresh_cleanup_preserves_cache']

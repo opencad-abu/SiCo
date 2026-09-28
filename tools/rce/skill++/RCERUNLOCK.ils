@@ -1,0 +1,72 @@
+; Reserve, validate and release the run-directory launch lock. SKILL++ lexical scope.
+
+procedure(rceRunDirectory(form)
+  let((key base)
+    base=or(form~>outDirPath~>value "")
+    key=case(form~>inpType~>value
+      (("OA" "CDL+LAY")
+        when(and(strlen(or(form~>layLib~>value ""))>0
+                 strlen(or(form~>layCell~>value ""))>0)
+          strcat(form~>layLib~>value "." form~>layCell~>value)))
+      ("SCH+GDS"
+        when(and(strlen(or(form~>schLib~>value ""))>0
+                 strlen(or(form~>schCell~>value ""))>0)
+          strcat(form~>schLib~>value "." form~>schCell~>value)))
+      ("CDL+GDS"
+        when(strlen(or(form~>gdsCell~>value ""))>0
+          strcat("CDLGDS." form~>gdsCell~>value)))
+      ("SVDB"
+        when(strlen(or(form~>svdbCell~>value ""))>0
+          strcat("SVDB." form~>svdbCell~>value)))
+      ("CCI"
+        when(strlen(or(form~>cciCell~>value ""))>0
+          strcat("CCI." form~>cciCell~>value))))
+    when(and(strlen(base)>0 key)
+      SICO_absolutePath(strcat(base "/" key)))
+  )
+)
+
+procedure(rceRunLockCommand(action runDir token)
+  system(strcat("env -u PYTHONHOME -u PYTHONPATH LD_LIBRARY_PATH="
+    SICO_shellQuote(SICO_pythonLibraryPath()) " "
+    SICO_backendCommand("rce" RCE_pythonExe() RCE_pythonEntry()) " lock " SICO_shellQuote(action)
+    " " SICO_shellQuote(runDir) " " SICO_shellQuote(token)))
+)
+
+procedure(rceReserveRun(form)
+  prog((runDir token)
+    runDir=rceRunDirectory(form)
+    unless(runDir
+      GUI_messageApp('e "RCE"
+        "Complete the input library/cell and run directory before running.")
+      return(nil))
+    token=cadBatchNewId("RCE")
+    if(rceRunLockCommand("reserve" runDir token)==0 then
+      return(list(runDir token))
+    else
+      GUI_messageApp('e "RCE"
+        strcat("Cannot reserve the RCE run directory:\n" runDir
+          "\nAnother run may be active or queued. See CIW for details."))
+      return(nil))
+  )
+)
+
+procedure(rceReleaseRun(reservation)
+  when(reservation
+    rceRunLockCommand("release" car(reservation) cadr(reservation)))
+)
+
+procedure(rcePrint(form @optional reservation)
+  let((owned result)
+    unless(reservation
+      reservation=rceReserveRun(form)
+      owned=t)
+    when(reservation
+      unwindProtect(
+        when(and(equal(car(reservation) rceRunDirectory(form))
+                 rceRunLockCommand("check" car(reservation) cadr(reservation))==0)
+          result=rcePrintReserved(form))
+        when(owned rceReleaseRun(reservation))))
+    result
+  )
+)

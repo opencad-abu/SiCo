@@ -1,0 +1,249 @@
+; Handle input selection and synchronize extraction top-cell names. SKILL++ lexical scope.
+
+procedure(rceExtractTopCellValue(form)
+  let((source)
+    source=form~>topCellSource~>value
+    or(
+      case(form~>inpType~>value
+        ("OA"
+          if(source=="Schematic" then
+            form~>schCell~>value
+          else
+            form~>layCell~>value
+          )
+        )
+        ("SCH+GDS"
+          if(source=="Schematic" then
+            form~>schCell~>value
+          else
+            form~>gdsCell~>value
+          )
+        )
+        ("CDL+LAY"
+          if(source=="Schematic" then
+            form~>cdlCell~>value
+          else
+            form~>layCell~>value
+          )
+        )
+        ("CDL+GDS"
+          if(source=="Schematic" then
+            form~>cdlCell~>value
+          else
+            form~>gdsCell~>value
+          )
+        )
+        ("SVDB" form~>svdbCell~>value)
+        ("CCI"  form~>cciCell~>value)
+        (t "")
+      )
+      ""
+    )
+  )
+)
+
+procedure(rceSyncExtractTopCell(form)
+  let((singleCell topCell)
+    singleCell=member(form~>inpType~>value '("SVDB" "CCI"))
+    form~>topCellSource~>enabled=!singleCell
+    when(singleCell
+      form~>topCellSource~>value="Layout"
+    )
+    topCell=rceExtractTopCellValue(form)
+    form~>extractTopCell~>value=topCell
+    rceSyncCreateNetlistView(form)
+    rceSyncNativeView(form)
+    topCell
+  )
+)
+
+procedure(rceTopCellSourceCB(form)
+  rceSyncExtractTopCell(form)
+)
+
+procedure(rceInpCB(form)
+  let(()
+    when(form->inputSync
+      form->inputSync->invisible=(form->inpType->value!="OA")
+    )
+    cadCdlIncludeInputTypeCB(form)
+    case(form->inpType->value
+      ("OA"
+         form->schInp->invisible=nil
+         form->layInp->invisible=nil
+         form->cdlInp->invisible=t
+         form->gdsInp->invisible=t
+         form->svdbInp->invisible=t
+         form->cciInp->invisible=t
+      )
+      ("CDL+GDS"
+         form->schInp->invisible=t
+         form->layInp->invisible=t
+         form->cdlInp->invisible=nil
+         form->gdsInp->invisible=nil
+         form->svdbInp->invisible=t
+         form->cciInp->invisible=t
+      )
+      ("CDL+LAY"
+         form->schInp->invisible=t
+         form->layInp->invisible=nil
+         form->cdlInp->invisible=nil
+         form->gdsInp->invisible=t
+         form->svdbInp->invisible=t
+         form->cciInp->invisible=t
+      )
+      ("SCH+GDS"
+         form->schInp->invisible=nil
+         form->layInp->invisible=t
+         form->cdlInp->invisible=t
+         form->gdsInp->invisible=nil
+         form->svdbInp->invisible=t
+         form->cciInp->invisible=t
+      )
+      ("SVDB"
+         form->schInp->invisible=t
+         form->layInp->invisible=t
+         form->cdlInp->invisible=t
+         form->gdsInp->invisible=t
+         form->svdbInp->invisible=nil
+         form->cciInp->invisible=t
+      )
+      ("CCI"
+         form->schInp->invisible=t
+         form->layInp->invisible=t
+         form->cdlInp->invisible=t
+         form->gdsInp->invisible=t
+         form->svdbInp->invisible=t
+         form->cciInp->invisible=nil
+      )
+      (t t )
+    );case
+
+    case(form~>inpType~>value
+      ("SVDB" || "CCI"
+        GUI_messageApp('w "RCE" extmsgStruc->inputSvdbCci)
+      )
+    );case
+    rceSyncExtractTopCell(form)
+    rceSyncNetlistCustomize(form)
+    rceSyncReduction(form)
+  );let
+)
+
+procedure(rceSyncInputNames(form source)
+  let((normalized libName cellName viewName)
+    normalized=lowerCase(or(source ""))
+    case(normalized
+      ("schematic"
+        libName=or(form~>schLib~>value "")
+        cellName=or(form~>schCell~>value "")
+        viewName=or(form~>layView~>value "")
+        form~>layLib~>value=libName
+        form~>layCell~>value=cellName
+        form~>layView~>value=viewName
+      )
+      ("layout"
+        libName=or(form~>layLib~>value "")
+        cellName=or(form~>layCell~>value "")
+        viewName=or(form~>schView~>value "")
+        form~>schLib~>value=libName
+        form~>schCell~>value=cellName
+        form~>schView~>value=viewName
+      )
+      (t
+        warn("RCE input-name synchronization source is invalid: %L\n" source)
+        nil
+      )
+    )
+    when(member(normalized '("schematic" "layout"))
+      rceSyncExtractTopCell(form)
+      t
+    )
+  )
+)
+
+procedure(rceCdlFileCB(form)
+  let(()
+    form~>cdlCell~>value=SICO_fileStem(form~>cdlFile~>value)
+    rceSyncExtractTopCell(form)
+  );let
+)
+
+procedure(rceGdsFileCB(form)
+  let(()
+    form~>gdsCell~>value=SICO_fileStem(form~>gdsFile~>value)
+    rceSyncExtractTopCell(form)
+  );let
+)
+
+procedure(rceSvdbDirCB(form)
+  let((cell)
+    cell=setof(i getDirFiles(form~>svdbDir~>value) cadr(parseString(i ".")) == "sp")
+    cell=car(parseString(car(cell) "."))
+    form~>svdbCell~>value=cell
+    rceSyncExtractTopCell(form)
+  )
+)
+
+procedure(rceCciDirCB(form)
+  let((cell)
+    cell=setof(i getDirFiles(form~>cciDir~>value) cadr(parseString(i ".")) == "agf")
+    cell=car(parseString(car(cell) "."))
+    form~>cciCell~>value=cell
+    rceSyncExtractTopCell(form)
+  );let
+)
+
+procedure(rceOutDirCB(form)
+  let((dir)
+    case(form~>outDirType~>value
+      ("Current Directory" || "Project Directory"
+        form~>outDirPath~>editable=nil
+        form~>outDirPath~>enabled=nil
+      )
+      ("Customize Directory"
+        form~>outDirPath~>editable=t
+        form~>outDirPath~>enabled=t
+      )
+    );case
+
+    case(form~>outDirType~>value
+      ("Current Directory"
+        form~>outDirPath~>value=strcat(pwd())
+      )
+      ("Project Directory"
+        if(dir=SICO_envValue("RCE_DB_DIR") then
+          if(or(isDir(dir) cadOutDirUsableP(dir)) then
+            form~>outDirPath~>value=dir
+          else
+           GUI_messageApp('w "RCE" "Directory deosn't exist, set to current.")
+           form~>outDirPath~>value=strcat(pwd())
+          )
+        else
+          GUI_messageApp('e "RCE" extmsgStruc->projShellNotSet)
+          form~>outDirType~>value="Current Directory"
+        )
+      )
+      ("Customize Directory"
+        form~>outDirPath~>value="Please select a directory..."
+      )
+    );case
+  );let
+)
+
+procedure(rceCdsLibPath(form)
+  let((field path updatedLib forcedLib environmentLib)
+    field=when(form getq(form cdsLib))
+    path=when(field getq(field value))
+    updatedLib=when(isCallable('ddGetUpdatedLib) ddGetUpdatedLib())
+    forcedLib=when(isCallable('ddGetForcedLib) ddGetForcedLib())
+    environmentLib=getShellEnvVar("CDS_LIB")
+    SICO_absolutePath(
+      or(when(and(path strlen(path)>0) path)
+         when(and(stringp(updatedLib) strlen(updatedLib)>0) updatedLib)
+         when(and(stringp(forcedLib) strlen(forcedLib)>0) forcedLib)
+         when(and(stringp(environmentLib) strlen(environmentLib)>0)
+           environmentLib)
+         strcat(pwd() "/cds.lib")))
+  )
+)

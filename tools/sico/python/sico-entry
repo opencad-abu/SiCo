@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+"""Development entry; production uses the compiled sico launcher."""
+
+from __future__ import annotations
+
+from sico.entry import main
+
+raise SystemExit(main())

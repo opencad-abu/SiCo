@@ -1,0 +1,73 @@
+; Own IPC completion receipts and release reservations after publication. SKILL++ lexical scope.
+
+unless(boundp('rceIpcTable)
+  rceIpcTable=makeTable("rceIpcTable" nil)
+)
+procedure(rceIpcSetMeta(cid meta)
+  rceIpcTable[cid]=meta
+)
+
+procedure(rceIpcGetMeta(cid)
+  rceIpcTable[cid]
+)
+
+procedure(rceIpcDataHandler(cid data)
+  nil
+)
+
+procedure(rceIpcErrHandler(cid data)
+  nil
+)
+
+procedure(rceAppendLaunchLog(launchLog message)
+  let((out)
+    when(and(launchLog strlen(launchLog)>0)
+      out=outfile(launchLog "a")
+      when(out
+        fprintf(out "%s\n" message)
+        close(out)
+      )
+    )
+  )
+)
+
+procedure(rceIpcPostFunc(cid exitStatus)
+  let((meta pidFile launchLog viewRequest resultMeta flowLogRequest
+        viewOk resultOk summaryResult reservation protected)
+    meta=rceIpcGetMeta(cid)
+    launchLog=""
+    when(meta
+      pidFile=car(meta)
+      launchLog=cadr(meta)
+      viewRequest=nth(3 meta)
+      resultMeta=nth(4 meta)
+      flowLogRequest=nth(5 meta)
+      reservation=nth(6 meta)
+      when(pidFile && isFile(pidFile)
+        deleteFile(pidFile)
+      )
+      rceIpcSetMeta(cid nil)
+    )
+    viewOk=(exitStatus==0)
+    unwindProtect(
+      progn(
+        when(and(viewOk viewRequest)
+          protected=errset(rceCompleteViewRequest(viewRequest launchLog) t)
+          viewOk=and(protected car(protected)))
+        resultOk=nil
+        when(resultMeta
+          summaryResult=errset(rceSummaryDisplay(resultMeta exitStatus viewOk) t)
+          resultOk=and(summaryResult car(summaryResult))))
+      when(reservation rceReleaseRun(reservation)))
+    when(and(resultOk flowLogRequest)
+      GUI_flowLogClose(flowLogRequest)
+    )
+    if(resultOk then
+      info(strcat("<INFO> RCE::Finished. LOG=\"" launchLog "\"\n"))
+    else
+      warn(strcat("<WARN> RCE::Finished with errors or incomplete output. "
+                    "EXIT=" sprintf(nil "%L" exitStatus)
+                    " LOG=\"" launchLog "\"\n"))
+    )
+  )
+)

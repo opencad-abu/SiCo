@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "established": "2026-09-20",
+  "description": "Private source-size transition ceilings. Tests are not exempt. New exceptions and increased ceilings fail against --base-ref. 300 is a review warning; 500 is the hard limit.",
+  "baseline": [],
+  "vendored_sources": [
+    {
+      "path": "tools/mtsnl/python/mtsnetlistor/_vendor/__init__.py",
+      "sha256": "a90ecb15bb0c98c673fe289895c8bccfbe38146eaccca5cf25ba22b28b8b64ea",
+      "owner": "tomli (including its one-line namespace marker)",
+      "license": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/LICENSE"
+    },
+    {
+      "path": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/__init__.py",
+      "sha256": "9eb042d7c0db5d14c2168ec4946e410de5a91c9cce86892f5e4db5e4633c6762",
+      "owner": "tomli (including its one-line namespace marker)",
+      "license": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/LICENSE"
+    },
+    {
+      "path": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/_parser.py",
+      "sha256": "a412234c86bf710b361e0943276961f0e25fa6d7c36ba7a0e7eec87a3e018c7b",
+      "owner": "tomli (including its one-line namespace marker)",
+      "license": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/LICENSE"
+    },
+    {
+      "path": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/_re.py",
+      "sha256": "a12359fe294523a72112e434d58452a14c9d050affa2417f9927474e4166bfdd",
+      "owner": "tomli (including its one-line namespace marker)",
+      "license": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/LICENSE"
+    },
+    {
+      "path": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/_types.py",
+      "sha256": "f864c6d9552a929c7032ace654ee05ef26ca75d21b027b801d77e65907138b74",
+      "owner": "tomli (including its one-line namespace marker)",
+      "license": "tools/mtsnl/python/mtsnetlistor/_vendor/tomli/LICENSE"
+    }
+  ]
+}

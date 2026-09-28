@@ -1,0 +1,154 @@
+; RCE extraction form fields and constructor defaults.
+
+unless(and(boundp('RCEBASEGUIVersion)
+             RCEBASEGUIVersion=="20260919.gui.modules.v1")
+defclass(EXTOPTGUI ()
+  (;slot start
+    (cornerChoices        @initform list("")
+                          @initarg  cornerChoices
+    )
+    (cornerTypeChoices    @initform list("Single Corner" "Multiple Corners")
+                          @initarg  cornerTypeChoices
+    )
+    (tempChoices          @initform list("")
+                          @initarg  tempChoices
+    )
+    (rcTechDirChoices     @initform list("")
+                          @initarg  rcTechDirChoices
+    )
+    (rcTypeChoices        @initform list("")
+                          @initarg  rcTypeChoices
+    )
+    (topCellSourceChoices @initform list("Schematic" "Layout")
+                          @initarg  topCellSourceChoices
+    )
+    (nameSourceChoices    @initform list("Schematic" "Layout")
+                          @initarg  nameSourceChoices
+    )
+    (tempDefvalue         @initform "25"
+                          @initarg  tempDefvalue
+    )
+    (outTypeChoices       @initform list("")
+                          @initarg  outTypeChoices
+    )
+    (cornerCB             @initform list(infoStruc->noCB)
+                          @initarg  cornerCB
+    )
+    (cornerTypeCB         @initform list(infoStruc->noCB)
+                          @initarg  cornerTypeCB
+    )
+    (rcTechDirCB          @initform infoStruc->noCB
+                          @initarg  rcTechDirCB
+    )
+    (rcTechDirPathCB      @initform infoStruc->noCB
+                          @initarg  rcTechDirPathCB
+    )
+    (rcTypeCB             @initform list(infoStruc->noCB)
+                          @initarg  rcTypeCB
+    )
+    (topCellSourceCB      @initform list(infoStruc->noCB)
+                          @initarg  topCellSourceCB
+    )
+    (nameSourceCB         @initform list(infoStruc->noCB)
+                          @initarg  nameSourceCB
+    )
+    (netSelBtnCB          @initform infoStruc->noCB
+                          @initarg  netSelBtnCB
+    )
+    (netSchSelBtnCB       @initform infoStruc->noCB
+                          @initarg  netSchSelBtnCB
+    )
+    (cellSelBtnCB         @initform infoStruc->noCB
+                          @initarg  cellSelBtnCB
+    )
+    (cellLibSelBtnCB      @initform infoStruc->noCB
+                          @initarg cellLibSelBtnCB
+    )
+    (relFilterCapBtnCB    @initform infoStruc->noCB
+                          @initarg  relFilterCapBtnCB
+    )
+    (absFilterCapBtnCB    @initform infoStruc->noCB
+                          @initarg  absFilterCapBtnCB
+    )
+    (absFilterResBtnCB    @initform infoStruc->noCB
+                          @initarg  absFilterResBtnCB
+    )
+    (outTypeCB            @initform list(infoStruc->noCB)
+                          @initarg  outTypeCB
+    )
+    (pinOrderBtnCB        @initform infoStruc->noCB
+                          @initarg  pinOrderBtnCB
+    )
+    (pinOrderTypeCB       @initform infoStruc->noCB
+                          @initarg  pinOrderTypeCB
+    )
+    (bracketBtnCB         @initform infoStruc->noCB
+                          @initarg  bracketBtnCB
+    )
+    (hierDeliBtnCB        @initform infoStruc->noCB
+                          @initarg  hierDeliBtnCB
+    )
+    (nlParInfoCB          @initform list(infoStruc->noCB)
+                          @initarg  nlParInfoCB
+    )
+    (corner               @initform nil)
+    (cornerType           @initform nil)
+    (singleCornerSetup    @initform nil)
+    (multiCornerSetup     @initform nil)
+    (cornerSelectFields   @initform nil)
+    (cornerNameFields     @initform nil)
+    (cornerTempFields     @initform nil)
+    (cornerRowNames       @initform nil)
+    (cornerRowLayouts     @initform nil)
+    (temp                 @initform nil)
+    (tech                 @initform nil)
+    (rcTechDirName        @initform nil)
+    (rcTechDirPath        @initform nil)
+    (rcTechDir            @initform nil)
+    (rcType               @initform nil)
+    (topCellSource        @initform nil)
+    (extractTopCell       @initform nil)
+    (extractTopCellRow    @initform nil)
+    (nameSource           @initform nil)
+    (basicOpt             @initform nil)
+    (netSelBtn            @initform nil)
+    (netSelChoices        @initform nil)
+    (netSelFile           @initform nil)
+    (netSchSelBtn         @initform nil)
+    (netSel               @initform nil)
+    (cellSelBtn           @initform nil)
+    (cellSelFile          @initform nil)
+    (cellLibSelBtn        @initform nil)
+    (cellSel              @initform nil)
+    (relFilterCapBtn      @initform nil)
+    (relFilterCapValue    @initform nil)
+    (absFilterCapBtn      @initform nil)
+    (absFilterCapValue    @initform nil)
+    (absFilterResBtn      @initform nil)
+    (absFilterResValue    @initform nil)
+    (filter               @initform nil)
+    (moreOpt              @initform nil)
+    (extOpt               @initform nil)
+    (outType              @initform nil)
+    (pinOrderBtn          @initform nil)
+    (pinOrderType         @initform nil)
+    (pinOrderFile         @initform nil)
+    (pinCtrl              @initform nil)
+    (bracketBtn           @initform nil)
+    (bracketChoices       @initform nil)
+    (brackets             @initform nil)
+    (hierDeliBtn          @initform nil)
+    (hierDeliChoices      @initform nil)
+    (hierDeli             @initform nil)
+    (nlBasic              @initform nil)
+    (nlMore               @initform nil)
+    (nlParInfo            @initform nil)
+    (nlRmInst             @initform nil)
+    (nlMoreInfo           @initform nil)
+    (nlOpt                @initform nil)
+
+  );slot end
+)
+
+RCEBASEGUIVersion="20260919.gui.modules.v1"
+)

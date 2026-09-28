@@ -1,0 +1,73 @@
+[run]
+run_dir = "${RCE_RUN_ROOT}/ESCN55H7.AND2X1H7.qrc_smart_view"
+cds_lib = "${PROJECT_ROOT}/cds.lib"
+run_type = "Current Host"
+
+[input]
+type = "OA"
+
+[input.schematic]
+lib = "ESCN55H7"
+cell = "AND2X1H7"
+view = "schematic"
+cdl_header_file = ""
+
+[input.layout]
+lib = "ESCN55H7"
+cell = "AND2X1H7"
+view = "layout_drc"
+layer_map = "${PROJECT_ROOT}/ETIPN55/ETIPN55.layermap"
+
+[lvs]
+tool = "Calibre"
+runset_name = "ETIPN55"
+runset_file = "${PDK_ROOT}/pv/ETIPN55.lvs.cal"
+ignore_error = false
+case_sensitive = true
+hcell_enable = false
+hcell_file = ""
+
+[extract]
+tool = "QRC"
+tech_name = "typ"
+tech_dir = "${PDK_ROOT}/rc/QRC/typ"
+corner = "typ"
+corners = ["typ"]
+temperature = "25"
+corner_temperatures = ["25"]
+rc_type = "R+Cg+Cc"
+top_cell_source = "schematic"
+name_source = "schematic" # QRC native views always use schematic names
+output_type = "view"
+
+[extract.view]
+kind = "smart"
+library = "ESCN55H7"
+cell = "AND2X1H7"
+name = "av_extracted"
+layout_view = "layout_drc"
+
+[runtime]
+lvs_cpus = "1"
+ext_cpus = "1"
+
+[selection]
+net_enable = false
+net_type = "Include Nets"
+nets = ""
+cell_enable = false
+cell_type = "Block Cells"
+cells = ""
+
+[filter]
+cap_percentage = ""
+cap_value = ""
+res_value = ""
+
+[netlist]
+pin_order_enable = false
+hierarchy_delimiter_enable = false
+brackets_replace = false
+parasitic_coordinates = false
+parasitic_res_layer = false
+parasitic_res_dimensions = false

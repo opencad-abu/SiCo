@@ -1,0 +1,59 @@
+[run]
+run_dir = "${RCE_RUN_ROOT}/smic28.busTest.xrc"
+
+[input]
+type = "CDL+GDS"
+
+[input.cdl]
+file = "${SMIC28_ROOT}/busTest.cdl"
+cell = "busTest"
+
+[input.gds]
+file = "${SMIC28_ROOT}/busTest.gds"
+cell = "busTest"
+
+[lvs]
+tool = "Calibre"
+runset_file = "${SMIC28_ROOT}/smic28hkmg_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_oa_cds_2015_04_15_v1.0/Calibre/XRC/calibrexrc_28HKMG_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_v1.0_0R/rulefiles/calibrexrc_28HKMG_1P10M_8Ma_8Ic_2TMc_ALPA1_TYP/SmicSP0T_cal28_LG_HKMG_plmtx_0925_V1.0_1R.lvs"
+ignore_error = false
+case_sensitive = true
+hcell_enable = true
+hcell_file = "${SMIC28_ROOT}/smic28hkmg_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_oa_cds_2015_04_15_v1.0/Calibre/XRC/calibrexrc_28HKMG_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_v1.0_0R/rc/Typ/hcell_list"
+
+[extract]
+tool = "CalXRC"
+tech_dir = "${SMIC28_ROOT}/smic28hkmg_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_oa_cds_2015_04_15_v1.0/Calibre/XRC/calibrexrc_28HKMG_0925_1P10M_8Ma_8Ic_2TMc_ALPA1_v1.0_0R/rc"
+corner = "Typ"
+corners = ["Typ"]
+temperature = "25"
+corner_temperatures = ["25"]
+rc_type = "R+Cg+Cc"
+top_cell_source = "schematic"
+name_source = "schematic"
+output_type = "dspf"
+start_rve = false
+
+[runtime]
+lvs_cpus = "1"
+ext_cpus = "1"
+
+[selection]
+net_enable = false
+net_type = "Include Nets"
+nets = ""
+cell_enable = false
+cell_type = "Block Cells"
+cells = ""
+
+[netlist]
+output_path = "busTest.dspf"
+pin_order_enable = true
+pin_order_type = "CDL Netlist File"
+pin_order_file = ""
+hierarchy_delimiter_enable = false
+hierarchy_delimiter = "/"
+brackets_replace = false
+brackets_replace_type = "<> ===> []"
+parasitic_coordinates = false
+parasitic_res_layer = false
+parasitic_res_dimensions = false

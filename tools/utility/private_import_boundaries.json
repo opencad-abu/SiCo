@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "description": "Declared F06 and T12 source boundaries; private audit input, never runtime payload.",
+  "rules": [
+    {
+      "id": "aivw-agent-value-codec",
+      "root": "tools/aivw/python/aivworkbench/agent",
+      "exclude_files": [
+        "protocol.py",
+        "value_codec.py"
+      ],
+      "forbid_private_imports_from": [
+        "aivworkbench.agent.protocol",
+        "aivworkbench.agent.providers.replay"
+      ],
+      "owner": "value_codec.py",
+      "public_operations": [
+        "ensure_json",
+        "freeze",
+        "redact",
+        "thaw",
+        "reject_verdict_fields",
+        "request_digest"
+      ],
+      "exit_condition": "All agent consumers use value_codec and request_digest; protocol/replay private aliases can be deleted after fixture migration."
+    },
+    {
+      "id": "cadai-waveform-operation",
+      "paths": [
+        "tools/ai/python/cadai/ac_tools.py"
+      ],
+      "forbid_private_imports_from": [
+        "cadai.waveform_tools"
+      ],
+      "owner": "waveform_tools.py",
+      "public_operations": [
+        "capture_waveform"
+      ],
+      "exit_condition": "AC consumers retain only the capture_waveform operation."
+    },
+    {
+      "id": "cadai-simulation-operation",
+      "paths": [
+        "tools/ai/python/cadai/cdf_update.py",
+        "tools/ai/python/cadai/project_tools.py"
+      ],
+      "forbid_private_imports_from": [
+        "cadai.simulation_recipe"
+      ],
+      "owner": "simulation_recipe.py",
+      "public_operations": [
+        "call_simulation_native"
+      ],
+      "exit_condition": "CDF and project consumers retain only call_simulation_native."
+    },
+    {
+      "id": "cadview-library-definitions",
+      "paths": [
+        "tools/common/python/cadview/catalog.py"
+      ],
+      "forbid_private_imports_from": [
+        "cadview.cdslib"
+      ],
+      "owner": "cdslib.py",
+      "public_operations": [
+        "read_library_definitions",
+        "LibraryDefinitions"
+      ],
+      "exit_condition": "Catalog consumers no longer access the parser accumulator or _read_definitions."
+    },
+    {
+      "id": "dspf-analysis-repository",
+      "paths": [
+        "tools/rce/python/rcepy/dspf/analysis.py"
+      ],
+      "forbid_private_imports_from": [
+        "rcepy.dspf.repository"
+      ],
+      "forbid_private_attributes": [
+        "repository._connection"
+      ],
+      "owner": "repository.py",
+      "public_operations": [
+        "summarize_resistors",
+        "summarize_capacitors",
+        "count_dangling_nodes"
+      ],
+      "exit_condition": "Net analysis consumes repository results and never owns SQL or the SQLite connection."
+    }
+  ],
+  "includes": [
+    "tools/utility/boundaries/frontend.json",
+    "tools/utility/boundaries/frontend_objects.json",
+    "tools/utility/boundaries/shared_internal.json",
+    "tools/utility/boundaries/agent_service.json"
+  ]
+}

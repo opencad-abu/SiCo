@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SiCo 使用手册：DRC 版图规则检查。安装、环境变量、Virtuoso 集成与 CAD flow 配置。">
+<title>DRC 版图规则检查 · SiCo 使用手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b4543a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='sans-serif' font-size='24' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/manual.css">
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
+  <span class="edition">使用手册 / 2026.09</span>
+  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+</header>
+<noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="手册目录">
+<p class="rail-label">SICO DOCUMENTATION</p>
+<a href="index.html">开始阅读</a>
+<p class="nav-group">开始使用</p>
+<a href="installation.html">01 · 安装</a>
+<a href="environment.html">02 · 环境变量</a>
+<a href="virtuoso.html">03 · Virtuoso 集成</a>
+<a href="flows.html">04 · CAD flows</a>
+<p class="nav-group">流程指南</p>
+<a href="drc.html" aria-current="page">DRC · 规则检查</a>
+<a href="lvs.html">LVS · 连接检查</a>
+<a href="rce.html">RCE · 寄生提取</a>
+<a href="mts.html">MTS · 多工艺网表</a>
+<a href="utilities.html">LEF / GDS / CDL</a>
+<a href="lsf.html">LSF · 运行与资源</a>
+<p class="nav-group">参考附录</p>
+<a href="environment-internal.html">环境接口附录</a>
+<div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
+</nav>
+<div class="reading">
+<main id="main">
+<p class="eyebrow">CAD FLOW / DESIGN RULE CHECK</p>
+<h1>DRC · 版图规则检查</h1>
+<p class="lead">使用 Calibre 检查 OA layout 或已有 GDS。先准备正确的工艺 runset，再选择输入、运行模式与结果目录。</p>
+<h2 id="prepare">准备工具与工艺文件</h2>
+<div class="code-block"><div class="code-label">Bash · 在启动 Virtuoso 前配置</div><pre><code>export DRC_FILE="default,$PDK_ROOT/pv/drc.cal;signoff,$PDK_ROOT/pv/drc-signoff.cal"
+export DRC_DB_DIR="$PROJECT_ROOT/runs/drc"
+export DRC_DEF_TOOL="Calibre"
+# OA 输入才需要下列两项；路径必须与当前 PDK 匹配。
+export CDS_LIB="$PROJECT_ROOT/cds.lib"
+export TECH_LAYER_MAP="$PDK_ROOT/stream/streamOut.map"
+command -v calibre strmout</code></pre></div>
+<p><code>calibre</code> 必须能从 PATH 找到。设置 <code>MGC_HOME</code> 并不会替 DRC 选择执行程序。已有 GDS 输入不需要再从 OA stream-out。</p>
+<h2 id="run">在 GUI 中运行</h2>
+<ol class="steps"><li>选择 <strong>SiCo → DRC</strong>。使用已保存设置时，先选择 Profile 并点击 <strong>Load</strong>。</li><li>选择 OA layout 的 library / cell / view，或选择 GDS 文件并填入其 top cell。</li><li>选择 DRC runset；需要缩小检查范围时使用 <strong>Rule Select</strong>。检查选中的 group / check 与工艺规则相符。</li><li>选择输出根目录及 <strong>Current Host</strong> 或 <strong>LSF Farm</strong>。Hier 模式可选 CPU；Flat 模式固定使用 1 CPU。</li><li>运行后查看日志和 DRC summary。成功完成工具调用后可以选择打开 Calibre RVE，查看违反规则的位置。</li></ol>
+<div class="notice">工具正常退出与“版图没有 DRC violation”是两个结论。交付前需检查 summary 与 RVE 的实际结果；仅有完成提示不足以判定设计规则通过。</div>
+<h2 id="rules">Rule Select 的使用边界</h2>
+<p>普通 SVRF 可直接发现规则组。编译期 TVF 需要 Calibre 展开后分析，首次读取可能较慢；可用 <code>CALIBRE_BIN</code> 为规则展开单独指定工具，<code>DRC_RULE_GROUP_CACHE_DIR</code> 指定展开缓存。它们不改变主 DRC 的 Calibre 选择。</p>
+<p>只有明确需要补充工艺命令时才填写 Custom SVRF，并检查最终命令与 foundry runset 的关系。团队常用设置应通过 Profile 保存。</p>
+<h2 id="cli">命令行与结果</h2>
+<p>下面的 <code>/path/to/run/drc.toml</code> 指一次运行使用的完整配置，通常由 GUI 生成；不是仅含 Profile 标识的文件。</p>
+<div class="code-block"><div class="code-label">Shell · 检查计划、生成命令、运行与查看结果</div><pre><code>drc run /path/to/run/drc.toml --dry-run
+drc generate /path/to/run/drc.toml
+drc run /path/to/run/drc.toml
+drc report /path/to/run/drc.toml</code></pre></div>
+<p><code>generate</code> 写出工具命令；<code>--dry-run</code> 不启动 EDA 工具，但仍可能准备运行目录与配置文件。实际 DRC 命令在 <code>log/drc.cal</code>，RVE 数据库为 <code>db/drc/cal_drc.out</code>。需要复核默认项时查看 <code>log/flow-defaults/</code>。</p>
+<h2 id="troubleshoot">遇到问题时</h2>
+<div class="table-wrap"><table><thead><tr><th>现象</th><th>处理</th></tr></thead><tbody>
+<tr><td>Runset 下拉为空</td><td>核对 <code>DRC_FILE</code> 格式与文件访问权限，重新启动读取新环境的 Virtuoso。</td></tr>
+<tr><td>OA 导出失败</td><td>检查 CDS_LIB、库/cell/view、TECH_LAYER_MAP，以及 strmout 与许可证环境。</td></tr>
+<tr><td>TVF 规则组读取失败</td><td>检查 Calibre 版本、展开日志与 runset 的 include 环境；不要把空规则列表当成不存在检查项。</td></tr>
+<tr><td>结果目录无法创建</td><td>检查 DRC_DB_DIR 或自定义根的最近存在父目录是否可写。</td></tr>
+</tbody></table></div>
+
+<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="lvs.html">LVS 连接一致性 →</a></footer>
+</main>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#prepare">准备工具与工艺文件</a><a href="#run">在 GUI 中运行</a><a href="#rules">Rule Select 的使用边界</a><a href="#cli">命令行与结果</a><a href="#troubleshoot">遇到问题时</a></aside>
+</div></div>
+</body>
+</html>

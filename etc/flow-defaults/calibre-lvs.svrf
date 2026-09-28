@@ -1,0 +1,7 @@
+// Shared by standalone LVS and RCE LVS.
+[before_erc_results]
+LVS EXECUTE ERC YES
+
+[after_erc_results]
+ERC CELL NAME YES CELL SPACE XFORM
+DRC ICSTATION YES

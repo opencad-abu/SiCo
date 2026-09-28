@@ -1,0 +1,75 @@
+unless(isCallable('SICO_envPairNames)
+  cond(
+    (and(boundp('drcCommonRoot) drcCommonRoot)
+      load(strcat(drcCommonRoot "/skill/SICO_envOptions.il")))
+    (isCallable('cadLoadRelative)
+      cadLoadRelative("common/skill/SICO_envOptions.il"))
+    (t
+      warn("DRCCFG requires DRC.ils or a configured SICO_HOME.\n"))
+  )
+)
+
+unless(and(isCallable('SICO_lsfLocalHost)
+             isCallable('SICO_lsfAutoHost))
+  cond(
+    (and(boundp('drcCommonRoot) drcCommonRoot)
+      load(strcat(drcCommonRoot "/skill/SICO_lsf.il")))
+    (isCallable('cadLoadRelative)
+      cadLoadRelative("common/skill/SICO_lsf.il"))
+    (t
+      warn("DRCCFG requires the shared CAD LSF helper.\n"))
+  )
+)
+
+defstruct(drcstr
+title cmd reportCmd formdone outDirChoices outDirCB defOutDir drcRunsetChoices
+drcRunsetCB lsfChoicesCB queueCB runTypeChoices defQueueName queueChoices
+defSrvName srvChoices drcToolChoices
+drcToolDefValue cpuChoices
+)
+
+procedure(drcInitializeConfig()
+  drcStruc=make_drcstr(
+  ?title            strcat(SICO_logo() "::DRC")
+  ; Keep button callbacks as symbols.  HI supplies the owning form handle,
+  ; which avoids dispatching through a stale global drcForm value.
+  ?cmd              'drcRunCB
+  ?reportCmd        'drcReport
+  ?formdone         'drcFormDoneCB
+  ?outDirChoices    '("Project Directory" "Current Directory" "Customize Directory")
+  ?outDirCB         "drcOutDirCB(hiGetCurrentForm())"
+  ?defOutDir        or(SICO_envValue("DRC_DB_DIR") pwd())
+  ?drcRunsetChoices SICO_envPairNames("DRC_FILE")
+  ?drcRunsetCB      "drcRunsetCB(hiGetCurrentForm())"
+  ?lsfChoicesCB     "SICO_lsfChoicesCB(hiGetCurrentForm())"
+  ?queueCB          "SICO_lsfQueueChoicesCB(hiGetCurrentForm())"
+  ?runTypeChoices   '("Current Host" "LSF Farm")
+  ?defQueueName     ""
+  ?queueChoices     list("")
+  ?defSrvName       SICO_lsfLocalHost()
+  ?srvChoices       list(SICO_lsfLocalHost())
+  ?cpuChoices       or(parseString(or(SICO_envValue("SICO_FLOW_CPU_ALLOW") "") ", \t")
+                       '("1" "2" "4" "8"))
+  ?drcToolChoices   '("Calibre")
+  ?drcToolDefValue  or(getShellEnvVar("DRC_DEF_TOOL") "Calibre")
+  )
+
+  drcMsgStruc=make_drcmsg(
+    ?projShellNotSet "DRC_DB_DIR was not set; using current directory."
+    ?dirExist        "Run directory doesn't exist. Creating..."
+    ?dirAccess       "Cannot create run directory. Check path and permissions."
+    ?inputOaLay      "Layout library/cell/view was not specified."
+    ?runsetFile      "DRC runset file was not specified or cannot be accessed."
+    ?noConfig        "Cannot create DRC TOML."
+    ?noResultsDb     "Cannot find DRC results database. Run DRC first."
+  )
+  t
+)
+
+defstruct(drcmsg
+projShellNotSet dirExist dirAccess inputOaLay runsetFile noConfig noResultsDb
+)
+
+unless(getShellEnvVar("VIRTUOSO_CONTEXT_BUILD")=="1"
+  drcInitializeConfig()
+)

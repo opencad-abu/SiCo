@@ -1,0 +1,92 @@
+#!/bin/sh
+set -eu
+
+program=${0##*/}
+launcher=$0
+case $launcher in
+    */*) ;;
+    *)
+        launcher=$(command -v "$launcher") || {
+            echo "$program: Cannot locate the command dispatcher" >&2
+            exit 2
+        }
+        ;;
+esac
+
+link_depth=0
+while [ -L "$launcher" ]; do
+    link_depth=$((link_depth + 1))
+    if [ "$link_depth" -gt 16 ]; then
+        echo "$program: Command link chain is too deep" >&2
+        exit 2
+    fi
+    launcher_dir=$(CDPATH='' cd -- "$(dirname -- "$launcher")" && pwd -P)
+    link_target=$(readlink -- "$launcher") || {
+        echo "$program: Cannot resolve command link: $launcher" >&2
+        exit 2
+    }
+    case $link_target in
+        /*) launcher=$link_target ;;
+        *) launcher=$launcher_dir/$link_target ;;
+    esac
+done
+
+script_dir=$(CDPATH='' cd -- "$(dirname -- "$launcher")" && pwd -P)
+product_root=$(CDPATH='' cd -- "$script_dir/.." && pwd -P)
+. "$product_root/tools/common/sh/sico-installation.sh"
+sico_installation "$product_root"
+sico_launcher_environment
+tools_root=$SICO_HOME/tools
+
+case $program in
+    sico)
+        target=$tools_root/sico/bin/sico
+        ;;
+    mts-netlistor)
+        target=$tools_root/mtsnl/bin/mts-netlistor
+        ;;
+    aivw)
+        target=$tools_root/aivw/bin/aivw
+        ;;
+    rce)
+        target=$tools_root/rce/bin/rce
+        ;;
+    drc)
+        target=$tools_root/drc/bin/drc
+        ;;
+    lvs)
+        target=$tools_root/lvs/bin/lvs
+        ;;
+    lefgen)
+        target=$tools_root/lef/bin/lefgen
+        ;;
+    dspfana)
+        target=$tools_root/rce/bin/rce
+        if [ -n "${RCE_ANALYZER_PYTHON-}" ]; then
+            RCE_PYTHON=$RCE_ANALYZER_PYTHON
+            export RCE_PYTHON
+        fi
+        set -- dspf-gui "$@"
+        ;;
+    gdsout)
+        target=$tools_root/lvs/bin/lvs
+        set -- stream-gds "$@"
+        ;;
+    cdlout)
+        target=$tools_root/lvs/bin/lvs
+        set -- export-cdl "$@"
+        ;;
+    aiassistant)
+        target=$tools_root/ai/bin/aiassistant
+        ;;
+    *)
+        echo "sico-tool-dispatch: Unsupported command name: $program" >&2
+        exit 2
+        ;;
+esac
+
+if [ ! -f "$target" ] || [ ! -x "$target" ]; then
+    echo "$program: Command target is unavailable: $target" >&2
+    exit 2
+fi
+exec "$target" "$@"

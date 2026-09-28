@@ -1,0 +1,49 @@
+#!/bin/sh
+
+set -u
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+product_root=$(CDPATH='' cd -- "$script_dir/../../.." && pwd -P)
+. "$product_root/tools/common/sh/sico-installation.sh"
+sico_installation "$product_root" || exit 2
+sico_launcher_environment || exit 2
+repo_dir=$(CDPATH='' cd -- "$script_dir/.." && pwd -P) || exit 2
+if [ -n "${MTS_NETLISTOR_ROOT-}" ]; then
+    mts_configured=$(CDPATH='' cd -- "$MTS_NETLISTOR_ROOT" 2>/dev/null && pwd -P) || {
+        echo "mts-netlistor: MTS_NETLISTOR_ROOT is not a directory: $MTS_NETLISTOR_ROOT" >&2
+        exit 2
+    }
+    [ "$mts_configured" = "$repo_dir" ] || {
+        echo "mts-netlistor: MTS_NETLISTOR_ROOT conflicts with the SiCo installation" >&2
+        exit 2
+    }
+fi
+common_python=$repo_dir/../common/python
+mts_python=$repo_dir/python
+entry=$mts_python/mtsnetlistor
+vendor_tomli=$entry/_vendor/tomli/__init__.py
+python=${SICO_PYTHON-}
+if [ -z "$python" ] && [ -n "${SICO_PYTHON_ROOT-}" ]; then
+    python=$SICO_PYTHON_ROOT/bin/python3
+fi
+python=${python:-python3}
+case $python in
+    */*) [ -x "$python" ] || { echo "mts-netlistor: Python is not executable: $python" >&2; exit 2; } ;;
+    *) command -v "$python" >/dev/null 2>&1 || { echo "mts-netlistor: Python is unavailable: $python" >&2; exit 2; } ;;
+esac
+if [ ! -f "$entry/__init__.py" ]; then
+    echo "mts-netlistor: Python package is incomplete: $entry" >&2
+    exit 2
+fi
+if [ ! -f "$vendor_tomli" ]; then
+    echo "mts-netlistor: bundled Python 3.9 TOML parser is missing: $vendor_tomli" >&2
+    exit 2
+fi
+export PYTHONNOUSERSITE=1
+export PYTHONDONTWRITEBYTECODE=1
+unset PYTHONHOME PYTHONPATH LD_PRELOAD LD_AUDIT
+# Do not let this process join the launching Virtuoso's multiprocess SKILL
+# session.  Python repeats this by prefix so future CDS_MPS_* selectors are
+# also removed before any Cadence worker is started.
+unset CDS_MPS_SESSION CDS_MPS_HOST CDS_MPS_PORT
+export PYTHONPATH=$common_python:$mts_python
+exec "$python" -s -m mtsnetlistor.cli "$@"

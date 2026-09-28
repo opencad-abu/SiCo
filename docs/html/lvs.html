@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SiCo 使用手册：LVS 连接一致性。安装、环境变量、Virtuoso 集成与 CAD flow 配置。">
+<title>LVS 连接一致性 · SiCo 使用手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b4543a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='sans-serif' font-size='24' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/manual.css">
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
+  <span class="edition">使用手册 / 2026.09</span>
+  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+</header>
+<noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="手册目录">
+<p class="rail-label">SICO DOCUMENTATION</p>
+<a href="index.html">开始阅读</a>
+<p class="nav-group">开始使用</p>
+<a href="installation.html">01 · 安装</a>
+<a href="environment.html">02 · 环境变量</a>
+<a href="virtuoso.html">03 · Virtuoso 集成</a>
+<a href="flows.html">04 · CAD flows</a>
+<p class="nav-group">流程指南</p>
+<a href="drc.html">DRC · 规则检查</a>
+<a href="lvs.html" aria-current="page">LVS · 连接检查</a>
+<a href="rce.html">RCE · 寄生提取</a>
+<a href="mts.html">MTS · 多工艺网表</a>
+<a href="utilities.html">LEF / GDS / CDL</a>
+<a href="lsf.html">LSF · 运行与资源</a>
+<p class="nav-group">参考附录</p>
+<a href="environment-internal.html">环境接口附录</a>
+<div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
+</nav>
+<div class="reading">
+<main id="main">
+<p class="eyebrow">CAD FLOW / LAYOUT VERSUS SCHEMATIC</p>
+<h1>LVS · 版图与原理图一致性</h1>
+<p class="lead">以 Calibre 比较版图和源网表。OA、CDL 与 GDS 可按实际设计来源组合，层映射与器件定义需要匹配同一工艺。</p>
+<h2 id="prepare">配置项目输入</h2>
+<div class="code-block"><div class="code-label">Bash · LVS 环境</div><pre><code>export LVS_FILE="default,$PDK_ROOT/pv/lvs.cal"
+export LVS_DB_DIR="$PROJECT_ROOT/runs/lvs"
+export LVS_DEF_TOOL="Calibre"
+export CDS_LIB="$PROJECT_ROOT/cds.lib"
+export TECH_LAYER_MAP="$PDK_ROOT/stream/streamOut.map"
+# 工艺或项目需要时配置；没有文件就不要设置占位值。
+export CDL_HEADER_FILE="$PDK_ROOT/cdl/devices.cdl"
+export HCELL_FILE="$PROJECT_ROOT/config/hcell.list"
+command -v calibre si strmout</code></pre></div>
+<p>非空 <code>CDL_HEADER_FILE</code> 预填 CDL Include，非空 <code>HCELL_FILE</code> 默认启用 Hcell。表单中的最终勾选与文件选择决定本次运行内容。</p>
+<h2 id="inputs">选择输入组合</h2>
+<div class="table-wrap"><table><thead><tr><th>输入</th><th>源电路</th><th>版图</th></tr></thead><tbody>
+<tr><td>OA</td><td>schematic library / cell / view</td><td>layout library / cell / view</td></tr>
+<tr><td>CDL+GDS</td><td>已有 CDL 与 top cell</td><td>已有 GDS 与 top cell</td></tr>
+<tr><td>CDL+LAY</td><td>已有 CDL</td><td>OA layout，需层映射</td></tr>
+<tr><td>SCH+GDS</td><td>OA schematic，按需 CDL Include</td><td>已有 GDS</td></tr>
+</tbody></table></div>
+<h2 id="run">运行与判读</h2>
+<ol class="steps"><li>选择 <strong>SiCo → LVS</strong>，加载需要的 LVS Profile。</li><li>指定输入组合及双方 top cell，检查 runset、Hcell 与 CDL Include。</li><li>按工艺要求设置 Case Sensitive、Virtual Connect、Recognize Gates 等选项；不要用宽松选项掩盖未确认的连接问题。</li><li>选择 Hier 或 Flat。Hier 使用选定 CPU；Flat 不传层次/turbo 参数并固定 1 CPU。</li><li>运行完成后检查比较报告，需要时打开 RVE 定位不匹配。LVS 的 RVE 数据库位于 <code>db/svdb.&lt;top_cell&gt;</code>。</li></ol>
+<div class="notice"><strong>LVS 与 RCE 前置 LVS 分别配置。</strong> 此页使用 <code>LVS_FILE</code>；QRC / StarRC 寄生提取使用 <code>RCE_LVS_FILE</code>，不会自动回退到这里。后者通常需要满足 CCI/query 的抽取配套要求。</div>
+<h2 id="cli">命令行入口</h2>
+<div class="code-block"><div class="code-label">Shell · 使用完整运行 TOML</div><pre><code>lvs run /path/to/run/lvs.toml --dry-run
+lvs generate /path/to/run/lvs.toml
+lvs run /path/to/run/lvs.toml
+lvs report /path/to/run/lvs.toml</code></pre></div>
+<p>CLI 在当前主机执行。运行目录保留本次 TOML、导出的中间 CDL/GDS、工具日志和 SVDB。若结果显示 mismatch，检查双方 top cell、器件定义、全局网络、Hcell 与规则版本后再重跑。</p>
+<h2 id="reuse">保存团队设置</h2>
+<p>用 <strong>Save As…</strong> 保存 LVS Profile，并通过 <code>LVS_CONFIG</code> 预填下一次表单的 Config File。共享 Profile 适合保存工艺选项；运行目录和设计身份在每次 Run 前仍应核对。</p>
+
+<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="rce.html">RCE 寄生提取 →</a></footer>
+</main>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#prepare">配置项目输入</a><a href="#inputs">选择输入组合</a><a href="#run">运行与判读</a><a href="#cli">命令行入口</a><a href="#reuse">保存团队设置</a></aside>
+</div></div>
+</body>
+</html>

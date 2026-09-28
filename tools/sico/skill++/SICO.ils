@@ -1,0 +1,62 @@
+; Independent loader for the Python Agent; it does not load the terminal runtime.
+; Load once per Virtuoso process; repeated menu invocations only re-show the Agent.
+
+let((loaderDirectory)
+  loaderDirectory=strcat("/" buildString(reverse(cdr(reverse(
+    parseString(simplifyFilename(get_filename(piport) t) "/")))) "/"))
+  load(strcat(loaderDirectory "/../../ai/skill++/AI_shared.ils")))
+
+; Share the SKILL value slot explicitly; .ils assignment uses a different binding.
+unless(and(boundp('sicoLoaderVersion)
+           symeval('sicoLoaderVersion)=="20260924.sico.loader.v6"
+           isCallable('aiCopilotCaptureRevision)
+           aiCopilotCaptureRevision()=="20260922.ai.circuit.capture.v6"
+           isCallable('sicoBindingRevision)
+           sicoBindingRevision()=="20260921.sico.binding.v1"
+           isCallable('sicoShow)
+           isCallable('sicoContextRevision)
+           sicoContextRevision()=="20260921.sico.context.v1"
+           isCallable('sicoDiagnosticsRevision)
+           sicoDiagnosticsRevision()=="20260921.sico.diagnostics.v1"
+           isCallable('sicoEntryRead)
+           isCallable('sicoAdeRevision)
+           sicoAdeRevision()=="20260921.sico.ade.v1"
+           isCallable('sicoMenusRevision)
+           sicoMenusRevision()=="20260921.sico.menus.v1"
+           isCallable('sicoQuickRevision)
+           sicoQuickRevision()=="20260921.sico.quick.v1"
+           isCallable('sicoRmbRevision)
+           sicoRmbRevision()=="20260921.sico.rmb.v2"
+           isCallable('sicoSessionsRevision)
+           sicoSessionsRevision()=="20260921.sico.sessions.v1"
+           isCallable('sicoLauncherRevision)
+           sicoLauncherRevision()=="20260922.sico.launcher.v2")
+  let((root shared origin product parts)
+    set('sicoLoaderVersion nil)
+    origin=simplifyFilename(get_filename(piport) t)
+    parts=cddr(cddr(reverse(parseString(origin "/"))))
+    product=strcat("/" buildString(reverse(parts) "/"))
+    load(strcat(product "/tools/common/skill/SICO_environment.il"))
+    load(strcat(product "/tools/common/skill/SICO_installation.il"))
+    product=SICO_installationRoot(product)
+    root=SICO_installationPath(product "tools/sico")
+    shared=SICO_installationPath(product "tools/ai")
+    set('sicoRoot root)
+    foreach(name list("AI_entry_project.il" "AI_copilot_literals.il" "AI_copilot_results.il" "AI_copilot_targets.il" "AI_copilot_circuit.il")
+      load(strcat(shared "/skill/" name)))
+    foreach(name list("SICO_entry.il" "SICO_diagnostics.il" "SICO_binding.il" "SICO_context.il" "SICO_ade.il"
+                      "SICO_sessions.il" "SICO_launcher.il" "SICO_registration.il" "SICO_menus.il"
+                      "SICO_quick.il" "SICO_rmb.il")
+      load(strcat(root "/skill/" name)))
+    sicoInstallAdeMenus()
+    sicoInstallEditorMenus()
+    sicoInstallNativeBindings()
+    sicoSchedulePlatformRegistration()
+    set('sicoLoaderVersion "20260924.sico.loader.v6")
+  )
+)
+
+unless(and(isCallable('sicoLoaderRevision)
+           sicoLoaderRevision()=="20260924.sico.loader.v6")
+  procedure(sicoLoaderRevision()
+    "20260924.sico.loader.v6"))

@@ -1,0 +1,30 @@
+*|DSPF 1.0
+*|DESIGN "qrc_top"
+*|VENDOR "Cadence"
+*|PROGRAM "Quantus"
+*|DIVIDER /
+*|DELIMITER :
+*|BUSBIT <>
+.SUBCKT qrc_top IN OUT VSS
+*|GROUND_NET VSS
+*LAYER_MAP
+*0 SUBSTRATE
+*1 metal1 ITF=M1
+*2 metal2 ITF=M2
+*|NET IN 0.3PF
+*|P (IN I 0 0 0) // $llx=0 $lly=0 $lvl=1
+*|I (XBUF:A XBUF A I 0 1 0) // $lvl=1
+*|S (IN:1 2 0) // $lvl=1
+Rin IN IN:1 1KOHM // $l=2u $w=1u $lvl=1
+Cin IN:1 VSS 0.2PF // $lvl=1
+Cc_io IN:1 OUT 0.1PF // layer1=M1 layer2=M2
+*|NET OUT 0.25PF
+*|P (OUT O 0 4 0) // $lvl=2
+*|S (OUT:1 3 0) // $lvl=2
+Rout OUT OUT:1 2OHM $l=1u $w=.5u $layer=metal2
+Cout VSS OUT:1 0.15PF $lvl=2
+* Instance Section
+RRmodel IN OUT RMOD 5
+CCmodel IN OUT CMOD 9PF
+XBUF IN OUT buffer
+.ENDS qrc_top

@@ -1,0 +1,37 @@
+"""Compatibility test entry for LSF GUI source acceptance.
+
+Case modules use ``*_cases.py`` names so directory collection executes each
+case once. Retire this entry after test commands migrate to those modules.
+"""
+
+from cadlsf_gui_fixtures import application as application
+
+from cadlsf_gui_models_cases import (
+    test_table_models_expose_load_values_progress_and_recommendation as test_table_models_expose_load_values_progress_and_recommendation,
+    test_cpu_progress_threshold_boundaries as test_cpu_progress_threshold_boundaries,
+    test_memory_progress_threshold_boundaries as test_memory_progress_threshold_boundaries,
+    test_memory_without_total_keeps_available_value_without_alert as test_memory_without_total_keeps_available_value_without_alert,
+)
+
+from cadlsf_gui_window_cases import (
+    test_host_filter_and_progress_delegate_render_nonblank as test_host_filter_and_progress_delegate_render_nonblank,
+    test_job_model_filter_and_window_tab_layout as test_job_model_filter_and_window_tab_layout,
+    test_window_refresh_pause_failure_and_close_lifecycle as test_window_refresh_pause_failure_and_close_lifecycle,
+)
+
+from cadlsf_gui_jobs_cases import (
+    test_job_kill_button_maps_proxy_row_confirms_and_refreshes as test_job_kill_button_maps_proxy_row_confirms_and_refreshes,
+    test_job_kill_failure_preserves_snapshot as test_job_kill_failure_preserves_snapshot,
+    test_failed_job_refresh_preserves_rows_and_unavailable_status as test_failed_job_refresh_preserves_rows_and_unavailable_status,
+)
+
+from cadlsf_gui_selector_cases import (
+    test_selector_publishes_only_latest_verified_auto_or_host as test_selector_publishes_only_latest_verified_auto_or_host,
+    test_selector_cancel_and_stale_snapshot_do_not_publish as test_selector_cancel_and_stale_snapshot_do_not_publish,
+    test_selector_rejects_selection_changed_during_live_validation as test_selector_rejects_selection_changed_during_live_validation,
+)
+
+from cadlsf_gui_refresh_cases import (
+    test_refresh_controller_discards_stale_result as test_refresh_controller_discards_stale_result,
+    test_refresh_controller_publishes_cached_snapshot_before_topology_refresh as test_refresh_controller_publishes_cached_snapshot_before_topology_refresh,
+)

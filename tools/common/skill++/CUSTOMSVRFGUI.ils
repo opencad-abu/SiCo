@@ -1,0 +1,63 @@
+; Shared user SVRF command controls.
+
+defclass(CUSTOMSVRFGUI ()
+  (;slot start
+    (customSvrfEnable  @initform nil)
+    (customSvrfCommand @initform nil)
+    (customSvrf        @initform nil)
+  );slot end
+)
+
+procedure(cadCustomSvrfCB(form)
+  form~>customSvrfCommand~>invisible=!form~>customSvrfEnable~>value
+  t
+)
+
+procedure(cadCustomSvrfBind(form)
+  hiSetFieldMinSize(form 'customSvrfCommand ?widgetHeight 120)
+  cadCustomSvrfCB(form)
+)
+
+defmethod(makeCustomSvrf ((inst CUSTOMSVRFGUI))
+  inst->customSvrfEnable=hiCreateBooleanButton(
+    ?name           'customSvrfEnable
+    ?buttonText     "Customized SVRF Command"
+    ?buttonLocation 'left
+    ?defValue       nil
+    ?callback       "cadCustomSvrfCB(hiGetCurrentForm())"
+  )
+  inst->customSvrfCommand=hiCreateMLTextField(
+    ?name                    'customSvrfCommand
+    ?value                   ""
+    ?defValue                ""
+    ?hasVerticalScrollbar    t
+    ?hasHorizontalScrollbar  t
+    ?enableWordWrap          nil
+    ?invisible               t
+  )
+  inst->customSvrf=makevbl(
+    'customSvrf
+    list(list(inst->customSvrfEnable 'horiz_align 'left)
+         inst->customSvrfCommand)
+  )
+);defmethod makeCustomSvrf
+
+defmethod(makeLvsCustomSvrf ((inst CUSTOMSVRFGUI))
+  makeCustomSvrf(inst)
+);defmethod makeLvsCustomSvrf
+
+procedure(cadLvsCustomSvrfCB(form)
+  cadCustomSvrfCB(form)
+)
+
+procedure(cadLvsCustomSvrfBind(form)
+  cadCustomSvrfBind(form)
+)
+
+procedure(cadBaseCustomSvrfRevision()
+  "20260813.custom.svrf.common.v1"
+)
+
+procedure(cadBaseLvsCustomSvrfRevision()
+  "20260812.custom.svrf.align.v2"
+)

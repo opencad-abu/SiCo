@@ -1,0 +1,290 @@
+; Validate form input and atomically publish its run configuration. SKILL++ lexical scope.
+
+procedure(rcePrintReserved(form)
+  prog((runBase runDir tempFile cmdFile cdslib outFile inputType topCell
+         schlib schcell schview laylib laycell layview
+         cdl cdlcell gds gdscell svdb svdbcell cci ccicell
+         netsFile cellsFile pinControlFile hcellFile cdlIncludeFile
+         runsetFile layerMap techDir outPath
+         createView nativeView viewTarget viewDeviceMap viewLayerMap
+         availableCorners selectedCorners selectedTemperatures processCorners
+         cornerTemperatures cornerIndex selectedCorner matchedCorner
+         processCorner)
+
+    unless(rceValidatePinOrder(form)
+      return(nil))
+    unless(rceValidateCdlRunDirectory(form)
+      return(nil))
+    unless(SICO_lsfValidateSelection(form "RCE")
+      return(nil))
+    unless(rceValidateReduction(form)
+      return(nil))
+    when(or(!form~>outDirPath~>value
+            form~>outDirPath~>value==""
+            form~>outDirPath~>value=="Please select a directory...")
+      GUI_messageApp('e "RCE" extmsgStruc->dirAccess)
+      return(nil))
+    cdslib=rceCdsLibPath(form)
+    tempFile=SICO_tempPath("rceXXXX")
+    unless(tempFile
+      GUI_messageApp('e "RCE" rceMsgStruc->noConfig)
+      return(nil))
+    tempFile=makeTempFileName(tempFile)
+    runBase=form~>outDirPath~>value
+    inputType=form~>inpType~>value
+    schlib=form~>schLib~>value
+    schcell=form~>schCell~>value
+    schview=form~>schView~>value
+    laylib=form~>layLib~>value
+    laycell=form~>layCell~>value
+    layview=form~>layView~>value
+    cdl=form~>cdlFile~>value
+    cdlcell=form~>cdlCell~>value
+    gds=form~>gdsFile~>value
+    gdscell=form~>gdsCell~>value
+    svdb=form~>svdbDir~>value
+    svdbcell=form~>svdbCell~>value
+    cci=form~>cciDir~>value
+    ccicell=form~>cciCell~>value
+    runsetFile=SICO_absolutePath(form~>lvsRunsetFile~>value)
+    layerMap=SICO_absolutePath(getShellEnvVar("TECH_LAYER_MAP"))
+    techDir=SICO_absolutePath(form~>rcTechDirPath~>value)
+    topCell=rceSyncExtractTopCell(form)
+    availableCorners=rceProcessCornerNames(form~>extTool~>value
+                                            techDir)
+    selectedCorners=rceSelectedProcessCorners(form)
+    selectedTemperatures=rceSelectedCornerTemperatures(form)
+    unless(and(selectedCorners
+                 length(selectedCorners)==length(selectedTemperatures))
+      GUI_messageApp('e "RCE" extmsgStruc->processCorner)
+      return(nil)
+    )
+    processCorners=nil
+    cornerTemperatures=nil
+    for(cornerIndex 0 sub1(length(selectedCorners))
+      selectedCorner=nth(cornerIndex selectedCorners)
+      matchedCorner=rceMatchingProcessCorner(selectedCorner availableCorners)
+      unless(matchedCorner
+        GUI_messageApp('e "RCE" extmsgStruc->processCorner)
+        return(nil)
+      )
+      processCorners=append1(processCorners matchedCorner)
+      cornerTemperatures=append1(
+        cornerTemperatures nth(cornerIndex selectedTemperatures))
+    )
+    processCorner=car(processCorners)
+    when(and(form~>extTool~>value=="StarRC"
+               length(processCorners)>15)
+      GUI_messageApp('e "RCE" extmsgStruc->multiCornerLimit)
+      return(nil)
+    )
+
+    case(inputType
+      ("OA"
+        when(schlib=="" || ! schlib || schcell=="" || ! schcell || schview=="" || ! schview
+          GUI_messageApp('e "RCE" extmsgStruc->inputOaSch)
+          return(nil))
+        when(laylib=="" || ! laylib || laycell=="" || ! laycell || layview=="" || ! layview
+          GUI_messageApp('e "RCE" extmsgStruc->inputOaLay)
+          return(nil))
+        runDir=strcat(runBase "/" laylib "." laycell)
+      )
+      ("SCH+GDS"
+        when(schlib=="" || ! schlib || schcell=="" || ! schcell || schview=="" || ! schview
+          GUI_messageApp('e "RCE" extmsgStruc->inputOaSch)
+          return(nil))
+        when(! isFile(gds)
+          GUI_messageApp('e "RCE" extmsgStruc->gdsFile)
+          return(nil))
+        gds=SICO_absolutePath(gds)
+        when(gdscell=="" || ! gdscell
+          GUI_messageApp('e "RCE" extmsgStruc->gdsCell)
+          return(nil))
+        runDir=strcat(runBase "/" schlib "." schcell)
+      )
+      ("CDL+LAY"
+        when(! isFile(cdl)
+          GUI_messageApp('e "RCE" extmsgStruc->cdlFile)
+          return(nil))
+        cdl=SICO_absolutePath(cdl)
+        when(cdlcell=="" || ! cdlcell
+          GUI_messageApp('e "RCE" extmsgStruc->cdlCell)
+          return(nil))
+        when(laylib=="" || ! laylib || laycell=="" || ! laycell || layview=="" || ! layview
+          GUI_messageApp('e "RCE" extmsgStruc->inputOaLay)
+          return(nil))
+        runDir=strcat(runBase "/" laylib "." laycell)
+      )
+      ("CDL+GDS"
+        when(! isFile(cdl)
+          GUI_messageApp('e "RCE" extmsgStruc->cdlFile)
+          return(nil))
+        cdl=SICO_absolutePath(cdl)
+        when(cdlcell=="" || ! cdlcell
+          GUI_messageApp('e "RCE" extmsgStruc->cdlCell)
+          return(nil))
+        when(! isFile(gds)
+          GUI_messageApp('e "RCE" extmsgStruc->gdsFile)
+          return(nil))
+        gds=SICO_absolutePath(gds)
+        when(gdscell=="" || ! gdscell
+          GUI_messageApp('e "RCE" extmsgStruc->gdsCell)
+          return(nil))
+        runDir=strcat(runBase "/" "CDLGDS" "." gdscell)
+      )
+      ("SVDB"
+        when(! isDir(svdb)
+          GUI_messageApp('e "RCE" extmsgStruc->svdbDir)
+          return(nil))
+        svdb=SICO_absolutePath(svdb)
+        when(svdbcell=="" || ! svdbcell
+          GUI_messageApp('e "RCE" extmsgStruc->svdbCell)
+          return(nil))
+        runDir=strcat(runBase "/" "SVDB" "." svdbcell)
+      )
+      ("CCI"
+        when(! isDir(cci)
+          GUI_messageApp('e "RCE" extmsgStruc->cciDir)
+          return(nil))
+        cci=SICO_absolutePath(cci)
+        when(ccicell=="" || ! ccicell
+          GUI_messageApp('e "RCE" extmsgStruc->cciCell)
+          return(nil))
+        runDir=strcat(runBase "/" "CCI" "." ccicell)
+      )
+    );case
+
+    runDir=simplifyFilename(runDir t)
+    cmdFile=strcat(runDir "/rce.toml")
+    nativeView=rceNativeViewOutputP(form~>outType~>value)
+    when(and(nativeView length(processCorners)>1
+               member(form~>extTool~>value '("StarRC" "CalXRC" "XRC")))
+      GUI_messageApp('e "RCE" extmsgStruc->multiCornerView)
+      return(nil)
+    )
+    when(nativeView
+      viewTarget=rceNativeViewTarget(form)
+      unless(viewTarget
+        GUI_messageApp('e "RCE" extmsgStruc->nativeViewTarget)
+        return(nil)
+      )
+      when(form~>extTool~>value=="CalXRC"
+        unless(isCallable('mgc_rve_load_setup_file)
+          GUI_messageApp('e "RCE" extmsgStruc->nativeViewImporter)
+          return(nil)
+        )
+        viewDeviceMap=form~>viewDeviceMap~>value
+        unless(and(viewDeviceMap isFile(viewDeviceMap))
+          GUI_messageApp('e "RCE" extmsgStruc->nativeViewMap)
+          return(nil)
+        )
+        viewDeviceMap=SICO_absolutePath(viewDeviceMap)
+      )
+      when(form~>extTool~>value=="StarRC"
+        viewDeviceMap=form~>viewDeviceMap~>value
+        viewLayerMap=form~>viewLayerMap~>value
+        unless(and(viewDeviceMap isFile(viewDeviceMap)
+                     viewLayerMap isFile(viewLayerMap))
+          GUI_messageApp('e "RCE" extmsgStruc->nativeViewMap)
+          return(nil)
+        )
+        viewDeviceMap=SICO_absolutePath(viewDeviceMap)
+        viewLayerMap=SICO_absolutePath(viewLayerMap)
+      )
+    )
+    createView=and(form~>createNetlistView~>value
+                    rceParasiticNetlistOutputP(form~>outType~>value))
+    when(createView
+      viewTarget=rceNetlistViewTarget(form)
+      unless(viewTarget
+        GUI_messageApp('e "RCE" extmsgStruc->netlistViewTarget)
+        return(nil)
+      )
+    )
+
+    hcellFile=""
+    when(form~>lvsHcellBtn~>value
+      hcellFile=form~>lvsHcellFile~>value
+      unless(and(hcellFile isFile(hcellFile))
+        GUI_messageApp('e "RCE" extmsgStruc->hcellFile)
+        return(nil))
+      hcellFile=SICO_absolutePath(hcellFile)
+    )
+
+    cdlIncludeFile=""
+    when(and(member(inputType '("OA" "SCH+GDS"))
+             form~>cdlIncludeBtn~>value)
+      cdlIncludeFile=form~>cdlIncludeFile~>value
+      unless(and(cdlIncludeFile isFile(cdlIncludeFile))
+        GUI_messageApp('e "RCE" extmsgStruc->cdlIncludeFile)
+        return(nil))
+      cdlIncludeFile=SICO_absolutePath(cdlIncludeFile)
+    )
+
+    unless(rceCheckOaTermOrder(form)
+      return(nil))
+
+    when(! isDir(runDir)
+      info(strcat("<INFO> RCE::" extmsgStruc->dirExist "\n"))
+      info(strcat("            Create directory: " runDir "\n"))
+      unless(system(strcat("mkdir -p " SICO_shellQuote(runDir)))==0
+        GUI_messageApp('e "RCE" extmsgStruc->dirAccess)
+        return(nil))
+    )
+
+    when(form~>netSelBtn~>value
+      netsFile=form~>netSelFile~>value
+      unless(and(netsFile strlen(netsFile)>0)
+        GUI_messageApp('e "RCE" extmsgStruc->netsFile)
+        return(nil))
+      when(isFile(netsFile)
+        netsFile=SICO_absolutePath(netsFile))
+    )
+    when(form~>cellSelBtn~>value
+      cellsFile=form~>cellSelFile~>value
+      unless(and(cellsFile strlen(cellsFile)>0)
+        GUI_messageApp('e "RCE" extmsgStruc->cellsFile)
+        return(nil))
+      when(isFile(cellsFile)
+        cellsFile=SICO_absolutePath(cellsFile))
+    )
+    when(form~>pinOrderBtn~>value && form~>pinOrderType~>value == "User Defined File"
+      pinControlFile=SICO_absolutePath(form~>pinOrderFile~>value)
+      unless(and(pinControlFile isFile(pinControlFile))
+        GUI_messageApp('e "RCE" extmsgStruc->pinFiles)
+        return(nil))
+      pinControlFile=SICO_absolutePath(pinControlFile)
+    )
+
+    outPath=if(nativeView then
+      ""
+    else
+      RCE_tomlDefaultOutput(runDir topCell form~>outType~>value)
+    )
+    outFile=outfile(tempFile)
+
+    rceWriteRunToml(outFile form runDir cdslib)
+    rceWriteInputTypeToml(outFile inputType)
+    rceWriteSchematicToml(outFile schlib schcell schview cdlIncludeFile)
+    rceWriteLayoutToml(outFile laylib laycell layview layerMap)
+    rceWriteCdlToml(outFile form cdl cdlcell)
+    rceWriteGdsToml(outFile gds gdscell)
+    rceWriteSvdbToml(outFile svdb svdbcell)
+    rceWriteCciToml(outFile cci ccicell)
+    rceWriteLvsToml(outFile form runsetFile hcellFile)
+    rceWriteExtractToml(outFile form techDir processCorner processCorners cornerTemperatures)
+    rceWriteViewToml(outFile form nativeView viewTarget viewDeviceMap viewLayerMap)
+    rceWriteReductionToml(outFile form)
+    rceWriteRuntimeToml(outFile form)
+    rceWriteSelectionToml(outFile form netsFile cellsFile)
+    rceWriteFilterToml(outFile form)
+    rceWriteNetlistToml(outFile form outPath createView pinControlFile)
+
+    close(outFile)
+    unless(system(strcat("mv " SICO_shellQuote(tempFile) " "
+                         SICO_shellQuote(cmdFile)))==0
+      GUI_messageApp('e "RCE" rceMsgStruc->noConfig)
+      return(nil))
+    return(cmdFile)
+  );prog
+)

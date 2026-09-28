@@ -1,0 +1,25 @@
+[run]
+run_dir = "${LEF_RUN_DIR}"
+cds_lib = "${CDS_LIB}"
+
+[input]
+library = "AG_Pins"
+cell_list_file = "ic618_rak_ag_pins.cells"
+layout_view = "layout"
+logical_view = "schematic"
+abstract_view = "abstract"
+
+[abstract]
+options_file = "${LEFGEN_OPT_FILE}"
+bin = "Core"
+
+[steps]
+pins = false
+extract = false
+abstract = true
+
+[output]
+lef_file = "AG_Pins.lef"
+lef_version = "5.8"
+geometry = true
+technology = false

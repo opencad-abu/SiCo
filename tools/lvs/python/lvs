@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+"""Entry point for the LVS-only flow."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+
+HERE = Path(__file__).resolve()
+SICO_TOOLS_ROOT = HERE.parents[2]
+RCE_PYTHON = SICO_TOOLS_ROOT / "rce" / "python"
+COMMON_PYTHON = SICO_TOOLS_ROOT / "common" / "python"
+for root in (RCE_PYTHON, COMMON_PYTHON):
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
+
+from lvspy.cli import main
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

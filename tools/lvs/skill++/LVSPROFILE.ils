@@ -1,0 +1,190 @@
+;------------------------------------------------------------------------------
+; LVS configuration-profile adapter.
+;------------------------------------------------------------------------------
+
+procedure(lvsSvdbQueryFromForm(form)
+  let((field value labels result index)
+    field=get(form 'svdbQuery)
+    labels=list("CCI" "SI" "RECON" "IXF NXF SLPH" "PINLOC")
+    value=if(field then field~>value else '(nil nil nil nil nil))
+    result=nil
+    for(index 0 sub1(length(labels))
+      when(nth(index value)
+        result=append1(result nth(index labels))))
+    result
+  )
+)
+
+procedure(lvsSvdbQueryFlags(data)
+  let((selected labels result label selectedIxf)
+    selected=SICO_profileDataValue(data "lvs.svdb_query" nil)
+    labels=list("CCI" "SI" "RECON" "IXF NXF SLPH" "PINLOC")
+    selectedIxf=or(member("IXF NXF SLPH" selected)
+                   member("IXF+NXF+SLPH" selected)
+                   and(member("IXF" selected)
+                       member("NXF" selected)
+                       member("SLPH" selected)))
+    result=nil
+    foreach(label labels
+      result=append1(result
+        if(label=="IXF NXF SLPH" then selectedIxf else member(label selected))))
+    result
+  )
+)
+
+procedure(lvsProfileCollect(form)
+  let((entries tasks svdbQuery)
+    tasks=or(form~>cadBatchTasks nil)
+    svdbQuery=lvsSvdbQueryFromForm(form)
+    entries=list(
+      list("run.root_type" or(form~>outDirType~>value "Customize Directory"))
+      list("run.root" or(form~>outDirPath~>value ""))
+      list("run.run_type" or(form~>runType~>value "Current Host"))
+      list("run.queue_name" or(form~>queueName~>value ""))
+      list("run.server_name" SICO_lsfSelectedHost(form~>srvName~>value))
+      list("input.type" or(form~>inpType~>value "OA"))
+      list("input.cdl_include_enable" and(form~>cdlIncludeBtn~>value t))
+      list("input.schematic.lib" or(form~>schLib~>value ""))
+      list("input.schematic.cell" or(form~>schCell~>value ""))
+      list("input.schematic.view" or(form~>schView~>value ""))
+      list("input.schematic.cdl_header_file"
+           or(form~>cdlIncludeFile~>value ""))
+      list("input.layout.lib" or(form~>layLib~>value ""))
+      list("input.layout.cell" or(form~>layCell~>value ""))
+      list("input.layout.view" or(form~>layView~>value ""))
+      list("input.cdl.file" or(form~>cdlFile~>value ""))
+      list("input.cdl.cell" or(form~>cdlCell~>value ""))
+      list("input.gds.file" or(form~>gdsFile~>value ""))
+      list("input.gds.cell" or(form~>gdsCell~>value ""))
+      list("lvs.tool" or(form~>lvsTool~>value "Calibre"))
+      list("lvs.runset_name" or(form~>lvsRunsetName~>value ""))
+      list("lvs.runset_file" or(form~>lvsRunsetFile~>value ""))
+      list("lvs.run_mode" or(form~>lvsRunMode~>value "Hier"))
+      list("lvs.hcell_enable" and(form~>lvsHcellBtn~>value t))
+      list("lvs.hcell_file" or(form~>lvsHcellFile~>value ""))
+      list("lvs.ignore_error" nil)
+      list("lvs.case_sensitive" and(form~>lvsCaseBtn~>value t))
+      list("lvs.recognize_gates" or(form~>lvsRecognizeGates~>value "NONE"))
+      list("lvs.virtual_connect_enable" car(form~>lvsVirtualConn~>value))
+      list("lvs.virtual_connect_name_enable" cadr(form~>lvsVirtualConn~>value))
+      list("lvs.virtual_connect_names" or(form~>lvsVirtualConnName~>value "?"))
+      list("lvs.custom_svrf_enable" and(form~>customSvrfEnable~>value t))
+      list("lvs.custom_svrf_command" or(form~>customSvrfCommand~>value ""))
+      list("lvs.svdb_query" svdbQuery)
+      list("runtime.lvs_cpus" or(form~>lvsCpu~>value "1"))
+      list("batch.scope" or(form~>batchRunScope~>value "Single Cell"))
+      list("batch.parallel_cells" or(form~>batchParallelCells~>value "2"))
+    )
+    when(tasks
+      entries=append1(entries list("batch.tasks" tasks)))
+    entries
+  )
+)
+
+procedure(lvsProfileApply(form data)
+  prog((inputType nameConnect root rootType runsetFile scope virtualConnect)
+    inputType=SICO_profileDataValue(data "input.type" "OA")
+    scope=SICO_profileDataValue(data "batch.scope" "Single Cell")
+    when(and(scope=="Multiple Cells" inputType!="OA")
+      return(nil))
+
+    form~>batchRunScope~>value="Single Cell"
+    cadBatchScopeCB(form)
+
+    root=SICO_profilePathValue(data "run.root" form~>outDirPath~>value)
+    rootType=SICO_profileDataValue(data "run.root_type" "Customize Directory")
+    unless(member(rootType
+                  '("Project Directory" "Current Directory"
+                    "Customize Directory"))
+      return(nil))
+    form~>outDirType~>value=rootType
+    lvsOutDirCB(form)
+    when(form~>outDirType~>value=="Customize Directory"
+      form~>outDirPath~>value=or(root ""))
+
+    form~>inpType~>value=inputType
+    form~>schLib~>value=SICO_profileDataValue(
+      data "input.schematic.lib" form~>schLib~>value)
+    form~>schCell~>value=SICO_profileDataValue(
+      data "input.schematic.cell" form~>schCell~>value)
+    form~>schView~>value=SICO_profileDataValue(
+      data "input.schematic.view" form~>schView~>value)
+    form~>layLib~>value=SICO_profileDataValue(
+      data "input.layout.lib" form~>layLib~>value)
+    form~>layCell~>value=SICO_profileDataValue(
+      data "input.layout.cell" form~>layCell~>value)
+    form~>layView~>value=SICO_profileDataValue(
+      data "input.layout.view" form~>layView~>value)
+    form~>cdlFile~>value=SICO_profilePathValue(data "input.cdl.file" "")
+    form~>cdlCell~>value=SICO_profileDataValue(data "input.cdl.cell" "")
+    form~>gdsFile~>value=SICO_profilePathValue(data "input.gds.file" "")
+    form~>gdsCell~>value=SICO_profileDataValue(data "input.gds.cell" "")
+    form~>cdlIncludeBtn~>value=SICO_profileDataValue(
+      data "input.cdl_include_enable" nil)
+    form~>cdlIncludeFile~>value=SICO_profilePathValue(
+      data "input.schematic.cdl_header_file" "")
+    lvsInpCB(form)
+    cadCdlIncludeCB(form)
+
+    form~>lvsRunsetName~>value=SICO_profileDataValue(
+      data "lvs.runset_name" form~>lvsRunsetName~>value)
+    lvsRunsetCB(form)
+    runsetFile=SICO_profilePathValue(
+      data "lvs.runset_file" form~>lvsRunsetFile~>value)
+    form~>lvsRunsetFile~>value=or(runsetFile "")
+    form~>lvsTool~>value=SICO_profileDataValue(
+      data "lvs.tool" form~>lvsTool~>value)
+
+    form~>lvsRunMode~>value=SICO_profileDataValue(data "lvs.run_mode" "Hier")
+    form~>lvsCpu~>value=SICO_profileDataValue(data "runtime.lvs_cpus" "1")
+    form~>lvsHcellBtn~>value=SICO_profileDataValue(
+      data "lvs.hcell_enable" nil)
+    form~>lvsHcellFile~>value=SICO_profilePathValue(data "lvs.hcell_file" "")
+    lvsRunModeCB(form)
+    lvsHcellCB(form)
+
+    form~>lvsCaseBtn~>value=SICO_profileDataValue(
+      data "lvs.case_sensitive" t)
+    virtualConnect=SICO_profileDataValue(
+      data "lvs.virtual_connect_enable" nil)
+    nameConnect=SICO_profileDataValue(
+      data "lvs.virtual_connect_name_enable" t)
+    form~>lvsVirtualConn~>value=list(virtualConnect nameConnect)
+    form~>lvsVirtualConnName~>value=SICO_profileDataValue(
+      data "lvs.virtual_connect_names" "?")
+    lvsVirtualConnCB(form)
+
+    form~>lvsRecognizeGates~>value=SICO_profileDataValue(
+      data "lvs.recognize_gates" "NONE")
+    form~>customSvrfEnable~>value=SICO_profileDataValue(
+      data "lvs.custom_svrf_enable" nil)
+    form~>customSvrfCommand~>value=SICO_profileDataValue(
+      data "lvs.custom_svrf_command" "")
+    SICO_profileSetFormValue(
+      form 'svdbQuery lvsSvdbQueryFlags(data))
+    cadCustomSvrfCB(form)
+
+    form~>cadBatchTasks=SICO_profileDataValue(data "batch.tasks" nil)
+    form~>cadBatchEditIndex=nil
+    form~>batchParallelCells~>value=SICO_profileDataValue(
+      data "batch.parallel_cells" "2")
+    form~>batchRunScope~>value=scope
+    cadBatchScopeCB(form)
+    cadBatchSetEditorValues(form cadBatchDesignValues(form))
+    cadBatchRefreshReport(form)
+
+    form~>runType~>value=SICO_profileDataValue(
+      data "run.run_type" "Current Host")
+    SICO_lsfSetPreferredValues(
+      form SICO_profileDataValue(data "run.queue_name" "")
+      SICO_profileDataValue(data "run.server_name" ""))
+    SICO_lsfChoicesCB(form)
+    return(t)
+  )
+)
+
+procedure(lvsProfileRevision()
+  "20260820.rce.live.log.v4"
+)
+
+SICO_profileRegisterAdapter("LVS" 'lvsProfileCollect 'lvsProfileApply)

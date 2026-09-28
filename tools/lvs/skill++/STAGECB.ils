@@ -1,0 +1,351 @@
+unless(boundp('lvsStageIpcTable)
+  lvsStageIpcTable=makeTable("lvsStageIpcTable" nil)
+)
+
+procedure(lvsStageOutDirCB(form stage)
+  unless(lvsStageFormValidP(form)
+    return(nil))
+  let((dir)
+    case(form~>outDirType~>value
+      ("Current Directory" || "Project Directory"
+        form~>outDirPath~>editable=nil
+        form~>outDirPath~>enabled=nil)
+      ("Customize Directory"
+        form~>outDirPath~>editable=t
+        form~>outDirPath~>enabled=t)
+    )
+    case(form~>outDirType~>value
+      ("Current Directory"
+        form~>outDirPath~>value=strcat(pwd()))
+      ("Project Directory"
+        if(dir=lvsStageProjectDir(stage) then
+          if(or(isDir(dir) cadOutDirUsableP(dir)) then
+            form~>outDirPath~>value=dir
+          else
+            GUI_messageApp('w lvsStageLabel(stage) lvsStageMsgStruc->projShellNotSet)
+            form~>outDirPath~>value=strcat(pwd()))
+        else
+          GUI_messageApp('w lvsStageLabel(stage) lvsStageMsgStruc->projShellNotSet)
+          form~>outDirType~>value="Current Directory"
+          form~>outDirPath~>value=strcat(pwd())))
+      ("Customize Directory"
+        form~>outDirPath~>value="Please select a directory...")
+    )
+  )
+)
+
+procedure(lvsStageFormValidP(form)
+  SICO_lsfFormValidP(form)
+)
+
+procedure(streamGdsFormDoneCB(form)
+  when(lvsStageFormValidP(form)
+    SICO_lsfCancelFormDiscovery(form))
+  t
+)
+
+procedure(streamGdsRunCB(form)
+  when(lvsStageFormValidP(form)
+    lvsStageStart(form "gds"))
+  t
+)
+
+procedure(streamGdsRunCloseCB(form)
+  when(lvsStageFormValidP(form)
+    when(lvsStageStart(form "gds")
+      hiFormClose(form)))
+  t
+)
+
+procedure(exportCdlFormDoneCB(form)
+  when(lvsStageFormValidP(form)
+    SICO_lsfCancelFormDiscovery(form))
+  t
+)
+
+procedure(exportCdlRunCB(form)
+  when(lvsStageFormValidP(form)
+    lvsStageStart(form "cdl"))
+  t
+)
+
+procedure(exportCdlRunCloseCB(form)
+  when(lvsStageFormValidP(form)
+    when(lvsStageStart(form "cdl")
+      hiFormClose(form)))
+  t
+)
+
+procedure(lvsStageLsfChoicesCB(form)
+  when(lvsStageFormValidP(form)
+    SICO_lsfChoicesCB(form))
+)
+
+procedure(lvsStageLabel(stage)
+  if(stage=="gds" then "Stream GDS" else "Export CDL")
+)
+
+procedure(lvsStageCommandName(stage)
+  if(stage=="gds" then "stream-gds" else "export-cdl")
+)
+
+procedure(lvsStagePrefix(stage)
+  if(stage=="gds" then "stream_gds" else "export_cdl")
+)
+
+procedure(lvsStageTomlName(stage)
+  strcat(lvsStagePrefix(stage) ".toml")
+)
+
+procedure(lvsStageRunDirFromForm(form stage)
+  let((runBase)
+    runBase=form~>outDirPath~>value
+    if(stage=="gds" then
+      strcat(runBase "/" form~>layLib~>value "." form~>layCell~>value)
+    else
+      strcat(runBase "/" form~>schLib~>value "." form~>schCell~>value))
+  )
+)
+
+procedure(lvsStageOutputName(form stage)
+  if(stage=="gds" then
+    strcat(form~>layCell~>value ".gds")
+  else
+    strcat(form~>schCell~>value ".cdl"))
+)
+
+procedure(lvsStageValidateForm(form stage)
+  if(or(!form~>outDirPath~>value
+       form~>outDirPath~>value==""
+       form~>outDirPath~>value=="Please select a directory...") then
+    GUI_messageApp('e lvsStageLabel(stage) lvsStageMsgStruc->dirAccess)
+    nil
+  else if(not(SICO_lsfValidateSelection(form lvsStageLabel(stage))) then
+    nil
+  else if(stage=="gds" then
+    if(form~>layLib~>value=="" || ! form~>layLib~>value ||
+        form~>layCell~>value=="" || ! form~>layCell~>value ||
+        form~>layView~>value=="" || ! form~>layView~>value then
+      GUI_messageApp('e "Stream GDS" lvsStageMsgStruc->inputOaLay)
+      nil
+    else
+      t)
+  else
+    if(form~>schLib~>value=="" || ! form~>schLib~>value ||
+        form~>schCell~>value=="" || ! form~>schCell~>value ||
+        form~>schView~>value=="" || ! form~>schView~>value then
+      GUI_messageApp('e "Export CDL" lvsStageMsgStruc->inputOaSch)
+      nil
+    else
+      t))))
+)
+
+procedure(lvsStageWriteToml(form stage)
+  prog((tempFile cmdFile runDir cdslib outFile schlib schcell schview laylib laycell layview
+        cdlIncludeFile layerMap)
+    unless(lvsStageValidateForm(form stage)
+      return(nil))
+    cdslib=SICO_absolutePath(
+             or(getShellEnvVar("CDS_LIB") strcat(pwd() "/cds.lib")))
+    tempFile=SICO_tempPath(
+      if(stage=="gds" then "lvsgdsXXXX" else "lvscdlXXXX"))
+    unless(tempFile
+      GUI_messageApp('e lvsStageLabel(stage) lvsStageMsgStruc->noConfig)
+      return(nil))
+    tempFile=makeTempFileName(tempFile)
+    runDir=lvsStageRunDirFromForm(form stage)
+    runDir=simplifyFilename(runDir t)
+    cmdFile=strcat(runDir "/" lvsStageTomlName(stage))
+    schlib=if(stage=="cdl" then form~>schLib~>value else "")
+    schcell=if(stage=="cdl" then form~>schCell~>value else "")
+    schview=if(stage=="cdl" then form~>schView~>value else "")
+    laylib=if(stage=="gds" then form~>layLib~>value else "")
+    laycell=if(stage=="gds" then form~>layCell~>value else "")
+    layview=if(stage=="gds" then form~>layView~>value else "")
+    cdlIncludeFile=""
+    layerMap=SICO_absolutePath(getShellEnvVar("TECH_LAYER_MAP"))
+
+    when(and(stage=="cdl" form~>cdlIncludeBtn~>value)
+      cdlIncludeFile=form~>cdlIncludeFile~>value
+      unless(and(cdlIncludeFile isFile(cdlIncludeFile))
+        GUI_messageApp('e "Export CDL" lvsStageMsgStruc->cdlIncludeFile)
+        return(nil))
+      cdlIncludeFile=SICO_absolutePath(cdlIncludeFile)
+    )
+
+    when(! isDir(runDir)
+      info(strcat("<INFO> LVS::" lvsStageMsgStruc->dirExist "\n"))
+      unless(system(strcat("mkdir -p " SICO_shellQuote(runDir)))==0
+        GUI_messageApp('e lvsStageLabel(stage) lvsStageMsgStruc->dirAccess)
+        return(nil)))
+
+    outFile=outfile(tempFile)
+    unless(outFile
+      GUI_messageApp('e lvsStageLabel(stage) lvsStageMsgStruc->noConfig)
+      return(nil))
+    SICO_tomlWriteSection(outFile "run")
+    SICO_tomlWriteString(outFile "run_dir" runDir)
+    SICO_tomlWriteString(outFile "cds_lib" cdslib)
+    SICO_tomlWriteString(outFile "run_type" form~>runType~>value)
+    SICO_tomlWriteString(outFile "queue_name" form~>queueName~>value)
+    SICO_tomlWriteString(
+      outFile "server_name" SICO_lsfSelectedHost(form~>srvName~>value))
+
+    SICO_tomlWriteSection(outFile "input")
+    SICO_tomlWriteString(outFile "type" "OA")
+
+    SICO_tomlWriteSection(outFile "input.schematic")
+    SICO_tomlWriteString(outFile "lib" schlib)
+    SICO_tomlWriteString(outFile "cell" schcell)
+    SICO_tomlWriteString(outFile "view" schview)
+    SICO_tomlWriteString(outFile "cdl_header_file" cdlIncludeFile)
+
+    SICO_tomlWriteSection(outFile "input.layout")
+    SICO_tomlWriteString(outFile "lib" laylib)
+    SICO_tomlWriteString(outFile "cell" laycell)
+    SICO_tomlWriteString(outFile "view" layview)
+    SICO_tomlWriteString(outFile "layer_map" layerMap)
+
+    SICO_tomlWriteSection(outFile "options")
+    SICO_tomlWriteBool(outFile "replace_bus_bit_char"
+                      form~>replaceBusBitChar~>value)
+
+    SICO_tomlWriteSection(outFile "runtime")
+    SICO_tomlWriteString(outFile "cpus" form~>runCpu~>value)
+
+    close(outFile)
+    unless(system(strcat("mv " SICO_shellQuote(tempFile) " "
+                         SICO_shellQuote(cmdFile)))==0
+      GUI_messageApp('e lvsStageLabel(stage) lvsStageMsgStruc->noConfig)
+      return(nil))
+    return(cmdFile)
+  )
+)
+
+procedure(lvsStageCdlIncludeRevision()
+  "20260812.cdl.include.v2"
+)
+
+procedure(lvsStageAbsolutePathRevision()
+  "20260812.toml.absolute.paths.v1"
+)
+
+procedure(lvsStageUsesCadTempPath()
+  t
+)
+
+procedure(lvsStageRunRootRevision()
+  "20260924.flow.environment.v3"
+)
+
+procedure(lvsStageBackupRunData(runDir stage outputName)
+  let((dataDir logs cmd)
+    dataDir=if(stage=="gds" then "db/gds" else "db/cdl")
+    logs=if(stage=="gds" then
+      "log/strmout.log log/stream_gds.launch.log log/stream_gds.manifest log/stream_gds.toml"
+    else
+      "log/si.log log/export_cdl.launch.log log/export_cdl.manifest log/export_cdl.toml")
+    cmd=strcat("cd " SICO_shellQuote(runDir)
+                " && tag=$(date +%m-%d-%H-%M-%S)-$$"
+                " && mkdir -p db log"
+                " && if [ -d " dataDir " ]; then mv " dataDir " " dataDir ".$tag; fi"
+                " && output=" SICO_shellQuote(outputName)
+                " && if [ -e \"$output\" ]; then mv \"$output\" \"$output.$tag\"; fi"
+                " && for f in " logs "; do if [ -e \"$f\" ]; then mv \"$f\" \"$f.$tag\"; fi; done")
+    system(cmd)
+  )
+)
+
+procedure(lvsStageIpcDataHandler(cid data)
+  nil
+)
+
+procedure(lvsStageIpcErrHandler(cid data)
+  nil
+)
+
+procedure(lvsStageIpcPostFunc(cid exitStatus)
+  let((meta pidFile launchLog label)
+    meta=lvsStageIpcTable[cid]
+    launchLog=""
+    label="LVS Stage"
+    when(meta
+      pidFile=car(meta)
+      launchLog=cadr(meta)
+      label=caddr(meta)
+      when(pidFile && isFile(pidFile)
+        deleteFile(pidFile))
+      lvsStageIpcTable[cid]=nil)
+    if(exitStatus == 0 then
+      info(strcat("<INFO> " label "::Finished. LOG=\"" launchLog "\"\n"))
+    else
+      warn(strcat("<WARN> " label "::Finished with exit status "
+                    sprintf(nil "%L" exitStatus)
+                    ". LOG=\"" launchLog "\"\n")))
+  )
+)
+
+procedure(lvsStageStart(form stage)
+  prog((cmdFile runPathParts pidPostfix tmp user lib cell pid pidNum inp run
+         runPathPrefix logDir launchLog cmd launchCmd cid out label prefix
+         outputName)
+    run="YES"
+    user=getLogin()
+    label=lvsStageLabel(stage)
+    prefix=lvsStagePrefix(stage)
+    info(strcat("<INFO> " label "::Start to run progress...\n"))
+    cmdFile=lvsStageWriteToml(form stage)
+    when(! cmdFile return(nil))
+    runPathParts=parseString(cmdFile "/")
+    pidPostfix=nth(length(runPathParts)-2 runPathParts)
+    tmp=parseString(pidPostfix ".")
+    lib=nth(0 tmp)
+    cell=nth(1 tmp)
+    pid=SICO_tempPath(strcat(prefix ".pid." user "." lib "." cell))
+    unless(pid
+      warn("<WARN> LVS::Cannot create the stage PID file path.\n")
+      return(nil))
+    when(isFile(pid)
+      inp=infile(pid)
+      gets(pidNum inp)
+      close(inp)
+      run=GUI_askApp(label strcat("A process is running for the same cell. Start another anyway?\n\nPID: " pidNum)))
+    when(run == "NO"
+      info(strcat("<INFO> " label "::User canceled progress.\n"))
+      return(nil))
+    runPathPrefix=substring(cmdFile 1 (strlen(cmdFile)-strlen(lvsStageTomlName(stage))-1))
+    outputName=lvsStageOutputName(form stage)
+    when((lvsStageBackupRunData(runPathPrefix stage outputName) != 0)
+      warn(strcat("<WARN> " label "::Failed to back up existing run data in "
+                    runPathPrefix "\n"))
+      return(nil))
+    logDir=strcat(runPathPrefix "/log")
+    launchLog=strcat(logDir "/" prefix ".launch.log")
+    cmd=strcat(SICO_backendCommand("lvs" LVS_pythonExe() LVS_pythonEntry()) " " lvsStageCommandName(stage) " " SICO_shellQuote(cmdFile))
+    launchCmd=LVS_launchEnvCommand(
+                strcat("LVS_BACKUP_DONE=1 "
+                        SICO_backendCommand("lvs" LVS_pythonExe() LVS_pythonEntry()) " "
+                        lvsStageCommandName(stage) " "
+                        SICO_shellQuote(cmdFile)))
+    launchCmd=SICO_lsfWrapCommand(
+      launchCmd form~>runType~>value form~>queueName~>value
+      form~>srvName~>value
+      form~>runCpu~>value nil launchLog)
+    cmd=launchCmd
+    info(strcat("<INFO> " label "::CMD=\"" cmd "\"\n"))
+    info(strcat("<INFO> " label "::LOG=\"" launchLog "\"\n"))
+    system(strcat("mkdir -p " SICO_shellQuote(logDir)))
+    cid=ipcBeginProcess(launchCmd "" 'lvsStageIpcDataHandler 'lvsStageIpcErrHandler 'lvsStageIpcPostFunc launchLog)
+    when(! cid
+      warn(strcat("<WARN> " label "::Failed to start IPC process.\n"))
+      return(nil))
+    lvsStageIpcTable[cid]=list(pid launchLog label)
+    out=outfile(pid "w")
+    when(out
+      fprintf(out "%L\n" cid)
+      close(out))
+    ipcActivateBatch(cid)
+    GUI_flowLogOpen(label launchLog)
+    return(t)
+  )
+)

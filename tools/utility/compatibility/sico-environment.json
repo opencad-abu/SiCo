@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "compatibility": [
+    {
+      "legacy": "SiCo finite process aliases",
+      "source": "tools/common/python/sicoenv.py:read",
+      "replacement": "tools/common/python/sicoenv.py",
+      "owner": "tools/common/python/sicoenv.py",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/ai/python/tests/test_sico_process_environment.py"
+      ],
+      "status": "tombstone",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "SiCo SKILL environment aliases",
+      "source": "tools/common/skill/SICO_environment.il",
+      "replacement": "tools/common/skill/SICO_environment.il",
+      "owner": "tools/common/skill/SICO_environment.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_skill_contract.py"
+      ],
+      "status": "tombstone",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "SiCo shell launcher input aliases",
+      "source": "tools/common/sh/sico-installation.sh",
+      "replacement": "tools/common/sh/sico-installation.sh",
+      "owner": "tools/common/sh/sico-installation.sh",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_launchers.py"
+      ],
+      "status": "tombstone",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "SiCo native launcher input aliases",
+      "source": "deploy/sico_native_installation.h",
+      "replacement": "deploy/sico_native_installation.h",
+      "owner": "deploy/sico_native_installation.h",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "deploy/tests/test_sico_native_installation.py"
+      ],
+      "status": "tombstone",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "SiCo CMake input aliases",
+      "source": "tools/ai/terminal/cmake/sico-options.cmake",
+      "replacement": "tools/ai/terminal/CMakeLists.txt",
+      "owner": "tools/ai/terminal/CMakeLists.txt",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "deploy/tests/test_sico_build_compatibility.py"
+      ],
+      "status": "tombstone",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "SiCo shell build input aliases",
+      "source": "tools/ai/terminal/scripts/sico-build-environment.sh",
+      "replacement": "tools/ai/terminal/scripts/build_qtermwidget5.sh",
+      "owner": "tools/ai/terminal/scripts/build_qtermwidget5.sh",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "deploy/tests/test_sico_build_compatibility.py"
+      ],
+      "status": "tombstone",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped."
+    },
+    {
+      "legacy": "cadAiLoadProtectedContext site hook",
+      "source": "deploy/context_bootstrap.il",
+      "replacement": "deploy/context_bootstrap.il",
+      "owner": "deploy/context_bootstrap.il",
+      "consumers": [],
+      "external_consumers": "Supported proj3 site uses SICO names; immutable v0.0.1 remains available for old sites.",
+      "evidence": [
+        "deploy/tests/test_runtime_bootstrap.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "cadAiLoadProtectedContext": "SICO_loadRuntime"
+      }
+    },
+    {
+      "legacy": "cadNonAiInitialize function",
+      "source": "tools/common/skill/SICO_toolsRuntime.il",
+      "replacement": "tools/common/skill/SICO_toolsRuntime.il",
+      "owner": "tools/common/skill/SICO_toolsRuntime.il",
+      "consumers": [],
+      "external_consumers": "Retired after v0.0.1; proj3 uses the current entry.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "cadNonAiInitialize": "SICO_toolsInitialize"
+      }
+    },
+    {
+      "legacy": "cadLoadThisFirst function",
+      "source": "tools/common/skill/sicoToolRegister.il",
+      "replacement": "tools/common/skill/sicoToolRegister.il",
+      "owner": "tools/common/skill/sicoToolRegister.il",
+      "consumers": [],
+      "external_consumers": "Retired after v0.0.1; proj3 uses the current entry.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "cadLoadThisFirst": "sicoToolRegister"
+      }
+    },
+    {
+      "legacy": "cadDisplayCodexTerminal function",
+      "source": "tools/ai/skill/AI_launcher.il",
+      "replacement": "tools/ai/skill/AI_launcher.il",
+      "owner": "tools/ai/skill/AI_launcher.il",
+      "consumers": [],
+      "external_consumers": "Retired after v0.0.1; proj3 uses the current entry.",
+      "evidence": [
+        "tools/common/python/tests/test_sico_legacy_skill.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Removed in v0.0.2 after migration release v0.0.1; qualification and site cutover are recorded in docs/SICO_REFACTOR_STATUS.md. Historical protocol records and finite diagnostic/sanitation names remain explicitly scoped.",
+      "symbols": {
+        "cadDisplayCodexTerminal": "cadDisplayAiAssistant"
+      }
+    }
+  ]
+}

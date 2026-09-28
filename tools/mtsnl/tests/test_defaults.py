@@ -1,0 +1,35 @@
+"""Legacy test collector; remove after scripts migrate to domain cases."""
+
+import pytest
+
+pytestmark = pytest.mark.usefixtures("protected_worker_context")
+
+from defaults_snapshot_cases import (
+    test_report_normalizes_disabled_models_and_preserves_process_text,
+    test_model_files_resolve_relative_entries_and_preserve_raw_marker,
+    test_mae_include_paths_resolve_relative_model_files,
+    test_disabled_mae_all_included_path_is_not_used,
+    test_report_accepts_scope_and_raw_model_audit_fields,
+    test_mae_source_defaults_skip_include_empty_values,
+)
+
+from defaults_report_cases import (
+    test_report_rejects_unknown_fields_and_source_mismatch,
+    test_probe_request_validates_dialect,
+    test_mae_setup_requires_explicit_test_and_validates_identity,
+    test_mae_report_round_trip_preserves_provider_and_setup,
+    test_report_rejects_provider_or_mae_setup_mismatch,
+    test_report_rejects_unknown_mae_setup_fields,
+    test_report_rejects_success_status_with_api_errors,
+)
+
+from defaults_probe_cases import (
+    test_probe_script_observes_asi_before_user_overrides,
+    test_probe_script_reads_active_asi_session_and_model_selection_api,
+    test_mae_probe_script_uses_explicit_mae_apis_without_guessing,
+    test_mae_probe_script_reports_open_and_api_failures_without_masquerading_as_success,
+    test_mae_probe_closes_explicit_session_without_masking_body_failures,
+    test_mae_probe_script_supports_flat_and_pair_property_list_forms,
+)
+
+__all__ = ['test_report_normalizes_disabled_models_and_preserves_process_text', 'test_model_files_resolve_relative_entries_and_preserve_raw_marker', 'test_mae_include_paths_resolve_relative_model_files', 'test_disabled_mae_all_included_path_is_not_used', 'test_report_accepts_scope_and_raw_model_audit_fields', 'test_mae_source_defaults_skip_include_empty_values', 'test_report_rejects_unknown_fields_and_source_mismatch', 'test_probe_request_validates_dialect', 'test_mae_setup_requires_explicit_test_and_validates_identity', 'test_mae_report_round_trip_preserves_provider_and_setup', 'test_report_rejects_provider_or_mae_setup_mismatch', 'test_report_rejects_unknown_mae_setup_fields', 'test_report_rejects_success_status_with_api_errors', 'test_probe_script_observes_asi_before_user_overrides', 'test_probe_script_reads_active_asi_session_and_model_selection_api', 'test_mae_probe_script_uses_explicit_mae_apis_without_guessing', 'test_mae_probe_script_reports_open_and_api_failures_without_masquerading_as_success', 'test_mae_probe_closes_explicit_session_without_masking_body_failures', 'test_mae_probe_script_supports_flat_and_pair_property_list_forms']

@@ -1,0 +1,23 @@
+* StarRC installation defaults; GUI and request commands are generated.
+[extraction]
+MODE: 400
+REDUCTION: YES
+DENSITY_BASED_THICKNESS: YES
+
+[coupling]
+COUPLE_TO_GROUND: NO
+
+[xref]
+XREF_USE_LAYOUT_DEVICE_NAME: YES
+
+[database]
+EXTRACT_VIA_CAPS: YES
+REMOVE_FLOATING_NETS: NO
+REMOVE_DANGLING_NETS: NO
+SKIP_CELLS: !*
+
+[after_selection]
+TRANSLATE_RETAIN_BULK_LAYERS: YES
+
+[netlist.file]
+NETLIST_PASSIVE_PARAMS: YES

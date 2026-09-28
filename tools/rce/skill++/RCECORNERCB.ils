@@ -1,0 +1,260 @@
+; Manage corner row selection and preserve selected temperatures. SKILL++ lexical scope.
+
+procedure(rceCornerRowRecords(form)
+  let((records index selectField nameField tempField corner selected)
+    records=nil
+    when(and(form~>rceCornerSelectFields form~>rceCornerNameFields
+             form~>rceCornerTempFields)
+      for(index 0 sub1(length(form~>rceCornerSelectFields))
+        selectField=nth(index form~>rceCornerSelectFields)
+        nameField=nth(index form~>rceCornerNameFields)
+        tempField=nth(index form~>rceCornerTempFields)
+        corner=nameField~>value
+        when(corner==" " corner="")
+        selected=car(selectField~>value)
+        when(and(corner strlen(corner)>0)
+          records=append1(records list(corner tempField~>value selected))
+        )
+      )
+    )
+    records
+  )
+)
+
+procedure(rceMatchingCornerRecord(name records)
+  let((match record)
+    match=nil
+    foreach(record records
+      when(and(name car(record)
+               lowerCase(name)==lowerCase(car(record)))
+        match=record
+      )
+    )
+    match
+  )
+)
+
+procedure(rceSelectedMultiCornerRecords(form)
+  let((selected record)
+    selected=nil
+    foreach(record rceCornerRowRecords(form)
+      when(nth(2 record)
+        selected=append1(selected record)
+      )
+    )
+    selected
+  )
+)
+
+procedure(rceSelectedProcessCorners(form)
+  let((corners record)
+    if(and(form~>cornerType
+           form~>cornerType~>value=="Multiple Corners") then
+      corners=nil
+      foreach(record rceSelectedMultiCornerRecords(form)
+        corners=append1(corners car(record))
+      )
+      corners
+    else
+      when(and(form~>corner~>value strlen(form~>corner~>value)>0)
+        list(form~>corner~>value))
+    )
+  )
+)
+
+procedure(rceSelectedCornerTemperatures(form)
+  let((temperatures record)
+    if(and(form~>cornerType
+           form~>cornerType~>value=="Multiple Corners") then
+      temperatures=nil
+      foreach(record rceSelectedMultiCornerRecords(form)
+        temperatures=append1(temperatures cadr(record))
+      )
+      temperatures
+    else
+      when(form~>corner~>value list(form~>temp~>value))
+    )
+  )
+)
+
+procedure(rcePrimaryProcessCorner(form)
+  car(rceSelectedProcessCorners(form))
+)
+
+procedure(rcePopulateMultiCornerRows(form corners preferred)
+  let((records selectedCount index selectField nameField tempField rowLayout
+       corner record selected temperature visible)
+    records=rceCornerRowRecords(form)
+    selectedCount=0
+    foreach(record records
+      when(and(nth(2 record)
+               rceMatchingProcessCorner(car(record) corners))
+        selectedCount=selectedCount+1
+      )
+    )
+    for(index 0 sub1(length(form~>rceCornerSelectFields))
+      selectField=nth(index form~>rceCornerSelectFields)
+      nameField=nth(index form~>rceCornerNameFields)
+      tempField=nth(index form~>rceCornerTempFields)
+      rowLayout=nth(index form~>rceCornerRowLayouts)
+      visible=and(index<length(corners)
+                  strlen(nth(index corners))>0)
+      if(visible then
+        corner=nth(index corners)
+        record=rceMatchingCornerRecord(corner records)
+        selected=if(record then nth(2 record)
+                     else and(selectedCount==0 corner==preferred))
+        temperature=if(record then cadr(record)
+                       else rceDefaultCornerTemperature(
+                              corner form~>temp~>value))
+        nameField~>value=corner
+        nameField~>_labelOnly=corner
+        selectField~>value=list(selected)
+        tempField~>value=temperature
+        rowLayout~>invisible=nil
+      else
+        nameField~>value=""
+        nameField~>_labelOnly=""
+        selectField~>value=list(nil)
+        rowLayout~>invisible=t
+      )
+    )
+  )
+)
+
+procedure(rceCornerTypeCB(form @optional (migrate t))
+  let((multiple selected index selectField nameField tempField)
+    multiple=form~>cornerType~>value=="Multiple Corners"
+    when(and(multiple form~>rceAvailableCorners
+               length(form~>rceAvailableCorners)>
+                 length(form~>rceCornerSelectFields))
+      GUI_messageApp('e "RCE" extmsgStruc->multiCornerCapacity)
+      form~>cornerType~>value="Single Corner"
+      multiple=nil
+    )
+    when(migrate
+      if(multiple then
+        for(index 0 sub1(length(form~>rceCornerSelectFields))
+          selectField=nth(index form~>rceCornerSelectFields)
+          nameField=nth(index form~>rceCornerNameFields)
+          tempField=nth(index form~>rceCornerTempFields)
+          when(and(strlen(nameField~>value)>0
+                     lowerCase(nameField~>value)==
+                       lowerCase(form~>corner~>value))
+            selectField~>value=list(t)
+            tempField~>value=form~>temp~>value
+          )
+        )
+      else
+        selected=car(rceSelectedMultiCornerRecords(form))
+        when(selected
+          form~>corner~>value=car(selected)
+          form~>temp~>value=cadr(selected)
+        )
+      )
+    )
+    form~>singleCornerSetup~>invisible=multiple
+    form~>multiCornerSetup~>invisible=!multiple
+    rceSyncNativeView(form)
+    rceSyncReduction(form)
+    multiple
+  )
+)
+
+procedure(rceRefreshProcessCorners(form)
+  let((corners selected)
+    corners=rceProcessCornerNames(form~>extTool~>value
+                                   form~>rcTechDirPath~>value)
+    selected=rcePreferredProcessCorner(corners form~>corner~>value)
+    form~>rceAvailableCorners=corners
+    form~>corner~>items=corners
+    form~>corner~>enabled=and(selected strlen(selected)>0)
+    form~>corner~>value=or(selected "")
+    rcePopulateMultiCornerRows(form corners selected)
+    rceCornerTypeCB(form nil)
+    when(selected
+      rceCornerCB(form)
+    )
+    rceSyncNativeView(form)
+    selected
+  )
+)
+
+procedure(rceExtToolCB(form)
+  let((techNames)
+    case(form~>outType~>value
+      ("extview" || "smartview"
+        when(form~>extTool~>value!="QRC"
+          GUI_messageApp('i "RCE" extmsgStruc->viewEngine)
+          form~>extTool~>value="QRC"
+        )
+        form~>nlRmInst~>value="TRUE"
+      )
+      ("sp" || "spice"
+        form~>nlRmInst~>value="TRUE"
+      )
+      ("dspf"
+        form~>nlRmInst~>value="FALSE"
+      )
+      (t
+        form~>nlRmInst~>value="TRUE"
+      )
+    );case
+    rceSyncBlockCellSelection(form)
+    techNames=RCE_extTechNames(form~>extTool~>value)
+    form~>rcTechDirName~>items=techNames
+    form~>rcTechDirName~>value=car(techNames)
+    form~>rcTechDirPath~>value=RCE_extTechValue(form~>extTool~>value form~>rcTechDirName~>value)
+    form~>viewDeviceMap~>value=""
+    form~>viewLayerMap~>value=""
+    rceRefreshProcessCorners(form)
+    rceSyncStartRve(form)
+    rceSyncNativeView(form)
+    rceSyncExtractTopCell(form)
+    rceSyncNetlistCustomize(form)
+    rceSyncReduction(form)
+  );let
+)
+
+procedure(rceRcTechDirCB(form)
+  let(()
+    form~>rcTechDirPath~>value=RCE_extTechValue(form~>extTool~>value form~>rcTechDirName~>value)
+    form~>viewDeviceMap~>value=""
+    form~>viewLayerMap~>value=""
+    rceRefreshProcessCorners(form)
+    rceSyncNativeView(form)
+  );let
+)
+
+procedure(rceRcTechDirPathCB(form)
+  form~>viewDeviceMap~>value=""
+  form~>viewLayerMap~>value=""
+  rceRefreshProcessCorners(form)
+  rceSyncNativeView(form)
+)
+
+procedure(rceCornerCB(form)
+  let((index selectField nameField tempField selected)
+    form~>temp~>value=rceDefaultCornerTemperature(
+                        form~>corner~>value form~>temp~>value)
+    when(form~>cornerType~>value=="Single Corner"
+      for(index 0 sub1(length(form~>rceCornerSelectFields))
+        selectField=nth(index form~>rceCornerSelectFields)
+        nameField=nth(index form~>rceCornerNameFields)
+        tempField=nth(index form~>rceCornerTempFields)
+        selected=and(strlen(nameField~>value)>0
+                       lowerCase(nameField~>value)==
+                         lowerCase(form~>corner~>value))
+        selectField~>value=list(selected)
+        when(selected
+          tempField~>value=form~>temp~>value
+        )
+      )
+    )
+    when(form~>viewDeviceMap
+      form~>viewDeviceMap~>value=""
+      form~>viewLayerMap~>value=""
+      rceSyncNativeView(form)
+    )
+  );let
+)

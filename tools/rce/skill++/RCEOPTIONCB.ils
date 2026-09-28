@@ -1,0 +1,165 @@
+; Handle LVS, execution-host and net/cell filter option changes. SKILL++ lexical scope.
+
+procedure(rceLvsIgnoreErrorCB(form)
+  let(()
+   when(form~>lvsIgnoreError~>value
+     GUI_messageApp('w "RCE" extmsgStruc->lvsIgnoreError)
+   )
+  );let
+)
+
+procedure(rceLvsRunsetCB(form)
+  let(()
+    form~>lvsRunsetFile~>value=SICO_envPairValue(
+      "RCE_LVS_FILE" form~>lvsRunsetName~>value)
+  );let
+)
+
+procedure(rceLvsHcellCB(form)
+  let(()
+    form~>lvsHcellFile~>enabled=form~>lvsHcellBtn~>value
+  )
+)
+
+procedure(rceLvsVirtualConnFieldCB(field scope item value)
+  ; Use the owning form supplied by HI, including programmatic changes when
+  ; another form is current (for example after browsing an output directory).
+  rceLvsVirtualConnCB(scope)
+)
+
+procedure(rceLvsVirtualConnCB(form)
+  let((nameEnabled)
+    nameEnabled=cadr(form->lvsVirtualConn->value)
+    if(nameEnabled then
+      form->lvsVirtualConnName->invisible=nil
+      when(or(!form->lvsVirtualConnName->value
+                blankstrp(form->lvsVirtualConnName->value))
+        form->lvsVirtualConnName->value="?"
+      )
+    else
+      form->lvsVirtualConnName->invisible=t
+    )
+  );let
+)
+
+procedure(rceLsfChoicesCB(form)
+  SICO_lsfChoicesCB(form)
+)
+
+procedure(rceNetSelBtnCB(form)
+  let(()
+    if(form~>netSelBtn~>value then
+      form~>netSelChoices~>enabled=t
+      form~>netSelFile~>enabled=t
+      form~>netSchSelBtn~>enabled=t
+    else
+      form~>netSelChoices~>enabled=nil
+      form~>netSelFile~>enabled=nil
+      form~>netSchSelBtn~>enabled=nil
+    )
+
+    unless(form~>netSelBtn~>value
+      form~>netSelChoices~>value="Include Nets"
+      form~>netSelFile~>value=""
+    )
+  );let
+)
+
+procedure(rceNetSchSelBtnCB(form)
+  let((lib cell view)
+    lib=form~>schLib~>value
+    cell=form~>schCell~>value
+    view=form~>schView~>value
+    if(lib=="" || ! lib || cell=="" || ! cell || view=="" || ! view then
+      GUI_messageApp('e "RCE"  extmsgStruc->inputOaSch)
+    else
+      UI_rceSelectNetFromView(lib cell view form)
+    )
+  );let
+)
+
+procedure(rceCellSelBtnCB(form)
+  let(()
+    if(form~>cellSelBtn~>value then
+      form~>cellSelFile~>enabled=t
+      form~>cellLibSelBtn~>enabled=t
+    else
+      form~>cellSelFile~>enabled=nil
+      form~>cellLibSelBtn~>enabled=nil
+    )
+
+    unless(form~>cellSelBtn~>value
+      form~>cellSelFile~>value=""
+    )
+
+  );let
+)
+
+procedure(rceSyncBlockCellSelection(form)
+  let(()
+    form~>cellSelBtn~>enabled=t
+    rceCellSelBtnCB(form)
+    t
+  );let
+)
+
+procedure(rceCellLibSelBtnCB(form)
+  if(rceFormValidP(form) then
+    let((lib libraries firstLibrary)
+      lib=form~>layLib~>value
+      when(! lib || lib==""
+        lib=form~>schLib~>value
+      )
+      when(! lib || lib==""
+        libraries=ddGetLibList()
+        firstLibrary=car(libraries)
+        lib=when(firstLibrary firstLibrary~>name)
+      )
+      UI_rceCreateSelCellForm(lib form)
+    )
+  else
+    nil
+  )
+)
+
+procedure(rceRelFilterCapBtnCB(form)
+  let(()
+    if(form~>relFilterCapBtn~>value then
+      form~>relFilterCapValue~>enabled=t
+    else
+      form~>relFilterCapValue~>enabled=nil
+    )
+
+    when(! form~>relFilterCapBtn~>value
+      form~>relFilterCapValue~>value="0.1"
+    )
+  );let
+)
+
+procedure(rceAbsFilterCapBtnCB(form)
+  let(()
+    if(form~>absFilterCapBtn~>value then
+      form~>absFilterCapValue~>enabled=t
+    else
+      form~>absFilterCapValue~>enabled=nil
+    )
+
+    when(!  form~>absFilterCapBtn~>value
+      form~>absFilterCapValue~>value="0.01"
+    )
+  );let
+)
+
+procedure(rceAbsFilterResBtnCB(form)
+  let(()
+    if(form~>absFilterResBtn~>value then
+      form~>absFilterResValue~>enabled=t
+    else
+      form~>absFilterResValue~>enabled=nil
+    )
+
+    when(! form~>absFilterResBtn~>value
+      form~>absFilterResValue~>value="0.001"
+    )
+  );let
+)

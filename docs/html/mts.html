@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SiCo 使用手册：MTS 多工艺网表。安装、环境变量、Virtuoso 集成与 CAD flow 配置。">
+<title>MTS 多工艺网表 · SiCo 使用手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b4543a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='sans-serif' font-size='24' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/manual.css">
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
+  <span class="edition">使用手册 / 2026.09</span>
+  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+</header>
+<noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="手册目录">
+<p class="rail-label">SICO DOCUMENTATION</p>
+<a href="index.html">开始阅读</a>
+<p class="nav-group">开始使用</p>
+<a href="installation.html">01 · 安装</a>
+<a href="environment.html">02 · 环境变量</a>
+<a href="virtuoso.html">03 · Virtuoso 集成</a>
+<a href="flows.html">04 · CAD flows</a>
+<p class="nav-group">流程指南</p>
+<a href="drc.html">DRC · 规则检查</a>
+<a href="lvs.html">LVS · 连接检查</a>
+<a href="rce.html">RCE · 寄生提取</a>
+<a href="mts.html" aria-current="page">MTS · 多工艺网表</a>
+<a href="utilities.html">LEF / GDS / CDL</a>
+<a href="lsf.html">LSF · 运行与资源</a>
+<p class="nav-group">参考附录</p>
+<a href="environment-internal.html">环境接口附录</a>
+<div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
+</nav>
+<div class="reading">
+<main id="main">
+<p class="eyebrow">CAD FLOW / MULTI TECHNOLOGY SIMULATION</p>
+<h1>MTS · 多工艺网表生成</h1>
+<p class="lead">从指定项目的 schematic 生成 Spectre 或 hspiceD 网表，整理模型与工艺参数作用域，并按需发布到当前工程的目标库。</p>
+<h2 id="environment">先配置项目来源</h2>
+<div class="code-block"><div class="code-label">Bash · MTS 启动环境</div><pre><code>export MTS_NETLISTOR_MODULEFILES="/path/to/project/modulefiles"
+export PROJ_ADE_DB_DIR="/path/to/my/project/simulation"
+# modulecmd 不在标准路径时再设置。
+# export MTS_NETLISTOR_MODULECMD="/path/to/modules/bin/modulecmd"
+command -v modulecmd ocean dbAccess cdsTextTo5x cdsLibDebug
+mts-netlistor gui</code></pre></div>
+<p>项目 modulefiles 目录必须显式提供。<code>mts-netlistor gui --module-root DIR</code> 可覆盖环境设置；两者均未提供、为空或目录不存在时，GUI 提示后结束启动。宿主 <code>MODULEPATH</code> 不作为项目列表，仅供所选 module 的依赖解析。</p>
+<div class="notice"><code>PROJ_ADE_DB_DIR</code> 当前仍有效，必须是可写绝对路径，用于 MTS 结果保存。它不属于已经去掉 PROJ_ 前缀的 DRC / LVS / RCE 变量。</div>
+<h2 id="modulefile">项目 modulefile 应提供什么</h2>
+<p>每个源项目 module 必须自行定义 <code>PROJ_USER_HOME</code>，该目录下的 <code>cds.lib</code> 是源项目默认库定义。还需加载该项目适用的 Cadence、PDK、许可证和模型环境。MTS 在独立环境中加载所选 module，不修改宿主 Virtuoso 的项目环境。</p>
+<div class="code-block"><div class="code-label">Tcl modulefile · 最小结构示意</div><pre><code>#%Module1.0
+# 将路径换为这个源项目的个人工作目录。
+setenv PROJ_USER_HOME /path/to/source/project/user
+# 在这里加载本站点批准的 Cadence、PDK 与许可证模块。
+# PROJ_USER_HOME/cds.lib 必须已存在并能正确解析源库。</code></pre></div>
+<p>这段只说明必要目录字段，完整站点工具配置由 CAD 提供。仅创建空 modulefile 不足以完成源项目准备。</p>
+<h2 id="gui">在 GUI 中配置与生成</h2>
+<ol class="steps"><li>在当前目标工程的 Virtuoso 选择 <strong>SiCo → MTS Netlistor…</strong>，或使用独立命令启动。每个 Process 页面选择一个源项目。</li><li>等待源库列表加载，选择 library / cell / schematic view。需要读取新增 cell 时点击 <strong>Refresh</strong>。</li><li>选择 <strong>spectre</strong> 或 <strong>hspiceD</strong>。查看从源工艺读取的模型和默认项，核对 model file、section、启用状态及顺序。</li><li>按方言支持调整温度、scale、gmin 和 simulator options；Spectre 还可配置 tnom、scalem、reltol。当前 hspiceD 不接受后三项。保留单位和数据类型，不凭文件名猜模型 corner。</li><li>点击 <strong>Run Current</strong> 运行当前设置，或 <strong>Run All</strong> 顺序处理已配置项目。检查日志与结果后，通过 <strong>Open Result</strong> 查看输出。</li><li>用 <strong>Save Config…</strong> 保存整个工作台配置，之后用 <strong>Load Config…</strong> 恢复。</li></ol>
+<p>每个 Process 页复用自己的后台 OCEAN，切换 cell 通常无需重启源进程。更换项目、配置变化或任务失败可能重新创建该进程。首次加载 PDK 会比后续切换慢，留意日志中的初始化进度。</p>
+<h2 id="publish">配置目标发布</h2>
+<p>生成结果检查完成后，可设置目标 library / cell，选择生成 symbol view、netlist view，再使用 <strong>Publish Views</strong>。目标库需在目标工程的 <code>cds.lib</code> 中可解析且可写。独立 GUI 若没有目标 session，需要先提供正确的目标会话信息；从 Virtuoso 菜单启动会带入当前目标工程。</p>
+<p>source 与 target 使用独立的 Cadence 环境。不要把源项目 <code>cds.lib</code> 加载到当前目标 Virtuoso 来“切换工艺”；在 MTS 的 Process 页面选择源项目即可。默认拒绝覆盖已有目标，确实需要更新时明确选择相应 symbol / netlist view 覆盖选项。</p>
+<h2 id="cli">命令行 request 示例</h2>
+<p>CLI 的 request 文件与 GUI 保存的 workspace 配置格式不同。下面示例只生成一个源 cell 的 Spectre 网表；填写实际源库、模型和路径后先校验。</p>
+<div class="code-block"><div class="code-label">TOML · mts-request.toml</div><pre><code>format = "sico-mts-netlistor-request"
+schema_version = 1
+
+[source]
+cds_lib = "/path/to/source/project/cds.lib"
+library = "source_design"
+cell = "amplifier"
+view = "schematic"
+
+[simulator]
+dialect = "spectre"
+
+[[models]]
+enabled = true
+file = "/path/to/pdk/models/process.scs"
+section = "tt"
+
+[process_options]
+temp = 25.0</code></pre></div>
+<div class="code-block"><div class="code-label">Shell · 在已加载源项目工具环境的 shell 执行</div><pre><code>mts-netlistor validate mts-request.toml --json
+mts-netlistor generate mts-request.toml --json
+mts-netlistor inspect /path/to/completed/run --json</code></pre></div>
+<p>结果保存到 <code>$PROJ_ADE_DB_DIR/&lt;lib&gt;.&lt;cell&gt;.&lt;view&gt;/.mts-netlistor/runs/&lt;运行标识&gt;/</code>，包括源网表、作用域处理结果、日志与发布记录。普通 Spectre 输出后缀为 <code>.spe</code>，hspiceD 为 <code>.sp</code>；Spectre corner library 模式生成 <code>_corners.scs</code>。</p>
+<h2 id="troubleshoot">常见问题</h2>
+<div class="table-wrap"><table><thead><tr><th>现象</th><th>检查</th></tr></thead><tbody>
+<tr><td>没有项目候选</td><td>MTS_NETLISTOR_MODULEFILES 是否存在且包含可用 modulefile；不要仅设置 MODULEPATH。</td></tr>
+<tr><td>项目加载失败</td><td>modulecmd 是否可执行；module 是否自己定义 PROJ_USER_HOME；该目录的 cds.lib 是否可访问。</td></tr>
+<tr><td>生成时提示输出根无效</td><td>PROJ_ADE_DB_DIR 是否为绝对路径且可写。</td></tr>
+<tr><td>新 cell 没显示</td><td>点击 Refresh 强制重新读取源库；成功的源目录快照在 GUI 内缓存约 300 秒。</td></tr>
+<tr><td>模型或默认设置不对</td><td>核对所选源项目、方言及模型 section；需要的 startup_file / simrc 必须显式提供。</td></tr>
+</tbody></table></div>
+
+<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="utilities.html">LEF 与导出工具 →</a></footer>
+</main>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#environment">先配置项目来源</a><a href="#modulefile">项目 modulefile 应提供什么</a><a href="#gui">在 GUI 中配置与生成</a><a href="#publish">配置目标发布</a><a href="#cli">命令行 request 示例</a><a href="#troubleshoot">常见问题</a></aside>
+</div></div>
+</body>
+</html>

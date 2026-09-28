@@ -1,0 +1,164 @@
+defclass(LEFPROFILEGUI (PROFILEGUI OUTPUTGUI HARDWARE) ())
+
+; Share the HI-created form handle with SKILL++ lifecycle code.
+importSkillVar(lefForm)
+
+procedure(cadDisplayLefForm()
+  ; A form is a long-lived HI object.  Rebuilding fields under the same
+  ; symbol while the old object is mapped leaves HI with dangling field
+  ; records (the source of the hiiListToFieldUT crash).  Reuse a live form.
+  if(and(boundp('lefForm) lefForm hiIsForm(lefForm)) then
+    progn(
+      unless(hiIsFormDisplayed(lefForm)
+        ; Close cancels asynchronous discovery; restart it before re-showing.
+        SICO_lsfChoicesCB(lefForm)
+        hiDisplayForm(lefForm))
+      lefForm)
+  else
+    let((cv cfg inputCallback cellCallback profileGui
+          lefLib cellListFile lefCell inlineCells layoutView logicalView
+          abstractView cdsLib optionsFile binName runPins runExtract runAbstract
+          stepsLay pinsOptionsLay extractOptionsLay abstractOptionsLay
+          binOptionsLay moreOptions lefFile lefVersion
+          exportGeometry exportTech exportLay inputLay abstractLay outputLay
+          hardwareLay mainLay
+          defaultLib defaultCell defaultView)
+      ; An invalid legacy handle cannot be used by HI.  Clear only that stale
+      ; value before creating the replacement form.
+      when(and(boundp('lefForm) lefForm !hiIsForm(lefForm))
+        lefForm=nil)
+      lefResetLoadedFormState()
+      cfg=lefConfig()
+      cv=geGetEditCellView()
+      defaultLib=if(cv then cv~>libName else "")
+      defaultCell=if(cv then cv~>cellName else "")
+      defaultView=if(cv then cv~>viewName else "layout")
+      inputCallback="lefInputCB(hiGetCurrentForm())"
+      cellCallback="lefCellInputCB(hiGetCurrentForm())"
+
+      profileGui=makeInstance('LEFPROFILEGUI)
+      profileGui->profileFlow="LEF"
+      makeProfileControls(profileGui)
+      profileGui->lsfChoicesCB="SICO_lsfChoicesCB(hiGetCurrentForm())"
+      profileGui->queueCB="SICO_lsfQueueChoicesCB(hiGetCurrentForm())"
+      profileGui->runTypeChoices=cfg->runTypeChoices
+      profileGui->defQueueName=cfg->defQueueName
+      profileGui->queueChoices=cfg->queueChoices
+      profileGui->defSrvName=cfg->defSrvName
+      profileGui->srvChoices=cfg->srvChoices
+      profileGui->cpuChoices=cfg->cpuChoices
+      profileGui->outDirChoices=cfg->outDirChoices
+      profileGui->outDirCB=cfg->outDirCB
+      profileGui->defOutDir=cfg->defOutDir
+      makeServers(profileGui)
+      makeRunCpus(profileGui)
+      makeOutDir(profileGui)
+      profileGui->outDirPath~>callback=inputCallback
+
+      lefLib=ddHiCreateLibraryComboField(
+        ?name 'lefLib ?prompt "            Library:" ?defValue defaultLib
+        ?callback inputCallback)
+      lefCell=ddHiCreateCellComboField(
+        ?name 'lefCell ?prompt "Single       Cell:" ?defValue defaultCell
+        ?callback cellCallback)
+      cellListFile=hiCreateFileSelectorField(
+        ?name 'cellListFile ?mode 'existingFile ?prompt "Cell   List   File:"
+        ?defValue cfg->cellListFile ?callback cellCallback)
+      inlineCells=hiCreateStringField(
+        ?name 'inlineCells ?prompt "Loaded Inline Cells:"
+        ?defValue "" ?enabled nil ?invisible t)
+      layoutView=ddHiCreateViewComboField(
+        ?name 'layoutView ?prompt "Layout    View:" ?defValue defaultView
+        ?callback inputCallback)
+      logicalView=hiCreateStringField(
+        ?name 'logicalView ?prompt  "Logical    View:" ?defValue "schematic")
+      abstractView=hiCreateStringField(
+        ?name 'abstractView ?prompt "Abstract View:" ?defValue "abstract")
+      cdsLib=hiCreateFileSelectorField(
+        ?name 'cdsLib ?mode 'existingFile ?prompt "             cds.lib:"
+        ?defValue cfg->cdsLib)
+      inputLay=hiCreateVerticalBoxLayout('lefInputLay
+        ?frame "Design Input" ?horiz_align 'left ?spacing 6
+        ?items list(lefLib cellListFile lefCell inlineCells layoutView
+                    logicalView abstractView cdsLib))
+
+      optionsFile=hiCreateFileSelectorField(
+        ?name 'optionsFile ?mode 'existingFile ?prompt "Options File:"
+        ?defValue cfg->optionsFile)
+      binName=hiCreateComboField(
+        ?name 'binName ?prompt "Cell         Bin:" ?items cfg->binChoices
+        ?defValue cfg->defaultBin ?editable nil)
+      runPins=hiCreateBooleanButton(
+        ?name 'runPins ?buttonText "Pins" ?buttonLocation 'left ?defValue t)
+      runExtract=hiCreateBooleanButton(
+        ?name 'runExtract ?buttonText "Extract" ?buttonLocation 'left ?defValue t)
+      runAbstract=hiCreateBooleanButton(
+        ?name 'runAbstract ?buttonText "Abstract" ?buttonLocation 'left ?defValue t)
+      stepsLay=hiCreateHorizontalBoxLayout('lefStepsLay
+        ?frame "Run Steps" ?horiz_align 'left ?spacing 18
+        ?items list(runPins runExtract runAbstract))
+
+      pinsOptionsLay=lefCreateOptionGroup('pins 'lefPinsOptionsLay "Pins")
+      extractOptionsLay=lefCreateOptionGroup('extract 'lefExtractOptionsLay "Extract")
+      abstractOptionsLay=lefCreateOptionGroup(
+        'abstract 'lefAbstractOptionsLay "Abstract")
+      binOptionsLay=hiCreateHorizontalBoxLayout('lefBinOptionsLay
+        ?horiz_align 'left ?spacing 8
+        ?items list(pinsOptionsLay extractOptionsLay abstractOptionsLay))
+      moreOptions=hiCreateDisclosureTriangle(
+        ?name 'moreAbstractOptions ?labelText "More Abstract Options"
+        ?onFields '(lefBinOptionsLay) ?offFields '() ?persistent nil)
+      abstractLay=hiCreateVerticalBoxLayout('lefAbstractLay
+        ?frame "Abstract Generation" ?horiz_align 'left ?spacing 6
+        ?items list(optionsFile binName stepsLay moreOptions binOptionsLay))
+
+      hardwareLay=hiCreateVerticalBoxLayout('lefHardwareLay
+        ?frame "Hardware Configuration" ?horiz_align 'left ?spacing 6
+        ?items list(profileGui->servers profileGui->runCpu))
+
+      lefFile=hiCreateFileSelectorField(
+        ?name 'lefFile ?mode 'anyFile ?prompt "LEF         File:"
+        ?defValue lefDefaultOutputPath(
+          cfg->defOutDir defaultLib defaultCell defaultView cfg->cellListFile))
+      lefVersion=hiCreateComboField(
+        ?name 'lefVersion ?prompt "LEF  Version:" ?items cfg->lefVersions
+        ?defValue cfg->defaultLefVersion ?editable nil)
+      exportGeometry=hiCreateBooleanButton(
+        ?name 'exportGeometry ?buttonText "Geometry LEF" ?defValue t)
+      exportTech=hiCreateBooleanButton(
+        ?name 'exportTech ?buttonText "Technology LEF" ?defValue nil)
+      exportLay=hiCreateHorizontalBoxLayout('lefExportLay
+        ?horiz_align 'left ?spacing 18 ?items list(exportGeometry exportTech))
+      outputLay=hiCreateVerticalBoxLayout('lefOutputLay
+        ?frame "Output Configuration" ?horiz_align 'left ?spacing 6
+        ?items list(profileGui->outDir lefFile lefVersion exportLay))
+      mainLay=hiCreateVerticalBoxLayout('lefMainLay
+        ?margins '(10 10 10 10) ?spacing 8
+        ?items list(profileGui->profileLay inputLay abstractLay outputLay hardwareLay))
+
+      lefForm=hiCreateLayoutForm(
+        'lefForm cfg->title mainLay ?callback 'lefFormDoneCB
+        ?sizePolicy 'expanding
+        ?initialSize 1000:750
+        ?buttonLayout list('Empty
+          list('Run\+Close 'lefRunCloseCB)
+          list('Run 'lefRunCB)
+          list('Close 'hiFormClose)))
+      putpropq(lefForm profileGui->profileFile profileFile)
+      putpropq(lefForm profileGui->profileLoad profileLoad)
+      putpropq(lefForm profileGui->profileSave profileSave)
+      putpropq(lefForm profileGui->profileSaveAs profileSaveAs)
+      putpropq(lefForm nil cadProfilePathStates)
+      putpropq(lefForm nil cadProfileSourcePath)
+      hiInstantiateForm(lefForm)
+      ddHiLinkFields(lefForm~>lefLib lefForm~>lefCell lefForm~>layoutView)
+      SICO_lsfChoicesCB(lefForm)
+      hiDisplayForm(lefForm)
+      lefForm
+    )
+  )
+)
+
+procedure(lefHardwareGuiRevision()
+  "20260820.lsf.monitor.v1"
+)

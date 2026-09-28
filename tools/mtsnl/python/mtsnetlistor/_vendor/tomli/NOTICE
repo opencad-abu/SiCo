@@ -1,0 +1,4 @@
+This directory contains the pure-Python distribution of tomli 2.4.1.
+
+Upstream project: https://github.com/hukkin/tomli
+License: MIT (see LICENSE)

@@ -1,0 +1,164 @@
+unless(isCallable('SICO_envPairNames)
+  cond(
+    (and(boundp('rceCommonRoot) rceCommonRoot)
+      load(strcat(rceCommonRoot "/skill/SICO_envOptions.il")))
+    (isCallable('cadLoadRelative)
+      cadLoadRelative("common/skill/SICO_envOptions.il"))
+    (t
+      warn("RCECFG requires RCE.ils or a configured SICO_HOME.\n"))
+  )
+)
+
+unless(and(isCallable('RCE_extTechNames) isCallable('RCE_extTechValue))
+  cond(
+    (and(boundp('rceSkillRoot) rceSkillRoot)
+      load(strcat(rceSkillRoot "/skill/RCE_envOptions.il")))
+    (isCallable('cadLoadRelative)
+      cadLoadRelative("rce/skill/RCE_envOptions.il"))
+    (t
+      warn("RCECFG requires the RCE extraction option helper.\n"))
+  )
+)
+
+unless(and(isCallable('SICO_lsfLocalHost)
+             isCallable('SICO_lsfAutoHost))
+  cond(
+    (and(boundp('rceCommonRoot) rceCommonRoot)
+      load(strcat(rceCommonRoot "/skill/SICO_lsf.il")))
+    (isCallable('cadLoadRelative)
+      cadLoadRelative("common/skill/SICO_lsf.il"))
+    (t
+      warn("RCECFG requires the shared CAD LSF helper.\n"))
+  )
+)
+
+defstruct(extstr
+title cmd formdone inpChoices inpCB cellNameCB cdlFileCB gdsFileCB svdbDirCB cciDirCB outDirChoices
+outDirCB defOutDir lvsHcellCB lvsIgnoreErrorCB lvsVirtualConnCB lsfChoicesCB queueCB runTypeChoices
+defQueueName queueChoices defSrvName srvChoices cpuChoices lvsToolChoices lvsToolDefValue
+extToolChoices extToolDefValue extToolCB cornerChoices cornerTypeChoices tempChoices
+rcTypeChoices tempDefvalue outTypeChoices cornerCB cornerTypeCB rcTypeCB topCellSourceCB nameSourceCB netSelBtnCB
+netSchSelBtnCB cellSelBtnCB cellLibSelBtnCB
+relFilterCapBtnCB absFilterCapBtnCB absFilterResBtnCB outTypeCB
+pinOrderBtnCB pinOrderTypeCB bracketBtnCB hierDeliBtnCB nlParInfoCB
+lvsRunsetEnvName lvsRunsetChoices lvsRunsetCB rcTechDirChoices rcTechDirCB rcTechDirPathCB
+)
+
+defstruct(extmsg
+viewEngine lvsIgnoreError inputSvdbCci projShellNotSet dirExist dirAccess
+inputOaSch inputOaLay gdsFile gdsCell cdlFile cdlCell hcellFile cdlIncludeFile
+svdbDir svdbCell
+cciDir cciCell netsFile cellsFile pinFiles netlistViewTarget processCorner
+multiCornerCapacity multiCornerLimit multiCornerView nativeViewTarget nativeViewMap nativeViewImporter
+)
+
+procedure(rceInitializeConfig()
+  extstrStruc=make_extstr(
+  ?title                strcat(SICO_logo() "::RCE")
+  ?cmd                  'rceRunCB
+  ?formdone             'rceFormDoneCB
+  ?inpChoices           '("OA" "CDL+GDS" "CDL+LAY" "SCH+GDS" "SVDB" "CCI")
+  ?inpCB                '("(rceInpCB hiGetCurrentForm())")
+  ?cellNameCB           "(rceSyncExtractTopCell hiGetCurrentForm())"
+  ?cdlFileCB            "(rceCdlFileCB hiGetCurrentForm())"
+  ?gdsFileCB            "(rceGdsFileCB hiGetCurrentForm())"
+  ?svdbDirCB            "(rceSvdbDirCB hiGetCurrentForm())"
+  ?cciDirCB             "(rceCciDirCB hiGetCurrentForm())"
+  ?outDirChoices        '("Project Directory" "Current Directory" "Customize Directory")
+  ?outDirCB             "(rceOutDirCB hiGetCurrentForm()) "
+  ?defOutDir            or(SICO_envValue("RCE_DB_DIR") pwd())
+  ?lvsRunsetEnvName     "RCE_LVS_FILE"
+  ?lvsRunsetChoices     SICO_envPairNames("RCE_LVS_FILE")
+  ?lvsRunsetCB          "(rceLvsRunsetCB hiGetCurrentForm())"
+  ?lvsHcellCB           "(rceLvsHcellCB hiGetCurrentForm())"
+  ?lvsIgnoreErrorCB     "(rceLvsIgnoreErrorCB hiGetCurrentForm())"
+  ?lvsVirtualConnCB     '(rceLvsVirtualConnFieldCB)
+  ?lsfChoicesCB         "(rceLsfChoicesCB hiGetCurrentForm())"
+  ?queueCB              "(SICO_lsfQueueChoicesCB hiGetCurrentForm())"
+  ?runTypeChoices       '("Current Host" "LSF Farm")
+  ?defQueueName         ""
+  ?queueChoices         list("")
+  ?defSrvName           SICO_lsfLocalHost()
+  ?srvChoices           list(SICO_lsfLocalHost())
+  ?cpuChoices           or(parseString(or(SICO_envValue("SICO_FLOW_CPU_ALLOW") "") ",") '("1" "2" "4" "8"))
+  ?lvsToolChoices       '("Calibre")
+  ?lvsToolDefValue      or(getShellEnvVar("LVS_DEF_TOOL") "Calibre")
+  ?extToolChoices       '("StarRC" "QRC" "CalXRC")
+  ?extToolDefValue      or(SICO_envValue("RCE_DEF_TOOL") "StarRC")
+  ?extToolCB            '("(rceExtToolCB hiGetCurrentForm())")
+  ?cornerChoices        '("")
+  ?cornerTypeChoices    '("Single Corner" "Multiple Corners")
+  ?rcTechDirChoices     RCE_extTechNames(or(SICO_envValue("RCE_DEF_TOOL") "StarRC"))
+  ?rcTechDirCB          "(rceRcTechDirCB hiGetCurrentForm())"
+  ?rcTechDirPathCB      "(rceRcTechDirPathCB hiGetCurrentForm())"
+  ?tempChoices          or(parseString(or(SICO_envValue("RCE_TEMP_LIST") "") ",") '("125" "85" "25"))
+  ?rcTypeChoices        '("R+Cg+Cc" "R+Cg" "Cg+Cc" "Cg" "R" "NONE" "Totem" "VoltusFi")
+  ?tempDefvalue         or(SICO_envValue("RCE_DEF_TEMP") "125")
+  ?outTypeChoices       or(parseString(or(SICO_envValue("RCE_OUTPUT_CHOICES") "") ",") '("dspf"))
+  ?cornerCB             '("(rceCornerCB hiGetCurrentForm())")
+  ?cornerTypeCB         '("(rceCornerTypeCB hiGetCurrentForm())")
+  ?rcTypeCB             '("(rceRcTypeCB hiGetCurrentForm())")
+  ?topCellSourceCB      '("(rceTopCellSourceCB hiGetCurrentForm())")
+  ?nameSourceCB         '("(rceNameSourceCB hiGetCurrentForm())")
+  ?netSelBtnCB          "(rceNetSelBtnCB hiGetCurrentForm())"
+  ?netSchSelBtnCB       "(rceNetSchSelBtnCB hiGetCurrentForm())"
+  ?cellSelBtnCB         "(rceCellSelBtnCB hiGetCurrentForm())"
+  ?cellLibSelBtnCB      "(rceCellLibSelBtnCB hiGetCurrentForm())"
+  ?relFilterCapBtnCB    "(rceRelFilterCapBtnCB hiGetCurrentForm())"
+  ?absFilterCapBtnCB    "(rceAbsFilterCapBtnCB hiGetCurrentForm())"
+  ?absFilterResBtnCB    "(rceAbsFilterResBtnCB hiGetCurrentForm())"
+  ?outTypeCB            '("(rceOutTypeCB hiGetCurrentForm())")
+  ?pinOrderBtnCB        "(rcePinOrderBtnCB hiGetCurrentForm())"
+  ?pinOrderTypeCB       "(rcePinOrderTypeCB hiGetCurrentForm())"
+  ?bracketBtnCB         "(rceBracketBtnCB hiGetCurrentForm())"
+  ?hierDeliBtnCB        "(rceHierDeliBtnCB hiGetCurrentForm())"
+  ?nlParInfoCB          '("(rceParasiticInfoCB hiGetCurrentForm() 0)"
+                          "(rceParasiticInfoCB hiGetCurrentForm() 1)"
+                          "(rceParasiticInfoCB hiGetCurrentForm() 2)")
+  )
+  extmsgStruc=make_extmsg(
+    ?viewEngine      "Output type:\"extview\" and \"smartview\" only support for QRC engine,\n\tSet \"EXT Engine\" to \"QRC\"."
+    ?lvsIgnoreError  "Enable this menu will lead to a wrong connection in parasitic netlist.\n\tUnless you just want to evaluate the parasitic RC and the output will not use to run simulation,\n\tOr you should not enable this menu."
+    ?inputSvdbCci    "Use LVS not cleaned data may cause a parsitic accuracy issue or simulation issue.\n\tEnsure your SVDB/CCI data was passed LVS."
+    ?projShellNotSet "The system shell environment variable: \"RCE_DB_DIR\" was not set,\n\tSet it and re-start virtuoso if want to use.\n\tRun directory type will be changed to \"Current Directory\"."
+
+    ?dirExist        "Run directory doesn't exist. Creating..."
+    ?dirAccess       "Cannot create run directory!\n\t Check if directory exist or the write persssion."
+    ?inputOaSch      "Schematic library/cell/view was not been specified.\n\tSpecify them and re-run."
+    ?inputOaLay      "Layout library/cell/view was not been specified.\n\tSpecify them and re-run."
+    ?gdsFile         "GDS file was not been specified or cannot access it.\n\tCorrect it and re-run."
+    ?gdsCell         "GDS cell name was not been specified.\n\tCorrect it and re-run."
+    ?cdlFile         "CDL file was not been specified or cannot access it.\n\tCorrect it and re-run."
+    ?cdlCell         "CDL cell name was not been specified.\n\tCorrect it and re-run."
+    ?hcellFile       "Hcell file was not specified or cannot be accessed.\n\tCorrect it and re-run."
+    ?cdlIncludeFile  "CDL include file was not specified or cannot be accessed.\n\tCorrect it and re-run."
+    ?svdbDir         "SVDB directory was not been specified or cannot access it.\n\tCorrect it and re-run."
+    ?svdbCell        "SVDB cell name was not been specified.\n\tCorrect it and re-run."
+    ?cciDir          "CCI directory was not been specified or cannot access it.\n\tCorrect it and re-run."
+    ?cciCell         "CCI cell name was not been specified.\n\tCorrect it and re-run."
+    ?netsFile        "Net selection needs space-separated names or an accessible one-name-per-line file.\n\tCorrect it and re-run."
+    ?cellsFile       "Block Cells needs space-separated names or an accessible one-name-per-line file.\n\tCorrect it and re-run."
+    ?pinFiles        "Cannot access pin control file!\n\tCorrect it and re-run."
+    ?netlistViewTarget "Create Parasitic Netlist View needs an OA target for the selected extract top cell.\n\tChoose the OA-backed Schematic or Layout name, or disable view creation."
+    ?nativeViewTarget "Native OA view output needs a target.\n\tFor non-OA input, enter View Target as lib/cell/view. OA input continues to resolve its target from the selected design."
+    ?nativeViewMap   "Native OA view mapping file is missing or unreadable.\n\tSelect the foundry-provided Calibre cellmap or StarRC OA device/layer mapping files."
+    ?nativeViewImporter "Calibre View creation is unavailable because mgc_rve_load_setup_file is not loaded.\n\tInitialize the Calibre-Virtuoso integration and re-run."
+    ?processCorner   "No valid process corner is selected for the current Process Directory.\n\tChoose a directory containing a supported extraction technology corner."
+    ?multiCornerCapacity "The current Process Directory contains more than 32 valid corners.\n\tMultiple Corners mode cannot display them all; narrow the Process Directory or use Single Corner."
+    ?multiCornerLimit "StarRC simultaneous multi-corner extraction supports at most 15 selected corners.\n\tReduce the selected corner count and re-run."
+    ?multiCornerView "StarRC and Calibre XRC multi-corner extraction require a file netlist output.\n\tChoose DSPF/SPF/SPEF, or switch Corner Type to Single Corner."
+  )
+  t
+)
+
+unless(getShellEnvVar("VIRTUOSO_CONTEXT_BUILD")=="1"
+  rceInitializeConfig()
+)
+
+procedure(rceConfigRevision()
+  "20260909.pin.order.v1"
+)
+
+procedure(rceCdlIncludeConfigRevision()
+  "20260812.cdl.include.v2"
+)

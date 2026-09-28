@@ -1,0 +1,49 @@
+#!/bin/sh
+set -eu
+
+program=sico
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+product_root=$(CDPATH='' cd -- "$script_dir/../../.." && pwd -P)
+. "$product_root/tools/common/sh/sico-installation.sh"
+sico_installation "$product_root" || exit 2
+sico_launcher_environment || exit 2
+flow_root=$(CDPATH= cd -- "$script_dir/.." && pwd -P)
+entry=$flow_root/python/sico-entry
+
+if [ ! -f "$entry" ]; then
+    echo "$program: Python entry is unavailable: $entry" >&2
+    exit 2
+fi
+
+python=${SICO_PYTHON-}
+if [ -z "$python" ] && [ -n "${SICO_PYTHON_ROOT-}" ]; then
+    python=${SICO_PYTHON_ROOT%/}/bin/python3
+fi
+if [ -z "$python" ] && [ -x /software/pkgs/python/3.9.13/bin/python3 ]; then
+    python=/software/pkgs/python/3.9.13/bin/python3
+fi
+if [ -z "$python" ]; then
+    python=python3
+fi
+
+case $python in
+    */*) [ -f "$python" ] && [ -x "$python" ] ;;
+    *) command -v "$python" >/dev/null 2>&1 ;;
+esac || {
+    echo "$program: Python is not executable: $python" >&2
+    exit 2
+}
+
+for sico_eda_name in PATH LD_LIBRARY_PATH PYTHONPATH MODULEPATH LOADEDMODULES _LMFILES_ MODULESHOME LMOD_CMD; do
+    eval 'sico_eda_captured=${SICO_VIRTUOSO_'"$sico_eda_name"'+x}'
+    if [ "$sico_eda_captured" != x ]; then
+        eval 'sico_eda_value=${'"$sico_eda_name"'-}'
+        export "SICO_VIRTUOSO_$sico_eda_name=$sico_eda_value"
+    fi
+done
+
+export LD_LIBRARY_PATH=${SICO_AI_PYTHON_LIBRARY_PATH-${SICO_CODEX_PYTHON_LIBRARY_PATH-${SICO_SYSTEM_LD_LIBRARY_PATH:-}}}
+export PYTHONDONTWRITEBYTECODE=1
+export PYTHONNOUSERSITE=1
+unset PYTHONHOME PYTHONPATH LD_PRELOAD LD_AUDIT
+exec "$python" "$entry" "$@"

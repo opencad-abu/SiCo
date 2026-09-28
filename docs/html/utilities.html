@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SiCo 使用手册：LEF 与导出工具。安装、环境变量、Virtuoso 集成与 CAD flow 配置。">
+<title>LEF 与导出工具 · SiCo 使用手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b4543a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='sans-serif' font-size='24' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/manual.css">
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
+  <span class="edition">使用手册 / 2026.09</span>
+  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+</header>
+<noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="手册目录">
+<p class="rail-label">SICO DOCUMENTATION</p>
+<a href="index.html">开始阅读</a>
+<p class="nav-group">开始使用</p>
+<a href="installation.html">01 · 安装</a>
+<a href="environment.html">02 · 环境变量</a>
+<a href="virtuoso.html">03 · Virtuoso 集成</a>
+<a href="flows.html">04 · CAD flows</a>
+<p class="nav-group">流程指南</p>
+<a href="drc.html">DRC · 规则检查</a>
+<a href="lvs.html">LVS · 连接检查</a>
+<a href="rce.html">RCE · 寄生提取</a>
+<a href="mts.html">MTS · 多工艺网表</a>
+<a href="utilities.html" aria-current="page">LEF / GDS / CDL</a>
+<a href="lsf.html">LSF · 运行与资源</a>
+<p class="nav-group">参考附录</p>
+<a href="environment-internal.html">环境接口附录</a>
+<div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
+</nav>
+<div class="reading">
+<main id="main">
+<p class="eyebrow">CAD FLOW / EXPORT &amp; UTILITIES</p>
+<h1>LEF、数据导出与网表导入</h1>
+<p class="lead">通过 SiCo 菜单完成常用 OA 数据交接。各工具共用安装与工程环境，但使用各自的输出目录和配置文件。</p>
+<h2 id="lef">LEF Generator</h2>
+<p>在 <strong>SiCo → LEF Generator</strong> 中选择 layout library / cell / view，或使用 batch cell-list。Abstract options 包含 PDK 的 pin、extract、blockage 与 site 规则，应由工艺或 CAD 提供。</p>
+<div class="code-block"><div class="code-label">Bash · LEF 配置</div><pre><code>export LEF_DB_DIR="$PROJECT_ROOT/exports/lef"
+export LEFGEN_OPT_FILE="$PDK_ROOT/lef/abstract.options"
+export LEF_DEFAULT_BIN="Core"
+# 批处理时设置；单 cell 可以不设。
+export LEF_CELL_LIST="$PROJECT_ROOT/config/lef-cells.list"
+# 可选：预填已保存的 GUI Profile。
+export LEF_CONFIG="$PROJECT_ROOT/config/lef-profile.toml"
+export LEF_ABSTRACT="abstract"</code></pre></div>
+<p>分类可选 <code>Core</code>、<code>Block</code>、<code>IO</code>、<code>Corner</code>，默认 Core。选择输出根与运行主机后 Run，通常输出到 <code>$LEF_DB_DIR/&lt;lib&gt;.&lt;cell&gt;.&lt;view&gt;/&lt;cell&gt;.lef</code>。LEF Profile 与其他 flow 一样通过 Save / Load 管理。</p>
+<div class="code-block"><div class="code-label">Shell · LEF 运行配置</div><pre><code>lefgen generate /path/to/run/lef.toml
+lefgen run /path/to/run/lef.toml</code></pre></div>
+<h2 id="gds-cdl">Stream GDS 与 Export CDL</h2>
+<div class="table-wrap"><table><thead><tr><th>工具</th><th>输入与环境</th><th>默认项目输出结构</th></tr></thead><tbody>
+<tr><td>Stream GDS</td><td>OA layout、CDS_LIB、TECH_LAYER_MAP；PATH 中的 strmout</td><td><code>$GDS_DB_DIR/&lt;lib&gt;.&lt;cell&gt;/&lt;cell&gt;.gds</code></td></tr>
+<tr><td>Export CDL</td><td>OA schematic、CDS_LIB；按需 CDL_HEADER_FILE；PATH 中的 si</td><td><code>$CDL_DB_DIR/&lt;lib&gt;.&lt;cell&gt;/&lt;cell&gt;.cdl</code></td></tr>
+</tbody></table></div>
+<p>菜单中选择对应工具，填入设计 library / cell / view 并检查映射或 Include，选择输出根后运行。未设置相应 DB_DIR 时使用当前目录。完整 LVS/RCE 内部导出的 CDL/GDS 存在它们自己的运行目录，不使用独立导出目录代替。</p>
+<div class="code-block"><div class="code-label">Bash · 独立导出设置与 CLI</div><pre><code>export GDS_DB_DIR="$PROJECT_ROOT/exports/gds"
+export CDL_DB_DIR="$PROJECT_ROOT/exports/cdl"
+# 下面传入对应阶段的完整运行 TOML。
+gdsout /path/to/run/gds.toml --generate-only
+gdsout /path/to/run/gds.toml
+cdlout /path/to/run/cdl.toml --generate-only
+cdlout /path/to/run/cdl.toml</code></pre></div>
+<h2 id="netlist-view">Netlist to View</h2>
+<p>菜单 <strong>SiCo → Netlist to View…</strong> 将已有文本网表交给 Cadence <code>cdsTextTo5x</code> 导入目标 view。源文件、目标 OA library 与选定 <code>cds.lib</code> 必须已存在。</p>
+<div class="table-wrap"><table><thead><tr><th>格式参数</th><th>默认目标 view</th></tr></thead><tbody><tr><td>spectre</td><td>spectreText</td></tr><tr><td>hspice</td><td>hspiceText</td></tr><tr><td>spice</td><td>spiceText</td></tr><tr><td>dspf</td><td>dspfText</td></tr></tbody></table></div>
+<div class="code-block"><div class="code-label">Shell · 文本网表导入</div><pre><code>nl2view --format spectre --library my_design --cell amplifier \
+  --cdslib "$CDS_LIB" /path/to/amplifier.scs
+nl2view --format dspf --library my_design --cell amplifier \
+  --cdslib "$CDS_LIB" /path/to/amplifier.dspf</code></pre></div>
+<p>默认复制源网表，避免原文件移动后链接失效；表单也可显式选择 link 模式。PSpice 不在支持格式内。GUI 还会核对目标库物理位置与当前 Virtuoso 的同名库一致。</p>
+<h2 id="dspf">DSPF Analyzer</h2>
+<p>从 <strong>SiCo → DSPF Analyzer…</strong> 或 <code>dspfana /path/to/file.dspf</code> 打开寄生网表，查看网络与寄生数据。首次读取会建立索引；可通过 <code>RCE_DSPF_CACHE_DIR</code> 选择缓存目录，默认使用当前工程状态根下的 <code>rce/dspf</code>。</p>
+<div class="code-block"><div class="code-label">Shell · 无 GUI 的索引与信息查询</div><pre><code>rce dspf-index /path/to/amplifier.dspf --json
+rce dspf-info /path/to/amplifier.dspf --json</code></pre></div>
+
+<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="lsf.html">LSF 配置 →</a></footer>
+</main>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#lef">LEF Generator</a><a href="#gds-cdl">Stream GDS 与 Export CDL</a><a href="#netlist-view">Netlist to View</a><a href="#dspf">DSPF Analyzer</a></aside>
+</div></div>
+</body>
+</html>

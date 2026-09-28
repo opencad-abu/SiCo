@@ -1,0 +1,374 @@
+unless(and(isCallable('SICO_tomlRevision)
+             SICO_tomlRevision()=="20260922.sico.temp.v6"
+             isCallable('SICO_tomlString) isCallable('SICO_shellQuote)
+             isCallable('SICO_tempPath) isCallable('SICO_tempEnvironment))
+  cond(
+    (and(boundp('lvsCommonRoot) lvsCommonRoot)
+      load(strcat(lvsCommonRoot "/skill/SICO_toml.il")))
+    (isCallable('cadLoadRelative)
+      cadLoadRelative("common/skill/SICO_toml.il"))
+    (t
+      warn("LVSRUN requires LVS.ils or a configured SICO_HOME.\n"))
+  )
+)
+
+unless(boundp('lvsIpcTable)
+  lvsIpcTable=makeTable("lvsIpcTable" nil)
+)
+
+procedure(LVS_pythonEntry()
+  let((toolsRoot)
+    toolsRoot=SICO_toolsRoot()
+    or(
+      SICO_nativeEntry("lvs")
+      SICO_envValue("LVS_PYTHON_ENTRY")
+      if(toolsRoot then
+        simplifyFilename(strcat(toolsRoot "/lvs/python/lvs") t))
+    )
+  )
+)
+
+procedure(lvsRunUsesCadTempPath()
+  t
+)
+
+procedure(lvsLogDirRevision()
+  "20260817.log.artifacts.v1"
+)
+
+procedure(lvsRveLauncherRevision()
+  "20260828.prompt.return.v1"
+)
+
+procedure(lvsRunDirFromConfig(config)
+  if(rexMatchp("/log/lvs\\.toml$" config) then
+    substring(config 1 (strlen(config)-strlen("/log/lvs.toml")))
+  else
+    substring(config 1 (strlen(config)-strlen("/lvs.toml"))))
+)
+
+procedure(LVS_pythonExe()
+  let((pythonRoot)
+    pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
+    or(SICO_envValue("LVS_PYTHON") SICO_envValue("SICO_PYTHON")
+       when(pythonRoot
+         simplifyFilename(strcat(pythonRoot "/bin/python3") t))
+       "python3"))
+)
+
+procedure(LVS_launchEnvCommand(args)
+  strcat("env -u PYTHONHOME -u PYTHONPATH "
+          SICO_tempEnvironment()
+          "LVS_ORIG_LD_LIBRARY_PATH="
+          SICO_shellQuote(or(getShellEnvVar("LD_LIBRARY_PATH") ""))
+          " LD_LIBRARY_PATH="
+          SICO_shellQuote(SICO_pythonLibraryPath())
+          " "
+          args)
+)
+
+procedure(lvsTopCellFromForm(form)
+  case(form~>inpType~>value
+    ("OA"      form~>layCell~>value)
+    ("SCH+GDS" form~>gdsCell~>value)
+    ("CDL+LAY" form~>layCell~>value)
+    ("CDL+GDS" form~>gdsCell~>value)
+    (t         form~>cdlCell~>value)
+  )
+)
+
+procedure(lvsSvdbDirFromForm(form)
+  strcat(lvsRunDirFromForm(form) "/db/svdb." lvsTopCellFromForm(form))
+)
+
+procedure(lvsBackupRunData(runDir)
+  let((cmd)
+    cmd=strcat("cd " SICO_shellQuote(runDir)
+                " && tag=$(date +%m-%d-%H-%M-%S)"
+                " && if [ -d db ]; then mv db db.$tag; fi"
+                " && archivedLog=''"
+                " && if [ -d log ]; then archivedLog=log.$tag; mv log \"$archivedLog\"; fi"
+                " && for f in erc.db erc.rep; do"
+                " if [ -f \"$f\" ]; then"
+                " if [ -z \"$archivedLog\" ]; then archivedLog=log.$tag; mkdir -p \"$archivedLog\"; fi;"
+                " mv \"$f\" \"$archivedLog/$f\"; fi; done")
+    system(cmd)
+  )
+)
+
+procedure(lvsIpcDataHandler(cid data)
+  nil
+)
+
+procedure(lvsIpcErrHandler(cid data)
+  nil
+)
+
+procedure(lvsLogContainsCorrect(path)
+  let((input line correct)
+    correct=nil
+    when(and(path isFile(path))
+      input=infile(path)
+      when(input
+        while(gets(line input)
+          when(rexMatchp("LVS completed\\. CORRECT\\." line)
+            correct=t))
+        close(input)))
+    correct
+  )
+)
+
+procedure(lvsCompletionCorrectP(config exitStatus)
+  let((runDir)
+    and(config
+        exitStatus==0
+        runDir=lvsRunDirFromConfig(config)
+        lvsLogContainsCorrect(strcat(runDir "/log/callvs.log")))
+  )
+)
+
+procedure(lvsShowCompletionSummary(config svdb exitStatus)
+  let((statusText result)
+    statusText=if(lvsCompletionCorrectP(config exitStatus) then
+      "LVS Status: CORRECT :-)"
+      else
+      "LVS Status: INCORRECT :-(")
+    result=hiDisplayAppDBox(
+      ?name          'lvsCompletionSummary
+      ?dboxBanner    "LVS Summary"
+      ?dboxText      statusText
+      ?buttonLayout  'UserDefined
+      ?buttons       '("Open Calibre RVE" "Close")
+      ?defaultButton 2
+    )
+    when(and(result==1 config svdb)
+      lvsOpenRve(config svdb))
+    result
+  )
+)
+
+procedure(lvsIpcPostFunc(cid exitStatus)
+  let((meta pidFile launchLog config svdb)
+    meta=lvsIpcTable[cid]
+    launchLog=""
+    when(meta
+      pidFile=car(meta)
+      launchLog=cadr(meta)
+      config=caddr(meta)
+      svdb=cadddr(meta)
+      when(pidFile && isFile(pidFile)
+        deleteFile(pidFile))
+      lvsIpcTable[cid]=nil)
+    if(exitStatus == 0 then
+      info(strcat("<INFO> LVS::Finished. LOG=\"" launchLog "\"\n"))
+    else
+      warn(strcat("<WARN> LVS::Finished with exit status "
+                    sprintf(nil "%L" exitStatus)
+                    ". LOG=\"" launchLog "\"\n")))
+    lvsShowCompletionSummary(config svdb exitStatus)
+  )
+)
+
+procedure(lvsStart(form)
+  prog((cmdFile runPathParts pidPostfix tmp user lib cell pid pidNum inp run
+         runPathPrefix logDir launchLog launchCmd cid out)
+    run="YES"
+    user=getLogin()
+    info(strcat("<INFO> LVS::Start to run progress...\n"))
+    cmdFile=lvsWriteToml(form)
+    when(! cmdFile return(nil))
+    runPathParts=parseString(cmdFile "/")
+    pidPostfix=nth(length(runPathParts)-2 runPathParts)
+    tmp=parseString(pidPostfix ".")
+    lib=nth(0 tmp)
+    cell=nth(1 tmp)
+    pid=SICO_tempPath(strcat("lvs.pid." user "." lib "." cell))
+    unless(pid
+      warn("<WARN> LVS::Cannot create the PID file path.\n")
+      return(nil))
+    when(isFile(pid)
+      inp=infile(pid)
+      gets(pidNum inp)
+      close(inp)
+      run=GUI_askApp("LVS" strcat("An LVS process is running for the same cell. Start another anyway?\n\nPID: " pidNum)))
+    when(run == "NO"
+      info("<INFO> LVS::User canceled progress.\n")
+      return(nil))
+    runPathPrefix=substring(cmdFile 1 (strlen(cmdFile)-9))
+    lvsBackupRunData(runPathPrefix)
+    logDir=strcat(runPathPrefix "/log")
+    launchLog=strcat(logDir "/lvs.launch.log")
+    launchCmd=LVS_launchEnvCommand(
+                strcat("LVS_BACKUP_DONE=1 "
+                        SICO_backendCommand("lvs" LVS_pythonExe() LVS_pythonEntry()) " run "
+                        SICO_shellQuote(cmdFile)))
+    launchCmd=SICO_lsfWrapCommand(
+      launchCmd form~>runType~>value form~>queueName~>value
+      form~>srvName~>value
+      form~>lvsCpu~>value nil launchLog)
+    info(strcat("<INFO> LVS::LOG=\"" launchLog "\"\n"))
+    system(strcat("mkdir -p " SICO_shellQuote(logDir)))
+    cid=ipcBeginProcess(launchCmd "" 'lvsIpcDataHandler 'lvsIpcErrHandler 'lvsIpcPostFunc launchLog)
+    when(! cid
+      warn("<WARN> LVS::Failed to start IPC process.\n")
+      return(nil))
+    lvsIpcTable[cid]=list(pid launchLog cmdFile lvsSvdbDirFromForm(form))
+    out=outfile(pid "w")
+    when(out
+      fprintf(out "%L\n" cid)
+      close(out))
+    ipcActivateBatch(cid)
+    GUI_flowLogOpen("LVS" launchLog)
+    return(t)
+  )
+)
+
+procedure(lvsBatchSpec(form row batchId index)
+  prog((taskId jobName config runDir logDir launchLog launchCmd resultPath
+         spec)
+    taskId=cadBatchTaskId(index)
+    jobName=cadBatchJobName("LVS" batchId taskId)
+    cadBatchSetDesignValues(form row)
+    config=lvsWriteToml(form)
+    unless(config
+      return(nil))
+    runDir=substring(config 1 (strlen(config)-9))
+    logDir=strcat(runDir "/log")
+    launchLog=strcat(logDir "/lvs.launch.log")
+    resultPath=strcat(runDir "/db/svdb." form~>layCell~>value)
+    launchCmd=LVS_launchEnvCommand(
+      strcat("LVS_BACKUP_DONE=1 "
+              SICO_backendCommand("lvs" LVS_pythonExe() LVS_pythonEntry()) " run "
+              SICO_shellQuote(config)))
+    launchCmd=SICO_lsfWrapCommand(
+      launchCmd form~>runType~>value form~>queueName~>value
+      form~>srvName~>value form~>lvsCpu~>value jobName launchLog)
+    spec=cadBatchMakeSpec(
+      taskId buildString(row "/") config runDir launchCmd
+      SICO_lsfCancelCommand(form~>runType~>value jobName)
+      launchLog resultPath runDir nil)
+    return(spec)
+  )
+)
+
+procedure(lvsBatchStart(form)
+  prog((saved batchId root specs index row spec backupOk meta)
+    unless(and(cadBatchValidateTasks(form) form~>inpType~>value=="OA")
+      when(form~>inpType~>value!="OA"
+        cadBatchMessage('e "LVS" "Multiple Cells supports OA input only."))
+      return(nil))
+    batchId=cadBatchNewId("LVS")
+    root=cadBatchCreateRoot(form "LVS" batchId)
+    unless(root
+      cadBatchMessage('e "LVS" "Cannot create the batch control directory.")
+      return(nil))
+    saved=cadBatchDesignValues(form)
+    specs=nil
+    index=1
+    unwindProtect(
+      foreach(row form~>cadBatchTasks
+        when(specs!=nil || index==1
+          spec=lvsBatchSpec(form row batchId index)
+          if(spec then
+            specs=append1(specs spec)
+          else
+            specs=nil)
+          index=index+1))
+      cadBatchSetDesignValues(form saved))
+    unless(and(specs length(specs)==length(form~>cadBatchTasks))
+      cadBatchMessage('e "LVS"
+        "Batch configuration failed; no cell was started.")
+      return(nil))
+    unless(cadBatchSpecsIndependentP(specs)
+      cadBatchMessage('e "LVS"
+        "Two or more rows resolve to the same run directory or result target.")
+      return(nil))
+    backupOk=t
+    foreach(spec specs
+      unless(lvsBackupRunData(spec['runDir])==0
+        backupOk=nil))
+    unless(backupOk
+      cadBatchMessage('e "LVS"
+        "Cannot back up one or more existing run directories; no cell was started.")
+      return(nil))
+    meta=cadBatchBuildMeta(form "LVS" batchId root specs nil)
+    return(cadBatchLaunch(meta))
+  )
+)
+
+procedure(lvsOpenRve(config svdb)
+  prog((runDir logDir rveLog cmd launchCmd cid)
+    runDir=lvsRunDirFromConfig(config)
+    unless(isFile(config)
+      config=strcat(runDir "/log/lvs.toml")
+      unless(isFile(config)
+        GUI_messageApp('e "LVS" lvsMsgStruc->noConfig)
+        return(nil)))
+    unless(isDir(svdb)
+      GUI_messageApp('e "LVS" lvsMsgStruc->noSvdb)
+      return(nil))
+    logDir=strcat(runDir "/log")
+    rveLog=strcat(logDir "/lvs.rve.log")
+    cmd=strcat(SICO_backendCommand("lvs" LVS_pythonExe() LVS_pythonEntry()) " report " SICO_shellQuote(config))
+    launchCmd=LVS_launchEnvCommand(
+                strcat(SICO_backendCommand("lvs" LVS_pythonExe() LVS_pythonEntry()) " report "
+                        SICO_shellQuote(config)))
+    info(strcat("<INFO> LVS::RVE CMD=\"" cmd "\"\n"))
+    system(strcat("mkdir -p " SICO_shellQuote(logDir)))
+    cid=ipcBeginProcess(launchCmd "" nil nil nil rveLog)
+    when(cid
+      ipcActivateBatch(cid))
+    return(cid)
+  )
+)
+
+procedure(lvsPromptOpenRve(config svdb)
+  prog((runDir ans)
+    runDir=lvsRunDirFromConfig(config)
+    unless(isFile(config)
+      config=strcat(runDir "/log/lvs.toml")
+      unless(isFile(config)
+        GUI_messageApp('e "LVS" lvsMsgStruc->noConfig)
+        return(nil)))
+    unless(isDir(svdb)
+      GUI_messageApp('e "LVS" lvsMsgStruc->noSvdb)
+      return(nil))
+    ans=GUI_askApp("LVS Report" strcat("Open Calibre RVE?\n\ncalibre -rve " svdb))
+    if(ans == "YES" then
+      return(lvsOpenRve(config svdb))
+    else
+      return(t))
+  )
+)
+
+procedure(lvsReport(form)
+  let((runDir config svdb)
+    runDir=lvsRunDirFromForm(form)
+    config=strcat(runDir "/lvs.toml")
+    svdb=lvsSvdbDirFromForm(form)
+    lvsPromptOpenRve(config svdb)
+  )
+)
+
+procedure(lvsBatchEnterMultiple(form)
+  form~>designInp~>invisible=t
+  cadCdlIncludeInputTypeCB(form)
+  t
+)
+
+procedure(lvsCdlIncludeBatchRevision()
+  "20260812.cdl.include.v2"
+)
+
+procedure(lvsBatchLeaveMultiple(form)
+  form~>designInp~>invisible=nil
+  lvsInpCB(form)
+)
+
+procedure(lvsBatchOpenResult(spec)
+  lvsPromptOpenRve(spec['config] spec['resultPath])
+)
+
+cadBatchRegisterFlowAdapter(
+  "LVS" t 'lvsBatchEnterMultiple 'lvsBatchLeaveMultiple
+  'lvsBatchOpenResult 'LVS_pythonExe)

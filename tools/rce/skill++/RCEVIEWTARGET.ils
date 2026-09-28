@@ -1,0 +1,231 @@
+; Resolve native OA view kinds, names and target mappings. SKILL++ lexical scope.
+
+procedure(rceNativeViewOutputP(outputType)
+  if(member(lowerCase(or(outputType ""))
+              '("view" "extview" "smartview" "calibreview" "starrcview")) then
+    t
+  else
+    nil
+  )
+)
+
+procedure(rceNativeViewKindItems(form)
+  case(lowerCase(or(form~>outType~>value ""))
+    ("extview" '("Extracted View"))
+    ("smartview" '("Smart View"))
+    ("calibreview" '("Calibre View"))
+    ("starrcview" '("OpenAccess Parasitic View"))
+    (t
+      case(form~>extTool~>value
+        ("QRC" '("Smart View" "Extracted View"))
+        ("StarRC" '("OpenAccess Parasitic View"))
+        (t '("Calibre View"))
+      )
+    )
+  )
+)
+
+procedure(rceNativeViewKindValue(form)
+  let((kind)
+    kind=if(form~>extTool~>value=="QRC" then
+      form~>viewKind~>value
+    else
+      form~>viewKindFixed~>value
+    )
+    case(kind
+      ("Smart View" "smart")
+      ("Extracted View" "extracted")
+      ("Calibre View" "calibre")
+      ("OpenAccess Parasitic View" "oa")
+      (t "")
+    )
+  )
+)
+
+procedure(rceNativeViewDefaultName(kind)
+  case(kind
+    ("Smart View" "smart_view")
+    ("Extracted View" "av_extracted")
+    ("Calibre View" "calibre")
+    ("OpenAccess Parasitic View" "starrc")
+    (t "parasitic")
+  )
+)
+
+procedure(rceEffectiveCornerDir(form)
+  let((root corner)
+    root=form~>rcTechDirPath~>value
+    corner=rcePrimaryProcessCorner(form)
+    when(and(root strlen(root)>0)
+      root=simplifyFilename(root t)
+      if(or(!corner strlen(corner)==0
+              lowerCase(rceProcessPathTail(root))==lowerCase(corner)) then
+        root
+      else
+        simplifyFilename(strcat(root "/" corner) t)
+      )
+    )
+  )
+)
+
+procedure(rceFirstExistingFile(dir names)
+  let((result name path)
+    result=nil
+    foreach(name names
+      unless(result
+        path=strcat(dir "/" name)
+        when(isFile(path)
+          result=path
+        )
+      )
+    )
+    result
+  )
+)
+
+procedure(rceNativeViewDeviceMapDefault(form)
+  let((cornerDir envValue found)
+    cornerDir=rceEffectiveCornerDir(form)
+    case(form~>extTool~>value
+      ("CalXRC"
+        envValue=SICO_envValue("RCE_CALIBRE_VIEW_CELLMAP")
+        or(envValue
+            when(cornerDir strcat(cornerDir "/calview.cellmap"))
+            "")
+      )
+      ("StarRC"
+        envValue=SICO_envValue("RCE_STARRC_OA_DEVICE_MAP")
+        found=when(cornerDir
+          rceFirstExistingFile(cornerDir
+            '("OA_DEVICE_MAP" "oa_device_map" "oa_device_mapping_file"
+              "device_mapping_file" "DFII_DEVICE_MAP")))
+        or(envValue found
+            when(cornerDir strcat(cornerDir "/OA_DEVICE_MAP"))
+            "")
+      )
+      (t "")
+    )
+  )
+)
+
+procedure(rceNativeViewLayerMapDefault(form)
+  let((cornerDir envValue found)
+    cornerDir=rceEffectiveCornerDir(form)
+    envValue=SICO_envValue("RCE_STARRC_OA_LAYER_MAP")
+    found=when(cornerDir
+      rceFirstExistingFile(cornerDir
+        '("OA_LAYER_MAP" "oa_layer_map" "oa_layer_mapping_file"
+          "layer_mapping_file" "DFII_LAYER_MAP")))
+    or(envValue found
+        when(cornerDir strcat(cornerDir "/OA_LAYER_MAP"))
+        "")
+  )
+)
+
+procedure(rceNativeViewImplicitTarget(form)
+  let((lib cell sourceView target targetObj)
+    target=nil
+    case(form~>extTool~>value
+      ("QRC"
+        case(form~>inpType~>value
+          ("OA" || "CDL+LAY"
+            lib=form~>layLib~>value
+            cell=form~>layCell~>value
+            sourceView=form~>layView~>value
+          )
+          ("SCH+GDS"
+            lib=form~>schLib~>value
+            cell=form~>schCell~>value
+            sourceView=form~>schView~>value
+          )
+        )
+      )
+      (t
+        if(form~>nameSource~>value=="Layout" then
+          when(member(form~>inpType~>value '("OA" "CDL+LAY"))
+            lib=form~>layLib~>value
+            cell=form~>layCell~>value
+            sourceView=form~>layView~>value
+          )
+        else
+          when(member(form~>inpType~>value '("OA" "SCH+GDS"))
+            lib=form~>schLib~>value
+            cell=form~>schCell~>value
+            sourceView=form~>schView~>value
+          )
+        )
+      )
+    )
+    when(and(lib cell sourceView
+               strlen(lib)>0 strlen(cell)>0 strlen(sourceView)>0)
+      targetObj=ddGetObj(lib cell sourceView)
+      when(targetObj
+        target=list(lib cell form~>viewName~>value)
+      )
+    )
+    when(and(target caddr(target) strlen(caddr(target))>0)
+      target
+    )
+  )
+)
+
+procedure(rceNativeViewExplicitTargetP(form)
+  and(form form~>viewTarget
+      stringp(getq(form rceNativeViewTargetExplicitValue))
+      strlen(getq(form rceNativeViewTargetExplicitValue))>0)
+)
+
+procedure(rceNativeViewTargetString(target)
+  if(target then buildString(target "/") else "")
+)
+
+procedure(rceParseNativeViewTarget(value)
+  let((parts valid part tokens)
+    ; Keep empty fields so a target such as "lib//view" cannot be
+    ; mistaken for a valid three-token destination.  The default
+    ; parseString whitespace rules are used for each token below; this is
+    ; more reliable in Virtuoso than embedding tab/CR/LF escapes in rex.
+    parts=parseString(or(value "") "/" t)
+    valid=length(parts)==3
+    foreach(part parts
+      unless(and(stringp(part) strlen(part)>0)
+        valid=nil)
+      when(and(valid stringp(part))
+        tokens=parseString(part)
+        unless(and(length(tokens)==1 car(tokens)==part)
+          valid=nil)))
+    when(valid parts)
+  )
+)
+
+procedure(rceNativeViewTarget(form)
+  let((implicit explicit raw)
+    implicit=rceNativeViewImplicitTarget(form)
+    if(form~>inpType~>value=="OA" then
+      implicit
+    else
+      progn(
+        raw=or(getq(form rceNativeViewTargetExplicitValue)
+               form~>viewTarget~>value)
+        explicit=rceParseNativeViewTarget(raw)
+        when(explicit
+          putpropq(form rceNativeViewTargetString(explicit)
+                   rceNativeViewTargetExplicitValue))
+        or(explicit implicit))
+    )
+  )
+)
+
+procedure(rceNativeViewLayoutView(form)
+  when(and(form~>extTool~>value=="QRC"
+             rceNativeViewOutputP(form~>outType~>value))
+    case(form~>inpType~>value
+      ("OA" || "CDL+LAY" or(form~>layView~>value ""))
+      ("SCH+GDS" "layout")
+      ("CDL+GDS" "layout")
+      ("SVDB" "layout")
+      ("CCI" "layout")
+      (t "")
+    )
+  )
+)

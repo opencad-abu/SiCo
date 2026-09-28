@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SiCo 使用手册：接入 Virtuoso。安装、环境变量、Virtuoso 集成与 CAD flow 配置。">
+<title>接入 Virtuoso · SiCo 使用手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b4543a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='sans-serif' font-size='24' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/manual.css">
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
+  <span class="edition">使用手册 / 2026.09</span>
+  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+</header>
+<noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="手册目录">
+<p class="rail-label">SICO DOCUMENTATION</p>
+<a href="index.html">开始阅读</a>
+<p class="nav-group">开始使用</p>
+<a href="installation.html">01 · 安装</a>
+<a href="environment.html">02 · 环境变量</a>
+<a href="virtuoso.html" aria-current="page">03 · Virtuoso 集成</a>
+<a href="flows.html">04 · CAD flows</a>
+<p class="nav-group">流程指南</p>
+<a href="drc.html">DRC · 规则检查</a>
+<a href="lvs.html">LVS · 连接检查</a>
+<a href="rce.html">RCE · 寄生提取</a>
+<a href="mts.html">MTS · 多工艺网表</a>
+<a href="utilities.html">LEF / GDS / CDL</a>
+<a href="lsf.html">LSF · 运行与资源</a>
+<p class="nav-group">参考附录</p>
+<a href="environment-internal.html">环境接口附录</a>
+<div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
+</nav>
+<div class="reading">
+<main id="main">
+<p class="eyebrow">03 / INTEGRATION</p>
+<h1>接入 Virtuoso</h1>
+<p class="lead">在启动 Virtuoso 之前加载 shell 环境，再由工程的 .cdsinit 注册 SiCo。加载完成后，CIW、Layout 和 Schematic 菜单提供相应工具入口。</p>
+<h2 id="startup">配置工程 .cdsinit</h2>
+<p>打开个人工程实际使用的 <code>.cdsinit</code>，保留已有的 PDK 与项目初始化，将下列代码作为唯一的 SiCo 加载段。<code>SICO_HOME</code> 需由启动 shell 设置为有效的绝对路径。</p>
+<div class="code-block"><div class="code-label">SKILL · 工程 .cdsinit</div><pre><code>let((sicoHome sicoSourceEntry sicoContextEntry)
+  sicoHome=getShellEnvVar("SICO_HOME")
+  unless(and(sicoHome strlen(sicoHome)&gt;0
+             substring(sicoHome 1 1)=="/" isDir(sicoHome))
+    error("SICO_HOME must point to an absolute SiCo installation directory\n"))
+
+  sicoSourceEntry=strcat(sicoHome "/scripts/sicoAutoLoad.il")
+  if(isFile(sicoSourceEntry) then
+    unless(load(sicoSourceEntry)
+      error("SiCo source bootstrap did not load: %s\n" sicoSourceEntry))
+  else
+    sicoContextEntry=strcat(sicoHome "/tools/common/context/sicoBoot.cxt")
+    unless(isFile(sicoContextEntry)
+      error("SiCo bootstrap context is missing: %s\n" sicoContextEntry))
+    ciwMenuInit()
+    unless(loadContext(sicoContextEntry t)
+      error("SiCo bootstrap context did not load: %s\n" sicoContextEntry))
+    unless(callInitProc("sicoBoot")
+      error("SiCo bootstrap initialization failed\n"))))</code></pre></div>
+<p>同一段初始化同时识别源码测试安装和二进制安装。它接入菜单和通信入口，不自动打开 SiCo 窗口，也不开始设计或验证任务。</p>
+<h2 id="check">启动并确认菜单</h2>
+<div class="code-block"><div class="code-label">Bash · 从已配置环境的 shell 启动</div><pre><code>cd /path/to/my/project
+virtuoso</code></pre></div>
+<ol class="steps"><li>在 CIW 确认初始化没有报错，并看到 <strong>SiCo</strong> 菜单。</li><li>打开 <strong>SiCo → DRC</strong> 或 <strong>LVS</strong>，确认表单能显示当前工程库、规则候选与输出目录。</li><li>使用 <strong>SiCo → Silicon Copilot</strong> 打开主界面；终端形式的入口为 <strong>AI Assistant</strong>。</li></ol>
+<p>若菜单未出现，先在 CIW 查看 <code>getShellEnvVar("SICO_HOME")</code>。检查 Virtuoso 是否确实读取了该工程的 <code>.cdsinit</code>，以及启动命令是否使用了 <code>-nocdsinit</code>。站点可能通过自己的初始化链加载工程文件，应由该链保留一个 SiCo 加载入口。</p>
+<h2 id="connect">独立 SiCo 关联 IC 会话</h2>
+<p>从同一工程 shell 执行 <code>sico</code> 后，在主窗口选择 <strong>通信 → 连接 CDNS-IC…</strong>，选择当前用户、本机、当前工程且已加载 SiCo 集成的 Virtuoso。首次执行 AI 任务前，按<a href="installation.html#launch">模型配置</a>提供站点模型服务。</p>
+<div class="pipeline" aria-label="SiCo 与 Virtuoso 的接入关系"><span><b>环境</b>同一工程启动</span><span><b>Virtuoso</b>.cdsinit 加载集成</span><span><b>SiCo</b>通信菜单选择实例</span><span><b>设计</b>核对 library / cell / view</span></div>
+<p>独立首页可以先浏览历史；实际连接时再检查模型设置。EMPY-AE 与 SNPS-CC 当前显示为禁用入口。需要手工 CIW relay 联调时才使用 <code>sico connect</code>，普通使用走通信菜单即可。</p>
+<h2 id="project-skill">项目 SKILL 与 OA 配置</h2>
+<p>源码 bootstrap 支持 <code>PROJ_CAD_HOME</code>：指定项目 SKILL 目录后，在公共注册完成后递归加载严格以 <code>.il</code> 结尾的文件。<code>.ils</code> 由各模块入口按依赖加载。项目目录不能指向 SiCo 的 <code>tools/</code>。二进制安装的项目初始化由站点初始化链管理，不应假定这一源码自动加载机制存在。</p>
+<p>OA 工具使用 <code>CDS_LIB</code>，未设置时表单采用 Virtuoso 当前工作目录的 <code>cds.lib</code>。需要导出 layout 时提供 <code>TECH_LAYER_MAP</code>；需要 CDL 器件定义时提供 <code>CDL_HEADER_FILE</code>。这些工艺文件必须匹配目标 library 的 PDK。</p>
+<h2 id="troubleshoot">常见接入问题</h2>
+<div class="table-wrap"><table><thead><tr><th>现象</th><th>检查与处理</th></tr></thead><tbody>
+<tr><td>找不到 sicoBoot.cxt</td><td>核对完整安装、SICO_HOME 与 context 版本。二进制缺少 context 时重新部署匹配的安装。</td></tr>
+<tr><td>连接列表里没有 Virtuoso</td><td>检查当前用户、机器、工程路径及 SiCo 初始化是否成功；新的 shell 设置不会进入已经启动的 Virtuoso。</td></tr>
+<tr><td>切换环境后仍显示旧规则或模型</td><td>保存需要保留的配置，结束任务与工程服务，在新 shell 中重新启动 Virtuoso 和 SiCo。</td></tr>
+<tr><td>Calibre 原生 OA view 无法导入</td><td>RCE 的 Calibre View 还需站点 Calibre–Virtuoso 集成，提供 <code>mgc_rve_load_setup_file</code>。SiCo 菜单加载不能代替该工具集成。</td></tr>
+<tr><td>提示 .sico 权限或其他用户所有</td><td>进入自己的工程工作目录，核对状态根。多人共用安装不等于共用私有会话目录。</td></tr>
+</tbody></table></div>
+
+<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="flows.html">CAD flow 配置 →</a></footer>
+</main>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#startup">配置工程 .cdsinit</a><a href="#check">启动并确认菜单</a><a href="#connect">独立 SiCo 关联 IC 会话</a><a href="#project-skill">项目 SKILL 与 OA 配置</a><a href="#troubleshoot">常见接入问题</a></aside>
+</div></div>
+</body>
+</html>

@@ -1,0 +1,278 @@
+unless(and(isCallable('SICO_tomlRevision)
+             SICO_tomlRevision()=="20260922.sico.temp.v6"
+             isCallable('SICO_tomlString) isCallable('SICO_shellQuote)
+             isCallable('SICO_tempPath) isCallable('SICO_tempEnvironment))
+  cond(
+    (and(boundp('drcCommonRoot) drcCommonRoot)
+      load(strcat(drcCommonRoot "/skill/SICO_toml.il")))
+    (isCallable('cadLoadRelative)
+      cadLoadRelative("common/skill/SICO_toml.il"))
+    (t
+      warn("DRCRUN requires DRC.ils or a configured SICO_HOME.\n"))
+  )
+)
+
+unless(boundp('drcIpcTable)
+  drcIpcTable=makeTable("drcIpcTable" nil)
+)
+
+procedure(DRC_pythonEntry()
+  let((toolsRoot)
+    toolsRoot=SICO_toolsRoot()
+    or(
+      SICO_nativeEntry("drc")
+      SICO_envValue("DRC_PYTHON_ENTRY")
+      if(toolsRoot then
+        simplifyFilename(strcat(toolsRoot "/drc/python/drc") t))
+    )
+  )
+)
+
+procedure(drcRunUsesCadTempPath()
+  t
+)
+
+procedure(DRC_pythonExe()
+  let((pythonRoot)
+    pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
+    or(SICO_envValue("DRC_PYTHON") SICO_envValue("SICO_PYTHON")
+       when(pythonRoot
+         simplifyFilename(strcat(pythonRoot "/bin/python3") t))
+       "python3"))
+)
+
+procedure(DRC_launchEnvCommand(args)
+  strcat("env -u PYTHONHOME -u PYTHONPATH "
+          SICO_tempEnvironment()
+          "DRC_ORIG_LD_LIBRARY_PATH="
+          SICO_shellQuote(or(getShellEnvVar("LD_LIBRARY_PATH") ""))
+          " LD_LIBRARY_PATH="
+          SICO_shellQuote(SICO_pythonLibraryPath())
+          " "
+          args)
+)
+
+procedure(drcBackupRunData(runDir)
+  let((cmd)
+    cmd=strcat("cd " SICO_shellQuote(runDir)
+                " && tag=$(date +%m-%d-%H-%M-%S)"
+                " && if [ -d db ]; then mv db db.$tag; fi"
+                " && if [ -d log ]; then mv log log.$tag; fi")
+    system(cmd)
+  )
+)
+
+procedure(drcResultsDbFromForm(form)
+  strcat(drcRunDirFromForm(form) "/db/drc/cal_drc.out")
+)
+
+procedure(drcIpcDataHandler(cid data)
+  nil
+)
+
+procedure(drcIpcErrHandler(cid data)
+  nil
+)
+
+procedure(drcIpcPostFunc(cid exitStatus)
+  let((meta pidFile launchLog config resultsDb)
+    meta=drcIpcTable[cid]
+    launchLog=""
+    when(meta
+      pidFile=car(meta)
+      launchLog=cadr(meta)
+      config=caddr(meta)
+      resultsDb=cadddr(meta)
+      when(pidFile && isFile(pidFile)
+        deleteFile(pidFile))
+      drcIpcTable[cid]=nil)
+    if(exitStatus == 0 then
+      info(strcat("<INFO> DRC::Finished. LOG=\"" launchLog "\"\n"))
+      when(config && resultsDb
+        drcPromptOpenRve(config resultsDb))
+    else
+      warn(strcat("<WARN> DRC::Finished with exit status "
+                    sprintf(nil "%L" exitStatus)
+                    ". LOG=\"" launchLog "\"\n")))
+  )
+)
+
+procedure(drcStart(form)
+  prog((cmdFile runPathParts pidPostfix tmp user lib cell pid pidNum inp run
+         runPathPrefix logDir launchLog launchCmd cid out)
+    run="YES"
+    user=getLogin()
+    info(strcat("<INFO> DRC::Start to run progress...\n"))
+    cmdFile=drcWriteToml(form)
+    when(! cmdFile return(nil))
+    runPathParts=parseString(cmdFile "/")
+    pidPostfix=nth(length(runPathParts)-2 runPathParts)
+    tmp=parseString(pidPostfix ".")
+    lib=nth(0 tmp)
+    cell=nth(1 tmp)
+    pid=SICO_tempPath(strcat("drc.pid." user "." lib "." cell))
+    unless(pid
+      warn("<WARN> DRC::Cannot create the PID file path.\n")
+      return(nil))
+    when(isFile(pid)
+      inp=infile(pid)
+      gets(pidNum inp)
+      close(inp)
+      run=GUI_askApp("DRC" strcat("A DRC process is running for the same cell. Start another anyway?\n\nPID: " pidNum)))
+    when(run == "NO"
+      info("<INFO> DRC::User canceled progress.\n")
+      return(nil))
+    runPathPrefix=substring(cmdFile 1 (strlen(cmdFile)-9))
+    drcBackupRunData(runPathPrefix)
+    logDir=strcat(runPathPrefix "/log")
+    launchLog=strcat(logDir "/drc.launch.log")
+    launchCmd=DRC_launchEnvCommand(
+                strcat("DRC_BACKUP_DONE=1 "
+                        SICO_backendCommand("drc" DRC_pythonExe() DRC_pythonEntry()) " run "
+                        SICO_shellQuote(cmdFile)))
+    launchCmd=SICO_lsfWrapCommand(
+      launchCmd form~>runType~>value form~>queueName~>value
+      form~>srvName~>value
+      form~>runCpu~>value nil launchLog)
+    info(strcat("<INFO> DRC::LOG=\"" launchLog "\"\n"))
+    system(strcat("mkdir -p " SICO_shellQuote(logDir)))
+    cid=ipcBeginProcess(launchCmd "" 'drcIpcDataHandler 'drcIpcErrHandler 'drcIpcPostFunc launchLog)
+    when(! cid
+      warn("<WARN> DRC::Failed to start IPC process.\n")
+      return(nil))
+    drcIpcTable[cid]=list(pid launchLog cmdFile drcResultsDbFromForm(form))
+    out=outfile(pid "w")
+    when(out
+      fprintf(out "%L\n" cid)
+      close(out))
+    ipcActivateBatch(cid)
+    GUI_flowLogOpen("DRC" launchLog)
+    return(t)
+  )
+)
+
+procedure(drcBatchSpec(form row batchId index)
+  prog((taskId jobName config runDir logDir launchLog launchCmd resultPath
+         spec)
+    taskId=cadBatchTaskId(index)
+    jobName=cadBatchJobName("DRC" batchId taskId)
+    cadBatchSetDesignValues(form row)
+    config=drcWriteToml(form)
+    unless(config
+      return(nil))
+    runDir=substring(config 1 (strlen(config)-9))
+    logDir=strcat(runDir "/log")
+    launchLog=strcat(logDir "/drc.launch.log")
+    resultPath=strcat(runDir "/db/drc/cal_drc.out")
+    launchCmd=DRC_launchEnvCommand(
+      strcat("DRC_BACKUP_DONE=1 "
+              SICO_backendCommand("drc" DRC_pythonExe() DRC_pythonEntry()) " run "
+              SICO_shellQuote(config)))
+    launchCmd=SICO_lsfWrapCommand(
+      launchCmd form~>runType~>value form~>queueName~>value
+      form~>srvName~>value form~>runCpu~>value jobName launchLog)
+    spec=cadBatchMakeSpec(
+      taskId buildString(row "/") config runDir launchCmd
+      SICO_lsfCancelCommand(form~>runType~>value jobName)
+      launchLog resultPath runDir nil)
+    return(spec)
+  )
+)
+
+procedure(drcBatchStart(form)
+  prog((saved batchId root specs index row spec backupOk meta)
+    unless(cadBatchValidateTasks(form)
+      return(nil))
+    batchId=cadBatchNewId("DRC")
+    root=cadBatchCreateRoot(form "DRC" batchId)
+    unless(root
+      cadBatchMessage('e "DRC" "Cannot create the batch control directory.")
+      return(nil))
+    saved=cadBatchDesignValues(form)
+    specs=nil
+    index=1
+    unwindProtect(
+      foreach(row form~>cadBatchTasks
+        when(specs!=nil || index==1
+          spec=drcBatchSpec(form row batchId index)
+          if(spec then
+            specs=append1(specs spec)
+          else
+            specs=nil)
+          index=index+1))
+      cadBatchSetDesignValues(form saved))
+    unless(and(specs length(specs)==length(form~>cadBatchTasks))
+      cadBatchMessage('e "DRC"
+        "Batch configuration failed; no cell was started.")
+      return(nil))
+    unless(cadBatchSpecsIndependentP(specs)
+      cadBatchMessage('e "DRC"
+        "Two or more rows resolve to the same run directory or result target.")
+      return(nil))
+    backupOk=t
+    foreach(spec specs
+      unless(drcBackupRunData(spec['runDir])==0
+        backupOk=nil))
+    unless(backupOk
+      cadBatchMessage('e "DRC"
+        "Cannot back up one or more existing run directories; no cell was started.")
+      return(nil))
+    meta=cadBatchBuildMeta(form "DRC" batchId root specs nil)
+    return(cadBatchLaunch(meta))
+  )
+)
+
+procedure(drcPromptOpenRve(config resultsDb)
+  prog((runDir logDir rveLog ans cmd launchCmd cid)
+    unless(isFile(config)
+      GUI_messageApp('e "DRC" drcMsgStruc->noConfig)
+      return(nil))
+    unless(isFile(resultsDb)
+      GUI_messageApp('e "DRC" drcMsgStruc->noResultsDb)
+      return(nil))
+    ans=GUI_askApp(
+      "DRC Report" strcat("Open Calibre RVE?\n\ncalibre -rve " resultsDb))
+    when(ans != "YES"
+      return(nil))
+    runDir=substring(config 1 (strlen(config)-9))
+    logDir=strcat(runDir "/log")
+    rveLog=strcat(logDir "/drc.rve.log")
+    cmd=strcat(SICO_backendCommand("drc" DRC_pythonExe() DRC_pythonEntry()) " report " SICO_shellQuote(config))
+    launchCmd=DRC_launchEnvCommand(
+                strcat(SICO_backendCommand("drc" DRC_pythonExe() DRC_pythonEntry()) " report "
+                        SICO_shellQuote(config)))
+    info(strcat("<INFO> DRC::RVE CMD=\"" cmd "\"\n"))
+    system(strcat("mkdir -p " SICO_shellQuote(logDir)))
+    cid=ipcBeginProcess(launchCmd "" nil nil nil rveLog)
+    when(cid
+      ipcActivateBatch(cid))
+    return(cid)
+  )
+)
+
+procedure(drcReport(form)
+  let((runDir config resultsDb)
+    runDir=drcRunDirFromForm(form)
+    config=strcat(runDir "/drc.toml")
+    resultsDb=drcResultsDbFromForm(form)
+    drcPromptOpenRve(config resultsDb)
+  )
+)
+
+procedure(drcBatchEnterMultiple(form)
+  form~>layInp~>invisible=t
+  t
+)
+
+procedure(drcBatchLeaveMultiple(form)
+  form~>layInp~>invisible=nil
+  t
+)
+
+procedure(drcBatchOpenResult(spec)
+  drcPromptOpenRve(spec['config] spec['resultPath])
+)
+
+cadBatchRegisterFlowAdapter(
+  "DRC" nil 'drcBatchEnterMultiple 'drcBatchLeaveMultiple
+  'drcBatchOpenResult 'DRC_pythonExe)

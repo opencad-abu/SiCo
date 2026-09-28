@@ -1,0 +1,114 @@
+; Shared execution host, queue and CPU controls.
+
+defclass(HARDWARE ()
+  (;slot start
+    (lsfChoicesCB    @initform infoStruc->noCB
+                     @initarg  lsfChoicesCB
+    )
+    (queueCB         @initform infoStruc->noCB
+                     @initarg  queueCB
+    )
+    (runTypeChoices  @initform list("Current Host" "LSF Farm")
+                     @initarg  runTypeChoices
+    )
+    (defSrvName      @initform ""
+                     @initarg  defSrvName
+    )
+    (defQueueName    @initform ""
+                     @initarg  defQueueName
+    )
+    (queueChoices    @initform list("")
+                     @initarg  queueChoices
+    )
+    (srvChoices      @initform list(" ")
+                     @initarg  srvChoices
+    )
+    (cpuChoices      @initform list("1" "2" "4" "8")
+                     @initarg  cpuChoices
+    )
+    (runType         @initform nil)
+    (queueName       @initform nil)
+    (srvName         @initform nil)
+    (lsfMonitor      @initform nil)
+    (servers         @initform nil)
+    (lvsCpu          @initform nil)
+    (extCpu          @initform nil)
+    (runCpu          @initform nil)
+  );slot end
+)
+
+procedure(cadLsfMonitorSelectorCB(form)
+  when(isCallable('SICO_lsfMonitorStartSelector)
+    SICO_lsfMonitorStartSelector(form))
+)
+
+defmethod(makeServers ((inst HARDWARE))
+  inst->runType=hiCreateComboField(
+    ?name     'runType
+    ?prompt   "Run at"
+    ?defValue "Current Host"
+    ?items    inst->runTypeChoices
+    ?editable nil
+    ?callback inst->lsfChoicesCB
+  )
+  inst->queueName=hiCreateComboField(
+    ?name     'queueName
+    ?defValue inst->defQueueName
+    ?items    inst->queueChoices
+    ?editable nil
+    ?enabled  nil
+    ?callback inst->queueCB
+  )
+  inst->srvName=hiCreateComboField(
+    ?name     'srvName
+    ?defValue inst->defSrvName
+    ?items    inst->srvChoices
+    ?editable nil
+    ?enabled  nil
+  )
+  inst->lsfMonitor=hiCreateButton(
+    ?name       'lsfMonitor
+    ?buttonText "LSF"
+    ?buttonIcon when(isCallable('SICO_lsfMonitorButtonIcon)
+                  SICO_lsfMonitorButtonIcon())
+    ?callback   "cadLsfMonitorSelectorCB(hiGetCurrentForm())"
+    ?enabled    nil
+    ?toolTip    "Open LSF Load Monitor and select a verified queue or host"
+  )
+  inst->servers=makehbl(
+    'servers list(inst->runType inst->queueName inst->srvName inst->lsfMonitor))
+);defmethod makeServers
+
+defmethod(makeLvsCpus ((inst HARDWARE))
+  inst->lvsCpu=hiCreateComboField(
+    ?name     'lvsCpu
+    ?prompt   "LVS CPU Number:"
+    ?items    inst->cpuChoices
+    ?defValue "1"
+    ?editable nil
+  )
+);defmethod makeLvsCpus
+
+defmethod(makeExtCpus ((inst HARDWARE))
+  inst->extCpu=hiCreateComboField(
+    ?name     'extCpu
+    ?prompt   "EXT CPU Number:"
+    ?items    inst->cpuChoices
+    ?defValue "1"
+    ?editable nil
+  )
+);defmethod makeExtCpus
+
+defmethod(makeRunCpus ((inst HARDWARE))
+  inst->runCpu=hiCreateComboField(
+    ?name     'runCpu
+    ?prompt   "CPU Number:"
+    ?items    inst->cpuChoices
+    ?defValue "1"
+    ?editable nil
+  )
+);defmethod makeRunCpus
+
+procedure(cadBaseHardwareRevision()
+  "20260820.lsf.monitor.v7"
+)

@@ -1,0 +1,39 @@
+"""Legacy test collector; migrate callers to domain cases before removal."""
+
+from rule_select_gui_fixtures import application as application, groups as groups
+
+from rule_selection_protocol_cases import (
+    test_initial_selection_tsv_is_case_insensitive_and_validated as test_initial_selection_tsv_is_case_insensitive_and_validated,
+    test_atomic_selection_output_uses_apply_protocol as test_atomic_selection_output_uses_apply_protocol,
+    test_selection_output_does_not_create_unrequested_parent as test_selection_output_does_not_create_unrequested_parent,
+    test_selection_output_refuses_a_preexisting_result as test_selection_output_refuses_a_preexisting_result,
+)
+
+from rule_select_model_cases import (
+    test_group_cascade_and_child_selection_produce_three_states as test_group_cascade_and_child_selection_produce_three_states,
+    test_item_check_events_cascade_and_shared_checks_stay_in_sync as test_item_check_events_cascade_and_shared_checks_stay_in_sync,
+    test_overlapping_full_groups_are_emitted_and_cover_shared_check as test_overlapping_full_groups_are_emitted_and_cover_shared_check,
+    test_initial_full_group_and_unknown_names_keep_existing_semantics as test_initial_full_group_and_unknown_names_keep_existing_semantics,
+    test_recursive_filter_does_not_change_selection as test_recursive_filter_does_not_change_selection,
+)
+
+from rule_select_dialog_cases import (
+    test_select_and_clear_visible_touch_only_filtered_checks as test_select_and_clear_visible_touch_only_filtered_checks,
+    test_dialog_uses_configured_logo_in_title as test_dialog_uses_configured_logo_in_title,
+    test_opaque_group_can_be_selected_and_cleared_when_visible as test_opaque_group_can_be_selected_and_cleared_when_visible,
+    test_apply_writes_result_and_accepts_dialog as test_apply_writes_result_and_accepts_dialog,
+    test_empty_apply_keeps_dialog_open_and_writes_nothing as test_empty_apply_keeps_dialog_open_and_writes_nothing,
+    test_cancel_and_window_close_do_not_write_result as test_cancel_and_window_close_do_not_write_result,
+    test_dialog_smoke_renders_nonblank_tree as test_dialog_smoke_renders_nonblank_tree,
+)
+
+from rule_select_navigation_cases import (
+    test_dialog_installs_wheel_filter_only_while_visible as test_dialog_installs_wheel_filter_only_while_visible,
+    test_rule_tree_mouse_wheel_scrolls_expanded_checks as test_rule_tree_mouse_wheel_scrolls_expanded_checks,
+)
+
+from rule_select_lifecycle_cases import (
+    test_parent_monitor_closes_when_pid_is_reused as test_parent_monitor_closes_when_pid_is_reused,
+    test_only_parent_owned_gui_uses_hard_exit_fallback as test_only_parent_owned_gui_uses_hard_exit_fallback,
+    test_qt_environment_cleanup_preserves_platform as test_qt_environment_cleanup_preserves_platform,
+)

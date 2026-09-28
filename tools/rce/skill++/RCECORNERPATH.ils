@@ -1,0 +1,137 @@
+; Discover technology corners and resolve corner defaults. SKILL++ lexical scope.
+
+procedure(rceDirectoryHasNamedFile(dir names)
+  let((found name)
+    found=nil
+    when(and(dir isDir(dir))
+      foreach(name names
+        when(isFile(strcat(dir "/" name))
+          found=t
+        )
+      )
+    )
+    found
+  )
+)
+
+procedure(rceSafeDirFiles(dir)
+  let((protected)
+    protected=errset(getDirFiles(dir))
+    if(protected then
+      car(protected)
+    else
+      warn("Cannot scan Process Directory: %s\n" dir)
+      nil
+    )
+  )
+)
+
+procedure(rceDirectorySuffixFileCount(dir suffixPattern)
+  let((count entry path)
+    count=0
+    when(and(dir isDir(dir))
+      foreach(entry rceSafeDirFiles(dir)
+        path=strcat(dir "/" entry)
+        when(and(isFile(path)
+                   rexMatchp(suffixPattern lowerCase(entry)))
+          count=count+1
+        )
+      )
+    )
+    count
+  )
+)
+
+procedure(rceStarCornerDirP(cornerDir processRoot)
+  let((parentDir gridFound mapFound)
+    parentDir=simplifyFilename(strcat(cornerDir "/..") t)
+    gridFound=or(rceDirectoryHasNamedFile(cornerDir '("nxtgrd"))
+                  rceDirectorySuffixFileCount(cornerDir "[.]nxtgrd$")==1)
+    mapFound=or(rceDirectoryHasNamedFile(
+                   cornerDir '("tran.map" "map" "MAPPING_FILE" "mapping_file"))
+                 rceDirectorySuffixFileCount(cornerDir "[.]map$")==1
+                 rceDirectoryHasNamedFile(processRoot '("MAPPING_FILE" "mapping_file"))
+                 rceDirectoryHasNamedFile(parentDir '("MAPPING_FILE" "mapping_file")))
+    and(gridFound mapFound)
+  )
+)
+
+procedure(rceProcessCornerDirP(tool cornerDir processRoot)
+  when(and(cornerDir isDir(cornerDir))
+    case(tool
+      ("QRC" || "Quantus"
+        rceDirectoryHasNamedFile(
+          cornerDir '("qrcTechFile" "qrc.tch" "cap_coeff.dat"))
+      )
+      ("StarRC"
+        rceStarCornerDirP(cornerDir processRoot)
+      )
+      ("CalXRC" || "XRC"
+        isFile(strcat(cornerDir "/xrc.cal"))
+      )
+      (t t)
+    )
+  )
+)
+
+procedure(rceProcessPathTail(path)
+  let((parts)
+    parts=parseString(simplifyFilename(path t) "/")
+    or(car(last(parts)) "")
+  )
+)
+
+procedure(rceProcessCornerNames(tool processDir)
+  let((corners entry cornerDir)
+    corners=nil
+    when(and(processDir isDir(processDir))
+      if(rceProcessCornerDirP(tool processDir processDir) then
+        corners=list(rceProcessPathTail(processDir))
+      else
+        foreach(entry rceSafeDirFiles(processDir)
+          unless(member(entry '("." ".."))
+            cornerDir=strcat(processDir "/" entry)
+            when(and(isDir(cornerDir)
+                       rceProcessCornerDirP(tool cornerDir processDir))
+              corners=append1(corners entry)
+            )
+          )
+        )
+      )
+    )
+    if(corners then sort(corners 'alphalessp) else '(""))
+  )
+)
+
+procedure(rceMatchingProcessCorner(name corners)
+  let((match corner)
+    match=nil
+    when(and(name strlen(name)>0)
+      foreach(corner corners
+        when(and(corner strlen(corner)>0
+                   lowerCase(name)==lowerCase(corner))
+          match=corner
+        )
+      )
+    )
+    match
+  )
+)
+
+procedure(rcePreferredProcessCorner(corners current)
+  or(rceMatchingProcessCorner(current corners)
+      rceMatchingProcessCorner(SICO_envValue("RCE_CORNER") corners)
+      rceMatchingProcessCorner("RCmax" corners)
+      rceMatchingProcessCorner("Cmax" corners)
+      rceMatchingProcessCorner("Typ" corners)
+      when(and(car(corners) strlen(car(corners))>0) car(corners)))
+)
+
+procedure(rceDefaultCornerTemperature(corner fallback)
+  case(lowerCase(or(corner ""))
+    (("cmin" "rcmax") "125")
+    (("cmax" "rcmin") "25")
+    ("typ" "85")
+    (t or(fallback "25"))
+  )
+)

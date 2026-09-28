@@ -1,0 +1,2 @@
+# Unified diff context represents blank lines with a single leading space.
+ai/terminal/patches/*.patch -whitespace

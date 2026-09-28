@@ -1,0 +1,120 @@
+; RCE output format and netlist customization controls.
+
+unless(and(boundp('RCENETLISTGUIVersion)
+             RCENETLISTGUIVersion=="20260919.gui.modules.v1")
+defmethod(makeExtOutType ((inst EXTOPTGUI))
+  inst->outType=hiCreateRadioField(
+    ?name     'outType
+    ?prompt   "Output Type:"
+    ?choices  inst->outTypeChoices
+    ?callback inst->outTypeCB
+  )
+)
+
+defmethod(makeNlPinCtrl ((inst EXTOPTGUI))
+  inst->pinOrderBtn=hiCreateBooleanButton(
+    ?name 'pinOrderBtn
+    ?buttonText "Use Pin Order From:"
+    ?buttonLocation 'left
+    ?value          t
+    ?defValue       t
+    ?callback       inst->pinOrderBtnCB
+  )
+  inst->pinOrderType=hiCreateComboField(
+    ?name     'pinOrderType
+    ?items    '("CDL Netlist File" "User Defined File")
+    ?value    "CDL Netlist File"
+    ?editable nil
+    ?enabled  nil
+    ?callback inst->pinOrderTypeCB
+  )
+  inst->pinOrderFile=hiCreateFileSelectorField(
+    ?name   'pinOrderFile
+    ?mode   'existingFile
+    ?enabled nil
+    ?callback "(rcePinOrderFileCB hiGetCurrentForm())"
+  )
+  inst->pinCtrl=makehbl('pinCtrl list(inst->pinOrderBtn inst->pinOrderType inst->pinOrderFile) ?s 0)
+)
+
+defmethod(makeNlBrackets ((inst EXTOPTGUI))
+  inst->bracketBtn=hiCreateBooleanButton(
+    ?name           'bracketBtn
+    ?buttonText     "Brackets Replace:"
+    ?buttonLocation 'left
+    ?callback       inst->bracketBtnCB
+  )
+  inst->bracketChoices=hiCreateComboField(
+    ?name     'bracketChoices
+    ?items    '("<> ===> []" "[] ===> <>")
+    ?value    "<> ===> []"
+    ?editable nil
+    ?enabled  nil
+  )
+  inst->brackets=makehbl('bracket list(inst->bracketBtn inst->bracketChoices) ?a left)
+)
+
+defmethod(makeNlHierDeli ((inst EXTOPTGUI))
+  inst->hierDeliBtn=hiCreateBooleanButton(
+    ?name           'hierDeliBtn
+    ?buttonText     "Hierarchy Delimiter:"
+    ?buttonLocation 'left
+    ?callback       inst->hierDeliBtnCB
+  )
+  inst->hierDeliChoices=hiCreateComboField(
+    ?name     'hierDeliChoices
+    ?items    '("/" ".")
+    ?value    "/"
+    ?editable nil
+    ?enabled  nil
+  )
+  inst->hierDeli=makehbl('hierDeli list(inst->hierDeliBtn inst->hierDeliChoices) ?a left ?s 0)
+)
+
+defmethod(makeNlBasic ((inst EXTOPTGUI))
+  makeNlPinCtrl(inst)
+  makeNlBrackets(inst)
+  makeNlHierDeli(inst)
+  inst->nlBasic=makevbl('nlBasic list(inst->pinCtrl makehbl('nlsubBasic list(inst->brackets inst->hierDeli))) ?s 0)
+)
+
+defmethod(makeNlMoreInfo ((inst EXTOPTGUI))
+  inst->nlParInfo=hiCreateToggleField(
+    ?name   'nlParInfo
+    ?prompt "+ Parasitic Information:"
+    ?choices list(list('parasiticCoordinates "R&C Coordinates")
+                   list('parasiticResLayer "Parasitic R Layer Name")
+                   list('parasiticResDimensions "Parasitic R Size (W&L)"))
+    ?value    '(nil nil nil)
+    ?defValue '(nil nil nil)
+    ?callback inst->nlParInfoCB
+  )
+  inst->nlRmInst=hiCreateRadioField(
+    ?name     'nlRmInst
+    ?prompt   "- Instance Section:"
+    ?choices  '("TRUE" "FALSE")
+    ?value    "FALSE"
+    ?defValue "FALSE"
+  )
+  inst->nlMoreInfo=makevbl('nlMoreInfo list(inst->nlParInfo inst->nlRmInst))
+)
+
+defmethod(makeNlMore ((inst EXTOPTGUI))
+  inst->nlMore=hiCreateDisclosureTriangle(
+    ?name       'nlMore
+    ?labelText  "More Netlist Options"
+    ?onFields   '(nlMoreInfo)
+    ?offFields  '()
+    ?persistent nil
+  )
+)
+
+defmethod(makeNlOpt ((inst EXTOPTGUI))
+  makeNlBasic(inst)
+  makeNlMore(inst)
+  makeNlMoreInfo(inst)
+  inst->nlOpt=makevbl('nlOpt list(inst->nlBasic inst->nlMore inst->nlMoreInfo))
+)
+
+RCENETLISTGUIVersion="20260919.gui.modules.v1"
+)

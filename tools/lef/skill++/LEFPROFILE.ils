@@ -1,0 +1,268 @@
+;------------------------------------------------------------------------------
+; LEF adapter for the shared versioned configuration-profile bridge.
+;------------------------------------------------------------------------------
+
+procedure(lefProfileValue(data path default)
+  let((pair)
+    pair=assoc(path data)
+    if(pair then cadr(pair) else default)
+  )
+)
+
+procedure(lefProfilePathValue(data path default)
+  let((resolved raw value)
+    resolved=SICO_profileDataValue(data strcat(path ".resolved") nil)
+    raw=SICO_profileDataValue(data strcat(path ".raw") nil)
+    value=lefProfileValue(data path default)
+    cond(
+      (and(resolved stringp(resolved) resolved!="") resolved)
+      (and(raw stringp(raw)) raw)
+      (t value))
+  )
+)
+
+procedure(lefProfileFieldNames()
+  let((names)
+    names='(outDirType outDirPath cdsLib lefLib cellListFile lefCell inlineCells
+            layoutView logicalView abstractView optionsFile binName runPins
+            runExtract runAbstract lefFile lefVersion exportGeometry exportTech
+            runType queueName srvName runCpu)
+    foreach(spec lefOptionSpecs
+      names=append1(names lefOptionFieldName(spec)))
+    names
+  )
+)
+
+procedure(lefProfileChoiceFieldNames()
+  '(outDirType binName lefVersion runType queueName srvName runCpu)
+)
+
+procedure(lefProfileSnapshot(form)
+  let((fields choices field)
+    fields=nil
+    foreach(name lefProfileFieldNames()
+      field=get(form name)
+      unless(field
+        error("LEF profile form field is missing: %L\n" name))
+      fields=append1(fields
+        list(name field~>value field~>enabled field~>invisible)))
+    choices=nil
+    foreach(name lefProfileChoiceFieldNames()
+      field=get(form name)
+      choices=append1(choices list(name field~>items)))
+    list(fields choices lefLoadedInlineCellsState lefLoadedExecutableState
+         lefLoadedBinOptions)
+  )
+)
+
+procedure(lefProfileRestore(form snapshot)
+  let((field)
+    foreach(entry car(snapshot)
+      field=get(form car(entry))
+      when(field
+        field~>value=cadr(entry)
+        field~>enabled=caddr(entry)
+        field~>invisible=cadddr(entry)))
+    foreach(entry cadr(snapshot)
+      field=get(form car(entry))
+      when(field
+        field~>items=cadr(entry)))
+    lefLoadedInlineCellsState=caddr(snapshot)
+    lefLoadedExecutableState=cadddr(snapshot)
+    lefLoadedBinOptions=car(cddddr(snapshot))
+    t
+  )
+)
+
+procedure(lefProfileSetChoice(field value)
+  let((items)
+    items=or(field~>items nil)
+    when(and(value stringp(value) !member(value items))
+      field~>items=append1(items value))
+    field~>value=value
+  )
+)
+
+procedure(lefProfileGetField(form name)
+  let((field)
+    field=get(form name)
+    unless(field
+      error("LEF profile form field is missing: %L\n" name))
+    field
+  )
+)
+
+procedure(lefProfileCollectForm(form)
+  let((entries cellListFile executable inlineCells optionsFile)
+    entries=list(
+      list("run.root_type" form~>outDirType~>value)
+      list("run.root" form~>outDirPath~>value)
+      list("run.cds_lib" form~>cdsLib~>value)
+      list("run.run_type" form~>runType~>value)
+      list("run.queue_name" form~>queueName~>value)
+      list("run.server_name" SICO_lsfSelectedHost(form~>srvName~>value))
+      list("run.cpus" form~>runCpu~>value)
+      list("input.library" form~>lefLib~>value))
+
+    executable=lefLoadedAbstractExecutable()
+    when(and(executable executable!="")
+      entries=append1(entries list("run.executable" executable)))
+
+    cellListFile=lefCellListValue(form)
+    inlineCells=lefInlineCellsValue()
+    cond(
+      (cellListFile
+        entries=append1(entries list("input.cell_list_file" cellListFile)))
+      (and(inlineCells length(inlineCells)>1)
+        entries=append1(entries
+          list("input.cells" SICO_profileStringList(inlineCells))))
+      (t
+        entries=append1(entries list("input.cell" form~>lefCell~>value))))
+    entries=append(entries list(
+      list("input.layout_view" form~>layoutView~>value)
+      list("input.logical_view" form~>logicalView~>value)
+      list("input.abstract_view" form~>abstractView~>value)))
+
+    optionsFile=form~>optionsFile~>value
+    when(and(optionsFile optionsFile!="")
+      entries=append1(entries list("abstract.options_file" optionsFile)))
+    entries=append1(entries list("abstract.bin" form~>binName~>value))
+    foreach(pair lefFormBinOptions(form)
+      entries=append1(entries
+        list(strcat("abstract.bin_options." car(pair)) cadr(pair))))
+
+    append(entries list(
+      list("steps.pins" form~>runPins~>value)
+      list("steps.extract" form~>runExtract~>value)
+      list("steps.abstract" form~>runAbstract~>value)
+      list("output.lef_file" form~>lefFile~>value)
+      list("output.lef_version" form~>lefVersion~>value)
+      list("output.geometry" form~>exportGeometry~>value)
+      list("output.technology" form~>exportTech~>value)))
+  )
+)
+
+procedure(lefProfileBinOptions(data)
+  let((options prefix path value)
+    options=nil
+    prefix="abstract.bin_options."
+    foreach(entry data
+      path=car(entry)
+      when(and(strlen(path)>strlen(prefix)
+               substring(path 1 strlen(prefix))==prefix)
+        value=cadr(entry)
+        options=append1(options
+          list(substring(path strlen(prefix)+1
+                         strlen(path)-strlen(prefix))
+               cond(
+                 (value==t "true")
+                 (value==nil "false")
+                 (stringp(value) value)
+                 (t sprintf(nil "%L" value)))))))
+    options
+  )
+)
+
+procedure(lefProfileApplyHardware(form runType queue server cpu)
+  lefProfileSetChoice(lefProfileGetField(form 'runType) runType)
+  lefProfileSetChoice(lefProfileGetField(form 'runCpu) cpu)
+  SICO_lsfSetPreferredValues(form queue server)
+  SICO_lsfChoicesCB(form)
+  t
+)
+
+procedure(lefProfileApplyForm(form data)
+  prog((snapshot protected cells cellList multipleCells runRoot lefFile
+        runRootType runType queue server cpu binOptions)
+    protected=errset(lefProfileSnapshot(form) t)
+    unless(protected return(nil))
+    snapshot=car(protected)
+    protected=errset(progn(
+      cells=SICO_profileStringList(
+        lefProfileValue(data "input.cells" nil))
+      unless(cells
+        let((cell)
+          cell=lefProfileValue(data "input.cell" "")
+          cells=if(cell=="" then nil else list(cell))))
+      cellList=lefProfilePathValue(
+        data "input.cell_list_file" "")
+      multipleCells=and(cellList=="" length(cells)>1)
+
+      runRoot=lefProfilePathValue(data "run.root" "")
+      runRootType=lefProfileValue(data "run.root_type" "Customize Directory")
+      unless(member(runRootType
+                    '("Project Directory" "Current Directory"
+                      "Customize Directory"))
+        return(nil))
+      lefProfileSetChoice(lefProfileGetField(form 'outDirType) runRootType)
+      lefOutDirCB(form)
+      when(runRootType=="Customize Directory"
+        lefProfileGetField(form 'outDirPath)~>value=or(runRoot ""))
+      lefProfileGetField(form 'cdsLib)~>value=lefProfilePathValue(
+        data "run.cds_lib" "")
+      lefProfileGetField(form 'lefLib)~>value=lefProfileValue(
+        data "input.library" "")
+      lefProfileGetField(form 'cellListFile)~>value=cellList
+      lefProfileGetField(form 'lefCell)~>value=or(car(cells) "")
+      lefProfileGetField(form 'inlineCells)~>value=if(multipleCells then
+        buildString(cells ", ") else "")
+      lefProfileGetField(form 'inlineCells)~>invisible=!multipleCells
+      lefProfileGetField(form 'layoutView)~>value=lefProfileValue(
+        data "input.layout_view" "layout")
+      lefProfileGetField(form 'logicalView)~>value=lefProfileValue(
+        data "input.logical_view" "schematic")
+      lefProfileGetField(form 'abstractView)~>value=lefProfileValue(
+        data "input.abstract_view" "abstract")
+
+      runRoot=lefProfileGetField(form 'outDirPath)~>value
+      lefProfileGetField(form 'optionsFile)~>value=lefProfilePathValue(
+        data "abstract.options_file" "")
+      lefProfileSetChoice(lefProfileGetField(form 'binName)
+        lefProfileValue(data "abstract.bin" "Core"))
+      lefProfileGetField(form 'runPins)~>value=lefProfileValue(
+        data "steps.pins" t)
+      lefProfileGetField(form 'runExtract)~>value=lefProfileValue(
+        data "steps.extract" t)
+      lefProfileGetField(form 'runAbstract)~>value=lefProfileValue(
+        data "steps.abstract" t)
+
+      lefFile=lefProfilePathValue(data "output.lef_file" nil)
+      unless(and(lefFile lefFile!="")
+        lefFile=lefDefaultOutputPath(runRoot
+          lefProfileGetField(form 'lefLib)~>value
+          lefProfileGetField(form 'lefCell)~>value
+          lefProfileGetField(form 'layoutView)~>value
+          if(or(cellList!="" multipleCells) then "batch")))
+      lefProfileGetField(form 'lefFile)~>value=lefFile
+      lefProfileSetChoice(lefProfileGetField(form 'lefVersion)
+        lefProfileValue(data "output.lef_version" "5.8"))
+      lefProfileGetField(form 'exportGeometry)~>value=lefProfileValue(
+        data "output.geometry" t)
+      lefProfileGetField(form 'exportTech)~>value=lefProfileValue(
+        data "output.technology" nil)
+
+      runType=lefProfileValue(data "run.run_type" "Current Host")
+      queue=lefProfileValue(data "run.queue_name" "")
+      server=lefProfileValue(
+        data "run.server_name" SICO_lsfLocalHost())
+      cpu=lefProfileValue(data "run.cpus" "1")
+      lefProfileApplyHardware(form runType queue server cpu)
+
+      lefSetLoadedInlineCells(if(multipleCells then cells else nil))
+      lefSetLoadedExecutable(
+        lefProfileValue(data "run.executable" nil))
+      binOptions=lefProfileBinOptions(data)
+      lefApplyBinOptions(form binOptions)
+      t) t)
+    unless(protected
+      errset(lefProfileRestore(form snapshot) t)
+      return(nil))
+    return(car(protected))
+  )
+)
+
+procedure(lefProfileRevision()
+  "20260820.rce.live.log.v4"
+)
+
+SICO_profileRegisterAdapter("LEF" 'lefProfileCollectForm 'lefProfileApplyForm)

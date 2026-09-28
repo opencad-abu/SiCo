@@ -1,0 +1,35 @@
+; Compose RCE extraction option panels.
+
+unless(and(boundp('RCEEXTRACTGUIVersion)
+             RCEEXTRACTGUIVersion=="20260919.gui.modules.v1")
+defmethod(makeExtopt ((inst EXTOPTGUI))
+  makeExtRcTechDir(inst)
+  makeExtBasicOpt(inst)
+  makeExtMoreOpt(inst)
+  makeExtNetSelOpt(inst)
+  makeExtCellSelOpt(inst)
+  makeExtFilterOpt(inst)
+  inst->extOpt=makevbl('extOpt list(inst->rcTechDir
+                                      inst->basicOpt
+                                      inst->moreOpt
+                                      list(inst->extractTopCellRow
+                                           'horiz_align 'left)
+                                      list(inst->nameSource
+                                           'horiz_align 'left)
+                                      inst->netSel
+                                      inst->cellSel
+                                      inst->filter)
+                        ?f "Extract Options")
+
+)
+
+procedure(rceBaseGuiRevision()
+  "20260909.pin.order.v1"
+)
+
+procedure(rceGuiModulesRevision()
+  "20260919.gui.modules.v1"
+)
+rceBaseGuiVersion="20260909.pin.order.v1"
+RCEEXTRACTGUIVersion="20260919.gui.modules.v1"
+)

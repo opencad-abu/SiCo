@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SiCo 使用手册：安装与首次启动。安装、环境变量、Virtuoso 集成与 CAD flow 配置。">
+<title>安装与首次启动 · SiCo 使用手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b4543a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='sans-serif' font-size='24' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/manual.css">
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
+  <span class="edition">使用手册 / 2026.09</span>
+  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+</header>
+<noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="手册目录">
+<p class="rail-label">SICO DOCUMENTATION</p>
+<a href="index.html">开始阅读</a>
+<p class="nav-group">开始使用</p>
+<a href="installation.html" aria-current="page">01 · 安装</a>
+<a href="environment.html">02 · 环境变量</a>
+<a href="virtuoso.html">03 · Virtuoso 集成</a>
+<a href="flows.html">04 · CAD flows</a>
+<p class="nav-group">流程指南</p>
+<a href="drc.html">DRC · 规则检查</a>
+<a href="lvs.html">LVS · 连接检查</a>
+<a href="rce.html">RCE · 寄生提取</a>
+<a href="mts.html">MTS · 多工艺网表</a>
+<a href="utilities.html">LEF / GDS / CDL</a>
+<a href="lsf.html">LSF · 运行与资源</a>
+<p class="nav-group">参考附录</p>
+<a href="environment-internal.html">环境接口附录</a>
+<div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
+</nav>
+<div class="reading">
+<main id="main">
+<p class="eyebrow">01 / GET STARTED</p>
+<h1>安装与首次启动</h1>
+<p class="lead">普通用户选择 CAD 已部署的完整安装，再加载项目环境。安装根、Python 和 Virtuoso 初始化入口需要成套使用。</p>
+<h2 id="requirements">准备运行环境</h2>
+<div class="table-wrap"><table><thead><tr><th>组件</th><th>何时需要</th><th>要求</th></tr></thead><tbody>
+<tr><td>Linux x86_64</td><td>全部功能</td><td>使用经站点确认的平台组合。当前运行包已有 EL7 / EL8 及当前 EL9 主机验收记录，具体资格以所选包为准。</td></tr>
+<tr><td>Cadence Virtuoso / OpenAccess</td><td>OA 输入、菜单、MTS、文本 view</td><td>站点提供工具和许可证；context 必须匹配发行验证的 Cadence 版本，当前验证基于 IC23.1。</td></tr>
+<tr><td>Python / Qt</td><td>SiCo 与图形工具</td><td>二进制安装使用 <code>runtime/python/</code>；源码测试使用配置好依赖的站点 Python。当前 Assistant 要求 Python 3.9.13。</td></tr>
+<tr><td>X11 与系统图形库</td><td>GUI</td><td>有效的 <code>DISPLAY</code> 与 X11 授权。LSF 节点中文输入还需 IBus/libpinyin、D-Bus 和 Qt IBus plugin。</td></tr>
+<tr><td>Calibre / Quantus / StarRC / Abstract</td><td>对应 CAD flow</td><td>按使用范围配置 PATH、许可证和 PDK 规则；SiCo 安装不代替这些 EDA 工具。</td></tr>
+<tr><td>LSF / Environment Modules</td><td>集群运行 / MTS 项目选择</td><td>LSF 按需启用；MTS 项目选择要求可用的 <code>modulecmd</code> 与明确的 modulefiles 目录。</td></tr>
+</tbody></table></div>
+<h2 id="install-package">部署完整运行包</h2>
+<p>如果站点已有 SiCo，请直接进入下一节。首次部署时，由 CAD 将已验收的运行包解压到一个新的版本目录，保留原版本以便切换。</p>
+<ol class="steps"><li>取得同一版本的归档及其 SHA-256 校验文件，先校验，再查看归档顶层目录。</li><li>解压到新的空目录，确认 <code>bin/</code>、<code>tools/</code>、<code>runtime/python/</code>、<code>etc/config/sico-install.json</code> 和 <code>RUNTIME-MANIFEST.json</code> 齐全。</li><li>将 <code>SICO_HOME</code> 指向包含上述目录的实际安装根；如果归档自带顶层目录，要指向该顶层目录内部。</li><li>按下面的检查启动新进程。安装更新时先核对 CAD 已维护的 <code>etc/flow-defaults/</code>，将站点修改合并到新版本。</li></ol>
+<div class="code-block"><div class="code-label">Bash · 部署示意，替换文件名和新目录</div><pre><code>sha256sum -c /path/to/sico-release.tar.gz.sha256
+tar -tzf /path/to/sico-release.tar.gz
+mkdir /path/to/new-sico-install
+tar -xzf /path/to/sico-release.tar.gz -C /path/to/new-sico-install</code></pre></div>
+<p>校验文件若使用相对文件名，应在归档所在目录执行校验。运行包已带 Python，不需要向系统 Python 安装 SiCo；站点的 EDA、许可证、图形与调度器环境仍需单独就绪。</p>
+<h2 id="shell">配置启动 shell</h2>
+<p>以下示例使用二进制安装 <code>/software/sico/latest-bin</code>。先加载站点项目 setup，再执行这些设置；将安装路径替换为实际位置。</p>
+<div class="code-block"><div class="code-label">Bash · 二进制安装</div><pre><code>source /path/to/project/setup.bashrc
+export SICO_HOME="/software/sico/latest-bin"
+export SICO_PYTHON_ROOT="$SICO_HOME/runtime/python"
+export SICO_PYTHON="$SICO_PYTHON_ROOT/bin/python3"
+export SICO_SYSTEM_LD_LIBRARY_PATH="$SICO_PYTHON_ROOT/lib:$SICO_HOME/lib"
+export SICO_AI_PYTHON_LIBRARY_PATH="$SICO_SYSTEM_LD_LIBRARY_PATH"
+export SICO_RUNTIME_TOOLS="$SICO_HOME/tools"
+export LD_LIBRARY_PATH="$SICO_HOME/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export PATH="$SICO_HOME/bin:$PATH"
+unset SICO_AI_PYQT_ROOT SICO_AI_QTERMWIDGET_RUNTIME
+unset SICO_AI_RELEASE_ROOT SICO_AI_CONTEXT SICO_AI_QT_PLUGIN_PATH</code></pre></div>
+<details><summary>Csh / Tcsh 的等价配置</summary><div class="code-block"><div class="code-label">Csh · 先加载站点项目环境</div><pre><code>source /path/to/project/setup.cshrc
+setenv SICO_HOME "/software/sico/latest-bin"
+setenv SICO_PYTHON_ROOT "$SICO_HOME/runtime/python"
+setenv SICO_PYTHON "$SICO_PYTHON_ROOT/bin/python3"
+setenv SICO_SYSTEM_LD_LIBRARY_PATH "$SICO_PYTHON_ROOT/lib:$SICO_HOME/lib"
+setenv SICO_AI_PYTHON_LIBRARY_PATH "$SICO_SYSTEM_LD_LIBRARY_PATH"
+setenv SICO_RUNTIME_TOOLS "$SICO_HOME/tools"
+if ( $?LD_LIBRARY_PATH ) then
+    setenv LD_LIBRARY_PATH "$SICO_HOME/lib:$LD_LIBRARY_PATH"
+else
+    setenv LD_LIBRARY_PATH "$SICO_HOME/lib"
+endif
+setenv PATH "$SICO_HOME/bin:$PATH"
+unsetenv SICO_AI_PYQT_ROOT
+unsetenv SICO_AI_QTERMWIDGET_RUNTIME
+unsetenv SICO_AI_RELEASE_ROOT
+unsetenv SICO_AI_CONTEXT
+unsetenv SICO_AI_QT_PLUGIN_PATH</code></pre></div></details>
+<div class="notice">Python/Qt 动态库通过 <code>SICO_SYSTEM_LD_LIBRARY_PATH</code> 传给 SiCo 子进程。不要把整套 Python/Qt 库直接前置到 Virtuoso 的 <code>LD_LIBRARY_PATH</code>。上面加入全局路径的仅是安装的 <code>lib/</code> 兼容库目录。</div>
+<h2 id="project">进入个人工程并检查安装</h2>
+<div class="code-block"><div class="code-label">Bash · 首次检查</div><pre><code>cd /path/to/my/project
+test -f "$SICO_HOME/etc/config/sico-install.json"
+test -x "$SICO_PYTHON"
+command -v sico virtuoso
+"$SICO_PYTHON" -I -B -c 'import sys; print(sys.version)'
+sico --help
+drc --help
+lvs --help
+rce --help
+mts-netlistor --help</code></pre></div>
+<p>共享安装时，每个用户在自己的工程工作目录启动。通常保持 <code>SICO_TEMP_DIR</code> 未设置，SiCo 自动使用 <code>&lt;启动目录&gt;/.sico</code>。若旧环境指定了错误的状态根，可在启动前清除 <code>SICO_TEMP_DIR</code> 和已退出的 <code>CAD_TEMP_DIR</code>。不要删除已有会话目录来解决配置错误。</p>
+<h2 id="launch">启动与模型配置</h2>
+<p>执行 <code>sico</code> 打开独立首页，启动或复用当前工程服务。它不会自动启动 Virtuoso。要在 Virtuoso 内使用菜单，请继续<a href="virtuoso.html">配置 .cdsinit</a>。</p>
+<div class="code-block"><div class="code-label">Bash · 需要 AI 功能时，在工程服务启动前设置</div><pre><code>export SICO_BACKEND="codex"
+export SICO_PROVIDER="responses"
+export SICO_API_BASE_URL="https://api.example.com/v1"
+export SICO_MODEL="your-model-name"
+# SICO_API_KEY 由站点的私有凭据配置注入。
+sico</code></pre></div>
+<p>模型地址与模型名配套设置。现行 Codex 后端要求上游提供 Responses 接口；仅提供 Chat Completions 的地址不能直接用于此配置。旧 <code>SICO_API_URL</code> 暂可读取，但与新地址冲突会报错。模型可选值由站点服务提供，SiCo 不设固定模型默认值。</p>
+<h2 id="source-test">源码测试安装</h2>
+<p>站点指定源码测试时，选择 <code>/software/sico/latest</code>，将 <code>SICO_PYTHON_ROOT</code> 改为站点 Python 3.9.13 目录，并设置 <code>SICO_AI_PYQT_ROOT="$SICO_HOME/tools/ai/terminal/pyqt"</code>。其余共享变量保持同一安装。源码测试树还需站点准备匹配的 worker context 和 Qt 终端依赖。</p>
+<p>源码树通过 <code>scripts/sicoAutoLoad.il</code> 接入；二进制安装通过 <code>sicoBoot.cxt</code> 接入。后者缺失时应修复安装，不能用另一份源码树的文件补齐。</p>
+<h2 id="upgrade">更新、切换与排错</h2>
+<ol class="steps"><li>结束或核对现有任务，关闭 SiCo 窗口，正常停止工程服务。</li><li>关闭旧 Virtuoso，在新 shell 加载目标版本环境。单纯修改 shell 变量不会更新已经运行的服务。</li><li>使用同一套安装入口重新启动，检查版本与连接。回退时成套切换到保留的旧安装。</li></ol>
+<div class="code-block"><div class="code-label">Bash · 正常停止当前工程服务</div><pre><code>sico service-stop --project-dir /path/to/my/project</code></pre></div>
+<p>若仍有活动或待核对任务，停止可能被拒绝；先处理这些任务。出现 <code>SICO_HOME conflicts</code> 时检查 <code>command -v sico</code> 与 <code>SICO_HOME</code> 是否属于同一安装；出现旧变量迁移错误时按<a href="environment.html#retired">迁移表</a>修改启动脚本。</p>
+
+<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="environment.html">环境变量速查 →</a></footer>
+</main>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#requirements">准备运行环境</a><a href="#install-package">部署完整运行包</a><a href="#shell">配置启动 shell</a><a href="#project">进入个人工程并检查安装</a><a href="#launch">启动与模型配置</a><a href="#source-test">源码测试安装</a><a href="#upgrade">更新、切换与排错</a></aside>
+</div></div>
+</body>
+</html>

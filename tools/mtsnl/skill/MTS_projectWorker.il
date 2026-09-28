@@ -1,0 +1,68 @@
+procedure(mtsProjectWriteStatus(path value)
+  let((out)
+    out=outfile(strcat(path ".tmp") "w")
+    unless(out error("Cannot write MTS worker status"))
+    fprintf(out "%s\n" value)
+    close(out)
+    renameFile(strcat(path ".tmp") path)
+  )
+)
+procedure(mtsProjectBaseline(sim)
+  or(mtsProjectBaselineTable[sim]
+    error("MTS could not capture pristine defaults for %L" sim))
+)
+procedure(mtsProjectCloseSession()
+  unless(or(null(asiGetCurrentSession()) ocnCloseSession())
+    error("MTS could not close OCEAN session"))
+  when(asiGetCurrentSession() error("MTS OCEAN session still active"))
+  t
+)
+procedure(mtsProjectTask(mtsTaskScript mtsTaskStatus mtsTaskWorkdir)
+  let((mtsTaskAnswer mtsTaskCleanup)
+    mtsProjectTaskComplete=nil
+    mtsTaskAnswer=errset(
+      progn(
+        unless(changeWorkingDir(mtsTaskWorkdir) error("MTS task directory unavailable"))
+        load(mtsTaskScript)
+      ) t)
+    mtsTaskCleanup=errset(mtsProjectCloseSession() t)
+    changeWorkingDir(mtsProjectRoot)
+    poport=mtsProjectOutput
+    errport=mtsProjectOutput
+    drain(mtsProjectOutput)
+    mtsProjectWriteStatus(mtsTaskStatus
+      if(and(mtsTaskAnswer car(mtsTaskAnswer) mtsProjectTaskComplete
+             mtsTaskCleanup car(mtsTaskCleanup)) then "ok" else "error"))
+  )
+)
+procedure(mtsProjectLoop()
+  let((mtsLoopSim mtsLoopAnswer)
+    foreach(mtsLoopSim '(spectre hspiceD)
+      mtsLoopAnswer=errset(simulator(mtsLoopSim) t)
+      when(and(mtsLoopAnswer car(mtsLoopAnswer))
+        mtsProjectBaselineTable[mtsLoopSim]=mtsDefaultsSnapshot(asiGetTool(mtsLoopSim) nil))
+      mtsProjectCloseSession()
+    )
+    drain(mtsProjectOutput)
+    mtsProjectWriteStatus(strcat(mtsProjectRoot "/ready") sprintf(nil "%d" ipcGetPid()))
+    while(!isFile(strcat(mtsProjectRoot "/shutdown"))
+      when(isFile(strcat(mtsProjectRoot "/command.il"))
+        renameFile(strcat(mtsProjectRoot "/command.il") strcat(mtsProjectRoot "/running.il"))
+        mtsLoopAnswer=errset(load(strcat(mtsProjectRoot "/running.il")) t)
+        deleteFile(strcat(mtsProjectRoot "/running.il"))
+        unless(mtsLoopAnswer
+          mtsProjectWriteStatus(strcat(mtsProjectRoot "/fatal") "command failed"))
+      )
+      ipcSleepMilli(50)
+    )
+    mtsProjectCloseSession()
+  )
+)
+procedure(mtsRuntimeProject(root)
+  mtsProjectRoot=root
+  mtsProjectOutput=outfile(strcat(root "/tasks.log") "w")
+  unless(mtsProjectOutput error("Cannot open MTS project log"))
+  poport=mtsProjectOutput errport=mtsProjectOutput
+  mtsProjectBaselineTable=makeTable("mtsProjectBaselineTable" nil)
+  mtsProjectLoop()
+  t)

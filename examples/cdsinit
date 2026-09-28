@@ -1,0 +1,33 @@
+; SiCo 的 Virtuoso .cdsinit 初始化参考（UTF-8）。
+; 启动 Virtuoso 前，先加载站点 Cadence 环境及 examples/bashrc 或 examples/cshrc。
+; 将本文件复制为工程工作目录下的 .cdsinit；若已有该文件，请合并下面的代码，
+; 保留项目/PDK 初始化，并用本段替换原有的 SiCo 加载代码，避免重复加载。
+;
+; SICO_HOME：所选安装的绝对路径，由 shell 设置，本文件不修改它。
+;   源码测试示例：/software/sico/latest
+;   二进制示例：  /software/sico/latest-bin
+; 源码树以 scripts/sicoAutoLoad.il 为标记；发行包不包含该文件。
+; 本文件只接入 Virtuoso 菜单与通信入口，不自动打开 SiCo 窗口或执行任务。
+
+let((sicoHome sicoSourceEntry sicoContextEntry)
+  sicoHome=getShellEnvVar("SICO_HOME")
+  unless(and(sicoHome strlen(sicoHome)>0
+             substring(sicoHome 1 1)=="/" isDir(sicoHome))
+    error("SICO_HOME must point to an absolute SiCo installation directory\n"))
+
+  sicoSourceEntry=strcat(sicoHome "/scripts/sicoAutoLoad.il")
+  if(isFile(sicoSourceEntry) then
+    ; 开发/源码测试：交给统一源码 bootstrap 注册菜单和工具。
+    unless(load(sicoSourceEntry)
+      error("SiCo source bootstrap did not load: %s\n" sicoSourceEntry))
+  else
+    ; 二进制安装：只加载本安装的受保护 context，缺失时直接报错。
+    sicoContextEntry=strcat(sicoHome "/tools/common/context/sicoBoot.cxt")
+    unless(isFile(sicoContextEntry)
+      error("SiCo bootstrap context is missing: %s\n" sicoContextEntry))
+    ; 先准备 CIW 基础菜单，供工具的菜单注册回调使用。
+    ciwMenuInit()
+    unless(loadContext(sicoContextEntry t)
+      error("SiCo bootstrap context did not load: %s\n" sicoContextEntry))
+    unless(callInitProc("sicoBoot")
+      error("SiCo bootstrap initialization failed\n"))))

@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "rules": [
+    {
+      "id": "assistant-ui-backend",
+      "root": "tools/sico/python/sico_ui",
+      "forbid_modules": [
+        "sico.transport",
+        "sico.storage",
+        "sico.providers",
+        "json",
+        "hashlib",
+        "socket",
+        "sico.service.session_recovery"
+      ],
+      "forbid_symbols": [
+        "SessionController",
+        "DesktopSessions",
+        "SessionJournal",
+        "AgentLoop",
+        "WorkerApi",
+        "WorkbenchService",
+        "EventService",
+        "CatalogService",
+        "DesktopStartup",
+        "LocalStartup",
+        "create_backend",
+        "build_backend",
+        "run_window",
+        "desktop_provider",
+        "SessionTokens",
+        "WorkbenchSource",
+        "EventStream",
+        "FrontendQueries",
+        "ProjectSessionOwner",
+        "ProjectWorkspace",
+        "FrontendHub",
+        "SessionInbox",
+        "SessionEnd",
+        "ServiceDispatch",
+        "ProjectServiceLease",
+        "FrontendLane",
+        "ServiceClient",
+        "Connection",
+        "ContextBroker",
+        "BridgeClient",
+        "FrontendPort",
+        "provider_from_config",
+        "run_service",
+        "spawn_service"
+      ],
+      "forbid_calls": [
+        "replay_start",
+        "native_origins",
+        "committed_batch",
+        "read_updates",
+        "_state_snapshot",
+        "read_text",
+        "read_bytes",
+        "write_text",
+        "write_bytes",
+        "fsync",
+        "sendall",
+        "read_artifact",
+        "artifact_text",
+        "wait_desktop",
+        "loads",
+        "sha256",
+        "circuit_call",
+        "assistant_call",
+        "check_target_request",
+        "router_snapshot",
+        "poll_router_status",
+        "request_receipt",
+        "archived_receipt",
+        "router_receipt_view",
+        "dumps",
+        "register_session",
+        "register_target",
+        "stop_service",
+        "end_session",
+        "publish_session",
+        "publish_history",
+        "kill",
+        "killpg",
+        "terminate",
+        "__import__",
+        "import_module",
+        "eval",
+        "exec"
+      ],
+      "forbid_result_calls": true,
+      "forbid_attributes": [
+        "journal",
+        "_owner",
+        "owner",
+        "sessions",
+        "_sessions",
+        "_commands",
+        "_queries",
+        "_events",
+        "_attach",
+        "_admin"
+      ],
+      "forbid_attribute_prefixes": [
+        "_FrontendPort__",
+        "_EventFeed__",
+        "_WorkbenchPort__"
+      ],
+      "forbid_definitions": [
+        "run_window",
+        "desktop_provider"
+      ],
+      "forbid_controller_calls": [
+        "submit",
+        "accept",
+        "rename",
+        "delete",
+        "poll_metadata",
+        "close",
+        "initialize_context",
+        "resume",
+        "answer_audit",
+        "acknowledge_interrupted",
+        "cancel_router_request",
+        "router_receipt",
+        "attach_targets"
+      ],
+      "exceptions": [
+        {
+          "kind": "import",
+          "symbol": "json",
+          "paths": [
+            "tools/sico/python/sico_ui/elicitation.py"
+          ],
+          "rationale": "Decode the user-entered elicitation JSON value."
+        },
+        {
+          "kind": "call",
+          "symbol": "json.loads",
+          "paths": [
+            "tools/sico/python/sico_ui/elicitation.py"
+          ],
+          "rationale": "Decode the user-entered elicitation JSON value.",
+          "any_args": 1
+        },
+        {
+          "kind": "call",
+          "symbol": "wait_desktop",
+          "args": [
+            0
+          ],
+          "rationale": "Nonblocking Qt shutdown readiness query."
+        },
+        {
+          "kind": "call",
+          "symbol": "result",
+          "args": [],
+          "paths": [
+            "tools/sico/python/sico_ui/commands.py",
+            "tools/sico/python/sico_ui/receipts.py"
+          ],
+          "rationale": "Receipt owners read completed futures after readiness checks."
+        },
+        {
+          "kind": "call",
+          "symbol": "stop_service",
+          "paths": [
+            "tools/sico/python/sico_ui/service_connection.py"
+          ],
+          "any_args": 0,
+          "rationale": "Only the explicit stop-service action may request service shutdown."
+        },
+        {
+          "kind": "call",
+          "symbol": "stop_service",
+          "paths": [
+            "tools/sico/python/sico_ui/close_choice.py"
+          ],
+          "any_args": 2,
+          "rationale": "关闭对话框里“结束服务”的显式选择，经 ServiceConnection.stop_service 发起。"
+        },
+        {
+          "kind": "call",
+          "symbol": "end_session",
+          "paths": [
+            "tools/sico/python/sico_ui/session_end_operation.py"
+          ],
+          "any_args": 2,
+          "rationale": "The sole session-end tracker issues and observes one explicit captured operation.",
+          "keywords": [
+            "observe"
+          ]
+        },
+        {
+          "kind": "call",
+          "symbol": "self.api.stop_service",
+          "paths": [
+            "tools/sico/python/sico_ui/home_window.py"
+          ],
+          "args": [],
+          "rationale": "Independent home polls the asynchronous service-stop receipt without accessing service internals."
+        }
+      ],
+      "rationale": "UI consumes frontend values and queued operations; backend construction, storage and blocking operations remain backend-owned.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_boundary_guards.py",
+        "tools/ai/python/tests/test_agent_worker_boundary.py",
+        "tools/ai/python/tests/test_agent_frontend_port.py",
+        "tools/ai/python/tests/test_agent_service_boundaries.py"
+      ],
+      "forbid_exact_calls": [
+        "open",
+        "print",
+        "builtins.open",
+        "builtins.print"
+      ],
+      "forbid_private_attributes": [
+        "api.commands",
+        "api.queries",
+        "api.events",
+        "api.attach"
+      ]
+    },
+    {
+      "id": "assistant-service-no-qt",
+      "root": "tools/sico/python/sico/service",
+      "exclude_files": [
+        "desktop.py",
+        "local_startup.py",
+        "composer.py"
+      ],
+      "forbid_modules": [
+        "sico_ui"
+      ],
+      "forbid_module_prefixes": [
+        "PyQt",
+        "PySide"
+      ],
+      "rationale": "Only application composition roots create Qt; service implementations remain independent of UI.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_boundary_guards.py:test_service_core_does_not_import_qt"
+      ]
+    }
+  ]
+}

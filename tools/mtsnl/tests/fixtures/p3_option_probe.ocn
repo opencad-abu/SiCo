@@ -1,0 +1,3 @@
+simulator('hspiceD)
+printf("MTS_P3_OPTIONS=%L\n" option())
+exit()

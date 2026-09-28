@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+"""Executable wrapper for the Python RCE backend."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+
+HERE = Path(__file__).resolve()
+SICO_TOOLS_ROOT = HERE.parents[2]
+COMMON_PYTHON = SICO_TOOLS_ROOT / "common" / "python"
+if str(COMMON_PYTHON) not in sys.path:
+    sys.path.insert(0, str(COMMON_PYTHON))
+
+from rcepy.cli import main
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

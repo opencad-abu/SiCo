@@ -1,0 +1,10 @@
+; P2 qualification probe. Paths are supplied through the worker environment.
+simulator('spectre)
+design("sxTest" "bufferx1" "schematic" "r")
+resultsDir(getShellEnvVar("MTS_PROBE_RESULTS"))
+envOption('setTopLevelAsSubckt t)
+temp(27)
+printf("MTS_P2_BEGIN\n")
+mtsNetlist = createNetlist(?recreateAll t ?display nil)
+if(mtsNetlist then printf("MTS_P2_RAW=%s\n" mtsNetlist) else printf("MTS_P2_ERROR\n"))
+exit()

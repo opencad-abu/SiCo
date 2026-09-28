@@ -1,0 +1,35 @@
+; Shared layout constructors and default callback metadata.
+
+inScheme(
+  defstruct(guiDefInfo noCB)
+  infoStruc=make_guiDefInfo(
+    ?noCB  "(info \"<INFO> No callback been set.\n\")"
+
+  )
+)
+
+defmacro(makevbl (name items @key (f  nil)  (i nil) (a 'center) (s 5))
+  `(hiCreateVerticalBoxLayout
+    ,name
+    ?frame       ,f
+    ?horiz_align (quote ,a)
+    ?spacing     ,s
+    ?items       ,items
+    ?invisible   ,i
+  )
+)
+
+defmacro(makehbl (name items @key (f nil) (i nil) (a 'center) (s 5))
+  `(hiCreateHorizontalBoxLayout
+    ,name
+    ?frame       ,f
+    ?horiz_align (quote ,a)
+    ?spacing     ,s
+    ?items       ,items
+    ?invisible   ,i
+  )
+)
+
+defgeneric(makegui (inst)
+  t
+)

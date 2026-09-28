@@ -1,0 +1,116 @@
+; Validate and synchronize netlist pin-order controls. SKILL++ lexical scope.
+
+unless(boundp('rcePinOrderSyncActive)
+  rcePinOrderSyncActive=nil
+)
+procedure(rcePinOrderSupportedP(form)
+  let((tool outputType)
+    tool=form~>extTool~>value
+    outputType=lowerCase(or(form~>outType~>value ""))
+    if(and(not(rceNativeViewOutputP(outputType))
+           not(and(tool=="QRC" lowerCase(form~>nameSource~>value)=="layout"))
+           or(tool!="StarRC" member(outputType '("dspf" "spf"))))
+      then t else nil)
+  )
+)
+
+procedure(rcePinOrderSourceChoices(form)
+  if(member(form~>inpType~>value '("SVDB" "CCI")) then
+    list("User Defined File")
+  else
+    list("CDL Netlist File" "User Defined File"))
+)
+
+procedure(rceSyncPinOrder(form pinSupported)
+  let((choices source suspended)
+    unless(rcePinOrderSyncActive
+      rcePinOrderSyncActive=t
+      unwindProtect(
+        progn(
+          suspended=form~>rcePinOrderSuspended
+          if(pinSupported then
+            when(suspended
+              form~>pinOrderBtn~>value=car(suspended)
+              form~>pinOrderType~>items=list("CDL Netlist File" "User Defined File")
+              form~>pinOrderType~>value=cadr(suspended)
+              form~>pinOrderFile~>value=caddr(suspended)
+              form~>rcePinOrderSuspended=nil)
+          else
+            unless(suspended
+              form~>rcePinOrderSuspended=list(form~>pinOrderBtn~>value
+                form~>pinOrderType~>value form~>pinOrderFile~>value))
+            form~>pinOrderBtn~>value=nil
+            form~>pinOrderFile~>value=""
+          )
+          choices=rcePinOrderSourceChoices(form)
+          source=form~>pinOrderType~>value
+          unless(member(source choices) source=car(choices))
+          unless(form~>pinOrderType~>items==choices
+            form~>pinOrderType~>items=choices)
+          form~>pinOrderType~>value=source
+          form~>pinOrderBtn~>enabled=pinSupported
+          form~>pinOrderType~>enabled=and(pinSupported form~>pinOrderBtn~>value)
+          form~>pinOrderFile~>enabled=and(form~>pinOrderType~>enabled
+                                           source=="User Defined File")
+        )
+        rcePinOrderSyncActive=nil
+      )
+    )
+  )
+)
+
+procedure(rceRestorePinOrder(form enabled source file)
+  rcePinOrderSyncActive=t
+  unwindProtect(
+    progn(
+      form~>rcePinOrderSuspended=nil
+      form~>pinOrderBtn~>value=enabled
+      form~>pinOrderType~>items=list("CDL Netlist File" "User Defined File")
+      form~>pinOrderType~>value=source
+      form~>pinOrderFile~>value=file
+    )
+    rcePinOrderSyncActive=nil
+  )
+  rceSyncPinOrder(form rcePinOrderSupportedP(form))
+)
+
+procedure(rceValidatePinOrder(form)
+  prog((source file)
+    unless(form~>pinOrderBtn~>value return(t))
+    unless(rcePinOrderSupportedP(form)
+      GUI_messageApp('e "RCE"
+        "Pin order is not supported for the selected output and name source.")
+      return(nil))
+    source=form~>pinOrderType~>value
+    unless(member(source rcePinOrderSourceChoices(form))
+      GUI_messageApp('e "RCE"
+        "SVDB/CCI input has no source CDL. Select User Defined File for pin order.")
+      return(nil))
+    when(source=="User Defined File"
+      file=SICO_absolutePath(form~>pinOrderFile~>value)
+      unless(and(strlen(file)>0 isFile(file))
+        GUI_messageApp('e "RCE" strcat(
+          "Pin-order file does not exist or is not a regular file:\n\n"
+          or(form~>pinOrderFile~>value "")
+          "\n\nSelect an existing file before starting extraction."))
+        return(nil))
+    )
+    return(t)
+  )
+)
+
+procedure(rcePinOrderBtnCB(form)
+  unless(rcePinOrderSyncActive rceSyncNetlistCustomize(form))
+)
+
+procedure(rcePinOrderTypeCB(form)
+  unless(rcePinOrderSyncActive
+    rceSyncNetlistCustomize(form)
+  )
+)
+
+procedure(rcePinOrderFileCB(form)
+  when(and(!rcePinOrderSyncActive form~>pinOrderFile~>enabled
+             strlen(or(form~>pinOrderFile~>value ""))>0)
+    rceValidatePinOrder(form))
+)

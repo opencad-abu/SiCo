@@ -1,0 +1,233 @@
+; Shared source/layout input controls.
+
+defclass(INPUTGUI ()
+  ( ;slot start
+    (cvid         @initform geGetEditCellView()
+                  @initarg  cvid
+    )
+    (inpChoices   @initform list("")
+                  @initarg  inpChoices
+    )
+    (inpCB        @initform list(infoStruc->noCB)
+                  @initarg  inpCB
+    )
+    (cellNameCB   @initform nil
+                  @initarg  cellNameCB
+    )
+    (cdlFileCB    @initform infoStruc->noCB
+                  @initarg  cdLInpCB
+    )
+    (gdsFileCB    @initform infoStruc->noCB
+                  @initarg  gdsFileCB
+    )
+    (svdbDirCB    @initform infoStruc->noCB
+                  @initarg  svdbDirCB
+    )
+    (cciDirCB     @initform infoStruc->noCB
+                  @initarg  cciDirCB
+    )
+    (inpType      @initform nil)
+    (schInp       @initform nil)
+    (layInp       @initform nil)
+    (cdlInp       @initform nil)
+    (gdsInp       @initform nil)
+    (svdbInp      @initform nil)
+    (cciInp       @initform nil)
+    (cdlIncludeBtn  @initform nil)
+    (cdlIncludeFile @initform nil)
+    (cdlInclude     @initform nil)
+    (frontendInp  @initform nil)
+    (backendInp   @initform nil)
+    (designInp    @initform nil)
+  );slot end
+)
+
+defmethod(makeInpType ((inst INPUTGUI))
+  let(()
+    inst->inpType=hiCreateRadioField(
+      ?name     'inpType
+      ?prompt   "Input Data Type:"
+      ?choices  inst->inpChoices
+      ?callback inst->inpCB
+    )
+  )
+);defmethod makeInpType
+
+defmethod(makeSchInp ((inst INPUTGUI))
+  let((schLib schCell schView schInp)
+    cv=inst->cvid
+    schLib=ddHiCreateLibraryComboField(
+      ?name    'schLib
+      ?prompt  "Library: "
+      ?defValue if(cv then cv~>libName else "")
+    )
+    schCell=ddHiCreateCellComboField(
+      ?name     'schCell
+      ?prompt   "      Cell: "
+      ?defValue if(cv then cv~>cellName else "")
+      ?callback inst->cellNameCB
+    )
+    schView=ddHiCreateViewComboField(
+      ?name     'schView
+      ?prompt   "    View: "
+      ?defValue "schematic"
+    )
+    inst->schInp=makevbl('schInp list(schLib schCell schView) ?f "Schematic ")
+  );let
+);defmethod makeSchInp
+
+defmethod(makeCdlInp ((inst INPUTGUI))
+  let((cdlFile cdlCell)
+    cdlFile=hiCreateFileSelectorField(
+      ?name     'cdlFile
+      ?prompt   "File    Path:"
+      ?mode     'existingFile
+      ?callback inst->cdlFileCB
+    )
+    cdlCell=hiCreateStringField(
+      ?name     'cdlCell
+      ?prompt   "Cell Name:"
+      ?callback inst->cellNameCB
+    )
+    inst->cdlInp=makevbl('cdlInp list(cdlFile cdlCell) ?f "CDL" ?i t)
+  );let
+);defmethod makeCdlInp
+
+procedure(cadCdlIncludeCB(form)
+  form~>cdlIncludeFile~>enabled=form~>cdlIncludeBtn~>value
+  t
+)
+
+procedure(cadCdlIncludeInputTypeCB(form)
+  when(form~>cdlInclude
+    form~>cdlInclude~>invisible=
+      !member(form~>inpType~>value '("OA" "SCH+GDS"))
+  )
+  t
+)
+
+defmethod(makeCdlInclude ((inst INPUTGUI))
+  let((includeFile includeEnable)
+    includeFile=SICO_envValue("CDL_HEADER_FILE")
+    includeEnable=and(includeFile strlen(includeFile)>0)
+    inst->cdlIncludeBtn=hiCreateBooleanButton(
+      ?name           'cdlIncludeBtn
+      ?buttonText     "CDL Include:"
+      ?buttonLocation 'left
+      ?defValue       includeEnable
+      ?callback       "cadCdlIncludeCB(hiGetCurrentForm())"
+    )
+    inst->cdlIncludeFile=hiCreateFileSelectorField(
+      ?name     'cdlIncludeFile
+      ?mode     'existingFile
+      ?defValue or(includeFile "")
+      ?enabled  includeEnable
+    )
+    inst->cdlInclude=makehbl(
+      'cdlInclude list(inst->cdlIncludeBtn inst->cdlIncludeFile) ?a left)
+  )
+);defmethod makeCdlInclude
+
+defmethod(makeLayInp ((inst INPUTGUI))
+  let((cv layLib layCell layView)
+    cv=inst->cvid
+    layLib=ddHiCreateLibraryComboField(
+      ?name     'layLib
+      ?prompt   "Library: "
+      ?defValue if(cv then cv~>libName else "")
+    )
+    layCell=ddHiCreateCellComboField(
+      ?name     'layCell
+      ?prompt   "      Cell: "
+      ?defValue if(cv then cv~>cellName else "")
+      ?callback inst->cellNameCB
+    )
+    layView=ddHiCreateViewComboField(
+      ?name     'layView
+      ?prompt   "    View: "
+      ?defValue "layout"
+    )
+    inst->layInp=makevbl('layInp  list(layLib layCell layView) ?f "Layout ")
+ );let
+);defmethod makeLayInp
+
+defmethod(makeGdsInp ((inst INPUTGUI))
+  let((gdsFile gdsCell)
+    gdsFile=hiCreateFileSelectorField(
+      ?name   'gdsFile
+      ?prompt "File    Path:"
+      ?mode   'existingFile
+      ?callback inst->gdsFileCB
+    )
+    gdsCell=hiCreateStringField(
+      ?name     'gdsCell
+      ?prompt   "Cell Name:"
+      ?callback inst->cellNameCB
+    )
+    inst->gdsInp=makevbl('gdsInp list(gdsFile gdsCell) ?f "GDS" ?i t)
+  );let
+);defmethod makeGdsInp
+
+defmethod(makeFrontendInp ((inst INPUTGUI))
+  makeSchInp(inst)
+  makeCdlInp(inst)
+  inst->frontendInp=makevbl('frontendInp list(inst->schInp inst->cdlInp))
+)
+
+defmethod(makeBackendInp ((inst INPUTGUI))
+  makeLayInp(inst)
+  makeGdsInp(inst)
+  inst->backendInp=makevbl('backendInp list(inst->layInp inst->gdsInp))
+)
+
+defmethod(makeDesignInp ((inst INPUTGUI))
+  makeFrontendInp(inst)
+  makeBackendInp(inst)
+  inst->designInp=makehbl('designInp list(inst->frontendInp inst->backendInp))
+)
+
+defmethod(makeSvdbInp ((inst INPUTGUI))
+  let((svdbDir svdbCell)
+    svdbDir=hiCreateFileSelectorField(
+      ?name     'svdbDir
+      ?prompt   "  Directory:"
+      ?mode     'directoryOnly
+      ?callback inst->svdbDirCB
+    )
+    svdbCell=hiCreateStringField(
+      ?name     'svdbCell
+      ?prompt   "Cell Name:"
+      ?callback inst->cellNameCB
+    )
+    inst->svdbInp=makevbl('svdbInp list(svdbDir svdbCell) ?f "SVDB" ?i t)
+  );let
+);defmethod makeSvdbInp
+
+defmethod(makeCciInp ((inst INPUTGUI))
+  let((cciDir cciCell)
+    cciDir=hiCreateFileSelectorField(
+      ?name     'cciDir
+      ?prompt   "  Directory:"
+      ?mode     'directoryOnly
+      ?callback inst->cciDirCB
+    )
+    cciCell=hiCreateStringField(
+      ?name     'cciCell
+      ?prompt   "Cell Name:"
+      ?callback inst->cellNameCB
+    )
+    inst->cciInp=makevbl('cciInp list(cciDir cciCell) ?f "Calibre Query Data(CCI)" ?i t)
+  );let
+);defmethod makeCciInp
+
+defmethod(makeInpLay  ((inst INPUTGUI))
+  t
+)
+
+procedure(cadBaseInputRevision()
+  "20260716.input.sync.v1"
+)
+
+procedure(cadBaseCdlIncludeRevision()
+  "20260812.cdl.include.v2"
+)

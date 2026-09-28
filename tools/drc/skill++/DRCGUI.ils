@@ -1,0 +1,249 @@
+; hiCreateLayoutForm stores the handle in the SKILL value slot.  Import it
+; explicitly so SKILL++ callbacks and display calls share that slot.
+importSkillVar(drcForm)
+
+defclass(DRCGUI (PROFILEGUI INPUTGUI OUTPUTGUI HARDWARE CUSTOMSVRFGUI BATCHGUI)
+  (
+    (title             @initform drcStruc->title @initarg title)
+    (cmd               @initform drcStruc->cmd @initarg cmd)
+    (reportCmd         @initform drcStruc->reportCmd @initarg reportCmd)
+    (formdone          @initform drcStruc->formdone @initarg formdone)
+    (drcRunsetChoices  @initform drcStruc->drcRunsetChoices @initarg drcRunsetChoices)
+    (drcRunsetCB       @initform drcStruc->drcRunsetCB @initarg drcRunsetCB)
+    (drcToolChoices    @initform drcStruc->drcToolChoices @initarg drcToolChoices)
+    (drcToolDefValue   @initform drcStruc->drcToolDefValue @initarg drcToolDefValue)
+    (inpLay            @initform nil)
+    (outLay            @initform nil)
+    (drcOptLay         @initform nil)
+    (hardwareLay       @initform nil)
+    (toolLay           @initform nil)
+    (drcRunsetName     @initform nil)
+    (drcRunsetFile     @initform nil)
+    (drcRunset         @initform nil)
+    (drcRunMode        @initform nil)
+    (drcRuleSelectEnable @initform nil)
+    (drcRuleSelectOpen @initform nil)
+    (drcRuleSelectSummary @initform nil)
+    (drcRuleSelect     @initform nil)
+    (drcMore           @initform nil)
+    (drcMoreContents   @initform nil)
+    (drcTool           @initform nil)
+    (drcEngine         @initform nil)
+    (mainLay           @initform nil)
+    (mainForm          @initform nil)
+  )
+)
+
+defmethod(makeInpLay ((inst DRCGUI))
+  makeLayInp(inst)
+  inst->batchFlow="DRC"
+  makeBatchControls(inst)
+  inst->inpLay=makevbl(
+    'drcInp list(inst->batchRunScope inst->layInp inst->batchTaskLay)
+    ?f "Layout Input")
+)
+
+defmethod(makeOutLay ((inst DRCGUI))
+  makeOutDir(inst)
+  inst->outLay=makevbl('drcOutLay list(inst->outDir) ?f "Output Configuration")
+)
+
+defmethod(makeDrcOptLay ((inst DRCGUI))
+  makeDrcRunMode(inst)
+  makeDrcRunset(inst)
+  makeDrcRuleSelect(inst)
+  makeCustomSvrf(inst)
+  inst->drcMoreContents=makevbl(
+    'drcMoreContents list(inst->drcRuleSelect inst->customSvrf))
+  inst->drcMore=hiCreateDisclosureTriangle(
+    ?name        'drcMore
+    ?labelText   "More DRC Options"
+    ?onFields    '(drcMoreContents)
+    ?offFields   '()
+    ?persistent  nil
+  )
+  inst->drcOptLay=makevbl(
+    'drcOptLay list(inst->drcRunMode inst->drcRunset
+                     inst->drcMore inst->drcMoreContents)
+    ?f "DRC Options")
+)
+
+defmethod(makeDrcRunMode ((inst DRCGUI))
+  inst->drcRunMode=hiCreateRadioField(
+    ?name        'drcRunMode
+    ?prompt      "Run Mode:"
+    ?choices     '("Hier" "Flat")
+    ?defValue    "Hier"
+    ?itemsPerRow 2
+    ; Radio-field callbacks use the list form required by hiCreateRadioField.
+    ?callback    '("drcRunModeCB(hiGetCurrentForm())")
+  )
+)
+
+defmethod(makeDrcTool ((inst DRCGUI))
+  inst->drcTool=hiCreateRadioField(
+    ?name     'drcTool
+    ?choices  inst->drcToolChoices
+    ?defValue inst->drcToolDefValue
+  )
+  inst->drcEngine=makevbl('drcEngine list(inst->drcTool) ?f "DRC Engine")
+)
+
+defmethod(makeDrcRunset ((inst DRCGUI))
+  inst->drcRunsetName=hiCreateComboField(
+    ?name     'drcRunsetName
+    ?prompt   "Rule File:"
+    ?items    inst->drcRunsetChoices
+    ?defValue car(inst->drcRunsetChoices)
+    ?editable nil
+    ?callback inst->drcRunsetCB
+  )
+  inst->drcRunsetFile=hiCreateFileSelectorField(
+    ?name     'drcRunsetFile
+    ?mode     'existingFile
+    ?defValue SICO_envPairValue("DRC_FILE" car(inst->drcRunsetChoices))
+    ?callback "drcRuleSelectInvalidate(hiGetCurrentForm())"
+  )
+  inst->drcRunset=makehbl('drcRunset list(inst->drcRunsetName inst->drcRunsetFile) ?a left)
+)
+
+defmethod(makeDrcRuleSelect ((inst DRCGUI))
+  inst->drcRuleSelectEnable=hiCreateBooleanButton(
+    ?name           'drcRuleSelectEnable
+    ?buttonText     "Rule Select"
+    ?buttonLocation 'left
+    ?defValue       nil
+    ?callback       "drcRuleSelectEnableCB(hiGetCurrentForm())"
+  )
+  inst->drcRuleSelectOpen=hiCreateButton(
+    ?name       'drcRuleSelectOpen
+    ?buttonText "Select..."
+    ?callback   "drcRuleSelectOpenCB(hiGetCurrentForm())"
+  )
+  inst->drcRuleSelectSummary=hiCreateLabel(
+    ?name          'drcRuleSelectSummary
+    ?labelText     "No rules selected"
+    ?justification 'left
+  )
+  inst->drcRuleSelect=makehbl(
+    'drcRuleSelect
+    list(inst->drcRuleSelectEnable inst->drcRuleSelectOpen
+         inst->drcRuleSelectSummary list('stretch_item 1))
+    ?a left
+  )
+)
+
+defmethod(makeToolLay ((inst DRCGUI))
+  makeDrcTool(inst)
+  inst->toolLay=makehbl('drcToolLay list(inst->drcEngine) ?f "Tool Configuration")
+)
+
+defmethod(makeHardwareLay ((inst DRCGUI))
+  makeServers(inst)
+  makeRunCpus(inst)
+  makeBatchParallelCells(inst)
+  inst->hardwareLay=makevbl(
+    'drcHardwareLay list(inst->servers inst->runCpu inst->batchParallelCells)
+    ?f "Hardware Configuration")
+)
+
+defmethod(makeMainLay ((inst DRCGUI))
+  inst->profileFlow="DRC"
+  makeProfileControls(inst)
+  makeInpLay(inst)
+  makeDrcOptLay(inst)
+  makeOutLay(inst)
+  makeToolLay(inst)
+  makeHardwareLay(inst)
+  inst->mainLay=makevbl('drcMainLay
+                         list(inst->profileLay
+                               inst->inpLay
+                               inst->drcOptLay
+                               inst->outLay
+                               inst->toolLay
+                               inst->hardwareLay))
+)
+
+defmethod(makeForm ((inst DRCGUI))
+  makeMainLay(inst)
+  when((! inst->mainForm)
+    inst->mainForm=hiCreateLayoutForm(
+      'drcForm
+      inst->title
+      inst->mainLay
+      ?callback      'drcFormDoneCB
+      ?sizePolicy    'expanding
+      ?initialSize   560:680
+      ?buttonLayout  list('Empty
+                           list('Run\+Close 'drcRunCloseCB)
+                           list('Run 'drcRunCB)
+                           list('Report 'drcReport)
+                           list('Close 'hiFormClose))
+    )
+  )
+)
+
+procedure(cadDisplayDrcForm()
+  ; Layout forms own native field records.  Reuse a live form instead of
+  ; rebuilding fields under the same global symbol on every menu invocation.
+  if(and(boundp('drcForm) drcForm hiIsForm(drcForm)) then
+    progn(
+      unless(hiIsFormDisplayed(drcForm)
+        SICO_lsfChoicesCB(drcForm)
+        hiDisplayForm(drcForm))
+      drcForm)
+  else
+    let((gui)
+      ; Clear only a stale legacy value; never ask HI to delete it here.
+      when(and(boundp('drcForm) drcForm !hiIsForm(drcForm))
+        drcForm=nil)
+      gui=makeInstance('DRCGUI)
+      gui->title             = drcStruc->title
+      gui->cmd               = drcStruc->cmd
+      gui->reportCmd         = drcStruc->reportCmd
+      gui->formdone          = drcStruc->formdone
+      gui->outDirChoices     = drcStruc->outDirChoices
+      gui->outDirCB          = drcStruc->outDirCB
+      gui->defOutDir         = drcStruc->defOutDir
+      gui->drcRunsetChoices  = drcStruc->drcRunsetChoices
+      gui->drcRunsetCB       = drcStruc->drcRunsetCB
+      gui->lsfChoicesCB      = drcStruc->lsfChoicesCB
+      gui->queueCB           = drcStruc->queueCB
+      gui->runTypeChoices    = drcStruc->runTypeChoices
+      gui->defQueueName      = drcStruc->defQueueName
+      gui->queueChoices      = drcStruc->queueChoices
+      gui->defSrvName        = drcStruc->defSrvName
+      gui->srvChoices        = drcStruc->srvChoices
+      gui->cpuChoices        = drcStruc->cpuChoices
+      gui->drcToolChoices    = drcStruc->drcToolChoices
+      gui->drcToolDefValue   = drcStruc->drcToolDefValue
+      makeForm(gui)
+      hiInstantiateForm(gui->mainForm)
+      putpropq(gui->mainForm nil cadProfilePathStates)
+      putpropq(gui->mainForm nil cadProfileSourcePath)
+      cadCustomSvrfBind(gui->mainForm)
+      drcRuleSelectBind(gui->mainForm)
+      ddHiLinkFields(gui->mainForm~>layLib gui->mainForm~>layCell gui->mainForm~>layView)
+      cadBatchBindForm(gui->mainForm "DRC")
+      SICO_lsfChoicesCB(gui->mainForm)
+      hiDisplayForm(gui->mainForm)
+      gui->mainForm
+    )
+  )
+)
+
+procedure(drcRuleFileGuiRevision()
+  "20260812.rule.file.label.v1"
+)
+
+procedure(drcCustomSvrfGuiRevision()
+  "20260813.custom.svrf.common.v1"
+)
+
+procedure(drcRuleSelectGuiRevision()
+  "20260814.rule.select.pyqt.v1"
+)
+
+procedure(drcAdvancedOptionsGuiRevision()
+  "20260817.advanced.options.v1"
+)

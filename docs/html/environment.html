@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SiCo 使用手册：环境变量速查。安装、环境变量、Virtuoso 集成与 CAD flow 配置。">
+<title>环境变量速查 · SiCo 使用手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b4543a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='sans-serif' font-size='24' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/manual.css">
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
+  <span class="edition">使用手册 / 2026.09</span>
+  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+</header>
+<noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="手册目录">
+<p class="rail-label">SICO DOCUMENTATION</p>
+<a href="index.html">开始阅读</a>
+<p class="nav-group">开始使用</p>
+<a href="installation.html">01 · 安装</a>
+<a href="environment.html" aria-current="page">02 · 环境变量</a>
+<a href="virtuoso.html">03 · Virtuoso 集成</a>
+<a href="flows.html">04 · CAD flows</a>
+<p class="nav-group">流程指南</p>
+<a href="drc.html">DRC · 规则检查</a>
+<a href="lvs.html">LVS · 连接检查</a>
+<a href="rce.html">RCE · 寄生提取</a>
+<a href="mts.html">MTS · 多工艺网表</a>
+<a href="utilities.html">LEF / GDS / CDL</a>
+<a href="lsf.html">LSF · 运行与资源</a>
+<p class="nav-group">参考附录</p>
+<a href="environment-internal.html">环境接口附录</a>
+<div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
+</nav>
+<div class="reading">
+<main id="main">
+<p class="eyebrow">02 / CONFIGURATION REFERENCE</p>
+<h1>环境变量速查</h1>
+<p class="lead">查名称、取值和未设置时的行为。表格覆盖 SiCo 运行、站点集成及 CAD flow 的配置接口；自动传递项与旧名迁移另附索引。</p>
+<div class="notice">这里的“默认”指当前代码在未设置时的行为，并非示例建议值。除有专门说明外，修改启动环境后需要重启对应进程；已经运行的工程服务不会重新读取 shell。构建脚本的编译开关和第三方软件完整变量集不属于本手册的运行配置范围。</div>
+<p><a href="environment-internal.html">查看内部传递项与诊断附录 →</a>　<a href="#retired">旧环境迁移 →</a></p>
+<div class="filters"><label for="env-search">搜索名称或用途<input id="env-search" type="search" placeholder="例如 RCE、温度、modulefiles" autocomplete="off"></label><label for="env-category">分类<select id="env-category"><option value="">全部分类</option>
+<option value="installation">安装、工程与公共入口</option>
+<option value="model">SiCo 模型与工程服务</option>
+<option value="assistant">AI Assistant 与终端</option>
+<option value="pdk">PDK、模板与可选数据</option>
+<option value="flow">CAD flow：输入、规则与输出</option>
+<option value="mts">MTS 项目与工作目录</option>
+<option value="runtime">解释器覆盖与站点维护</option>
+<option value="platform">系统与第三方集成环境</option>
+<option value="tool-help">EDA 本地帮助定位</option></select></label><button id="env-reset" type="button">清除筛选</button></div>
+<p class="search-status" id="env-count" role="status" aria-live="polite"></p>
+<section class="env-section" id="installation"><h2 id="installation-heading">安装、工程与公共入口</h2>
+<div class="table-wrap"><table class="env"><thead><tr><th scope="col">变量名</th><th scope="col">可选值 / 格式</th><th scope="col">默认 / 未设置行为</th><th scope="col">作用</th></tr></thead><tbody>
+<tr id="SICO_HOME"><td><code>SICO_HOME</code></td><td>有效绝对目录</td><td>CLI 从自身入口定位；.cdsinit 要求显式设置</td><td>唯一安装根；显式空值、无效目录或与入口不一致均报错。</td></tr>
+<tr id="SICO_PYTHON"><td><code>SICO_PYTHON</code></td><td>Python 可执行文件绝对路径</td><td>二进制入口使用包内 Python；源码路径见说明</td><td>共享解释器，优先于 SICO_PYTHON_ROOT。Assistant 要求 3.9.13。</td></tr>
+<tr id="SICO_PYTHON_ROOT"><td><code>SICO_PYTHON_ROOT</code></td><td>Python 安装目录绝对路径</td><td>二进制为 $SICO_HOME/runtime/python；源码站点配置</td><td>SICO_PYTHON 未设置时使用其 bin/python3；显式空值报错。</td></tr>
+<tr id="SICO_SYSTEM_LD_LIBRARY_PATH"><td><code>SICO_SYSTEM_LD_LIBRARY_PATH</code></td><td>冒号分隔的库目录；可空</td><td>空</td><td>SiCo Python 子进程的动态库搜索路径，通常含 Python/lib 与 SICO_HOME/lib。</td></tr>
+<tr id="SICO_TEMP_DIR"><td><code>SICO_TEMP_DIR</code></td><td>.sico 状态目录；相对或绝对路径</td><td>&lt;启动目录&gt;/.sico；空值视为未设置</td><td>相对值在首次启动时固定为绝对路径；包含持久会话，不能作为普通缓存清空。</td></tr>
+<tr id="SICO_RUNTIME_TOOLS"><td><code>SICO_RUNTIME_TOOLS</code></td><td>tools 目录路径</td><td>当前安装的 tools</td><td>受保护后台 worker 的定位根；保持为 $SICO_HOME/tools。</td></tr>
+<tr id="PROJ_CAD_HOME"><td><code>PROJ_CAD_HOME</code></td><td>项目 SKILL 目录</td><td>不额外加载</td><td>源码 bootstrap 在公共工具后递归加载 .il；不能指向 SiCo tools。</td></tr>
+<tr id="LOGO"><td><code>LOGO</code></td><td>标题文本</td><td>先读 LOGO，再 COMPANY，最后 SiCo</td><td>部分 flow 表单标题前缀；历史文本 OCAD 被忽略。</td></tr>
+<tr id="COMPANY"><td><code>COMPANY</code></td><td>标题文本</td><td>SiCo</td><td>LOGO 未提供有效值时使用的表单标题前缀。</td></tr>
+<tr id="SICO_MENU_CACHE_DIR"><td><code>SICO_MENU_CACHE_DIR</code></td><td>缓存目录</td><td>$XDG_CACHE_HOME/sico；否则 $HOME/.cache/sico</td><td>源码菜单生成数据的缓存位置。</td></tr>
+<tr id="SICO_RUNTIME_NO_MENU"><td><code>SICO_RUNTIME_NO_MENU</code></td><td>1；其他值为关闭此开关</td><td>未设置</td><td>1 跳过受保护工具菜单注册；后台集成使用，交互安装通常不设置。</td></tr>
+</tbody></table></div></section>
+<section class="env-section" id="model"><h2 id="model-heading">SiCo 模型与工程服务</h2>
+<div class="table-wrap"><table class="env"><thead><tr><th scope="col">变量名</th><th scope="col">可选值 / 格式</th><th scope="col">默认 / 未设置行为</th><th scope="col">作用</th></tr></thead><tbody>
+<tr id="SICO_BACKEND"><td><code>SICO_BACKEND</code></td><td>codex / python</td><td>codex</td><td>选择模型执行后端；python 为另一套已有协议适配入口。</td></tr>
+<tr id="SICO_PROVIDER"><td><code>SICO_PROVIDER</code></td><td>codex: responses；python: anthropic / openai</td><td>codex 时 responses；python 时 anthropic</td><td>上游 API 协议，必须与 backend 配套。</td></tr>
+<tr id="SICO_API_BASE_URL"><td><code>SICO_API_BASE_URL</code></td><td>服务基础 URL</td><td>无</td><td>与 SICO_MODEL 一起设置；Codex 后端访问其 Responses 接口。</td></tr>
+<tr id="SICO_API_URL"><td><code>SICO_API_URL</code></td><td>服务基础 URL</td><td>无；兼容共享旧名</td><td>SICO_API_BASE_URL 的临时兼容别名；二者同时存在且地址不同会拒绝启动。</td></tr>
+<tr id="SICO_MODEL"><td><code>SICO_MODEL</code></td><td>站点服务支持的模型名</td><td>无</td><td>主界面与 Codex Assistant 共用；不是固定枚举。</td></tr>
+<tr id="SICO_API_KEY"><td><code>SICO_API_KEY</code></td><td>私有凭据字符串</td><td>无内置密钥</td><td>由站点私有环境注入；不要保存到共享配置、HTML 或命令示例。</td></tr>
+<tr id="SICO_PROVIDER_CONFIG"><td><code>SICO_PROVIDER_CONFIG</code></td><td>JSON 文件路径</td><td>有模型环境时用环境；否则工程 .sico/ai/agent-provider.json（若存在）</td><td>显式 CLI 配置优先，其次本变量，再环境配置；相对路径基于启动工程。</td></tr>
+<tr id="SICO_CODEX_CLI"><td><code>SICO_CODEX_CLI</code></td><td>可执行文件路径或命令名</td><td>本安装 Codex runtime → 本安装 bin/codex → PATH</td><td>选择 Codex 程序；当前要求版本 0.156.1，显式空值不接受。</td></tr>
+<tr id="SICO_TOOL_FORMAT"><td><code>SICO_TOOL_FORMAT</code></td><td>native / flat</td><td>native</td><td>Codex 工具格式；SICO_LEGACY_0114 显式设置时优先。</td></tr>
+<tr id="SICO_LEGACY_0114"><td><code>SICO_LEGACY_0114</code></td><td>未设置 / 空 / 0 / 1</td><td>不强制覆盖 tool format</td><td>1 选择 flat，0 选择 native；不切换 Codex 版本，仍要求 Responses API。</td></tr>
+<tr id="SICO_LINUX_SANDBOX"><td><code>SICO_LINUX_SANDBOX</code></td><td>default / legacy-landlock</td><td>default</td><td>Codex Linux 隔离实现选择，按站点验证结果配置。</td></tr>
+<tr id="SICO_MCP_TIMEOUT"><td><code>SICO_MCP_TIMEOUT</code></td><td>1–3600 秒，可有限小数</td><td>1800 秒</td><td>Codex 单次工具调用上限；优先于 SICO_AI_MCP_TIMEOUT，向上取整到秒。</td></tr>
+<tr id="SICO_MODEL_IDLE_TIMEOUT"><td><code>SICO_MODEL_IDLE_TIMEOUT</code></td><td>1–86400 秒，可有限小数</td><td>900 秒</td><td>模型无新输出等待上限；环境优先于 provider JSON 的 idle_timeout。</td></tr>
+<tr id="SICO_SKILL_TIMEOUT"><td><code>SICO_SKILL_TIMEOUT</code></td><td>1–3600 秒</td><td>SICO_MCP_TIMEOUT；均未设置为 1800 秒</td><td>SiCo relay 等待 SKILL 回复的上限；本变量优先。</td></tr>
+<tr id="SICO_EXTERNAL_RESOURCES"><td><code>SICO_EXTERNAL_RESOURCES</code></td><td>JSON 清单绝对路径</td><td>工程 .sico/ai/agent-resources.json（若存在）</td><td>声明额外 skill_roots、plugins、capability_roots；不自动导入整个个人环境。</td></tr>
+<tr id="SICO_BACKGROUND_CONFIG"><td><code>SICO_BACKGROUND_CONFIG</code></td><td>JSON 配置绝对路径</td><td>无后台 runtime 配置</td><td>站点提供后台 Virtuoso runtime 与可选 LSF 执行设置。</td></tr>
+<tr id="SICO_CODEX_LSF_EXE"><td><code>SICO_CODEX_LSF_EXE</code></td><td>bsub 命令名或路径</td><td>未启用远程 HTTP</td><td>仅把访问模型上游的 HTTP worker 放到 LSF，设置后需重启服务。</td></tr>
+<tr id="SICO_CODEX_LSF_ARGS"><td><code>SICO_CODEX_LSF_ARGS</code></td><td>以 -I 或 -Is 开头，且显式 -q 队列</td><td>-Is -q ai</td><td>仅 EXE 启用时使用；允许 -q/-m/-R/-n/-W/-app，不允许通道重定向。</td></tr>
+</tbody></table></div></section>
+<section class="env-section" id="assistant"><h2 id="assistant-heading">AI Assistant 与终端</h2>
+<div class="table-wrap"><table class="env"><thead><tr><th scope="col">变量名</th><th scope="col">可选值 / 格式</th><th scope="col">默认 / 未设置行为</th><th scope="col">作用</th></tr></thead><tbody>
+<tr id="PROJ_AI_LSF_EXE"><td><code>PROJ_AI_LSF_EXE</code></td><td>bsub 或站点 wrapper 的单一名称/路径</td><td>未设置或空：本机运行</td><td>完整 Assistant 会话的 LSF launcher，区别于仅 HTTP worker。</td></tr>
+<tr id="PROJ_AI_LSF_ARGS"><td><code>PROJ_AI_LSF_ARGS</code></td><td>POSIX 引号拆分的参数</td><td>空</td><td>标准 bsub 必须以 -I 开头；不能用 -Is/-Ip；图形转发按站点 -XF 配置。</td></tr>
+<tr id="SICO_AI_REQUEST_TIMEOUT"><td><code>SICO_AI_REQUEST_TIMEOUT</code></td><td>正的有限秒数</td><td>300 秒</td><td>Assistant controller 请求超时；CLI --request-timeout 可覆盖。</td></tr>
+<tr id="SICO_AI_MCP_TIMEOUT"><td><code>SICO_AI_MCP_TIMEOUT</code></td><td>正的有限秒数；Codex 使用时限 1–3600</td><td>独立 Assistant MCP 为 305 秒；Codex 回退值 1800 秒</td><td>独立 MCP 的请求预算；Codex 中仅在 SICO_MCP_TIMEOUT 未设置时读取。</td></tr>
+<tr id="SICO_CODEX_HOME"><td><code>SICO_CODEX_HOME</code></td><td>用户私有目录</td><td>$XDG_STATE_HOME/cad-codex/codex-home；否则 ~/.local/state/cad-codex/codex-home</td><td>Assistant 私有登录/配置命名空间；显式空值报错。</td></tr>
+<tr id="SICO_AI_TERMINAL"><td><code>SICO_AI_TERMINAL</code></td><td>可执行文件路径或命令名</td><td>$SICO_HOME/tools/ai/bin/sico-ai-terminal</td><td>覆盖 Assistant 终端程序；CLI --terminal 优先。</td></tr>
+<tr id="SICO_AI_PYTHON_LIBRARY_PATH"><td><code>SICO_AI_PYTHON_LIBRARY_PATH</code></td><td>冒号分隔的库目录；可空</td><td>SICO_SYSTEM_LD_LIBRARY_PATH</td><td>Assistant/终端 Python 动态库路径；显式空值不回退。</td></tr>
+<tr id="SICO_CODEX_PYTHON_LIBRARY_PATH"><td><code>SICO_CODEX_PYTHON_LIBRARY_PATH</code></td><td>冒号分隔的库目录；兼容项</td><td>未配置时使用 SICO_SYSTEM_LD_LIBRARY_PATH</td><td>仅 aiassistant shell launcher 在 SICO_AI_PYTHON_LIBRARY_PATH 未设置时回退读取；新配置统一使用 SICO_AI_PYTHON_LIBRARY_PATH。</td></tr>
+<tr id="SICO_AI_QT_PLUGIN_PATH"><td><code>SICO_AI_QT_PLUGIN_PATH</code></td><td>Qt plugin 目录</td><td>由运行安装解析</td><td>终端子进程的 Qt 插件目录覆盖；跨安装遗留值应清除。</td></tr>
+<tr id="SICO_AI_UTF8_LOCALE"><td><code>SICO_AI_UTF8_LOCALE</code></td><td>执行节点可用的 UTF-8 locale</td><td>现有 UTF-8 locale → C.UTF-8 等候选探测</td><td>修正终端字符编码；显式不可用值报错。</td></tr>
+<tr id="SICO_AI_TERMINAL_COLOR_SCHEME"><td><code>SICO_AI_TERMINAL_COLOR_SCHEME</code></td><td>安装中可用的颜色方案名</td><td>BreezeModified</td><td>独立 Assistant 终端配色；嵌入主界面的终端可由宿主选择主题。</td></tr>
+<tr id="SICO_AI_QTERMWIDGET_DATA_PATH"><td><code>SICO_AI_QTERMWIDGET_DATA_PATH</code></td><td>非空、存在的绝对目录</td><td>$SICO_HOME/share/qtermwidget5</td><td>终端键盘映射与配色数据；不影响品牌图标解析。</td></tr>
+<tr id="SICO_AI_PYQT_ROOT"><td><code>SICO_AI_PYQT_ROOT</code></td><td>Python 终端包绝对目录</td><td>本安装 tools/ai/terminal/pyqt（源码）或 tools/ai/python</td><td>源码测试可覆盖终端包位置；二进制安装通常清除。</td></tr>
+<tr id="SICO_AI_QTERMWIDGET_RUNTIME"><td><code>SICO_AI_QTERMWIDGET_RUNTIME</code></td><td>终端运行库绝对目录</td><td>本安装 tools/ai/runtime/&lt;平台&gt;</td><td>终端 binding/库位置；应使用同一套已验证安装。</td></tr>
+<tr id="SICO_AI_PLATFORM"><td><code>SICO_AI_PLATFORM</code></td><td>rhel7 / rhel8</td><td>从 os-release 自动判断</td><td>终端 runtime 平台选择；EL8/EL9 使用 rhel8 档，不接受 rhel9 值。</td></tr>
+<tr id="SICO_AI_OS_RELEASE_FILE"><td><code>SICO_AI_OS_RELEASE_FILE</code></td><td>可读 os-release 文件路径</td><td>/etc/os-release，随后 /usr/lib/os-release</td><td>终端 dispatcher 平台检测输入覆盖，用于站点诊断。</td></tr>
+<tr id="SICO_AI_CONTEXT"><td><code>SICO_AI_CONTEXT</code></td><td>可用 .cxt 文件路径</td><td>$SICO_HOME/tools/ai/context/cadAiRunCtx.cxt</td><td>手工 connect 使用的 AI context；CLI --context-file 优先，显式空值报错。</td></tr>
+<tr id="SICO_AI_RELEASE_ROOT"><td><code>SICO_AI_RELEASE_ROOT</code></td><td>本安装 tools/ai 的绝对路径</td><td>$SICO_HOME/tools/ai</td><td>保留的兼容一致性检查项；不能用于混用另一套 runtime，建议清除。</td></tr>
+<tr id="SICO_CLAUDE_CLI"><td><code>SICO_CLAUDE_CLI</code></td><td>可执行路径或命令名</td><td>本安装 bin/claude → 覆盖值 → PATH 中 claude</td><td>仅 Assistant 的 Claude 入口使用；不改变主界面的默认 Codex 后端。</td></tr>
+<tr id="SICO_CLAUDE_MODEL"><td><code>SICO_CLAUDE_MODEL</code></td><td>Claude CLI 支持的模型名</td><td>不附加 --model，由 CLI 决定</td><td>仅 Claude Assistant 使用。</td></tr>
+<tr id="SICO_AI_DIAGNOSTIC_LOG"><td><code>SICO_AI_DIAGNOSTIC_LOG</code></td><td>JSONL 文件路径</td><td>单独 relay 未设置时不记录；服务通常自动指定</td><td>relay 私有诊断输出。</td></tr>
+<tr id="SICO_AI_ROUTER_DIAGNOSTIC_LOG"><td><code>SICO_AI_ROUTER_DIAGNOSTIC_LOG</code></td><td>JSONL 文件路径</td><td>工程服务自动分配</td><td>router 私有诊断输出。</td></tr>
+<tr id="SICO_AI_TEST_OUTPUT"><td><code>SICO_AI_TEST_OUTPUT</code></td><td>终端输出记录路径</td><td>不额外记录</td><td>终端验收/诊断开关，可能包含会话内容；普通使用不设置。</td></tr>
+</tbody></table></div></section>
+<section class="env-section" id="pdk"><h2 id="pdk-heading">PDK、模板与可选数据</h2>
+<div class="table-wrap"><table class="env"><thead><tr><th scope="col">变量名</th><th scope="col">可选值 / 格式</th><th scope="col">默认 / 未设置行为</th><th scope="col">作用</th></tr></thead><tbody>
+<tr id="SICO_PDK_DATA"><td><code>SICO_PDK_DATA</code></td><td>已发布标准 PDK 的 index.json 路径</td><td>工程 .sico/ai/pdk-data 的本地发布包；另有已安装 builtin 数据</td><td>设计读取已发布数据；相对路径按当前工程解析，调用相应工具时检查。</td></tr>
+<tr id="SICO_PDK_WORKFLOW"><td><code>SICO_PDK_WORKFLOW</code></td><td>design / generation</td><td>design</td><td>design 只读发布包；generation 用于独立的 PDK 采集维护进程。</td></tr>
+<tr id="SICO_CIRCUIT_TEMPLATES_DIR"><td><code>SICO_CIRCUIT_TEMPLATES_DIR</code></td><td>模板目录路径</td><td>工程 .sico/ai/circuit_templates；再查安装的 reference/circuit_templates（若有）</td><td>增加项目共享模板层；相对路径按当前工程固定，按需校验。</td></tr>
+<tr id="SICO_AI_DEVICE_CATALOG"><td><code>SICO_AI_DEVICE_CATALOG</code></td><td>器件目录数据路径</td><td>工程 .sico/ai/reference/virtuoso-base-libraries/catalog.sqlite3；再查安装对应 reference 路径（若有）</td><td>可选器件 catalog；相对路径按当前工程解析。</td></tr>
+<tr id="SICO_AI_SKILL_REFERENCE_ROOT"><td><code>SICO_AI_SKILL_REFERENCE_ROOT</code></td><td>SKILL 参考数据目录</td><td>安装 tools/ai/reference/cadence-skill（若有）</td><td>可选参考资源；相对路径按当前工程解析，按需读取。运行包不保证携带参考资源。</td></tr>
+<tr id="SICO_TEMPLATE_CACHE"><td><code>SICO_TEMPLATE_CACHE</code></td><td>on / off；接受 1/0、true/false、yes/no、enabled/disabled</td><td>on</td><td>模板缓存开关；空值按 on。</td></tr>
+<tr id="SICO_PDK_WORKERS"><td><code>SICO_PDK_WORKERS</code></td><td>1–32 整数</td><td>8</td><td>PDK 事实采集后台 worker 并发数。</td></tr>
+<tr id="SICO_PDK_WORKER_TIMEOUT"><td><code>SICO_PDK_WORKER_TIMEOUT</code></td><td>1–3600 秒</td><td>180 秒</td><td>PDK worker 请求预算。</td></tr>
+<tr id="SICO_PDK_DBACCESS"><td><code>SICO_PDK_DBACCESS</code></td><td>dbAccess 命令名或路径</td><td>源 Cadence 安装的 bin/dbAccess；否则 PATH 中 dbAccess</td><td>PDK 采集的数据库进程。</td></tr>
+<tr id="SICO_PDK_WORKER_CONTEXT"><td><code>SICO_PDK_WORKER_CONTEXT</code></td><td>已有 .cxt 文件</td><td>$SICO_HOME/tools/ai/context/cadPdkWork.cxt</td><td>PDK worker 的受保护 context。</td></tr>
+<tr id="SICO_PDK_WORKER_INIT"><td><code>SICO_PDK_WORKER_INIT</code></td><td>已有 .cxt 文件</td><td>不额外加载</td><td>站点提供的 PDK worker 初始化 context。</td></tr>
+</tbody></table></div></section>
+<section class="env-section" id="flow"><h2 id="flow-heading">CAD flow：输入、规则与输出</h2>
+<div class="table-wrap"><table class="env"><thead><tr><th scope="col">变量名</th><th scope="col">可选值 / 格式</th><th scope="col">默认 / 未设置行为</th><th scope="col">作用</th></tr></thead><tbody>
+<tr id="CDS_LIB"><td><code>CDS_LIB</code></td><td>cds.lib 文件路径</td><td>Virtuoso 当前目录/cds.lib（GUI）</td><td>当前 OA 库定义；CLI 使用其配置中的 run.cds_lib。</td></tr>
+<tr id="TECH_LAYER_MAP"><td><code>TECH_LAYER_MAP</code></td><td>PDK stream-out 层映射文件</td><td>无</td><td>OA layout 导出 GDS 时需要；不等同于 StarRC OA writer mapping。</td></tr>
+<tr id="CDL_HEADER_FILE"><td><code>CDL_HEADER_FILE</code></td><td>CDL header 文件；可空</td><td>空，CDL Include 未启用</td><td>LVS、RCE 与 Export CDL 的 Include 初值。</td></tr>
+<tr id="HCELL_FILE"><td><code>HCELL_FILE</code></td><td>Calibre hcell 文件；可空</td><td>空，Hcell 未启用</td><td>LVS/RCE 层次对应文件；非空时默认启用。</td></tr>
+<tr id="DRC_FILE"><td><code>DRC_FILE</code></td><td>显示名,路径;显示名,路径 或单路径</td><td>无候选</td><td>DRC runset。</td></tr>
+<tr id="LVS_FILE"><td><code>LVS_FILE</code></td><td>显示名,路径;显示名,路径 或单路径</td><td>无候选</td><td>日常 LVS runset，不供 RCE 自动回退。</td></tr>
+<tr id="RCE_LVS_FILE"><td><code>RCE_LVS_FILE</code></td><td>显示名,路径;显示名,路径 或单路径</td><td>无候选</td><td>RCE 的 LVS runset 候选；CalXRC 也使用独立 LVS runset，再加载 corner 内的 xrc.cal。</td></tr>
+<tr id="QUANTUS_TECH_DIR"><td><code>QUANTUS_TECH_DIR</code></td><td>显示名,路径;显示名,路径 或单路径</td><td>无候选</td><td>QRC 工艺目录，推荐指向包含各 corner 的根。见<a href="rce.html#techdir-qrc">目录与文件清单</a>。</td></tr>
+<tr id="STARRC_TECH_DIR"><td><code>STARRC_TECH_DIR</code></td><td>显示名,路径;显示名,路径 或单路径</td><td>无候选</td><td>StarRC 工艺目录。见<a href="rce.html#techdir-starrc">目录与文件清单</a>。</td></tr>
+<tr id="CALXRC_TECH_DIR"><td><code>CALXRC_TECH_DIR</code></td><td>显示名,路径;显示名,路径 或单路径</td><td>无候选</td><td>Calibre XRC 工艺目录。见<a href="rce.html#techdir-calxrc">目录与文件清单</a>。</td></tr>
+<tr id="DRC_DB_DIR"><td><code>DRC_DB_DIR</code></td><td>结果根目录，可相对</td><td>当前目录</td><td>DRC 的 Project Directory。</td></tr>
+<tr id="LVS_DB_DIR"><td><code>LVS_DB_DIR</code></td><td>结果根目录，可相对</td><td>当前目录</td><td>LVS 的 Project Directory。</td></tr>
+<tr id="RCE_DB_DIR"><td><code>RCE_DB_DIR</code></td><td>结果根目录，可相对</td><td>当前目录</td><td>RCE 的 Project Directory。</td></tr>
+<tr id="GDS_DB_DIR"><td><code>GDS_DB_DIR</code></td><td>结果根目录，可相对</td><td>当前目录</td><td>独立 Stream GDS 的输出根。</td></tr>
+<tr id="CDL_DB_DIR"><td><code>CDL_DB_DIR</code></td><td>结果根目录，可相对</td><td>当前目录</td><td>独立 Export CDL 的输出根。</td></tr>
+<tr id="LEF_DB_DIR"><td><code>LEF_DB_DIR</code></td><td>结果根目录，可相对</td><td>当前目录</td><td>LEF Generator 的输出根。</td></tr>
+<tr id="DRC_CONFIG"><td><code>DRC_CONFIG</code></td><td>DRC GUI Profile 文件</td><td>空</td><td>预填 DRC 的 Config File。</td></tr>
+<tr id="LVS_CONFIG"><td><code>LVS_CONFIG</code></td><td>LVS GUI Profile 文件</td><td>空</td><td>预填 LVS 的 Config File。</td></tr>
+<tr id="RCE_CONFIG"><td><code>RCE_CONFIG</code></td><td>RCE GUI Profile 文件</td><td>空</td><td>预填 RCE 的 Config File。</td></tr>
+<tr id="LEF_CONFIG"><td><code>LEF_CONFIG</code></td><td>LEF GUI Profile 文件</td><td>空</td><td>预填 LEF 的 Config File。</td></tr>
+<tr id="DRC_DEF_TOOL"><td><code>DRC_DEF_TOOL</code></td><td>Calibre</td><td>Calibre</td><td>DRC 工具初值，当前仅支持 Calibre。</td></tr>
+<tr id="LVS_DEF_TOOL"><td><code>LVS_DEF_TOOL</code></td><td>Calibre</td><td>Calibre</td><td>独立 LVS 与 RCE 前置 LVS 的工具初值。</td></tr>
+<tr id="RCE_DEF_TOOL"><td><code>RCE_DEF_TOOL</code></td><td>StarRC / QRC / CalXRC</td><td>StarRC</td><td>RCE 默认抽取引擎。</td></tr>
+<tr id="RCE_CORNER"><td><code>RCE_CORNER</code></td><td>扫描到的有效 corner 名，大小写保留</td><td>按 RCmax → Cmax → Typ 优先，再取有效项</td><td>首选工艺角；配置值不存在时选有效项。</td></tr>
+<tr id="RCE_DEF_TEMP"><td><code>RCE_DEF_TEMP</code></td><td>温度数值文本，单位 °C</td><td>125</td><td>抽取温度初值。</td></tr>
+<tr id="RCE_TEMP_LIST"><td><code>RCE_TEMP_LIST</code></td><td>逗号分隔的温度列表</td><td>125,85,25</td><td>温度下拉候选。</td></tr>
+<tr id="RCE_OUTPUT_CHOICES"><td><code>RCE_OUTPUT_CHOICES</code></td><td>逗号分隔；QRC：sp,dspf,spef,view；StarRC：dspf,spf,spef,view；CalXRC：dspf,sp,spice,view</td><td>dspf</td><td>输出下拉候选；QRC 的 spice/hspice 为 sp 别名。原生 OA 统一用 view，旧别名见 RCE 页。</td></tr>
+<tr id="SICO_FLOW_CPU_ALLOW"><td><code>SICO_FLOW_CPU_ALLOW</code></td><td>逗号分隔的正整数列表</td><td>1,2,4,8</td><td>flow CPU 候选；Flat DRC/LVS 固定 1。</td></tr>
+<tr id="RCE_CALIBRE_VIEW_CELLMAP"><td><code>RCE_CALIBRE_VIEW_CELLMAP</code></td><td>foundry Calibre cellmap 文件</td><td>有效 corner/calview.cellmap</td><td>Calibre 原生 OA view 的 mapping 初值。</td></tr>
+<tr id="RCE_STARRC_OA_DEVICE_MAP"><td><code>RCE_STARRC_OA_DEVICE_MAP</code></td><td>foundry OA device mapping 文件</td><td>当前 corner 中 OA_DEVICE_MAP 等认可名称</td><td>StarRC 原生 OA view 的器件映射初值。</td></tr>
+<tr id="RCE_STARRC_OA_LAYER_MAP"><td><code>RCE_STARRC_OA_LAYER_MAP</code></td><td>foundry OA layer mapping 文件</td><td>当前 corner 中 OA_LAYER_MAP 等认可名称</td><td>StarRC 原生 OA view 的层映射初值。</td></tr>
+<tr id="RCE_QUANTUS_BLOCK_CELL_FILE"><td><code>RCE_QUANTUS_BLOCK_CELL_FILE</code></td><td>绝对文件或相对当前 corner 的文件</td><td>不加载 foundry blocking 文件</td><td>Quantus blocking-cell 文件；多角时相对所选首角解析并共用；设置但不可读时启动前报错。</td></tr>
+<tr id="RCE_QREDUCE"><td><code>RCE_QREDUCE</code></td><td>命令名或路径</td><td>qreduce</td><td>寄生网表降阶可执行文件。</td></tr>
+<tr id="LEFGEN_OPT_FILE"><td><code>LEFGEN_OPT_FILE</code></td><td>Abstract options 文件</td><td>空</td><td>LEF 工艺设置，需站点提供。</td></tr>
+<tr id="LEF_CELL_LIST"><td><code>LEF_CELL_LIST</code></td><td>批处理 cell-list 文件</td><td>空</td><td>LEF batch 输入。</td></tr>
+<tr id="LEF_DEFAULT_BIN"><td><code>LEF_DEFAULT_BIN</code></td><td>Core / Block / IO / Corner</td><td>Core</td><td>Abstract 分类初值。</td></tr>
+<tr id="LEF_ABSTRACT"><td><code>LEF_ABSTRACT</code></td><td>命令名或路径</td><td>abstract</td><td>Abstract Generator 程序，CLI TOML 的明确配置优先。</td></tr>
+<tr id="MGC_HOME"><td><code>MGC_HOME</code></td><td>Calibre 安装目录</td><td>XRC 从 PATH 查找 calibre</td><td>非空时 XRC 使用其 bin/calibre；DRC/LVS 仍查 PATH。</td></tr>
+<tr id="CALIBRE_BIN"><td><code>CALIBRE_BIN</code></td><td>命令名或路径</td><td>calibre</td><td>仅 DRC TVF 展开/规则组发现；CLI --calibre 优先。</td></tr>
+<tr id="DRC_RULE_GROUP_CACHE_DIR"><td><code>DRC_RULE_GROUP_CACHE_DIR</code></td><td>缓存目录</td><td>工程 .sico/drc-rule-groups</td><td>DRC 展开缓存；CLI --cache-dir 优先。</td></tr>
+<tr id="RCE_DSPF_CACHE_DIR"><td><code>RCE_DSPF_CACHE_DIR</code></td><td>缓存目录</td><td>工程 .sico/rce/dspf</td><td>DSPF 索引缓存；CLI --cache-dir 优先。</td></tr>
+</tbody></table></div></section>
+<section class="env-section" id="mts"><h2 id="mts-heading">MTS 项目与工作目录</h2>
+<div class="table-wrap"><table class="env"><thead><tr><th scope="col">变量名</th><th scope="col">可选值 / 格式</th><th scope="col">默认 / 未设置行为</th><th scope="col">作用</th></tr></thead><tbody>
+<tr id="MTS_NETLISTOR_MODULEFILES"><td><code>MTS_NETLISTOR_MODULEFILES</code></td><td>存在的项目 modulefiles 目录</td><td>无，GUI 启动必配</td><td>--module-root 优先；不从 MODULEPATH 或安装位置推导。</td></tr>
+<tr id="MTS_NETLISTOR_MODULECMD"><td><code>MTS_NETLISTOR_MODULECMD</code></td><td>modulecmd 命令名或路径</td><td>PATH 中 modulecmd；随后 /bin/modulecmd</td><td>加载项目 modulefile 的程序。</td></tr>
+<tr id="PROJ_USER_HOME"><td><code>PROJ_USER_HOME</code></td><td>源项目个人工程目录</td><td>无，所选 module 必须显式定义</td><td>MTS 使用该目录/cds.lib；从所选项目的独立环境读取。</td></tr>
+<tr id="PROJ_HOME"><td><code>PROJ_HOME</code></td><td>项目根目录</td><td>无，可选</td><td>MTS 源项目元信息。</td></tr>
+<tr id="PROJ_ADE_DB_DIR"><td><code>PROJ_ADE_DB_DIR</code></td><td>可写绝对目录</td><td>无，生成时必需</td><td>MTS 运行结果根，缺失报错；仍是现行变量名。</td></tr>
+</tbody></table></div></section>
+<section class="env-section" id="runtime"><h2 id="runtime-heading">解释器覆盖与站点维护</h2>
+<div class="table-wrap"><table class="env"><thead><tr><th scope="col">变量名</th><th scope="col">可选值 / 格式</th><th scope="col">默认 / 未设置行为</th><th scope="col">作用</th></tr></thead><tbody>
+<tr id="DRC_PYTHON"><td><code>DRC_PYTHON</code></td><td>解释器命令或路径</td><td>SICO_PYTHON → SICO_PYTHON_ROOT/bin/python3 → python3</td><td>覆盖 DRC backend 解释器；源码开发使用，二进制保持包内 ABI。</td></tr>
+<tr id="LVS_PYTHON"><td><code>LVS_PYTHON</code></td><td>解释器命令或路径</td><td>同共享解释器顺序</td><td>覆盖 LVS、Stream GDS、Export CDL backend。</td></tr>
+<tr id="RCE_PYTHON"><td><code>RCE_PYTHON</code></td><td>解释器命令或路径</td><td>同共享解释器顺序</td><td>覆盖 RCE backend。</td></tr>
+<tr id="LEF_PYTHON"><td><code>LEF_PYTHON</code></td><td>解释器命令或路径</td><td>同共享解释器顺序</td><td>覆盖 LEF backend。</td></tr>
+<tr id="RCE_ANALYZER_PYTHON"><td><code>RCE_ANALYZER_PYTHON</code></td><td>解释器命令或路径</td><td>RCE 的解释器</td><td>DSPF Analyzer 专用覆盖。</td></tr>
+<tr id="DRC_RULE_SELECT_PYTHON"><td><code>DRC_RULE_SELECT_PYTHON</code></td><td>解释器命令或路径</td><td>DRC 的解释器</td><td>DRC Rule Select 图形程序专用覆盖。</td></tr>
+<tr id="SICO_LSF_PYTHON"><td><code>SICO_LSF_PYTHON</code></td><td>解释器命令或路径</td><td>同共享解释器顺序</td><td>LSF discovery/monitor helper 解释器。</td></tr>
+<tr id="DRC_PYTHON_ENTRY"><td><code>DRC_PYTHON_ENTRY</code></td><td>Python 入口文件</td><td>tools/drc/python/drc</td><td>源码 DRC backend 覆盖；二进制安装优先当前原生入口。</td></tr>
+<tr id="LVS_PYTHON_ENTRY"><td><code>LVS_PYTHON_ENTRY</code></td><td>Python 入口文件</td><td>tools/lvs/python/lvs</td><td>源码 LVS backend 覆盖。</td></tr>
+<tr id="RCE_PYTHON_ENTRY"><td><code>RCE_PYTHON_ENTRY</code></td><td>Python 入口文件</td><td>tools/rce/python/rce</td><td>源码 RCE backend 覆盖。</td></tr>
+<tr id="LEF_PYTHON_ENTRY"><td><code>LEF_PYTHON_ENTRY</code></td><td>Python 入口文件</td><td>tools/lef/python/lef</td><td>源码 LEF backend 覆盖。</td></tr>
+<tr id="SICO_AI_PYTHON_ENTRY"><td><code>SICO_AI_PYTHON_ENTRY</code></td><td>Assistant 入口文件</td><td>本安装 tools/ai/bin/sico-ai；否则 tools/ai/python/sico-ai</td><td>Assistant 专用入口覆盖优先；未设置时选择本安装 bin/sico-ai，再选源码入口。</td></tr>
+<tr id="SICO_LSF_PYTHON_ENTRY"><td><code>SICO_LSF_PYTHON_ENTRY</code></td><td>Python 入口文件</td><td>tools/common/python/sico-lsf</td><td>源码 LSF discovery 覆盖。</td></tr>
+<tr id="SICO_BATCH_PYTHON_ENTRY"><td><code>SICO_BATCH_PYTHON_ENTRY</code></td><td>Python 入口文件</td><td>tools/common/python/sico-batch</td><td>源码多 cell 批处理覆盖。</td></tr>
+<tr id="SICO_PROFILE_PYTHON_ENTRY"><td><code>SICO_PROFILE_PYTHON_ENTRY</code></td><td>Python 入口文件</td><td>tools/common/python/sico-profile</td><td>源码 Profile 解析器覆盖。</td></tr>
+<tr id="SICO_LSF_BSUB"><td><code>SICO_LSF_BSUB</code></td><td>命令名或路径</td><td>bsub</td><td>CAD flow 的 LSF 提交命令。</td></tr>
+<tr id="SICO_LSF_BKILL"><td><code>SICO_LSF_BKILL</code></td><td>命令名或路径</td><td>bkill</td><td>flow 取消与 Monitor Jobs 页的停止命令。</td></tr>
+<tr id="SICO_LSF_BQUEUES"><td><code>SICO_LSF_BQUEUES</code></td><td>命令名或路径</td><td>bqueues</td><td>提交前查询队列交互模式；拓扑发现仍使用 PATH。</td></tr>
+</tbody></table></div></section>
+<section class="env-section" id="platform"><h2 id="platform-heading">系统与第三方集成环境</h2>
+<div class="table-wrap"><table class="env"><thead><tr><th scope="col">变量名</th><th scope="col">可选值 / 格式</th><th scope="col">默认 / 未设置行为</th><th scope="col">作用</th></tr></thead><tbody>
+<tr id="PATH"><td><code>PATH</code></td><td>冒号分隔的可执行目录</td><td>继承启动 shell</td><td>加入 SICO_HOME/bin 与实际使用的 EDA / LSF / modulecmd 命令。</td></tr>
+<tr id="LD_LIBRARY_PATH"><td><code>LD_LIBRARY_PATH</code></td><td>冒号分隔的动态库目录</td><td>继承站点工具环境</td><td>供 EDA 使用；SiCo Python 库使用独立变量传递。</td></tr>
+<tr id="DISPLAY"><td><code>DISPLAY</code></td><td>X11 display</td><td>继承图形会话</td><td>GUI 显示，LSF 节点需可达。</td></tr>
+<tr id="XAUTHORITY"><td><code>XAUTHORITY</code></td><td>X11 授权文件路径</td><td>继承图形会话</td><td>远端图形程序授权。</td></tr>
+<tr id="LANG"><td><code>LANG</code></td><td>locale 名称</td><td>继承系统/站点</td><td>默认字符与语言环境。</td></tr>
+<tr id="LC_ALL"><td><code>LC_ALL</code></td><td>locale 名称</td><td>继承系统/站点</td><td>覆盖所有 locale；LSF collector 内部固定 C。</td></tr>
+<tr id="LC_CTYPE"><td><code>LC_CTYPE</code></td><td>locale 名称</td><td>继承系统/站点</td><td>字符编码类别；终端按可用 UTF-8 locale 准备。</td></tr>
+<tr id="LOCPATH"><td><code>LOCPATH</code></td><td>locale 数据路径</td><td>继承系统/站点</td><td>终端 UTF-8 探测会保留此设置。</td></tr>
+<tr id="HOME"><td><code>HOME</code></td><td>用户家目录</td><td>操作系统登录环境</td><td>个人配置与用户目录解析；无需修改。</td></tr>
+<tr id="USER"><td><code>USER</code></td><td>用户名</td><td>操作系统登录环境</td><td>项目 module 与调度器用户环境。</td></tr>
+<tr id="LOGNAME"><td><code>LOGNAME</code></td><td>登录用户名</td><td>操作系统登录环境</td><td>子进程身份环境，保持站点值。</td></tr>
+<tr id="HOSTNAME"><td><code>HOSTNAME</code></td><td>主机名</td><td>环境未提供时部分 flow 显示 localhost</td><td>表单/运行配置本机名称。</td></tr>
+<tr id="PWD"><td><code>PWD</code></td><td>启动目录</td><td>shell 当前工作目录</td><td>保留逻辑路径并固定工程身份。</td></tr>
+<tr id="CDS_LIC_FILE"><td><code>CDS_LIC_FILE</code></td><td>Cadence 许可证配置</td><td>由站点提供</td><td>许可证访问，SiCo 无内置服务地址。</td></tr>
+<tr id="LM_LICENSE_FILE"><td><code>LM_LICENSE_FILE</code></td><td>FlexNet 许可证配置</td><td>由站点提供</td><td>其他工具许可配置。</td></tr>
+<tr id="CDSHOME"><td><code>CDSHOME</code></td><td>Cadence 安装根</td><td>由项目提供</td><td>MTS 等工具定位 Cadence 运行环境。</td></tr>
+<tr id="CDS_AUTO_64BIT"><td><code>CDS_AUTO_64BIT</code></td><td>Cadence 支持的值，通常 ALL</td><td>由站点提供；部分后台 worker 设置 ALL</td><td>Cadence 64 位工具选择。</td></tr>
+<tr id="OA_HOME"><td><code>OA_HOME</code></td><td>OpenAccess 安装路径</td><td>由站点提供</td><td>OA 工具运行环境。</td></tr>
+<tr id="AMSHOME"><td><code>AMSHOME</code></td><td>AMS/Xcelium 安装根</td><td>由站点提供</td><td>AIVW/混合信号工具环境。</td></tr>
+<tr id="NODEJS_HOME"><td><code>NODEJS_HOME</code></td><td>Node.js 根目录或其 bin 目录</td><td>PATH 中 node</td><td>仅使用 npm 形式 Codex launcher 时补充 Node 路径，原生 Codex 通常不需要。</td></tr>
+<tr id="MODULEPATH"><td><code>MODULEPATH</code></td><td>冒号分隔的 module 搜索路径</td><td>继承站点</td><td>所选 MTS module 的依赖解析，不充当项目列表。</td></tr>
+<tr id="MODULESHOME"><td><code>MODULESHOME</code></td><td>Environment Modules 根</td><td>继承站点</td><td>module 工具环境。</td></tr>
+<tr id="LMOD_CMD"><td><code>LMOD_CMD</code></td><td>Lmod 程序路径</td><td>继承站点</td><td>保留的 module 运行环境。</td></tr>
+<tr id="LOADEDMODULES"><td><code>LOADEDMODULES</code></td><td>已加载 module 列表</td><td>由 module 工具维护</td><td>EDA 环境快照的一部分。</td></tr>
+<tr id="_LMFILES_"><td><code>_LMFILES_</code></td><td>已加载 modulefile 列表</td><td>由 module 工具维护</td><td>EDA 环境快照的一部分。</td></tr>
+<tr id="TMPDIR"><td><code>TMPDIR</code></td><td>临时目录</td><td>继承 EDA 值；SiCo 子进程使用工程状态目录</td><td>启动 EDA 时恢复原始值。</td></tr>
+<tr id="TMP"><td><code>TMP</code></td><td>临时目录</td><td>同 TMPDIR 的隔离/恢复策略</td><td>SiCo 与 EDA 的临时文件隔离。</td></tr>
+<tr id="TEMP"><td><code>TEMP</code></td><td>临时目录</td><td>同 TMPDIR 的隔离/恢复策略</td><td>SiCo 与 EDA 的临时文件隔离。</td></tr>
+<tr id="SQLITE_TMPDIR"><td><code>SQLITE_TMPDIR</code></td><td>SQLite 临时目录</td><td>同 TMPDIR 的隔离/恢复策略</td><td>SiCo SQLite 临时数据位置。</td></tr>
+<tr id="XDG_CACHE_HOME"><td><code>XDG_CACHE_HOME</code></td><td>缓存目录</td><td>SiCo 子进程指向工程 cache</td><td>启动 EDA 时恢复站点值。</td></tr>
+<tr id="XDG_RUNTIME_DIR"><td><code>XDG_RUNTIME_DIR</code></td><td>私有运行目录</td><td>SiCo 创建权限 0700 的工程 runtime</td><td>不要指向整个家目录或修改家目录权限。</td></tr>
+<tr id="XDG_STATE_HOME"><td><code>XDG_STATE_HOME</code></td><td>用户状态根</td><td>未设置时按 ~/.local/state</td><td>用于 Assistant 默认私有 Codex home。</td></tr>
+<tr id="NO_PROXY"><td><code>NO_PROXY</code></td><td>不经代理的主机列表</td><td>继承启动环境</td><td>本地通信通常需覆盖 localhost / 127.0.0.1。</td></tr>
+<tr id="no_proxy"><td><code>no_proxy</code></td><td>不经代理的主机列表</td><td>继承启动环境</td><td>小写代理配置，由底层网络库处理。</td></tr>
+<tr id="LSB_JOBID"><td><code>LSB_JOBID</code></td><td>LSF 正整数作业 ID</td><td>LSF 自动设置</td><td>用于判断是否在 LSF 内并准备私有输入法。</td></tr>
+<tr id="LSB_JOBNAME"><td><code>LSB_JOBNAME</code></td><td>LSF 作业名</td><td>LSF 自动设置</td><td>调度作业身份核对。</td></tr>
+<tr id="LSB_QUEUE"><td><code>LSB_QUEUE</code></td><td>LSF 队列名</td><td>LSF 自动设置</td><td>运行分配信息。</td></tr>
+<tr id="LSF_ENVDIR"><td><code>LSF_ENVDIR</code></td><td>LSF 配置目录</td><td>继承站点值，无 SiCo 固定默认值</td><td>Monitor 用于隔离不同 LSF 环境的缓存身份；由站点 LSF 设置。</td></tr>
+<tr id="LSF_SERVERDIR"><td><code>LSF_SERVERDIR</code></td><td>LSF 服务程序目录</td><td>继承站点值，无 SiCo 固定默认值</td><td>Monitor 用于隔离不同 LSF 环境的缓存身份；由站点 LSF 设置。</td></tr>
+<tr id="LSB_SHAREDIR"><td><code>LSB_SHAREDIR</code></td><td>LSF 共享状态目录</td><td>继承站点值，无 SiCo 固定默认值</td><td>Monitor 用于隔离不同 LSF 环境的缓存身份；由站点 LSF 设置。</td></tr>
+<tr id="LSF_BINDIR"><td><code>LSF_BINDIR</code></td><td>LSF 命令目录</td><td>继承站点值，无 SiCo 固定默认值</td><td>Monitor 用于隔离不同 LSF 环境的缓存身份；由站点 LSF 设置。</td></tr>
+<tr id="LSF_LIBDIR"><td><code>LSF_LIBDIR</code></td><td>LSF 库目录</td><td>继承站点值，无 SiCo 固定默认值</td><td>Monitor 用于隔离不同 LSF 环境的缓存身份；由站点 LSF 设置。</td></tr>
+<tr id="LSF_VERSION"><td><code>LSF_VERSION</code></td><td>LSF 版本标识</td><td>继承站点值，无 SiCo 固定默认值</td><td>Monitor 用于隔离不同 LSF 环境的缓存身份；由站点 LSF 设置。</td></tr>
+<tr id="LSF_CLUSTER_NAME"><td><code>LSF_CLUSTER_NAME</code></td><td>LSF 集群名</td><td>由站点/LSF 提供</td><td>调度身份核对。</td></tr>
+<tr id="BSUB_QUIET"><td><code>BSUB_QUIET</code></td><td>LSF 支持的 quiet 值</td><td>Assistant 标准 bsub 未设置时补 1</td><td>防止调度状态混入 JSONL；已有值保留。</td></tr>
+<tr id="LSB_EXPORT_ENV"><td><code>LSB_EXPORT_ENV</code></td><td>LSF 环境导出策略</td><td>保留站点值</td><td>Assistant 不强制扩大导出范围。</td></tr>
+<tr id="LSB_SSH_XFORWARD_CMD"><td><code>LSB_SSH_XFORWARD_CMD</code></td><td>LSF X11 SSH 命令</td><td>站点值优先，否则准备严格非交互 SSH</td><td>完整 Assistant -XF 使用。</td></tr>
+<tr id="SSH_AUTH_SOCK"><td><code>SSH_AUTH_SOCK</code></td><td>SSH agent socket</td><td>继承桌面会话</td><td>供站点 SSH X11 身份认证使用。</td></tr>
+</tbody></table></div></section>
+<section class="env-section" id="tool-help"><h2 id="tool-help-heading">EDA 本地帮助定位</h2>
+<p>tool_help 优先从 PATH 中的工具定位安装，再检查这些站点环境名称；它们不代替 flow 的执行程序配置。Virtuoso 还读取上表的 CDSHOME。</p>
+<div class="table-wrap"><table class="env"><thead><tr><th scope="col">变量名</th><th scope="col">可选值 / 格式</th><th scope="col">默认 / 未设置行为</th><th scope="col">作用</th></tr></thead><tbody>
+<tr id="IC_HOME"><td><code>IC_HOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Virtuoso 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="CDS_INST_DIR"><td><code>CDS_INST_DIR</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Virtuoso 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="CDSROOT"><td><code>CDSROOT</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Virtuoso 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="CDSDIR"><td><code>CDSDIR</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Virtuoso 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="SPECTRE_HOME"><td><code>SPECTRE_HOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Spectre 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="MMSIM_HOME"><td><code>MMSIM_HOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Spectre 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="MMSIMHOME"><td><code>MMSIMHOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Spectre 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="XCELIUM_HOME"><td><code>XCELIUM_HOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Xcelium 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="XCELIUMHOME"><td><code>XCELIUMHOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Xcelium 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="IUSHOME"><td><code>IUSHOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Xcelium 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="QUANTUS_HOME"><td><code>QUANTUS_HOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Quantus 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="QRC_HOME"><td><code>QRC_HOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Quantus 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="QRC_HOME_DIR"><td><code>QRC_HOME_DIR</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Quantus 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="PVS_HOME"><td><code>PVS_HOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 PVS 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="PEGASUS_HOME"><td><code>PEGASUS_HOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Pegasus 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="ASSURAHOME"><td><code>ASSURAHOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Assura 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="ASSURA_HOME"><td><code>ASSURA_HOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Assura 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="INNOVUS_HOME"><td><code>INNOVUS_HOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Innovus 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="INNOVUSHOME"><td><code>INNOVUSHOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Innovus 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="GENUS_HOME"><td><code>GENUS_HOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Genus 安装的 doc/；无需为未使用工具设置。</td></tr>
+<tr id="TEMPUS_HOME"><td><code>TEMPUS_HOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Tempus 安装的 doc/；无需为未使用工具设置。</td></tr>
+</tbody></table></div></section>
+<h2 id="precedence">常用优先级与空值</h2>
+<p>共享解释器：flow 专用覆盖 → SICO_PYTHON → SICO_PYTHON_ROOT/bin/python3 → 源码 flow 的 python3。Assistant 另有严格的 3.9.13 解释器检查，不能依赖 flow 的 PATH 回退。二进制入口使用包内 Python，应保持安装与 ABI 一致。</p>
+<p>模型配置：显式配置文件 / SICO_PROVIDER_CONFIG 优先于环境模型设置；没有这些输入时，可读取工程默认 provider 文件。Profile 加载后的值覆盖表单环境初值，最后手动调整形成运行 TOML。</p>
+<p>SICO_HOME、显式 SICO_PYTHON / SICO_PYTHON_ROOT 不能为空；SICO_TEMP_DIR 空值按未设置。不要假定所有变量都有相同空值语义。PROJECT_ROOT、PDK_ROOT、RCE_RUN_ROOT 等是用户在路径表达式中自定义的前缀，名称不由 SiCo 固定。</p>
+<h2 id="retired">迁移旧环境</h2>
+<p>新安装使用现行名称。旧名通常只用于报告迁移错误；存在新名时不会从旧值补齐。SICO_API_URL 是仍可读取的明确例外。不要批量替换所有 PROJ_：MTS 的 PROJ_USER_HOME / PROJ_ADE_DB_DIR，以及 PROJ_CAD_HOME / PROJ_AI_LSF_* 仍然有效。</p>
+<div class="table-wrap"><table><thead><tr><th>旧名</th><th>现在使用</th></tr></thead><tbody>
+<tr><td>CAD_HOME、SICO_ROOT、CAD_AGENT_ROOT</td><td>SICO_HOME</td></tr>
+<tr><td>CAD_PYTHON / CAD_PYTHON_ROOT / CAD_SYSTEM_LD_LIBRARY_PATH</td><td>对应 SICO_ 名称</td></tr>
+<tr><td>PROJ_DRC_*、PROJ_LVS_*、PROJ_RCE_* 等旧 flow 名</td><td>在下方完整迁移索引中逐项核对；通常去掉 PROJ_</td></tr>
+<tr><td>EXT_DEF_TOOL / CORNER / DEF_TEMP / TEMP_LIST / OUTPUT_CHOICES</td><td>对应 RCE_ 名称</td></tr>
+<tr><td>EXT_CPU_ALLOW、EXT_LSF_BSUB / BKILL / BQUEUES</td><td>SICO_FLOW_CPU_ALLOW、SICO_LSF_BSUB / BKILL / BQUEUES</td></tr>
+<tr><td>SICO_CODEX_MODEL / SICO_CODEX_API_BASE_URL / SICO_CODEX_API_KEY</td><td>SICO_MODEL / SICO_API_BASE_URL / SICO_API_KEY，共用模型配置</td></tr>
+<tr><td>CAD_TEMP_DIR</td><td>通常不设置；自动使用工程 .sico，必要时设 SICO_TEMP_DIR</td></tr>
+</tbody></table></div>
+<p><a href="environment-internal.html#retired-list">完整的已登记旧名索引 →</a>　<a href="flows.html">下一步：配置 CAD flow →</a></p>
+
+<footer class="page-footer"><span>内容基线 d48ccb31 · 核对 2026-09-28</span><a href="virtuoso.html">接入 Virtuoso →</a></footer>
+</main>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#installation-heading">安装、工程与公共入口</a><a href="#model-heading">SiCo 模型与工程服务</a><a href="#assistant-heading">AI Assistant 与终端</a><a href="#pdk-heading">PDK、模板与可选数据</a><a href="#flow-heading">CAD flow：输入、规则与输出</a><a href="#mts-heading">MTS 项目与工作目录</a><a href="#runtime-heading">解释器覆盖与站点维护</a><a href="#platform-heading">系统与第三方集成环境</a><a href="#tool-help-heading">EDA 本地帮助定位</a><a href="#precedence">常用优先级与空值</a><a href="#retired">迁移旧环境</a></aside>
+</div></div>
+</body>
+</html>

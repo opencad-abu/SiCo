@@ -1,0 +1,112 @@
+; RCE net/cell selection and parasitic filter controls.
+
+unless(and(boundp('RCESELECTIONGUIVersion)
+             RCESELECTIONGUIVersion=="20260919.gui.modules.v1")
+defmethod(makeExtNetSelOpt ((inst EXTOPTGUI))
+  inst->netSelBtn=hiCreateBooleanButton(
+    ?name           'netSelBtn
+    ?buttonText     "Nets:"
+    ?buttonLocation 'left
+    ?callback       inst->netSelBtnCB
+  )
+  inst->netSelChoices=hiCreateComboField(
+    ?name     'netSelChoices
+    ?items    '("Include Nets" "Exclude Nets")
+    ?value    "Include Nets"
+    ?editable nil
+    ?enabled  nil
+  )
+  inst->netSelFile=hiCreateFileSelectorField(
+    ?name    'netSelFile
+    ?mode    'existingFile
+    ?prompt  "Names / File:"
+    ?enabled nil
+  )
+  inst->netSchSelBtn=hiCreateButton(
+    ?name 'netSchSelBtn
+    ?buttonText "Select From Schematic"
+    ?enabled nil
+    ?callback inst->netSchSelBtnCB
+  )
+  inst->netSel=makehbl('netSel list(inst->netSelBtn inst->netSelChoices inst->netSelFile inst->netSchSelBtn) ?a left)
+)
+
+defmethod(makeExtCellSelOpt ((inst EXTOPTGUI))
+  inst->cellSelBtn=hiCreateBooleanButton(
+    ?name           'cellSelBtn
+    ?buttonText     "Block Cells:"
+    ?buttonLocation 'left
+    ?callback       inst->cellSelBtnCB
+  )
+  inst->cellSelFile=hiCreateFileSelectorField(
+    ?name    'cellSelFile
+    ?mode    'existingFile
+    ?prompt  "Names / File:"
+    ?enabled nil
+  )
+  inst->cellLibSelBtn=hiCreateButton(
+    ?name      'cellLibSelBtn
+    ?buttonText "Select From Library"
+    ?enabled    nil
+    ?callback   inst->cellLibSelBtnCB
+  )
+  inst->cellSel=makehbl('cellSel list(inst->cellSelBtn inst->cellSelFile inst->cellLibSelBtn) ?a left)
+)
+
+defmethod(makeExtFilterOpt ((inst EXTOPTGUI))
+  inst->relFilterCapBtn=hiCreateBooleanButton(
+    ?name           'relFilterCapBtn
+    ?buttonText     "Relative C Filter [%]:"
+    ?buttonLocation 'left
+    ?callback       inst->relFilterCapBtnCB
+  )
+  inst->relFilterCapValue=hiCreateStringField(
+    ?name     'relFilterCapValue
+    ?defValue "0.1"
+    ?enabled  nil
+  )
+  inst->absFilterCapBtn=hiCreateBooleanButton(
+    ?name           'absFilterCapBtn
+    ?buttonText     "Absolute C Filter [fF]:"
+    ?buttonLocation 'left
+    ?callback       inst->absFilterCapBtnCB
+  )
+  inst->absFilterCapValue=hiCreateStringField(
+    ?name     'absFilterCapValue
+    ?defValue "0.01"
+    ?enabled  nil
+  )
+  inst->absFilterResBtn=hiCreateBooleanButton(
+    ?name           'absFilterResBtn
+    ?buttonText     "Minimum R Filter [ohm]:"
+    ?buttonLocation 'left
+    ?callback       inst->absFilterResBtnCB
+  )
+  inst->absFilterResValue=hiCreateStringField(
+    ?name     'absFilterResValue
+    ?defValue "0.001"
+    ?enabled  nil
+  )
+  inst->filter=makehbl('filter
+                           list(inst->relFilterCapBtn
+                                 inst->relFilterCapValue
+                                 inst->absFilterCapBtn
+                                 inst->absFilterCapValue
+                                 inst->absFilterResBtn
+                                 inst->absFilterResValue)
+                           ?a left)
+
+)
+
+defmethod(makeExtMoreOpt ((inst EXTOPTGUI))
+  inst->moreOpt=hiCreateDisclosureTriangle(
+    ?name        'moreOpt
+    ?labelText   "More Extraction Options"
+    ?onFields    '(extractTopCellRow nameSource netSel cellSel filter)
+    ?offFields   '()
+    ?persistent  nil
+  )
+)
+
+RCESELECTIONGUIVersion="20260919.gui.modules.v1"
+)

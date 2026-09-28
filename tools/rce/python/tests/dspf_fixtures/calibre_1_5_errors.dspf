@@ -1,0 +1,23 @@
+*|DSPF 1.5
+*|DESIGN "calibre_top"
+*|VENDOR "Siemens"
+*|PROGRAM "Calibre xRC"
+*|DIVIDER /
+*|DELIMITER :
+*|BUSBIT <>
+.SUBCKT calibre_top A<0> Z VSS
+*|GROUND_NET VSS
+*|NET A<0> 0.1PF
+*|P (A<0> I 0 0 0)
+*|S (A<0>:1 1 0)
+Rneg A<0> A<0>:1 -2 $lvl=7
+Cbad A<0>:1 VSS not-a-number
+Cgood VSS A<0> 0.1PF $lvl1=7 $lvl2=0
+Lignored A<0> A<0>:1 1N
+*|NET Z 0
+*|P (Z O 0 2 0)
+*|S (Z:1 3 0)
+Rz Z Z:1 1
+Rcross Z:1 A<0>:1 5
+unknown_record here
+.ENDS calibre_top

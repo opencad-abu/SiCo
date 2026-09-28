@@ -1,0 +1,307 @@
+;------------------------------------------------------------------------------
+; OA-only multi-cell adapter for the RCE frontend.
+;------------------------------------------------------------------------------
+
+procedure(rceBatchViewRequest(form runDir outputPaths finalOutputPaths
+                              outputType)
+  let((viewTarget setupPath oldStamp request)
+    cond(
+      (rceNativeViewOutputP(outputType)
+        viewTarget=rceReductionViewTarget(form rceNativeViewTarget(form))
+        when(viewTarget
+          setupPath=if(member(form~>extTool~>value '("CalXRC" "XRC")) then
+            strcat(runDir "/log/calibreview.setup")
+          else
+            nil)
+          oldStamp=rceNativeViewStamp(
+            car(viewTarget) cadr(viewTarget) caddr(viewTarget))
+          request=list("native" form~>extTool~>value
+                       car(viewTarget) cadr(viewTarget) caddr(viewTarget)
+                       setupPath oldStamp)))
+      (and(form~>createNetlistView~>value
+            rceParasiticNetlistOutputP(outputType))
+        viewTarget=rceNetlistViewTarget(form)
+        when(viewTarget
+          request=rceNetlistViewRequest(
+            form viewTarget outputPaths finalOutputPaths outputType)))
+    )
+    request
+  )
+)
+
+procedure(rceBatchPublicationRequiredP(form viewRequest)
+  if(viewRequest then t else nil)
+)
+
+procedure(rceBatchSpec(form row batchId index @optional reservation)
+  prog((taskId jobName config runDir logDir launchLog launchCmd outputType
+         outputPaths finalOutputPaths outputPath viewRequest publicationRequired
+         resultPath spec)
+    taskId=cadBatchTaskId(index)
+    jobName=cadBatchJobName("RCE" batchId taskId)
+    cadBatchSetDesignValues(form row)
+    rceSyncExtractTopCell(form)
+    config=rcePrint(form reservation)
+    unless(config
+      return(nil))
+    runDir=substring(config 1 (strlen(config)-9))
+    logDir=strcat(runDir "/log")
+    launchLog=strcat(logDir "/rce.launch.log")
+    outputType=lowerCase(form~>outType~>value)
+    outputPaths=rceExpectedOutputPaths(
+      runDir rceSyncExtractTopCell(form) outputType
+      form~>extTool~>value rceSelectedProcessCorners(form))
+    finalOutputPaths=rceFinalOutputPaths(form outputPaths outputType)
+    outputPath=or(car(finalOutputPaths) "")
+    viewRequest=rceBatchViewRequest(
+      form runDir outputPaths finalOutputPaths outputType)
+    publicationRequired=rceBatchPublicationRequiredP(form viewRequest)
+    resultPath=if(viewRequest then
+      rceSummaryViewTargetText(viewRequest)
+    else
+      outputPath)
+    launchCmd=strcat(
+      "env -u PYTHONHOME -u PYTHONPATH RCE_BACKUP_DONE=1 "
+      SICO_tempEnvironment()
+      "RCE_ORIG_LD_LIBRARY_PATH="
+      SICO_shellQuote(or(getShellEnvVar("LD_LIBRARY_PATH") ""))
+      " LD_LIBRARY_PATH=" SICO_shellQuote(SICO_pythonLibraryPath()) " "
+      SICO_backendCommand("rce" RCE_pythonExe() RCE_pythonEntry()) " run " SICO_shellQuote(config)
+      if(reservation then strcat(" --lock-token " SICO_shellQuote(cadr(reservation)))
+        else ""))
+    launchCmd=SICO_lsfWrapCommand(
+      launchCmd form~>runType~>value form~>queueName~>value
+      form~>srvName~>value
+      SICO_lsfMaxCpu(list(form~>lvsCpu~>value form~>extCpu~>value))
+      jobName launchLog)
+    spec=cadBatchMakeSpec(
+      taskId buildString(row "/") config runDir launchCmd
+      SICO_lsfCancelCommand(form~>runType~>value jobName)
+      launchLog resultPath if(viewRequest then resultPath else runDir)
+      publicationRequired)
+    cadBatchSpecSet(spec 'viewRequest viewRequest)
+    ; Keep the historical outputPaths slot pointed at the published result so
+    ; older batch consumers continue to see the same value.  Preserve the
+    ; extraction paths separately for the reduction-aware summary and expose
+    ; the reduced paths explicitly for new consumers.
+    cadBatchSpecSet(spec 'outputPaths finalOutputPaths)
+    cadBatchSpecSet(spec 'originalOutputPaths outputPaths)
+    cadBatchSpecSet(spec 'reducedOutputPaths
+      when(and(rceReductionEnabledP(form)
+                 rceReductionFileOutputP(outputType))
+        finalOutputPaths))
+    return(spec)
+  )
+)
+
+procedure(rceBatchPublicationMessage(spec success)
+  let((request)
+    request=when(spec spec['viewRequest])
+    if(request then
+      if(success then
+        strcat("Created " rceSummaryViewTargetText(request))
+      else
+        strcat("Failed to create " rceSummaryViewTargetText(request)))
+    else
+      "Publication request is missing"
+    )
+  )
+)
+
+procedure(rceBatchPostProcess(meta controllerStatus)
+  unwindProtect(
+    rceBatchPublishResults(meta controllerStatus)
+    foreach(reservation meta['runReservations]
+      rceReleaseRun(reservation)))
+)
+
+procedure(rceBatchPublishResults(meta controllerStatus)
+  prog((input line fields waiting port spec request protected success
+         publicationStatus finalCommand finalStatus taskId)
+    waiting=nil
+    when(isFile(meta['statusTsv])
+      input=infile(meta['statusTsv])
+      when(input
+        gets(line input)
+        while(gets(line input)
+          fields=parseString(line "\t\r\n" t)
+          when(and(length(fields)>=4 nth(3 fields)=="awaiting_publication")
+            waiting=append1(waiting nth(1 fields))))
+        close(input)))
+    unless(waiting
+      return(controllerStatus))
+    port=outfile(meta['publicationTsv] "w")
+    unless(port
+      return(1))
+    fprintf(port "id\tstatus\tmessage\n")
+    foreach(taskId waiting
+      spec=cadBatchSpecById(meta taskId)
+      request=when(spec spec['viewRequest])
+      protected=when(request
+        errset(rceCompleteViewRequest(request spec['launchLog]) t))
+      success=and(protected car(protected))
+      publicationStatus=if(success then "succeeded" else "failed")
+      fprintf(port "%s\t%s\t%s\n" taskId publicationStatus
+        rceBatchPublicationMessage(spec success)))
+    close(port)
+    finalCommand=cadBatchControllerCommand(
+      "RCE" "finalize" meta['manifest] meta['publicationTsv])
+    unless(finalCommand
+      return(1))
+    finalStatus=system(finalCommand)
+    return(finalStatus)
+  )
+)
+
+procedure(rceBatchStart(form)
+  prog((saved reservations reservation valid started)
+    unless(and(cadBatchValidateTasks(form) form~>inpType~>value=="OA")
+      when(form~>inpType~>value!="OA"
+        cadBatchMessage('e "RCE" "Multiple Cells supports OA input only."))
+      return(nil))
+    saved=cadBatchDesignValues(form)
+    valid=t
+    unwindProtect(
+      progn(
+        foreach(row form~>cadBatchTasks
+          when(valid
+            cadBatchSetDesignValues(form row)
+            reservation=rceReserveRun(form)
+            if(reservation then
+              reservations=append1(reservations reservation)
+            else valid=nil)))
+        when(valid started=rceBatchStartReserved(form reservations)))
+      progn(
+        cadBatchSetDesignValues(form saved)
+        rceSyncExtractTopCell(form)
+        unless(started
+          foreach(reservation reservations rceReleaseRun(reservation)))))
+    return(started)
+  )
+)
+
+procedure(rceBatchStartReserved(form reservations)
+  prog((saved savedStartRve batchId root specs index row spec backupOk meta)
+    unless(and(cadBatchValidateTasks(form) form~>inpType~>value=="OA")
+      when(form~>inpType~>value!="OA"
+        cadBatchMessage('e "RCE" "Multiple Cells supports OA input only."))
+      return(nil))
+    batchId=cadBatchNewId("RCE")
+    root=cadBatchCreateRoot(form "RCE" batchId)
+    unless(root
+      cadBatchMessage('e "RCE" "Cannot create the batch control directory.")
+      return(nil))
+    saved=cadBatchDesignValues(form)
+    savedStartRve=when(form~>startRve form~>startRve~>value)
+    when(form~>startRve
+      form~>startRve~>value=nil)
+    specs=nil
+    index=1
+    unwindProtect(
+      foreach(row form~>cadBatchTasks
+        when(specs!=nil || index==1
+          spec=rceBatchSpec(form row batchId index nth(sub1(index) reservations))
+          if(spec then
+            specs=append1(specs spec)
+          else
+            specs=nil)
+          index=index+1))
+      progn(
+        cadBatchSetDesignValues(form saved)
+        when(form~>startRve
+          form~>startRve~>value=savedStartRve)
+        rceSyncExtractTopCell(form)))
+    unless(and(specs length(specs)==length(form~>cadBatchTasks))
+      cadBatchMessage('e "RCE"
+        "Batch configuration failed; no cell was started.")
+      return(nil))
+    unless(cadBatchSpecsIndependentP(specs)
+      cadBatchMessage('e "RCE"
+        "Two or more rows resolve to the same run directory or OA result target.")
+      return(nil))
+    backupOk=t
+    index=0
+    foreach(spec specs
+      unless(rceBackupRunData(spec['runDir] nth(index reservations))==0
+        backupOk=nil)
+      index=index+1)
+    unless(backupOk
+      cadBatchMessage('e "RCE"
+        "Cannot back up one or more existing run directories; no cell was started.")
+      return(nil))
+    meta=cadBatchBuildMeta(form "RCE" batchId root specs 'rceBatchPostProcess)
+    meta['runReservations]=reservations
+    return(cadBatchLaunch(meta))
+  )
+)
+
+procedure(rceBatchEnterMultiple(form)
+  form~>cadBatchSingleStartRve=when(form~>startRve form~>startRve~>value)
+  form~>designInp~>invisible=t
+  form~>svdbInp~>invisible=t
+  form~>cciInp~>invisible=t
+  cadCdlIncludeInputTypeCB(form)
+  when(form~>startRve
+    form~>startRve~>value=nil
+    form~>startRve~>enabled=nil)
+  t
+)
+
+procedure(rceBatchLeaveMultiple(form)
+  form~>designInp~>invisible=nil
+  rceInpCB(form)
+  when(form~>startRve
+    rceSyncStartRve(form)
+    form~>startRve~>value=and(form~>startRve~>enabled
+                              form~>cadBatchSingleStartRve))
+  t
+)
+
+procedure(rceBatchPrimaryViewRequest(request)
+  let((primary childRequest)
+    when(request
+      if(car(request)=="group" then
+        foreach(childRequest cdr(request)
+          primary=rceBatchPrimaryViewRequest(childRequest))
+      else
+        primary=request)
+    )
+    primary
+  )
+)
+
+procedure(rceBatchOpenResult(spec)
+  let((request viewSpec viewName requestedViewName path)
+    request=rceBatchPrimaryViewRequest(spec['viewRequest])
+    path=spec['resultPath]
+    cond(
+      (and(request car(request)=="native")
+        deOpenCellView(nth(2 request) nth(3 request) nth(4 request)
+                       "" nil "r"))
+      (and(request car(request)=="text")
+        viewSpec=rceParasiticViewSpec(nth(4 request))
+        requestedViewName=nth(6 request)
+        viewName=or(when(and(stringp(requestedViewName)
+                              strlen(requestedViewName)>0)
+                      requestedViewName)
+                    car(viewSpec))
+        deOpenCellView(nth(1 request) nth(2 request) viewName
+                       cadr(viewSpec) nil "r"))
+      (and(path strlen(path)>0 isFile(path))
+        hiViewTextFile(path ?title "RCE Batch Result" ?fixedFont t))
+      (t nil)
+    )
+  )
+)
+
+cadBatchRegisterFlowAdapter(
+  "RCE" t 'rceBatchEnterMultiple 'rceBatchLeaveMultiple
+  'rceBatchOpenResult 'RCE_pythonExe)
+
+procedure(rceBatchAdapterRevision()
+  "20260924.flow.environment.v3"
+)
+
+procedure(rceCdlIncludeBatchRevision()
+  "20260812.cdl.include.v2"
+)

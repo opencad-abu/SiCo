@@ -1,0 +1,57 @@
+; Shared run output-directory controls.
+
+defclass(OUTPUTGUI ()
+  (;slot start
+    (outDirChoices @initform list("")
+                   @initarg  outDirChoices
+    )
+    (outDirCB      @initform list(infoStruc->noCB)
+                   @initarg  inpChoices
+    )
+    (defOutDir     @initform pwd()
+                   @initarg  defOutDir
+    )
+    (outDir        @initform nil)
+    (outDirType    @initform nil)
+    (outDirPath    @initform nil)
+  );slot end
+)
+
+defmethod(makeOutDir ((inst OUTPUTGUI))
+  inst->outDirType=hiCreateComboField(
+    ?name     'outDirType
+    ?prompt   "Save Data to"
+    ?defValue "Project Directory"
+    ?items    inst->outDirChoices
+    ?editable nil
+    ?callback inst->outDirCB
+  )
+  inst->outDirPath=hiCreateFileSelectorField(
+    ?name     'outDirPath
+    ?mode     'directoryOnly
+    ?defValue inst->defOutDir
+    ?editable nil
+    ?enabled  nil
+  )
+  inst->outDir=makehbl('outDir list(inst->outDirType inst->outDirPath) ?a left)
+);defmethod makeRunDir
+
+procedure(cadOutDirUsableP(dir)
+  ; A project output directory may not exist yet; the flows create the whole
+  ; chain when they run.  Accept a path whose nearest existing ancestor is a
+  ; writable directory.  An existing entry must be a writable directory, and a
+  ; regular file never names an output directory.
+  let((current parent tail)
+    current=SICO_absolutePath(dir)
+    while(and(current !isDir(current) current!="/")
+      tail=if(strlen(current)>1 then substring(current strlen(current)) else "")
+      when(tail=="/"
+        current=substring(current 1 sub1(strlen(current))))
+      if(isFile(current) then
+        current=nil
+      else
+        parent=simplifyFilename(strcat(current "/..") t)
+        current=if(parent==current then nil else parent)))
+    and(current isDir(current) isWritable(current))
+  )
+)

@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+"""Entry point for the LEF generation flow."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+common_python = Path(__file__).resolve().parents[2] / "common/python"
+sys.path.insert(0, str(common_python))
+
+from lefpy.cli import main
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
