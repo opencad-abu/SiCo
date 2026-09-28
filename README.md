@@ -38,7 +38,7 @@ SiCo的最终目标是多平台定制电路设计AI助手，能够协助电路/�
 [tools/ai/runtime/README.md](tools/ai/runtime/README.md)。Silicon Copilot 的部分能力
 依赖尚未公开的 AI 组件（`cadai`、`aiassistant`、`aivw`）；手册所述的二进制运行包
 同样不在本仓库内。
-
+后续文档整理好后会陆续开放开发计划
 ## 作者
 
 SiCo 的作者（按顺序）：GPT、DeepSeek、OpenCAD。
