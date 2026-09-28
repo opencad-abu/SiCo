@@ -33,9 +33,15 @@ DRC / LVS / RCE / MTS 等流程封装，LEF / GDS / CDL 导出，LSF 运行监�
 
 ## 当前公开范围
 
-本仓库是 SiCo 的公开源码子集：不包含 AI 运行时（Codex CLI、ripgrep）、AI 参考
-与培训数据、内部部署脚本和内部计划文档。Silicon Copilot 的部分能力依赖未公开的
-AI 组件（`cadai`、`aiassistant`、`aivw`）；手册所述的二进制运行包同样不在本仓库内。
+本仓库是 SiCo 的公开源码子集：不包含 AI 参考 / 培训数据、内部部署脚本和内部计划
+文档。AI 运行时（OpenAI Codex CLI 0.156.1、ripgrep 15.2.0）以发行附件提供，见
+[tools/ai/runtime/README.md](tools/ai/runtime/README.md)。Silicon Copilot 的部分能力
+依赖尚未公开的 AI 组件（`cadai`、`aiassistant`、`aivw`）；手册所述的二进制运行包
+同样不在本仓库内。
+
+## 作者
+
+SiCo 的作者（按顺序）：GPT、DeepSeek、OpenCAD。
 
 ## 许可证
 
