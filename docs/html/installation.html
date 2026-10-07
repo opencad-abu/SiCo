@@ -48,7 +48,7 @@
 <tr><td>Linux x86_64</td><td>全部功能</td><td>使用经站点确认的平台组合。当前运行包已有 EL7 / EL8 及当前 EL9 主机验收记录，具体资格以所选包为准。</td></tr>
 <tr><td>Cadence Virtuoso / OpenAccess</td><td>OA 输入、菜单、MTS、文本 view</td><td>站点提供工具和许可证；context 必须匹配发行验证的 Cadence 版本，当前验证基于 IC23.1。</td></tr>
 <tr><td>Python / Qt</td><td>SiCo 与图形工具</td><td>二进制安装使用 <code>runtime/python/</code>；源码测试使用配置好依赖的站点 Python。当前 Assistant 要求 Python 3.9.13。</td></tr>
-<tr><td>X11 与系统图形库</td><td>GUI</td><td>有效的 <code>DISPLAY</code> 与 X11 授权。LSF 节点中文输入还需 IBus/libpinyin、D-Bus 和 Qt IBus plugin。</td></tr>
+<tr><td>X11 与系统图形库</td><td>GUI</td><td>有效的 <code>DISPLAY</code> 与 X11 授权。中文输入所需的 IBus/libpinyin、D-Bus、Qt 插件及安装命令见<a href="#pinyin">拼音输入法</a>。</td></tr>
 <tr><td>Calibre / Quantus / StarRC / Abstract</td><td>对应 CAD flow</td><td>按使用范围配置 PATH、许可证和 PDK 规则；SiCo 安装不代替这些 EDA 工具。</td></tr>
 <tr><td>LSF / Environment Modules</td><td>集群运行 / MTS 项目选择</td><td>LSF 按需启用；MTS 项目选择要求可用的 <code>modulecmd</code> 与明确的 modulefiles 目录。</td></tr>
 </tbody></table></div>
@@ -92,6 +92,62 @@ unsetenv SICO_AI_RELEASE_ROOT
 unsetenv SICO_AI_CONTEXT
 unsetenv SICO_AI_QT_PLUGIN_PATH</code></pre></div></details>
 <div class="notice">Python/Qt 动态库通过 <code>SICO_SYSTEM_LD_LIBRARY_PATH</code> 传给 SiCo 子进程。不要把整套 Python/Qt 库直接前置到 Virtuoso 的 <code>LD_LIBRARY_PATH</code>。上面加入全局路径的仅是安装的 <code>lib/</code> 兼容库目录。</div>
+<h2 id="pinyin">拼音输入法：运行要求</h2>
+<p>SiCo 主界面、快捷输入框与 AI 终端使用同一套输入法接入。本地桌面启动时沿用已有的 IBus / Fcitx / XIM 配置及切换快捷键；通过 LSF 启动 GUI 时，SiCo 自动创建独立的 IBus 会话并选中 <code>libpinyin</code>，在输入框中键入拼音、按空格选择候选字即可。</p>
+<div class="notice"><strong>依赖安装在实际运行 GUI 的主机上。</strong> 使用 LSF 时，管理员应为队列中每个可能执行 GUI 的节点安装依赖；X11 转发到本地显示也不改变这一要求。仅承担模型 HTTP 请求的节点无需为此安装输入法组件。</div>
+<div class="table-wrap"><table><thead><tr><th>组件</th><th>作用与要求</th></tr></thead><tbody>
+<tr><td>IBus / libpinyin</td><td><code>ibus</code> 提供输入法总线及 <code>ibus-daemon</code>；<code>ibus-libpinyin</code> 提供拼音引擎，<code>libpinyin</code> 与 <code>libpinyin-data</code> 提供运行库和词库。</td></tr>
+<tr><td>D-Bus / dconf / GLib</td><td>需能执行 <code>dbus-daemon</code>、<code>dbus-run-session</code> 和 <code>gsettings</code>，并具备 dconf 后端与 IBus 的 GSettings schema，用于建立独立输入会话。</td></tr>
+<tr><td>匹配的 Qt IBus 插件</td><td>所选 Python/Qt 必须包含 <code>platforminputcontexts/libibusplatforminputcontextplugin.so</code>。完整二进制运行包已自带该插件；系统输入法引擎仍需在主机安装。</td></tr>
+<tr><td>X11、UTF-8 与中文字体</td><td><code>DISPLAY</code> 和 X11 授权有效，图形动态库可加载，并使用已安装的 UTF-8 locale。中文字体用于显示候选词及输入结果，系统界面语言可以保持英文。</td></tr>
+</tbody></table></div>
+<h3 id="pinyin-packages">安装系统软件包与 lib</h3>
+<p>以下命令由管理员在执行节点运行，包含输入法、常用 X11/Qt 系统库、中文字体和英文 UTF-8 locale。按操作系统版本选择一组；软件源使用站点批准的对应版本仓库，已有软件包由包管理器处理。</p>
+<div class="code-block"><div class="code-label">Bash · EL8 / EL9</div><pre><code>sudo dnf install -y \
+  ibus ibus-libpinyin libpinyin libpinyin-data \
+  dbus-daemon dbus-x11 dbus-libs dconf glib2 \
+  libX11 libxcb libxkbcommon libxkbcommon-x11 \
+  xcb-util-image xcb-util-keysyms xcb-util-renderutil xcb-util-wm \
+  mesa-libGL fontconfig xorg-x11-xauth \
+  google-noto-sans-cjk-ttc-fonts glibc-langpack-en</code></pre></div>
+<div class="code-block"><div class="code-label">Bash · EL7</div><pre><code>sudo yum install -y \
+  ibus ibus-libpinyin libpinyin libpinyin-data \
+  dbus dbus-x11 dbus-libs dconf glib2 \
+  libX11 libxcb libxkbcommon libxkbcommon-x11 \
+  xcb-util-image xcb-util-keysyms xcb-util-renderutil xcb-util-wm \
+  mesa-libGL fontconfig xorg-x11-xauth \
+  wqy-zenhei-fonts glibc-common</code></pre></div>
+<p>EL8/EL9 将 D-Bus 守护进程单独放在 <code>dbus-daemon</code> 包中；EL7 由 <code>dbus</code> 包提供。若节点采用其他中文字体，可使用站点已确认覆盖中文字形的字体包。</p>
+<p>若启动时提示缺少 <code>libxcb-cursor.so.0</code>，且所选安装的 <code>lib/</code> 未提供兼容库，EL8/EL9 执行 <code>sudo dnf install -y xcb-util-cursor</code>，EL7 执行 <code>sudo yum install -y xcb-util-cursor</code>。该包在部分版本需要补充仓库，由管理员启用站点批准的软件源；不要从其他操作系统版本复制动态库。</p>
+<p>源码测试安装还需站点 Python 自身具备匹配的 Qt 插件。系统包 <code>qt5-qtbase-gui</code> 提供的是系统 Qt 插件，不能用于补齐另一套 Python/Qt；缺失包内插件时，应修复对应的 SiCo 或站点 Python 安装。</p>
+<h3 id="pinyin-check">安装后检查与使用</h3>
+<p>在实际执行节点、与 SiCo 相同的用户环境中检查。下面五个命令都应能找到；IBus schema 应有匹配输出，字符集应为 UTF-8，字体查询应列出可显示中文的字体。</p>
+<div class="code-block"><div class="code-label">Bash · 系统输入法依赖检查</div><pre><code>command -v ibus ibus-daemon dbus-daemon dbus-run-session gsettings
+rpm -q ibus ibus-libpinyin libpinyin libpinyin-data dconf
+gsettings list-schemas | grep -Fx org.freedesktop.ibus.general
+locale charmap
+fc-list :lang=zh family | head</code></pre></div>
+<p>若字符集不是 UTF-8，用 <code>locale -a</code> 查看已安装的 locale，并在站点启动环境中选择对应的 UTF-8 配置；同时检查 <code>LANG</code>、<code>LC_CTYPE</code> 和优先级更高的 <code>LC_ALL</code>。</p>
+<details><summary>进一步检查 Qt 插件与缺失动态库</summary>
+<p>先加载上面的 SiCo shell 环境，再用所选 Python 查询真实插件目录。两个插件都应存在，<code>ldd</code> 输出中不应有 <code>not found</code>，Qt 库应来自匹配的运行环境。</p>
+<div class="code-block"><div class="code-label">Bash · 使用当前 SiCo 的 Python/Qt 检查</div><pre><code>sico_qt_plugins=$(
+  LD_LIBRARY_PATH="$SICO_SYSTEM_LD_LIBRARY_PATH" \
+    "$SICO_PYTHON" -I -B -c 'from PyQt5.QtCore import QLibraryInfo; print(QLibraryInfo.location(QLibraryInfo.PluginsPath))'
+)
+ls "$sico_qt_plugins/platforminputcontexts/libibusplatforminputcontextplugin.so"
+LD_LIBRARY_PATH="$SICO_SYSTEM_LD_LIBRARY_PATH" \
+  ldd "$sico_qt_plugins/platforminputcontexts/libibusplatforminputcontextplugin.so"
+LD_LIBRARY_PATH="$SICO_SYSTEM_LD_LIBRARY_PATH" \
+  ldd "$sico_qt_plugins/platforms/libqxcb.so"</code></pre></div>
+<p>根据缺失的库补装对应系统包；不要把 EDA 自带的 Qt 目录混入 SiCo 的插件或动态库路径。仅在登录节点完成检查，不能证明队列执行节点也已就绪。</p>
+</details>
+<p>安装后重新启动 SiCo，在实际使用的输入框中输入 <code>zhongwen</code>、按空格选出“中文”，再输入 <code>shuru</code>、选出“输入”，确认最终得到“中文输入”。本地桌面需要先用原有快捷键切到中文；LSF 模式由 SiCo 自动选择拼音引擎。</p>
+<div class="table-wrap"><table><thead><tr><th>现象</th><th>处理方式</th></tr></thead><tbody>
+<tr><td>提示 <code>pinyin input is unavailable on this LSF host</code></td><td>查看同一行括号内的原因，检查执行节点上的命令、引擎、dconf 和 Qt 插件。此时 GUI 可能继续运行，但拼音尚未就绪；修复后重新启动。</td></tr>
+<tr><td>提示找不到 Qt 插件或动态库</td><td>按上面的插件检查定位缺项，核对所选 Python、Qt 和系统库是否配套。</td></tr>
+<tr><td>候选词或中文显示为方框</td><td>检查该节点的中文字体与 UTF-8 locale，并确认 <code>fc-list :lang=zh</code> 有有效输出。</td></tr>
+</tbody></table></div>
+<p>LSF 输入会话由 SiCo 管理，无需手动启动全局 <code>ibus-daemon</code>、切换全局引擎或修改桌面 GSettings。不要复制提交主机的 IBus/D-Bus 地址，也不要把 <code>XDG_RUNTIME_DIR</code> 指向 HOME；这些设置由独立会话管理。</p>
 <h2 id="project">进入个人工程并检查安装</h2>
 <div class="code-block"><div class="code-label">Bash · 首次检查</div><pre><code>cd /path/to/my/project
 test -f "$SICO_HOME/etc/config/sico-install.json"
@@ -113,6 +169,38 @@ export SICO_MODEL="your-model-name"
 # SICO_API_KEY 由站点的私有凭据配置注入。
 sico</code></pre></div>
 <p>模型地址与模型名配套设置。现行 Codex 后端要求上游提供 Responses 接口；仅提供 Chat Completions 的地址不能直接用于此配置。旧 <code>SICO_API_URL</code> 暂可读取，但与新地址冲突会报错。模型可选值由站点服务提供，SiCo 不设固定模型默认值。</p>
+<h2 id="model-deployment">模型部署建议：专用队列与内网转发节点</h2>
+<p>企业部署建议将 SiCo 工作会话统一提交到指定的 LSF 队列，并在一台专用的本地内网服务器上转发 LLM 请求。员工同时具备<strong>专用队列的提交权限</strong>与<strong>模型转发节点的访问权限</strong>，才可使用受控的模型服务。队列示例名为 <code>sico</code>，转发地址示例为 <code>https://llm-gateway.example.internal:8443/v1</code>。</p>
+<div class="pipeline" role="img" aria-label="授权员工通过 LSF 专用队列启动 SiCo；队列执行节点经允许的 HTTPS 端口访问内网模型转发节点，再由该节点访问上游 LLM。"><span><b>01</b>授权员工<br>队列成员资格</span><span><b>02</b>SiCo 专用队列<br>受控执行节点</span><span><b>03</b>内网 LLM 转发<br>HTTPS 指定端口</span><span><b>04</b>上游模型服务<br>由转发节点接入</span></div>
+<h3 id="model-access">两层权限如何配合</h3>
+<div class="table-wrap"><table><thead><tr><th>控制位置</th><th>建议设置</th><th>生效范围</th></tr></thead><tbody>
+<tr><td>LSF 队列</td><td>建立专用队列，提交权限仅授予获准使用 SiCo 的员工或用户组；将该队列限定到指定执行主机组。</td><td>决定谁可以提交，以及 SiCo 在哪些节点运行。由 LSF 服务端维护队列成员和主机范围。</td></tr>
+<tr><td>转发节点的网络入口</td><td>防火墙仅允许上述执行节点或受控出口地址访问模型 HTTPS 端口；办公终端、普通登录节点和其他计算节点不直接访问该端口。</td><td>限定模型调用的网络来源与目标端口；返回流量通过已建立连接放行。</td></tr>
+<tr><td>转发节点的调用权限</td><td>在转发服务上校验员工或用户组的调用凭据，并维护允许使用的模型。上游模型密钥由转发节点保管。</td><td>决定请求身份是否获准调用。即使请求来自允许的节点，未授权或已撤销的凭据也应被拒绝。</td></tr>
+</tbody></table></div>
+<p><strong>有效使用资格取两侧权限的交集：</strong>获准提交队列，并且获准访问模型 URL。入职、岗位调整或离职时，分别更新队列成员和转发服务授权；需要立即撤销权限时，还应处理该用户已运行的作业、服务和有效凭据。</p>
+<div class="notice"><strong>网络白名单按节点或出口地址生效。</strong> 防火墙不能仅凭源 IP 判断请求属于哪个 LSF 队列。建议使用专用执行主机组或按作业隔离的网络出口，并限制非授权队列和直接登录访问这些节点；共享同一出口时，还需转发服务的身份校验，才能落实到员工权限。</div>
+<h3 id="model-network">转发节点的网络边界</h3>
+<div class="table-wrap"><table><thead><tr><th>通信路径</th><th>端口与访问建议</th></tr></thead><tbody>
+<tr><td>专用队列执行节点 → 内网 LLM 转发节点</td><td>仅开放约定的模型 HTTPS 端口，例如 TCP 8443。该端口使用 TLS，证书由执行节点信任。</td></tr>
+<tr><td>其他用户节点 → 内网 LLM 转发节点</td><td>默认拒绝模型端口；转发节点的管理端口仅向管理员的管理网络开放。</td></tr>
+<tr><td>内网 LLM 转发节点 → 上游模型服务</td><td>仅允许所需模型地址和端口；由转发节点统一处理上游认证与请求转发。</td></tr>
+<tr><td>SiCo 执行节点 → 上游模型服务</td><td>限制直接访问，将受控模型调用统一经转发节点。仅修改 SiCo 的 URL 不会自动形成网络限制。</td></tr>
+</tbody></table></div>
+<p>这里的“本地机器”指站点内网的专用服务器，配置地址应能从队列执行节点解析和访问。<code>8443</code> 是端口示例，应与站点实际监听端口和防火墙规则一致。转发服务需要保留 Responses 接口及流式响应能力。</p>
+<h3 id="model-queue-launch">站点配置与队列启动示例</h3>
+<p>管理员先完成队列、执行主机组、转发服务和网络规则，再将下面的模型配置放入受管理的项目环境。凭据通过站点私有配置注入；启用转发认证时，<code>SICO_API_KEY</code> 使用发给该员工或组的转发服务凭据，上游供应商密钥留在转发节点。</p>
+<div class="code-block"><div class="code-label">Bash · 已加载项目与 SiCo 安装环境，队列和地址均需替换</div><pre><code>export SICO_BACKEND="codex"
+export SICO_PROVIDER="responses"
+export SICO_API_BASE_URL="https://llm-gateway.example.internal:8443/v1"
+export SICO_MODEL="your-model-name"
+# SICO_API_KEY 由站点私有配置提供，不写入公共 setup 脚本。
+cd /path/to/my/project
+bsub -I -XF -q sico "$SICO_HOME/bin/sico"</code></pre></div>
+<p>此命令将 SiCo 及其新启动的工程服务放到队列分配的节点，适用于已配置 X11 转发的站点。安装、项目和模型环境须在执行节点有效；使用 Virtuoso 联动时，由站点把 Virtuoso 与 SiCo 安排在同一运行节点、同一工程中。切换部署方式前，先正常停止旧工程服务，避免复用原位置的服务。</p>
+<p>若站点采用本地 GUI、仅将模型 HTTP 请求送往队列的模式，使用 <a href="lsf.html#gateway"><code>SICO_CODEX_LSF_EXE</code> / <code>SICO_CODEX_LSF_ARGS</code></a> 指定同一受控队列；这种模式约束的是模型请求的执行位置。完整工作会话按上面的站点入口提交。</p>
+<p>队列参数、modulefile 和启动脚本用于选择配置；实际限制由 LSF、操作系统、网络及转发服务执行。需要同时限制整个 SiCo 程序的使用时，还应为安装目录和启动入口设置相应的用户组访问/执行权限。SiCo 本身不会因为配置了模型 URL 就自动建立这些权限。</p>
+<p>启用前用授权和未授权测试账户核对：两侧均获授权时可以在指定队列完成模型请求；无队列资格时提交被拒绝；有队列资格但无转发授权时模型调用被拒绝；从未放行的节点访问模型端口也被拒绝。确认后再将入口交给员工使用。</p>
 <h2 id="source-test">源码测试安装</h2>
 <p>站点指定源码测试时，选择 <code>/software/sico/latest</code>，将 <code>SICO_PYTHON_ROOT</code> 改为站点 Python 3.9.13 目录，并设置 <code>SICO_AI_PYQT_ROOT="$SICO_HOME/tools/ai/terminal/pyqt"</code>。其余共享变量保持同一安装。源码测试树还需站点准备匹配的 worker context 和 Qt 终端依赖。</p>
 <p>源码树通过 <code>scripts/sicoAutoLoad.il</code> 接入；二进制安装通过 <code>sicoBoot.cxt</code> 接入。后者缺失时应修复安装，不能用另一份源码树的文件补齐。</p>
@@ -121,9 +209,9 @@ sico</code></pre></div>
 <div class="code-block"><div class="code-label">Bash · 正常停止当前工程服务</div><pre><code>sico service-stop --project-dir /path/to/my/project</code></pre></div>
 <p>若仍有活动或待核对任务，停止可能被拒绝；先处理这些任务。出现 <code>SICO_HOME conflicts</code> 时检查 <code>command -v sico</code> 与 <code>SICO_HOME</code> 是否属于同一安装；出现旧变量迁移错误时按<a href="environment.html#retired">迁移表</a>修改启动脚本。</p>
 
-<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="environment.html">环境变量速查 →</a></footer>
+<footer class="page-footer"><span>内容基线 8ef8482a · 核对 2026-09-28</span><a href="environment.html">环境变量速查 →</a></footer>
 </main>
-<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#requirements">准备运行环境</a><a href="#install-package">部署完整运行包</a><a href="#shell">配置启动 shell</a><a href="#project">进入个人工程并检查安装</a><a href="#launch">启动与模型配置</a><a href="#source-test">源码测试安装</a><a href="#upgrade">更新、切换与排错</a></aside>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#requirements">准备运行环境</a><a href="#install-package">部署完整运行包</a><a href="#shell">配置启动 shell</a><a href="#pinyin">拼音输入法要求</a><a href="#pinyin-packages">输入法与 lib 安装命令</a><a href="#pinyin-check">输入法检查与排错</a><a href="#project">进入个人工程并检查安装</a><a href="#launch">启动与模型配置</a><a href="#model-deployment">模型集中部署建议</a><a href="#model-access">两层访问权限</a><a href="#model-network">转发节点网络边界</a><a href="#model-queue-launch">专用队列启动示例</a><a href="#source-test">源码测试安装</a><a href="#upgrade">更新、切换与排错</a></aside>
 </div></div>
 </body>
 </html>

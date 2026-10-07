@@ -42,13 +42,15 @@
 <main id="main">
 <p class="eyebrow">EXECUTION / LSF</p>
 <h1>LSF · 选择合适的运行位置</h1>
-<p class="lead">CAD flow、完整 AI Assistant 和模型 HTTP worker 的远程执行各有入口。根据需要移动的工作选择配置。</p>
-<h2 id="modes">三种使用方式</h2>
+<p class="lead">SiCo 工作会话、CAD flow、完整 AI Assistant 和模型 HTTP worker 的远程执行各有入口。根据需要移动的工作选择配置。</p>
+<h2 id="modes">四种使用方式</h2>
 <div class="table-wrap"><table><thead><tr><th>需求</th><th>入口</th><th>远端执行内容</th></tr></thead><tbody>
+<tr><td>将 SiCo 工作会话限定到专用队列</td><td>站点统一提交入口；见<a href="installation.html#model-deployment">模型集中部署建议</a></td><td>SiCo 与其新启动的工程服务；由站点安排同节点的 Virtuoso 联动和图形显示。</td></tr>
 <tr><td>在计算集群跑 DRC / LVS / RCE / LEF</td><td>表单 Hardware Configuration → LSF Farm</td><td>该次 Python flow 与其 EDA 子进程。</td></tr>
 <tr><td>在远端运行整个 AI Assistant 终端会话</td><td><code>PROJ_AI_LSF_EXE</code> / <code>PROJ_AI_LSF_ARGS</code></td><td>controller、MCP、terminal 与 agent。</td></tr>
 <tr><td>只有某个队列可以访问模型服务</td><td><code>SICO_CODEX_LSF_EXE</code> / <code>SICO_CODEX_LSF_ARGS</code></td><td>访问上游 Responses API 的 HTTP worker。</td></tr>
 </tbody></table></div>
+<p>队列与模型转发节点的访问权限由站点共同管理。队列名或启动参数用于选择执行位置；员工授权、执行节点隔离、模型端口白名单及转发认证按<a href="installation.html#model-access">安装章节的两层权限方案</a>配置。</p>
 <h2 id="flow">CAD flow 提交</h2>
 <p>先加载站点 LSF 环境，确认 <code>bqueues</code>、<code>bhosts</code>、<code>lshosts</code>、<code>lsload</code>、<code>bjobs</code>、<code>bsub</code> 和 <code>bkill</code> 可用。在表单选择 <strong>LSF Farm</strong> 后，SiCo 动态查询当前用户能提交且开放的队列。Queue / Host 验证完成后才允许提交。</p>
 <p>通常选择 <strong>Auto (LSF Scheduler)</strong> 让 LSF 分配节点；显式选择 Host 会限制执行节点。CPU 申请与 GUI 设置一致，RCE 取 LVS / EXT CPU 较大值。交互队列使用 <code>bsub -Is</code>，禁止交互的队列使用 <code>-K</code> 并通过日志回显结果。</p>
@@ -73,11 +75,11 @@ export SICO_CODEX_LSF_ARGS="-Is -q ai"
 <p>此方式只把上游 HTTP 放到队列节点，工程服务、GUI 和 IC 通信仍留在原位置。每个请求提交一次交互作业，排队就绪最多等 120 秒。支持 <code>-I</code> / <code>-Is</code> 与 <code>-q/-m/-R/-n/-W/-app</code>；不能重定向控制通道或覆盖内部作业名。</p>
 <p><code>SICO_LEGACY_0114</code> 只选择工具格式，不改变网络权限，也不将 Chat Completions 代理变成 Responses 代理。设置后需重新启动工程服务。若显示 cleanup unconfirmed，应核对 LSF 作业终态，不能只凭本地 bsub 退出推断远端已停止。</p>
 <h2 id="diagnose">排查顺序</h2>
-<ol class="steps"><li>无 Queue：先在同一用户环境检查 bqueues 是否成功、是否有可提交的开放队列。</li><li>作业启动失败：检查执行节点同路径安装、许可证、共享工程与工具环境。</li><li>模型 502：检查真正发送上游 HTTP 的节点是否具备网络权限。</li><li>模型 400：核对 API 协议、模型名和工具格式；已成功排队不表示上游接受请求。</li><li>图形窗口或中文输入失败：检查 DISPLAY、XAUTHORITY、节点 UTF-8 locale 与 IBus/libpinyin 依赖。</li></ol>
+<ol class="steps"><li>无 Queue：先在同一用户环境检查 bqueues 是否成功、是否有可提交的开放队列。</li><li>作业启动失败：检查执行节点同路径安装、许可证、共享工程与工具环境。</li><li>模型 502：检查真正发送上游 HTTP 的节点是否具备网络权限。</li><li>模型 400：核对 API 协议、模型名和工具格式；已成功排队不表示上游接受请求。</li><li>图形窗口或中文输入失败：检查 DISPLAY、XAUTHORITY，并在实际执行 GUI 的节点按<a href="installation.html#pinyin">拼音输入法要求与 lib 安装命令</a>检查依赖、UTF-8 locale、中文字体和 Qt 插件。</li></ol>
 
-<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="environment-internal.html">环境接口附录 →</a></footer>
+<footer class="page-footer"><span>内容基线 8ef8482a · 核对 2026-09-28</span><a href="environment-internal.html">环境接口附录 →</a></footer>
 </main>
-<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#modes">三种使用方式</a><a href="#flow">CAD flow 提交</a><a href="#assistant">完整 AI Assistant 远程会话</a><a href="#gateway">仅模型网络请求走 LSF</a><a href="#diagnose">排查顺序</a></aside>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#modes">四种使用方式</a><a href="#flow">CAD flow 提交</a><a href="#assistant">完整 AI Assistant 远程会话</a><a href="#gateway">仅模型网络请求走 LSF</a><a href="#diagnose">排查顺序</a></aside>
 </div></div>
 </body>
 </html>
