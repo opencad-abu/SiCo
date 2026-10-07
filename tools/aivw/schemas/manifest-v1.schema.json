@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aivw.local/schemas/manifest-v1.schema.json",
+  "title": "AI Verification Workbench Split Manifest v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "run_id",
+    "request_digest",
+    "status",
+    "kind",
+    "role",
+    "run_dir",
+    "details",
+    "artifacts",
+    "binding"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "request_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "status": {"type": "string", "minLength": 1},
+    "kind": {"enum": ["aivw_control_manifest", "aivw_payload_manifest"]},
+    "role": {"enum": ["control", "payload"]},
+    "run_dir": {"type": "string", "minLength": 1},
+    "details": {"type": "object"},
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "size"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "size": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "artifact_locators": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["path", "kind", "exists", "producer"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["file", "directory"]},
+          "exists": {"const": true},
+          "producer": {"type": "string", "minLength": 1},
+          "sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+          "size": {"type": ["integer", "null"], "minimum": 0}
+        }
+      }
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "algorithm", "normalization", "self_core_sha256", "peer"],
+      "properties": {
+        "version": {"const": 1},
+        "algorithm": {"const": "sha256"},
+        "normalization": {"const": "canonical-json-without-binding"},
+        "self_core_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "peer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "root_path",
+            "root_uri",
+            "manifest_path",
+            "manifest_uri",
+            "manifest_core_sha256"
+          ],
+          "properties": {
+            "role": {"enum": ["control", "payload"]},
+            "root_path": {"type": "string", "minLength": 1},
+            "root_uri": {"type": "string", "pattern": "^file://"},
+            "manifest_path": {"type": "string", "minLength": 1},
+            "manifest_uri": {"type": "string", "pattern": "^file://"},
+            "manifest_core_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+          }
+        }
+      }
+    }
+  }
+}

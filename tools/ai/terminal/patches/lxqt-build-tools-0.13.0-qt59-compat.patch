@@ -1,0 +1,6 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -12,1 +12,1 @@
+-set(LXQT_MIN_LINGUIST_VERSION "5.15.0")
++set(LXQT_MIN_LINGUIST_VERSION "5.9.0")

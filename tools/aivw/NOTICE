@@ -1,0 +1,5 @@
+AI Verification Workbench
+
+This distribution includes an AIVW headless agent implementation informed by
+the OpenAI Codex public repository. The reference repository is used only at
+build time and is not included in the production runtime bundle.

@@ -1,0 +1,167 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -35 +35 @@
+-set(QT_MINIMUM_VERSION "5.15.0")
++set(QT_MINIMUM_VERSION "5.9.0")
+diff --git a/lib/ColorScheme.cpp b/lib/ColorScheme.cpp
+--- a/lib/ColorScheme.cpp
++++ b/lib/ColorScheme.cpp
+@@ -34 +34,5 @@
+-#include <QRandomGenerator>
++#include <QtGlobal>
++
++#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
++#include <QRandomGenerator>
++#endif
+@@ -191,3 +195,11 @@ ColorEntry ColorScheme::colorEntry(int index) const
+-        int hueDifference = range.hue ? QRandomGenerator::global()->bounded(range.hue) - range.hue/2 : 0;
+-        int saturationDifference = range.saturation ? QRandomGenerator::global()->bounded(range.saturation) - range.saturation/2 : 0;
+-        int valueDifference = range.value ? QRandomGenerator::global()->bounded(range.value) - range.value/2 : 0;
++#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
++        int hueDifference = range.hue ? QRandomGenerator::global()->bounded(range.hue) - range.hue/2 : 0;
++        int saturationDifference = range.saturation ? QRandomGenerator::global()->bounded(range.saturation) - range.saturation/2 : 0;
++        int valueDifference = range.value ? QRandomGenerator::global()->bounded(range.value) - range.value/2 : 0;
++#else
++        // Qt 5.9 has no QRandomGenerator. Color randomization is cosmetic,
++        // so qrand() preserves the existing bounded behavior on RHEL 7.
++        int hueDifference = range.hue ? qrand() % range.hue - range.hue/2 : 0;
++        int saturationDifference = range.saturation ? qrand() % range.saturation - range.saturation/2 : 0;
++        int valueDifference = range.value ? qrand() % range.value - range.value/2 : 0;
++#endif
+diff --git a/lib/TerminalDisplay.cpp b/lib/TerminalDisplay.cpp
+--- a/lib/TerminalDisplay.cpp
++++ b/lib/TerminalDisplay.cpp
+@@ -69 +69,12 @@
+ using namespace Konsole;
++
++namespace {
++int fontAdvance(const QFontMetrics& metrics, const QString& text)
++{
++#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
++    return metrics.horizontalAdvance(text);
++#else
++    return metrics.width(text);
++#endif
++}
++} // namespace
+@@ -229 +240 @@ void TerminalDisplay::fontChange(const QFont&)
+-  _fontWidth = qRound(static_cast<double>(fm.horizontalAdvance(QLatin1String(REPCHAR)))/static_cast<double>(qstrlen(REPCHAR)));
++  _fontWidth = qRound(static_cast<double>(fontAdvance(fm, QLatin1String(REPCHAR)))/static_cast<double>(qstrlen(REPCHAR)));
+@@ -233 +244 @@ void TerminalDisplay::fontChange(const QFont&)
+-  int fw = fm.horizontalAdvance(QLatin1Char(REPCHAR[0]));
++  int fw = fontAdvance(fm, QString(QLatin1Char(REPCHAR[0])));
+@@ -236 +247 @@ void TerminalDisplay::fontChange(const QFont&)
+-    if (fw != fm.horizontalAdvance(QLatin1Char(REPCHAR[i])))
++    if (fw != fontAdvance(fm, QString(QLatin1Char(REPCHAR[i]))))
+@@ -1277 +1288 @@ void TerminalDisplay::showResizeNotification()
+-        _resizeWidget->setMinimumWidth(_resizeWidget->fontMetrics().horizontalAdvance(label));
++        _resizeWidget->setMinimumWidth(fontAdvance(_resizeWidget->fontMetrics(), label));
+@@ -1622 +1633 @@ int TerminalDisplay::textWidth(const int startColumn, const int length, const int line) const
+-    result += fm.horizontalAdvance(_image[loc(startColumn + column, line)].character);
++    result += fontAdvance(fm, QString(_image[loc(startColumn + column, line)].character));
+diff --git a/lib/kptyprocess.cpp b/lib/kptyprocess.cpp
+--- a/lib/kptyprocess.cpp
++++ b/lib/kptyprocess.cpp
+@@ -51 +51 @@ KPtyProcess::KPtyProcess(int ptyMasterFd, QObject *parent) :
+-    d->pty = std::make_unique<KPtyDevice>(this);
++    d->pty.reset(new KPtyDevice(this));
+diff --git a/lib/kprocess.h b/lib/kprocess.h
+--- a/lib/kprocess.h
++++ b/lib/kprocess.h
+@@ -33,5 +33,6 @@
+ //#include <kdecore_export.h>
+
+ #include <QProcess>
++#include <QScopedPointer>
+
+ #include <memory>
+@@ -323,7 +324,7 @@ protected:
+     /**
+      * @internal
+      */
+-    std::unique_ptr<KProcessPrivate> const d_ptr;
++    QScopedPointer<KProcessPrivate> d_ptr;
+
+ private:
+     // hide those
+diff --git a/lib/kpty.h b/lib/kpty.h
+--- a/lib/kpty.h
++++ b/lib/kpty.h
+@@ -24,5 +24,6 @@
+ #define kpty_h
+
+ #include <QObject>
++#include <QScopedPointer>
+
+ #include <memory>
+@@ -189,7 +190,7 @@ protected:
+     /**
+      * @internal
+      */
+-    std::unique_ptr<KPtyPrivate> const d_ptr;
++    QScopedPointer<KPtyPrivate> d_ptr;
+ };
+
+ #endif
+diff --git a/lib/kptyprocess.h b/lib/kptyprocess.h
+--- a/lib/kptyprocess.h
++++ b/lib/kptyprocess.h
+@@ -34,6 +34,7 @@
+ #include "kptydevice.h"
+
+ #include <csignal>
++#include <QScopedPointer>
+ #include <memory>
+
+ class KPtyDevice;
+@@ -148,7 +149,7 @@ protected:
+     void setupChildProcess() override;
+
+ private:
+-    std::unique_ptr<KPtyProcessPrivate> const d_ptr;
++    QScopedPointer<KPtyProcessPrivate> d_ptr;
+ };
+
+
+diff --git a/lib/kpty.cpp b/lib/kpty.cpp
+--- a/lib/kpty.cpp
++++ b/lib/kpty.cpp
+@@ -337,7 +337,7 @@ gotpty:
+         qWarning()
+         << "chownpty failed for device " << ptyName << "::" << d->ttyName
+         << "\nThis means the communication can be eavesdropped."
+-        << Qt::endl;
++        << endl;
+     }
+
+ #if defined (HAVE__GETPTY) || defined (HAVE_GRANTPT)
+diff --git a/lib/qtermwidget.cpp b/lib/qtermwidget.cpp
+--- a/lib/qtermwidget.cpp
++++ b/lib/qtermwidget.cpp
+@@ -275 +275,5 @@ void QTermWidget::init(int startnow)
+-    QStringList dirs = d.split(QLatin1Char(':'), Qt::SkipEmptyParts);
++#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
++    QStringList dirs = d.split(QLatin1Char(':'), Qt::SkipEmptyParts);
++#else
++    QStringList dirs = d.split(QLatin1Char(':'), QString::SkipEmptyParts);
++#endif
+diff --git a/lib/TerminalDisplay.cpp b/lib/TerminalDisplay.cpp
+--- a/lib/TerminalDisplay.cpp
++++ b/lib/TerminalDisplay.cpp
+@@ -159 +159 @@ void TerminalDisplay::setScreenWindow(ScreenWindow* window)
+-        connect( _screenWindow , &ScreenWindow::scrollToEnd , this , &TerminalDisplay::scrollToEnd );
++        connect(_screenWindow.data(), &ScreenWindow::scrollToEnd, this, &TerminalDisplay::scrollToEnd);
+@@ -2601 +2601,5 @@ void TerminalDisplay::wheelEvent( QWheelEvent* ev )
+-    getCharacterPosition( ev->position() , charLine , charColumn );
++#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
++    getCharacterPosition(ev->position(), charLine, charColumn);
++#else
++    getCharacterPosition(ev->pos(), charLine, charColumn);
++#endif
+@@ -3284,2 +3284,3 @@ void TerminalDisplay::outputSuspended(bool suspended)
+-            _outputSuspendedLabel->setTextInteractionFlags(Qt::LinksAccessibleByMouse |
+-                                                          Qt::LinksAccessibleByKeyboard);
++            Qt::TextInteractionFlags interactionFlags(Qt::LinksAccessibleByMouse);
++            interactionFlags |= Qt::LinksAccessibleByKeyboard;
++            _outputSuspendedLabel->setTextInteractionFlags(interactionFlags);

@@ -1,0 +1,107 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -203,8 +203,5 @@ target_compile_definitions(${QTERMWIDGET_LIBRARY_NAME}
+ target_compile_definitions(${QTERMWIDGET_LIBRARY_NAME}
+     PRIVATE
+-        "KB_LAYOUT_DIR=\"${KB_LAYOUT_DIR}\""
+-        "COLORSCHEMES_DIR=\"${COLORSCHEMES_DIR}\""
+-        "TRANSLATIONS_DIR=\"${TRANSLATIONS_DIR}\""
+         "HAVE_POSIX_OPENPT"
+         "HAVE_SYS_TIME_H"
+ )
+diff --git a/lib/qtermwidget.cpp b/lib/qtermwidget.cpp
+--- a/lib/qtermwidget.cpp
++++ b/lib/qtermwidget.cpp
+@@ -31,6 +31,7 @@
+ #include "ColorScheme.h"
+ #include "SearchBar.h"
+ #include "qtermwidget.h"
++#include "tools.h"
+ 
+ #ifdef Q_OS_MACOS
+ // Qt does not support fontconfig on macOS, so we need to use a "real" font name.
+@@ -277,7 +278,11 @@ void QTermWidget::init(int startnow)
+         dirs.append(QString::fromLatin1("/usr/local/share"));
+         dirs.append(QString::fromLatin1("/usr/share"));
+     }
+-    dirs.append(QFile::decodeName(TRANSLATIONS_DIR));
++    const QString translationDir =
++        get_qtermwidget_data_dir(QLatin1String("translations"));
++    if (!translationDir.isEmpty()) {
++        dirs.prepend(translationDir);
++    }
+ 
+     m_translator = new QTranslator(this);
+ 
+diff --git a/lib/tools.cpp b/lib/tools.cpp
+--- a/lib/tools.cpp
++++ b/lib/tools.cpp
+@@ -1,12 +1,26 @@
+ #include "tools.h"
+ 
+ #include <QCoreApplication>
+ #include <QDir>
++#include <QFile>
+ #include <QtDebug>
+ 
+ 
+ Q_LOGGING_CATEGORY(qtermwidgetLogger, "qtermwidget", QtWarningMsg)
+ 
++QString get_qtermwidget_data_dir(const QString& subdirectory)
++{
++    const QByteArray configured = qgetenv("SICO_AI_QTERMWIDGET_DATA_PATH");
++    if (configured.isEmpty())
++        return QString();
++
++    const QDir root(QFile::decodeName(configured));
++    const QDir directory(root.absoluteFilePath(subdirectory));
++    if (!directory.exists())
++        return QString();
++    return directory.absolutePath();
++}
++
+ /*! Helper function to get possible location of layout files.
+ By default the KB_LAYOUT_DIR is used (linux/BSD/macports).
+ But in some cases (apple bundle) there can be more locations).
+@@ -16,12 +30,10 @@ QString get_kb_layout_dir()
+ //    qDebug() << __FILE__ << __FUNCTION__;
+ 
+     QString rval = QString();
+-    QString k(QLatin1String(KB_LAYOUT_DIR));
++    QString k = get_qtermwidget_data_dir(QLatin1String("kb-layouts"));
+     QDir d(k);
+ 
+-    //qDebug() << "default KB_LAYOUT_DIR: " << k;
+-
+-    if (d.exists())
++    if (!k.isEmpty() && d.exists())
+     {
+         rval = k.append(QLatin1Char('/'));
+         return rval;
+@@ -62,12 +74,10 @@ const QStringList get_color_schemes_dirs()
+ //    qDebug() << __FILE__ << __FUNCTION__;
+ 
+     QStringList rval;
+-    QString k(QLatin1String(COLORSCHEMES_DIR));
++    QString k = get_qtermwidget_data_dir(QLatin1String("color-schemes"));
+     QDir d(k);
+ 
+-//    qDebug() << "default COLORSCHEMES_DIR: " << k;
+-
+-    if (d.exists())
++    if (!k.isEmpty() && d.exists())
+         rval << k.append(QLatin1Char('/'));
+ 
+ #ifdef Q_OS_MAC
+diff --git a/lib/tools.h b/lib/tools.h
+--- a/lib/tools.h
++++ b/lib/tools.h
+@@ -5,6 +5,7 @@
+ #include <QStringList>
+ #include <QLoggingCategory>
+ 
++QString get_qtermwidget_data_dir(const QString& subdirectory);
+ QString get_kb_layout_dir();
+ void add_custom_color_scheme_dir(const QString& custom_dir);
+ const QStringList get_color_schemes_dirs();

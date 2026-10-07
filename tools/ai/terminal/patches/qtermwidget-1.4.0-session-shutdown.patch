@@ -1,0 +1,163 @@
+diff --git a/lib/Pty.cpp b/lib/Pty.cpp
+--- a/lib/Pty.cpp
++++ b/lib/Pty.cpp
+@@ -299,7 +299,11 @@ void Pty::sendData(const char* data, int length)
+ 
+ void Pty::dataReceived()
+ {
+-     QByteArray data = pty()->readAll();
++    QByteArray data = pty()->readAll();
++    if (data.isEmpty())
++    {
++        return;
++    }
+     emit receivedData(data.constData(),data.count());
+ }
+ 
+@@ -316,16 +320,24 @@ void Pty::lockPty(bool lock)
+ 
+ int Pty::foregroundProcessGroup() const
+ {
+-    int pid = tcgetpgrp(pty()->masterFd());
+-
+-    if ( pid != -1 )
++    const int masterFd = pty()->masterFd();
++    if (masterFd >= 0)
+     {
+-        return pid;
++        const int pid = tcgetpgrp(masterFd);
++        if (pid != -1)
++        {
++            return pid;
++        }
+     }
+ 
+     return 0;
+ }
+ 
++void Pty::closePty()
++{
++    pty()->close();
++}
++
+ void Pty::setupChildProcess()
+ {
+     KPtyProcess::setupChildProcess();
+diff --git a/lib/Pty.h b/lib/Pty.h
+--- a/lib/Pty.h
++++ b/lib/Pty.h
+@@ -150,6 +150,11 @@ Q_OBJECT
+      */
+     int foregroundProcessGroup() const;
+ 
++    /**
++     * Close the underlying pty master/slave pair.
++     */
++    void closePty();
++
+   public slots:
+ 
+     /**
+diff --git a/lib/Session.cpp b/lib/Session.cpp
+--- a/lib/Session.cpp
++++ b/lib/Session.cpp
+@@ -140,7 +140,7 @@ bool Session::hasDarkBackground() const
+ }
+ bool Session::isRunning() const
+ {
+-    return _shellProcess->state() == QProcess::Running;
++    return _shellProcess != nullptr && _shellProcess->state() == QProcess::Running;
+ }
+ 
+ void Session::setCodec(QTextCodec * codec) const
+@@ -539,23 +539,43 @@ void Session::refresh()
+ 
+ bool Session::sendSignal(int signal)
+ {
+-    int result = ::kill(static_cast<pid_t>(_shellProcess->processId()),signal);
++    if (processId() <= 0)
++    {
++        return false;
++    }
+ 
+-     if ( result == 0 )
+-     {
+-         _shellProcess->waitForFinished();
+-         return true;
+-     }
+-     else
+-         return false;
++    if (::kill(static_cast<pid_t>(_shellProcess->processId()), signal) == 0)
++    {
++        return _shellProcess->waitForFinished(1000);
++    }
++    return false;
+ }
+ 
+ void Session::close()
+ {
+     _autoClose = true;
+     _wantedClose = true;
+-    if (!_shellProcess->isRunning() || !sendSignal(SIGHUP)) {
+-        // Forced close.
++
++    if (isRunning())
++    {
++        // Match other terminal emulators: try SIGHUP, close the PTY, then
++        // force the child down rather than leaving cleanup to its destructor.
++        if (sendSignal(SIGHUP))
++        {
++            return;
++        }
++
++        qWarning() << "Process" << processId() << "did not die with SIGHUP";
++        _shellProcess->closePty();
++        if (!_shellProcess->waitForFinished(1000) && !sendSignal(SIGKILL))
++        {
++            qWarning() << "Process" << processId() << "did not die with SIGKILL";
++            QTimer::singleShot(1, this, SIGNAL(finished()));
++        }
++    }
++    else
++    {
++        // The process has already finished; only the session needs closing.
+         QTimer::singleShot(1, this, SIGNAL(finished()));
+     }
+ }
+@@ -572,6 +592,7 @@ void Session::sendKeyEvent(QKeyEvent* e) const
+ 
+ Session::~Session()
+ {
++    close();
+     delete _emulation;
+     delete _shellProcess;
+ //  delete _zmodemProc;
+diff --git a/lib/kptyprocess.cpp b/lib/kptyprocess.cpp
+--- a/lib/kptyprocess.cpp
++++ b/lib/kptyprocess.cpp
+@@ -67,22 +67,10 @@ KPtyProcess::~KPtyProcess()
+ {
+     Q_D(KPtyProcess);
+ 
+-    if (state() != QProcess::NotRunning)
++    if (state() != QProcess::NotRunning && d->addUtmp)
+     {
+-        if (d->addUtmp)
+-        {
+-            d->pty->logout();
+-            disconnect(this, &QProcess::stateChanged, this, nullptr);
+-        }
+-    }
+-    waitForFinished(300); // give it some time to finish
+-    if (state() != QProcess::NotRunning)
+-    {
+-        qWarning() << Q_FUNC_INFO << "the terminal process is still running, trying to stop it by SIGHUP";
+-        ::kill(static_cast<pid_t>(processId()), SIGHUP);
+-        waitForFinished(300);
+-        if (state() != QProcess::NotRunning)
+-            qCritical() << Q_FUNC_INFO << "process didn't stop upon SIGHUP and will be SIGKILL-ed";
++        d->pty->logout();
++        disconnect(this, &QProcess::stateChanged, this, nullptr);
+     }
+ }
+ 

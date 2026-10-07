@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+# Source-tree and installed-layout launcher. Re-exec with the
+# configured CAD Python before importing the package so PyQt5 and its SIP
+# extension come from the selected production runtime rather than whichever
+# ``python3`` happens to own this shebang.
+
+import os
+import shutil
+import sys
+from pathlib import Path
+
+launcher = Path(__file__).resolve()
+product_root = launcher.parents[4] if launcher.parent.name == "pyqt" else launcher.parents[3]
+sys.path.insert(0, str(product_root / "tools/common/python"))
+from sicoenv import RETIRED_NAMES, promote, read
+promote(os.environ, *RETIRED_NAMES)
+for selector in ("SICO_PYTHON", "SICO_PYTHON_ROOT", "SICO_AI_PYQT_ROOT"):
+    if selector in os.environ and not os.environ[selector].strip():
+        raise SystemExit(f"{selector} must not be empty")
+
+source_root = launcher.parent
+installed_root = launcher.parent.parent
+required_package_files = (
+    "__init__.py",
+    "appearance.py",
+    "control_channel.py",
+    "input_behavior.py",
+    "main.py",
+    "protocol.py",
+    "qt_frontend.py",
+    "resources.py",
+    "session_context.py",
+    "shell_environment.py",
+    "tab_renamer.py",
+    "terminal_session.py",
+    "terminal_widget.py",
+    "terminal_window.py",
+    "output_capture.py",
+    "toolbar.py",
+    "window_close.py",
+    "window_shutdown.py",
+)
+
+
+def _directory_key(directory: Path) -> str:
+    return os.path.normcase(os.path.abspath(directory))
+
+
+def _existing_directories(directories: list[Path]) -> list[str]:
+    return [str(directory) for directory in directories if directory.is_dir()]
+
+
+def _configured_interpreter() -> Path | None:
+    configured = os.environ.get("SICO_PYTHON", "").strip()
+    if not configured:
+        configured_root = os.environ.get("SICO_PYTHON_ROOT", "").strip()
+        if configured_root:
+            configured = str(Path(configured_root).expanduser() / "bin" / "python3")
+    if not configured:
+        return None
+    candidate = Path(configured).expanduser()
+    if not candidate.is_absolute():
+        resolved = shutil.which(configured)
+        if resolved is None:
+            print(
+                f"sico-ai-terminal: SICO_PYTHON is not executable: {configured}",
+                file=sys.stderr,
+            )
+            raise SystemExit(2)
+        candidate = Path(resolved)
+    try:
+        candidate = candidate.resolve(strict=True)
+    except OSError:
+        print(
+            f"sico-ai-terminal: SICO_PYTHON is not executable: {configured}",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+    if not candidate.is_file() or not os.access(candidate, os.X_OK):
+        print(
+            f"sico-ai-terminal: SICO_PYTHON is not executable: {configured}",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+    return candidate
+
+
+configured_interpreter = _configured_interpreter()
+current_interpreter = Path(sys.executable).resolve()
+target_interpreter = configured_interpreter or current_interpreter
+installed_layout = launcher.parent.name == "bin"
+configured_runtime = os.environ.get("SICO_AI_QTERMWIDGET_RUNTIME", "").strip()
+runtime_root = Path(configured_runtime).expanduser() if configured_runtime else installed_root
+if installed_layout and not runtime_root.is_absolute():
+    print(
+        "sico-ai-terminal: SICO_AI_QTERMWIDGET_RUNTIME must be absolute",
+        file=sys.stderr,
+    )
+    raise SystemExit(2)
+if installed_layout and configured_interpreter is None:
+    print(
+        "sico-ai-terminal: SICO_PYTHON or SICO_PYTHON_ROOT is required",
+        file=sys.stderr,
+    )
+    raise SystemExit(2)
+
+python_library_value = os.environ.get("SICO_AI_PYTHON_LIBRARY_PATH", "").strip()
+if "SICO_AI_PYTHON_LIBRARY_PATH" not in os.environ:
+    python_library_value = os.environ.get("SICO_SYSTEM_LD_LIBRARY_PATH", "").strip()
+python_library_dirs = [
+    Path(value).expanduser()
+    for value in python_library_value.split(os.pathsep)
+    if value and Path(value).expanduser().is_dir()
+]
+
+environment_before = (
+    os.environ.get("PYTHONNOUSERSITE"),
+    os.environ.get("PYTHONPATH"),
+    os.environ.get("LD_LIBRARY_PATH"),
+    os.environ.get("PYTHONHOME"),
+    os.environ.get("QT_PLUGIN_PATH"),
+    os.environ.get("QT_QPA_PLATFORM_PLUGIN_PATH"),
+    os.environ.get("LD_PRELOAD"),
+    os.environ.get("LD_AUDIT"),
+)
+os.environ["PYTHONNOUSERSITE"] = "1"
+if installed_layout:
+    installed_python_paths = _existing_directories(
+        [runtime_root / "python", installed_root / "python"]
+    )
+    os.environ["PYTHONPATH"] = os.pathsep.join(
+        list(dict.fromkeys(installed_python_paths))
+    )
+    os.environ["LD_LIBRARY_PATH"] = os.pathsep.join(
+        _existing_directories([runtime_root / "lib", *python_library_dirs])
+    )
+    for variable in (
+        "PYTHONHOME",
+        "QT_PLUGIN_PATH",
+        "QT_QPA_PLATFORM_PLUGIN_PATH",
+        "LD_PRELOAD",
+        "LD_AUDIT",
+    ):
+        os.environ.pop(variable, None)
+else:
+    configured_libraries = _existing_directories(python_library_dirs)
+    if configured_libraries:
+        os.environ["LD_LIBRARY_PATH"] = os.pathsep.join(configured_libraries)
+environment_changed = environment_before != (
+    os.environ.get("PYTHONNOUSERSITE"),
+    os.environ.get("PYTHONPATH"),
+    os.environ.get("LD_LIBRARY_PATH"),
+    os.environ.get("PYTHONHOME"),
+    os.environ.get("QT_PLUGIN_PATH"),
+    os.environ.get("QT_QPA_PLATFORM_PLUGIN_PATH"),
+    os.environ.get("LD_PRELOAD"),
+    os.environ.get("LD_AUDIT"),
+)
+
+# Python's user-site setting and LD_LIBRARY_PATH are read when the interpreter
+# starts. Re-exec whenever the launcher had to normalize either value; changing
+# LD_LIBRARY_PATH later would not reliably affect extension dlopen.
+if target_interpreter != current_interpreter or environment_changed:
+    try:
+        os.execv(
+            str(target_interpreter),
+            [str(target_interpreter), str(launcher), *sys.argv[1:]],
+        )
+    except OSError as exc:
+        print(
+            f"sico-ai-terminal: cannot start SICO_PYTHON: {exc}",
+            file=sys.stderr,
+        )
+        raise SystemExit(2) from exc
+
+# Installed layout: keep the target Python package and selected QTermWidget
+# runtime ahead of user-site packages and inherited EDA libraries. PyQt5 and
+# Qt themselves continue to come from the production CAD Python.
+if installed_layout and str(installed_root / "python") not in sys.path:
+    sys.path.insert(0, str(installed_root / "python"))
+if installed_layout and str(runtime_root / "python") not in sys.path:
+    sys.path.insert(0, str(runtime_root / "python"))
+
+# Select exactly one frontend package. An explicit source-tree override must
+# fail closed so an incomplete deployment cannot silently load an older package
+# from the release containing the runtime dispatcher.
+configured_root = os.environ.get("SICO_AI_PYQT_ROOT", "").strip()
+if configured_root:
+    package_root = Path(configured_root).expanduser()
+    if not package_root.is_absolute():
+        print(
+            "sico-ai-terminal: SICO_AI_PYQT_ROOT must be absolute",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+    package_label = "SICO_AI_PYQT_ROOT"
+elif installed_layout:
+    package_root = installed_root / "python"
+    package_label = "installed frontend root"
+else:
+    package_root = source_root
+    package_label = "source frontend root"
+
+package_directory = package_root / "cad_ai_terminal"
+if not package_directory.is_dir():
+    print(
+        f"sico-ai-terminal: {package_label} is missing cad_ai_terminal: "
+        f"{package_root}",
+        file=sys.stderr,
+    )
+    raise SystemExit(2)
+missing_package_files = [
+    name for name in required_package_files if not (package_directory / name).is_file()
+]
+if missing_package_files:
+    missing = ", ".join(f"cad_ai_terminal/{name}" for name in missing_package_files)
+    print(
+        f"sico-ai-terminal: {package_label} is incomplete at {package_root}; "
+        f"missing: {missing}",
+        file=sys.stderr,
+    )
+    raise SystemExit(2)
+
+# Remove equivalent lower-priority occurrences before inserting the selected
+# root. This also prevents inherited PYTHONPATH entries from winning the import.
+package_root_value = str(package_root)
+package_root_key = _directory_key(package_root)
+sys.path[:] = [
+    value
+    for value in sys.path
+    if not value or _directory_key(Path(value)) != package_root_key
+]
+sys.path.insert(0, package_root_value)
+
+from cad_ai_terminal.main import main  # noqa: E402
+
+
+raise SystemExit(main())

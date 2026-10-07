@@ -1,0 +1,58 @@
+#!/bin/sh
+
+set -u
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+product_root=$(CDPATH='' cd -- "$script_dir/../../.." && pwd -P)
+. "$product_root/tools/common/sh/sico-installation.sh"
+sico_installation "$product_root" || exit 2
+sico_launcher_environment || exit 2
+if [ -n "${AIVW_ROOT-}" ]; then
+    product_root=$(CDPATH= cd -- "$AIVW_ROOT" 2>/dev/null && pwd) || {
+        echo "aivw: AIVW_ROOT is not a directory: $AIVW_ROOT" >&2
+        exit 2
+    }
+else
+    product_root=$(CDPATH= cd -- "$script_dir/.." && pwd)
+fi
+
+package_root=$product_root/python/aivworkbench
+if [ -z "${SICO_PYTHON_ROOT-}" ] || [ -z "${SICO_PYTHON-}" ]; then
+    echo "aivw: SICO_PYTHON_ROOT and SICO_PYTHON must be set" >&2
+    exit 2
+fi
+case $SICO_PYTHON_ROOT in
+    /*) ;;
+    *) echo "aivw: SICO_PYTHON_ROOT must be an absolute path" >&2; exit 2 ;;
+esac
+case $SICO_PYTHON in
+    /*) ;;
+    *) echo "aivw: SICO_PYTHON must be an absolute path" >&2; exit 2 ;;
+esac
+if [ ! -d "$SICO_PYTHON_ROOT" ] || [ ! -x "$SICO_PYTHON" ]; then
+    echo "aivw: configured production Python is unavailable" >&2
+    exit 2
+fi
+python=$SICO_PYTHON
+# Isolate imports before invoking the shared interpreter contract.
+export PYTHONNOUSERSITE=1
+export PYTHONDONTWRITEBYTECODE=1
+unset PYTHONHOME PYTHONPATH LD_PRELOAD LD_AUDIT
+if [ ! -f "$package_root/__init__.py" ]; then
+    echo "aivw: Python package is incomplete: $package_root" >&2
+    exit 2
+fi
+
+unset CDS_MPS_SESSION CDS_MPS_HOST CDS_MPS_PORT
+export PYTHONPATH=$product_root/python:$product_root/../common/python
+exec "$python" -s -c '
+import sys
+sys.path = [path for path in sys.path if path]
+from aivworkbench.agent.runtime_info import validate_production_runtime
+try:
+    validate_production_runtime()
+except RuntimeError as exc:
+    print("aivw: " + str(exc), file=sys.stderr)
+    raise SystemExit(2)
+from aivworkbench.cli import main
+raise SystemExit(main(sys.argv[1:]))
+' "$@"

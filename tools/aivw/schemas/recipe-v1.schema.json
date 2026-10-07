@@ -1,0 +1,394 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aivw.local/schemas/recipe-v1.schema.json",
+  "title": "AI Verification Workbench Recipe v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "recipe_id",
+    "revision",
+    "purpose",
+    "target",
+    "structure",
+    "inputs",
+    "model",
+    "workflow",
+    "verification",
+    "live_update",
+    "publication"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "recipe_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]*$"},
+    "revision": {"type": "integer", "minimum": 1},
+    "purpose": {"type": "string", "minLength": 1},
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["library", "cell", "module", "source_views", "output_view"],
+      "properties": {
+        "library": {"type": "string", "minLength": 1},
+        "cell": {"type": "string", "minLength": 1},
+        "module": {"type": "string", "minLength": 1},
+        "source_views": {
+          "type": "object",
+          "additionalProperties": {"type": ["string", "null"]},
+          "minProperties": 1
+        },
+        "output_view": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "view_type", "language", "primary_file"],
+          "properties": {
+            "name": {"type": "string", "minLength": 1},
+            "view_type": {"type": "string", "minLength": 1},
+            "language": {"enum": ["systemverilog", "veriloga"]},
+            "primary_file": {"enum": ["verilog.sv", "veriloga.va"]}
+          }
+        }
+      }
+    },
+    "structure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "authoritative", "required_artifacts"],
+      "properties": {
+        "provider": {"enum": ["cadence_si", "hed_ade_unl", "runams"]},
+        "authoritative": {"const": true},
+        "required_artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["interface_contract", "behavior_spec", "correlation_policy"],
+      "properties": {
+        "interface_contract": {"$ref": "#/$defs/scopedPath"},
+        "behavior_spec": {"$ref": "#/$defs/scopedPath"},
+        "correlation_policy": {"$ref": "#/$defs/scopedPath"},
+        "experiment_contract": {"$ref": "#/$defs/scopedPath"},
+        "exploratory_policy": {"$ref": "#/$defs/scopedPath"},
+        "characterization_plan": {"$ref": "#/$defs/scopedPath"},
+        "acceptance_policy": {"$ref": "#/$defs/scopedPath"}
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class", "generation", "template_policy", "provenance_required"],
+      "properties": {
+        "class": {"type": "string", "minLength": 1},
+        "generation": {"const": "ai_iterative"},
+        "template_policy": {"enum": ["reference_only", "registered_scaffold"]},
+        "provenance_required": {
+          "type": "array",
+          "minItems": 4,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "xcelium_evidence_adapter": {
+          "enum": ["latched_dynamic_comparator.xcelium_evidence.v1"]
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gates"],
+      "properties": {
+        "gates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+              "required": ["id", "executor", "needs"],
+            "properties": {
+              "id": {"type": "string", "minLength": 1},
+              "executor": {"type": "string", "minLength": 1},
+                "needs": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {"type": "string", "minLength": 1}
+                }
+            }
+          }
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "required": ["cases", "metrics", "l1"],
+      "properties": {
+        "physical_pvt": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema_version",
+            "kind",
+            "require_exact_cross_product",
+            "dimensions",
+            "model_binding",
+            "execution"
+          ],
+          "properties": {
+            "schema_version": {"const": 1},
+            "kind": {"const": "physical_pvt_exact_cross_product"},
+            "require_exact_cross_product": {"const": true},
+            "expected_point_count": {"type": "integer", "minimum": 1, "maximum": 4096},
+            "dimensions": {
+              "type": "array",
+              "minItems": 3,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name", "source", "role", "values"],
+                "properties": {
+                  "name": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$"},
+                  "source": {"enum": ["corner", "vector_id"]},
+                  "role": {"enum": ["process", "temperature", "supply", "vector", "context"]},
+                  "values": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {"oneOf": [{"type": "string", "pattern": "\\S"}, {"type": "number"}]}
+                  }
+                }
+              }
+            },
+            "model_binding": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["model_file", "section_dimension", "section_by_value"],
+              "properties": {
+                "model_file": {"type": "string", "pattern": "^(?!/)(?!.*\\\\)(?!.*(^|/)\\.\\.?(/|$)).+"},
+                "section_dimension": {"type": "string", "minLength": 1},
+                "section_by_value": {"type": "object", "minProperties": 1}
+              }
+            },
+            "execution": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["simulator", "launcher", "raw_output", "payload_relative_root"],
+              "properties": {
+                "simulator": {"enum": ["spectre", "ams"]},
+                "launcher": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$"},
+                "raw_output": {"enum": ["psf", "shm", "fsdb"]},
+                "payload_relative_root": {"type": "string", "pattern": "^(?!/)(?!.*\\\\)(?!.*(^|/)\\.\\.?(/|$)).+"}
+              }
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "type", "inputs", "expected", "assertions"],
+            "properties": {
+              "id": {"type": "string", "minLength": 1},
+              "type": {"type": "string", "minLength": 1},
+              "inputs": {"type": "object", "minProperties": 1},
+              "corner": {"type": "object"},
+              "vector_id": {"type": "string", "minLength": 1},
+              "expected": {"type": "object", "minProperties": 1},
+              "assertions": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {"type": "string", "minLength": 1}
+              }
+            }
+          }
+        },
+        "metrics": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["name", "kind"],
+            "properties": {
+              "name": {"type": "string", "minLength": 1},
+              "kind": {
+                "enum": ["categorical", "numeric", "allowed_set", "timing", "waveform", "statistical"]
+              }
+            }
+          }
+        },
+        "l1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "protocol",
+            "require_exact_case_set",
+            "require_exact_metric_set",
+            "require_assertion_pass",
+            "minimum_case_coverage",
+            "required_metrics",
+            "required_checks",
+            "hold_case"
+          ],
+          "properties": {
+            "protocol": {"const": "AIVW_L1_EVENT v1 JSONL"},
+            "require_exact_case_set": {"const": true},
+            "require_exact_metric_set": {"const": true},
+            "require_assertion_pass": {"const": true},
+            "minimum_case_coverage": {"type": "number", "minimum": 0, "maximum": 1},
+            "required_metrics": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {"type": "string", "minLength": 1}
+            },
+            "required_checks": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {"type": "string", "minLength": 1}
+            },
+            "hold_case": {"type": "string", "minLength": 1},
+            "matrix": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "require_exact_cross_product", "dimensions"],
+              "properties": {
+                "kind": {"const": "exact_cross_product"},
+                "require_exact_cross_product": {"const": true},
+                "dimensions": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["name", "source", "application", "values"],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$"
+                      },
+                      "source": {"enum": ["corner", "vector_id"]},
+                      "application": {
+                        "enum": ["context", "model_parameter", "stimulus"]
+                      },
+                      "values": {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": {
+                          "oneOf": [
+                            {"type": "string", "pattern": "\\S"},
+                            {"type": "number"}
+                          ]
+                        }
+                      }
+                    }
+                  }
+                },
+                "expected_point_count": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 4096
+                }
+              }
+            },
+            "temporal_assertions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "property", "clock"],
+                "properties": {
+                  "id": {"type": "string", "minLength": 1},
+                  "property": {"type": "string", "minLength": 1},
+                  "clock": {"type": "string", "minLength": 1},
+                  "severity": {"type": "string", "minLength": 1}
+                }
+              }
+            },
+            "coverage": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "backend", "minimum_score", "required_points"],
+              "properties": {
+                "id": {"type": "string", "minLength": 1},
+                "backend": {"enum": ["ucis", "imc"]},
+                "minimum_score": {"type": "number", "minimum": 0, "maximum": 1},
+                "required_points": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {"type": "string", "minLength": 1}
+                }
+              }
+            },
+            "waveform": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "format", "retention"],
+              "properties": {
+                "id": {"type": "string", "minLength": 1},
+                "format": {"enum": ["shm", "vcd", "fsdb"]},
+                "retention": {"enum": ["always", "on_failure", "never"]}
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "live_update": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["triggers", "formal_requires_saved", "debounce_ms", "invalidation"],
+      "properties": {
+        "triggers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"enum": ["manual", "successful_save"]}
+        },
+        "formal_requires_saved": {"const": true},
+        "debounce_ms": {"type": "integer", "minimum": 0},
+        "invalidation": {"type": "object", "minProperties": 1}
+      }
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "allowed_languages",
+        "optimistic_concurrency",
+        "promotion",
+        "symbol_update",
+        "config_update",
+        "restore_on_failure"
+      ],
+      "properties": {
+        "mode": {"const": "ipc_text_view"},
+        "allowed_languages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"enum": ["systemverilog", "veriloga"]}
+        },
+        "optimistic_concurrency": {"const": true},
+        "promotion": {"const": "human_approved"},
+        "symbol_update": {"const": "forbidden"},
+        "config_update": {"const": "forbidden"},
+        "restore_on_failure": {"const": true}
+      }
+    }
+  },
+  "$defs": {
+    "scopedPath": {
+      "type": "string",
+      "pattern": "^(product|recipe):[^/].*$"
+    }
+  }
+}

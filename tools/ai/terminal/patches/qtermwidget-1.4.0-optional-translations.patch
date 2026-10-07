@@ -1,0 +1,26 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -19 +19,3 @@
+ option(USE_UTF8PROC "Use libutf8proc for better Unicode support. Default OFF" OFF)
++option(QTERMWIDGET_BUILD_TRANSLATIONS
++       "Compile QTermWidget translation catalogs" ON)
+@@ -39 +41,3 @@
+-find_package(Qt5LinguistTools "${QT_MINIMUM_VERSION}" REQUIRED)
++if(QTERMWIDGET_BUILD_TRANSLATIONS)
++    find_package(Qt5LinguistTools "${QT_MINIMUM_VERSION}" REQUIRED)
++endif()
+@@ -137,11 +141,13 @@
++if(QTERMWIDGET_BUILD_TRANSLATIONS)
+ lxqt_translate_ts(QTERMWIDGET_QM
+     TRANSLATION_DIR "lib/translations"
+     UPDATE_TRANSLATIONS
+         ${UPDATE_TRANSLATIONS}
+     SOURCES
+         ${SRCS} ${HDRS} ${UI}
+     INSTALL_DIR
+         ${TRANSLATIONS_DIR}
+     COMPONENT
+         Runtime
+ )
++endif()

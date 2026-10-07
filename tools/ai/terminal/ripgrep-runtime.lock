@@ -1,0 +1,10 @@
+format=cad-ai.ripgrep-runtime.v1
+product=ripgrep
+version=15.2.0
+cli_version=ripgrep 15.2.0 (rev e89fff89ac)
+target=x86_64-unknown-linux-musl
+source_url=https://github.com/BurntSushi/ripgrep
+archive_url=https://github.com/BurntSushi/ripgrep/releases/download/15.2.0/ripgrep-15.2.0-x86_64-unknown-linux-musl.tar.gz
+binary_size=5408904
+binary_sha256=e62198eb19b136b88c330af83647b5a962cb99b6b1f066758568f12de1974849
+license=Unlicense OR MIT

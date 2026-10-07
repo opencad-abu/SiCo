@@ -1,0 +1,15 @@
+#!/bin/sh
+# Development entry; distribution installs an ELF at the same path.
+set -eu
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/../../.." && pwd -P)
+. "$root/tools/common/sh/sico-installation.sh"
+sico_installation "$root"
+sico_launcher_environment
+python=${SICO_PYTHON:-${SICO_PYTHON_ROOT:+${SICO_PYTHON_ROOT%/}/bin/python3}}
+[ -n "$python" ] || { echo 'sico-ai-pinyin: SICO_PYTHON is required' >&2; exit 2; }
+exec "$python" -E -s -c '
+import sys
+sys.path.insert(0, sys.argv[1])
+from sico_pinyin.cli import main
+raise SystemExit(main(sys.argv[2:]))
+' "$root/tools/common/python" "$@"

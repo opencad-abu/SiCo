@@ -1,0 +1,11 @@
+diff --git a/pyqt/sip/qtermwidget.sip b/pyqt/sip/qtermwidget.sip
+--- a/pyqt/sip/qtermwidget.sip
++++ b/pyqt/sip/qtermwidget.sip
+@@ -63,6 +63,7 @@ public:
+     QString keyBindings();
+     void setMotionAfterPasting(int);
+     int historyLinesCount();
++    int screenLinesCount();
+     int screenColumnsCount();
+     void setSelectionStart(int row, int column);
+     void setSelectionEnd(int row, int column);
