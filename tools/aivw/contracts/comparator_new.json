@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "name": "saradc-comparator-new-m1",
+  "target": {
+    "library": "saradc",
+    "cell": "comparator_new",
+    "schematic_view": "schematic",
+    "symbol_view": "symbol"
+  },
+  "interface": {
+    "port_order": ["out", "outb", "Din+", "Din-", "clk"],
+    "ports": [
+      {"name": "out", "direction": "output"},
+      {"name": "outb", "direction": "output"},
+      {"name": "Din+", "direction": "input"},
+      {"name": "Din-", "direction": "input"},
+      {"name": "clk", "direction": "input"}
+    ],
+    "implicit_supplies": ["vdda!", "vssa!", "gnd!"]
+  },
+  "reference_equivalence": {
+    "confirmed": true,
+    "confirmed_on": "2026-08-29",
+    "confirmation_source": "user",
+    "references": [
+      {"library": "saradc", "cell": "comparator", "view": "schematic"},
+      {"library": "saradcII", "cell": "comparator", "view": "schematic"}
+    ],
+    "claim": "comparator_new preserves the comparator five-port function and polarity contract",
+    "requires_target_rerun": true
+  },
+  "maestro": {
+    "library": "saradc",
+    "cell": "comparator_new",
+    "view": "maestro",
+    "tests": {
+      "saradc:comparator_noise_TB_new:1": {
+        "testbench": "saradc/comparator_noise_TB_new/schematic",
+        "current_dut": "saradcII/comparator",
+        "current_instance": "I9",
+        "required_outputs": ["TotalNoiseatOutput", "InputReferredNoise", "noiseDensity"]
+      },
+      "saradc:comparator_offset_TB_new:1": {
+        "testbench": "saradc/comparator_offset_TB_new/schematic",
+        "current_dut": "saradc/comparator",
+        "current_instance": "I0",
+        "required_outputs": ["Offset", "Input", "Latch Out"]
+      }
+    },
+    "specifications": {
+      "saradc:comparator_noise_TB_new:1.InputReferredNoise": {
+        "type": "lt",
+        "maximum": "700u"
+      },
+      "saradc:comparator_offset_TB_new:1.Offset": {
+        "type": "range",
+        "minimum": "-5m",
+        "maximum": "5m"
+      }
+    },
+    "corners": {
+      "temperature": ["0", "27", "80"],
+      "VDD": ["1.15", "1.2", "1.25"],
+      "process": ["tt", "ff", "ss", "sf", "fs"],
+      "matrix_size": 45
+    }
+  },
+  "manual_evidence": {
+    "path": "/path/to/xh/amsVerify/ADC Verification.pdf",
+    "sha256": "370949ad76de6f3e5201afa0a05b913d674b3067621ea686bb97e16b03e40b8a",
+    "pages": [39, 52, 69, 71, 72, 75, 76, 79, 81],
+    "claims": [
+      "Lab 3-3 defines dynamic comparator PSS/Pnoise characterization",
+      "Lab 3-4 defines staircase offset characterization and mismatch Monte Carlo",
+      "Lab 3-5 defines comparator_new/maestro as the top-level verification cockpit",
+      "Lab 3-5 defines 45 PVT corners from three supplies, three temperatures, and five process sections"
+    ]
+  },
+  "historical_evidence": {
+    "offset_monte_carlo_mean": "approximately 0 V",
+    "offset_monte_carlo_sigma": "approximately 938u V",
+    "policy": "historical results describe the reference comparator and must not be relabeled as comparator_new results"
+  },
+  "qualification_policy": {
+    "source_mode": "read_only",
+    "artifact_contract": "$CWD/.aivw",
+    "rebind_target": "saradc/comparator_new/schematic",
+    "rebind_location": "$RUN/work",
+    "source_maestro_must_remain_unchanged": true,
+    "qualification_does_not_prove": [
+      "comparator_new Spectre measurements pass",
+      "an AI-generated RNM model is behaviorally correct",
+      "propagation delay, metastability, hysteresis, or power-invalid behavior is specified"
+    ]
+  }
+}

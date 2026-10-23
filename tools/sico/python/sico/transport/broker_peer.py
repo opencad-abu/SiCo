@@ -10,7 +10,7 @@ from concurrent.futures import TimeoutError as FutureTimeout
 from ..core.contracts import BoundContext, CircuitCallError, NeedsReconcile, identifier
 from .circuit import METHOD as CIRCUIT_METHOD
 from .framing import VERSION, Connection, ProtocolError
-from .methods import ASSISTANT_METHOD, SHARED_READ_METHODS, QueryUnavailable
+from .methods import ASSISTANT_METHOD, READ_METHODS, SHARED_READ_METHODS, QueryUnavailable
 from .relay import circuit_diagnostic, emit_diagnostic
 
 
@@ -277,7 +277,9 @@ class Peer:
             raise QueryUnavailable(
                 result.get("code", "read_failed"), result.get("message", "Context unavailable")
             )
-        if result.get("valid") is not True:
+        if method in READ_METHODS and result.get("valid") is not True:
+            if result.get("code") == "context_unavailable":
+                raise QueryUnavailable("context_unavailable", "来源暂时无法核验；已捕获的引用仍保留。")
             if method == "get_context" and "get_project_context" in context.snapshot.get(
                 "capabilities", []
             ):
@@ -313,7 +315,7 @@ class Peer:
             "preflight", "validation", "execution",
         }:
             raise CircuitCallError(code, message, data=data)
-        if code in {"unavailable", "read_failed", "result_too_large", "assistant_failed",
+        if code in {"context_unavailable", "unavailable", "read_failed", "result_too_large", "assistant_failed",
                     "request_too_large"}:
             raise QueryUnavailable(code, message)
         if code == "stale_context" and method in SHARED_READ_METHODS:

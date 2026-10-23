@@ -1,7 +1,7 @@
 ; Capture immutable-by-convention RCE run facts for the completion summary.
 
 unless(and(boundp('RCEsummaryRunVersion)
-             RCEsummaryRunVersion=="20260919.gui.modules.v1")
+             RCEsummaryRunVersion=="20261011.calibre.pex.tool.v1")
 procedure(rceSummaryInputText(form)
   case(form~>inpType~>value
     ("OA"
@@ -156,5 +156,5 @@ procedure(rceSummaryFailureReason(meta exitStatus viewOk netlistReady
   )
 )
 
-RCEsummaryRunVersion="20260919.gui.modules.v1"
+RCEsummaryRunVersion="20261011.calibre.pex.tool.v1"
 )

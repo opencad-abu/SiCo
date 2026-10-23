@@ -1,4 +1,4 @@
-"""Immutable settings, stage specifications and plans for Calibre XRC."""
+"""Immutable settings, stage specifications and plans for Calibre PEX."""
 
 from __future__ import annotations
 
@@ -24,13 +24,18 @@ class XrcSettings:
     corner_name: str
     temperature: str
     netlist_format: str
-    pdb_switch: str | None
+    pdb_arguments: tuple[str, ...] | None
     fmt_switches: tuple[str, ...]
-    simple_netlist: bool
+    capacitance_only: bool
     selection_switch: str | None
     pin_order_line: str | None
     character_map_line: str | None
     bus_delimiter: str | None
+
+    @property
+    def simple_netlist(self) -> bool:
+        """Return whether this extraction produces a parasitic-free netlist."""
+        return self.pdb_arguments is None
 
 
 @dataclass(frozen=True)

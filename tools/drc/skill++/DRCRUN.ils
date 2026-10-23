@@ -34,11 +34,13 @@ procedure(drcRunUsesCadTempPath()
 
 procedure(DRC_pythonExe()
   let((pythonRoot)
-    pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
-    or(SICO_envValue("DRC_PYTHON") SICO_envValue("SICO_PYTHON")
-       when(pythonRoot
-         simplifyFilename(strcat(pythonRoot "/bin/python3") t))
-       "python3"))
+    or(SICO_envValue("DRC_PYTHON") SICO_installedPython()
+       progn(
+         pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
+         or(SICO_envValue("SICO_PYTHON")
+            when(pythonRoot
+              simplifyFilename(strcat(pythonRoot "/bin/python3") t))
+            "python3"))))
 )
 
 procedure(DRC_launchEnvCommand(args)

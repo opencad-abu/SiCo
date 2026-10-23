@@ -38,7 +38,7 @@ DESIGN_TOOLS = frozenset(
         "preview_template_symbol",
         "create_template_symbol",
         "draw_symbol",
-        "prepare_circuit_library",
+        "prepare_library",
         "create_circuit_library",
         "create_circuit_config",
         "preview_simulation_recipe",
@@ -50,21 +50,32 @@ DESIGN_TOOLS = frozenset(
 INSTRUCTIONS = (
     "已有设计先检查库的工艺绑定；inspect_schematic/inspect_cdf 不需要全库采集。"
     "电路设计前调用 get_pdk_preparation，已有 target_library 技术绑定优先；"
-    "仅工艺未定时使用宿主 selection_question 询问并复用真实答复。"
+    "选定 PDK 后调用 init_pdk 完成库初始化（幂等；设计/仿真工具会经守卫自动补一次，"
+    "失败阻断；ADE 模型缺失时可 reload=true 重载）；"
+    "当前会话只有一个 PDK 候选时直接采用，不创建审阅；仅在多个或没有候选时"
+    "使用宿主 selection_question 询问并复用真实答复。"
+    "创建库不是电路设计：不要为建库调用 get_pdk_preparation 或 inspect 其他设计库；"
+    "用户未指定工艺时直接创建未绑定库，指定时直接传 technology_library。"
     "先读取已发布 PDK；有合格数据时不启动全库采集。生成流程使用 prepare_pdk_data/advance_pdk_collection，遵守 next_batch 和取消。"
     "采集 ready 仅表示事实采集完成，绝不表示可以设计。新包按 SICO-PDK-DATA 1.1.0 存入"
     "当前工作区 .sico/ai/pdk-data；原始证据和兼容捕获缓存单独保存。"
     "接着调用 get_pdk_data；默认只列正式发布且指定用途已确认 allow 的器件。"
     "调查采集结果使用 include_unconfirmed=true；section=missing 分页列出生成验收缺项。"
+    "任何 PDK 工具返回 pdk_generation_incomplete 或推进受阻时，先调用 "
+    "get_pdk_data(section=blockers) 读取按根因排序的报告；向用户说明根因、受影响数量和 "
+    "next_action，不要把裸错误码或模糊的‘平台不支持’当作最终答复。"
     "正常设计只读消费已发布的电路/仿真数据；绑定缺项不得在设计会话中调用"
     "prepare_pdk_data_update 或 apply_pdk_data_update。缺项应报告 pdk_generation_incomplete，"
-    "由独立的 SICO_PDK_WORKFLOW=generation 进程集中完成确认，再调用 publish_pdk_data 验收和发布；"
-    "正常设计不启用生成模式。仅检测到源依赖变化或现场结果与数据不符时才进入维护更新。"
+    "由用户明确要求的 PDK 维护任务集中完成确认，再调用 publish_pdk_data 验收和发布；"
+    "正常设计不主动进入维护更新。仅检测到源依赖变化或现场结果与数据不符时才进入维护更新。"
     "不得把 editable、模型存在或 interface 分层当成允许使用/写入。推荐步长不替代硬网格。"
     "查询和缺失检查不会启动 probe 或 IV。每个标准文件和响应最多 16 KiB，按修订游标分页；"
     "源内容未变时复用规则，不因换会话重复询问。路径迁移需明确 roots 绑定并核验内容。"
     "旧 search_pdk_devices/get_pdk_device 仅用于会话绑定兼容，不代表设计资格。"
     "bind/prepare/execute 必须经过有效标准规则门槛；未迁移的旧数据不能自动放行。"
+    "已发布标准且 design_ready=true 时直接消费，不要在常规设计中启动"
+    "prepare_pdk_data/advance_pdk_collection，也不要把同一器件拆成多个 section 反复查询；"
+    "section=cdf 加一次 tier=all 详情足以完成绑定前的核对。"
     "analogLib/basic 的内置原始数据继续只读，设计使用同样需要工作区标准规则。"
 )
 
@@ -95,6 +106,23 @@ def selection_prompt(candidates):
 
 def require_selection(info, prompt=selection_prompt):
     """Return the stable response used while a PDK choice is pending."""
+    candidates = info.get("candidates") or []
+    if len(candidates) == 1:
+        # One visible process needs no engineering decision.  Use it without
+        # opening a review event; the model still receives the retained
+        # selection evidence for prepare_pdk_data.
+        result = {
+            **info,
+            "status": "preparation_required",
+            "selection_required": False,
+            "choice_confirmed": True,
+            "selected_library": candidates[0]["library"],
+            "selection_source": "single_candidate",
+            "user_input_required": False,
+            "next_action": "prepare_pdk_data",
+        }
+        result.pop("selection_question", None)
+        return result
     return {
         **info,
         "status": "selection_required",
@@ -104,6 +132,26 @@ def require_selection(info, prompt=selection_prompt):
         "selection_question": prompt(info["candidates"]),
         "next_action": "ask_user_to_select_pdk",
     }
+
+
+def standard_reuse_allowed(environment):
+    """Design sessions reuse a ready publication even when refresh was requested."""
+    from .env_names import value as environment_value
+
+    return environment_value(environment, "PDK_WORKFLOW", "design") != "generation"
+
+
+def entry_recommendation(entry):
+    """Best-effort entry technology hint; entry-context failure is not a PDK stop."""
+    if not entry:
+        return None
+    try:
+        facts = entry()
+    except Exception:
+        return None
+    if facts and facts.get("ok") is True and facts.get("valid") is True:
+        return (facts.get("design") or {}).get("technology_library")
+    return None
 
 
 def describe(ctx, catalogs, issues, view, target_library, recommended, data_summary):

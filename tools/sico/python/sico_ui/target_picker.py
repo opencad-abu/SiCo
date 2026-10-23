@@ -21,7 +21,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
 )
 
-from sico.service.audit import NEW_WINDOW_OPTION as _NEW_WINDOW_OPTION
+from sico.core.audit_questions import NEW_WINDOW_OPTION as _NEW_WINDOW_OPTION
 
 from .chrome import SiDialog
 from .presentation import BusyCursor

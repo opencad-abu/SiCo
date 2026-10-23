@@ -41,6 +41,7 @@ def qrc_lines(
     output_file: str,
     filter_c: str,
     filter_r: str,
+    floating_net_option: str,
     output_name_space: str,
     cell_options: list[str],
     baseline: QrcDefaults,
@@ -62,7 +63,12 @@ def qrc_lines(
         )
     )
     lines.append("")
-    lines.extend(_qrc_command("filter_cap", baseline.options("filter_cap")))
+    lines.extend(
+        _qrc_command(
+            "filter_cap",
+            [*baseline.options("filter_cap"), floating_net_option],
+        )
+    )
     coupling_defaults = " ".join(baseline.options("filter_coupling_cap"))
     if coupling_defaults:
         filter_c = (filter_c + " " + coupling_defaults) if filter_c else "filter_coupling_cap " + coupling_defaults

@@ -8,6 +8,7 @@ from sico.service.workbench_query import WorkbenchQuery
 from .processes import ProcessPanel
 from .receipts import DataReceipt
 from .records import AuditPanel
+from .terminal_records import TerminalRecordsPanel
 from .workbench_list import ObjectList
 from .workspace import EvenTabPanel
 
@@ -54,11 +55,13 @@ class Centers(QWidget):
         self.reports, self.data = ObjectList("report"), ObjectList("data")
         self.audit = AuditPanel("暂无交互记录")
         self.processes = ProcessPanel(self.source)
+        self.terminal = TerminalRecordsPanel(data_service, journal, self)
         self.processes.activated.connect(self.objectRequested)
         self.audit.answerRequested.connect(self.answerRequested)
         for widget, label in ((self.audit, "审阅"), (self.reports, "汇报"), (self.data, "数据")):
             self.tabs.addTab(widget, label)
         self.tabs.addTab(self.processes, "进程")
+        self.tabs.addTab(self.terminal, "终端")
         self.tabs.currentChanged.connect(self.tab_changed)
         for listing in (self.reports, self.data):
             listing.activated.connect(self.objectRequested)
@@ -67,7 +70,8 @@ class Centers(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.tabs, 1)
         self.scroll_views = [self.reports.list, self.data.list, self.audit.list, self.audit.detail,
-                             self.audit.editor_scroll, self.processes.list]
+                             self.audit.editor_scroll, self.processes.list,
+                             self.terminal.list, self.terminal.detail]
         self.destroyed.connect(lambda *_: self._dispose())
         self.flush()
 
@@ -260,8 +264,11 @@ class Centers(QWidget):
     def show_tools(self):
         self.tabs.setCurrentWidget(self.data)
 
+    def show_terminal(self):
+        self.tabs.setCurrentWidget(self.terminal)
+
     def tab_changed(self, _index):
-        filters = self.tabs.currentWidget() is not self.processes
+        filters = self.tabs.currentWidget() not in (self.processes, self.terminal)
         self.work_filter.setVisible(filters)
         self.stage_filter.setVisible(filters)
         self.task_filter.setVisible(filters)
@@ -292,4 +299,8 @@ class Centers(QWidget):
             combo.setCurrentIndex(0)
             combo.blockSignals(False)
         self.tabs.setCurrentWidget(self.audit)
+        # Select immediately when this audit is already loaded. This prevents a
+        # second pending review from keeping the answer editor bound to the
+        # previously selected target while a refresh is in flight.
+        self.audit.select_audit(audit_id)
         self.query_changed()

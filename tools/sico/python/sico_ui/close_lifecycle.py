@@ -8,7 +8,7 @@ from sico.service.diagnostics import diagnostics
 class CloseLifecycle:
     GRACE_SECONDS = 5.0
 
-    def __init__(self, api, *, persistent=False, notice=lambda kind: None,
+    def __init__(self, api, *, persistent=False, notice=lambda kind, **payload: None,
                  clock=time.monotonic):
         self.api = api
         self.persistent = persistent

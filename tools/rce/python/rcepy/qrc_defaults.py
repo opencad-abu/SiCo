@@ -16,7 +16,7 @@ _RESERVED = {
         "technology_corner",
     },
     "capacitance": set(),
-    "filter_cap": set(),
+    "filter_cap": {"exclude_floating_nets"},
     "filter_coupling_cap": {"coupling_cap_threshold_absolute", "coupling_cap_threshold_relative"},
     "filter_res": {"min_res"},
     "extraction_setup": {"parasitic_blocking_device_cells_file"},
@@ -27,7 +27,8 @@ _RESERVED = {
     "output_db": {
         "type", "output_xy", "include_parasitic_res_model_by_sub_conductor",
         "include_parasitic_res_length", "include_parasitic_res_width_drawn",
-        "disable_instances", "pin_order_file", "cdl_out_map_directory", "view_name",
+        "disable_instances", "output_multi_value_rc", "pin_order_file",
+        "cdl_out_map_directory", "view_name",
     },
     "output_setup": {"net_name_space", "directory_name", "file_name"},
     "log_file": {"file_name"},

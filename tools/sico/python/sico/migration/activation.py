@@ -46,7 +46,7 @@ def candidate(transaction, tree, rows, digest):
             identity = read_identity(service)
         except FileNotFoundError:
             identity = create_identity(service, host.host_id)
-        identity.verify(service, host.host_id)
+        identity.verify(service)
         marker = {"format": FORMAT, "inventory_sha256": digest,
                   "source_identity": tree.identity, "target_identity": location(root),
                   "project_identity": identity.record(),

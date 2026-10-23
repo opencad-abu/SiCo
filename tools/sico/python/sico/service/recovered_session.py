@@ -3,6 +3,7 @@
 from ..core.contracts import TERMINAL, BoundContext
 from ..storage.inbox_records import read_input
 from .recovery_facts import read_facts
+from .reconcile_audit import audit_fields
 
 
 class RecoveredSession:
@@ -28,15 +29,17 @@ class RecoveredSession:
         return True
 
     def continue_chat(self, facts=None):
-        """Finish local interrupted bookkeeping without replaying any prior input."""
+        """Attach to unfinished work; only explicit reconciliation may finish it."""
         controller = self.controller
         if not self.blocked:
             return
         facts = facts or read_facts(self.project, controller.session_id)
         if controller._task.get("status") == "needs_reconcile":
-            controller.acknowledge_interrupted()
+            return  # Continue opens the card; it is not a decision about external effects.
+        selected = {record["id"] for record in controller.inbox.pending}
         for row in facts.inputs:
-            self._abandon(row)
+            if row["input_id"] not in selected:
+                self._abandon(row)
         self._release()
         controller.resume()
 
@@ -55,7 +58,8 @@ class RecoveredSession:
         if controller._task and controller._task.get("status") not in TERMINAL:
             raise ValueError("请先核对并确认原中断任务")
         controller.journal.append_session("session.input_abandoned", dict(
-            input_id=row["input_id"], address=row["address"], external_outcome="unconfirmed"),
+            input_id=row["input_id"], address=row["address"], external_outcome="unconfirmed",
+            evidence="显式继续已结束的任务；未选择恢复的旧输入不重放", **audit_fields()),
             controller.current)
         controller.inbox.pending = type(controller.inbox.pending)(
             record for record in controller.inbox.pending if record["id"] != row["input_id"])

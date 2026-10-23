@@ -46,16 +46,11 @@ _RULES = array(RULE_REF, 3)
 TOOLS = [
     tool(
         TOOL_NAME,
-        "Prepare a read-only template plan using one fixed catalog snapshot. "
-        "Dispatches exact or v3 core matching, reuses the existing adaptation and "
-        "preview/geometry validators, and never writes OA. A complete response is "
-        "still only a creation preparation; live binding and creation remain separate. "
-        "Use binding_refs to reuse retained device metadata, and placement with explicit "
-        "routing to derive layout from the verified mapping in this call. Supply either "
-        "placement or layout. Explicit allowed_rules names (rename, omit_optional_group, "
-        "add_boundary_group) resolve installed identities; alternatively use allowed_rule_refs. "
-        "Never supply both. Template permission is independently checked. "
-        "Missing inputs are reported in next_action.",
+        "Prepare a read-only template plan from one frozen catalog snapshot using exact or v3 "
+        "core matching. It never writes OA; binding and creation stay separate. Use binding_refs "
+        "for retained devices; supply either placement or layout (not both), and allowed_rules "
+        "or allowed_rule_refs. Template permission is checked independently; missing inputs "
+        "appear in next_action.",
         {
             "spec": _SPEC,
             "bindings": BINDINGS,

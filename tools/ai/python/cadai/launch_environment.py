@@ -3,19 +3,22 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Mapping
 from pathlib import Path
 
+from sicoenv import RETIRED_NAMES, promote, read
+from sicoenv import value as sico_environment_value
+from sicosessionenv import clear as clear_session
+from sicosessionenv import publish as publish_session
 from sicotemp import initialize as initialize_temporary
-from sicoenv import RETIRED_NAMES, promote, read, value as sico_environment_value
-from sicosessionenv import clear as clear_session, publish as publish_session
 
 from .agent_profile import INTERACTIVE_PROFILE, validate_profile
+from .installation import current
 from .lsf import capture_virtuoso_environment
+from .optional_resources import ENVIRONMENT_KEYS as OPTIONAL_RESOURCE_KEYS
+from .optional_resources import PATH_NAMES, apply_data_sources
+from .optional_resources import prepare as prepare_optional_resources
 from .runtime import RuntimePaths
 from .search_runtime import prepare_search_environment
-from .optional_resources import (ENVIRONMENT_KEYS as OPTIONAL_RESOURCE_KEYS, PATH_NAMES,
-                                 prepare as prepare_optional_resources)
 from .terminal_environment import prepare_input_environment
 
 _TERMINAL_BOOTSTRAP_ENV = frozenset(
@@ -28,6 +31,7 @@ _TERMINAL_BOOTSTRAP_ENV = frozenset(
         "SICO_AI_QT_PLUGIN_PATH",
         "SICO_AI_PYTHON_LIBRARY_PATH",
         "SICO_AI_OS_RELEASE_FILE", "SICO_AI_PLATFORM", "SICO_AI_PYQT_ROOT",
+        "SICO_PDK_WORKFLOW", "SICO_BACKEND", "SICO_PROVIDER",
     }
 )
 
@@ -46,7 +50,10 @@ def prepare_terminal_environment(
         raise ValueError(f"unsupported AI agent: {agent}")
     validate_profile(profile)
     env = dict(os.environ)
+    apply_pdk_workflow(env, workspace)
+    env["SICO_BACKEND"], env["SICO_PROVIDER"] = model_settings(workspace, env)
     promote(env, *(name for name in RETIRED_NAMES if name not in PATH_NAMES))
+    apply_data_sources(env, workspace)
     capture_virtuoso_environment(env)
     prepare_search_environment(env)
     resource_warnings = prepare_optional_resources(env, workspace)
@@ -69,9 +76,13 @@ def prepare_terminal_environment(
     env["QT_XCB_GL_INTEGRATION"] = "none"
     warnings = (*prepare_input_environment(env), *resource_warnings)
     python_libraries = read(env, "SICO_AI_PYTHON_LIBRARY_PATH", "").strip()
-    env["LD_LIBRARY_PATH"] = (python_libraries if python_libraries or
-        "SICO_AI_PYTHON_LIBRARY_PATH" in env else sico_environment_value(
-            env, "SICO_SYSTEM_LD_LIBRARY_PATH", ("CAD_SYSTEM_LD_LIBRARY_PATH",), "").strip())
+    if not python_libraries and "SICO_AI_PYTHON_LIBRARY_PATH" not in env:
+        python_libraries = sico_environment_value(
+            env, "SICO_SYSTEM_LD_LIBRARY_PATH", ("CAD_SYSTEM_LD_LIBRARY_PATH",), ""
+        ).strip()
+    if not python_libraries and "SICO_AI_PYTHON_LIBRARY_PATH" not in env:
+        python_libraries = current(env).runtime_library_path or ""
+    env["LD_LIBRARY_PATH"] = python_libraries
     initialize_temporary(env, cwd=workspace, temporary=temp_root)
     qt_plugin_path = read(env, "SICO_AI_QT_PLUGIN_PATH", "").strip()
     if qt_plugin_path:
@@ -102,6 +113,41 @@ def prepare_terminal_environment(
         env.setdefault("CLAUDE_CODE_NO_FLICKER", "1")
         env.setdefault("MCP_TIMEOUT", "10000")
     return env, warnings
+
+
+def pdk_workflow(workspace, environment):
+    """Only an explicit headless/CI workflow pins the process."""
+    configured = str(environment.get("SICO_PDK_WORKFLOW", "")).strip()
+    return configured if configured in {"design", "generation"} else None
+
+
+def apply_pdk_workflow(environment, workspace):
+    """Apply the optional workflow override without inventing a default mode."""
+    workflow = pdk_workflow(workspace, environment)
+    if workflow:
+        environment["SICO_PDK_WORKFLOW"] = workflow
+    else:
+        environment.pop("SICO_PDK_WORKFLOW", None)
+
+
+def model_settings(workspace, environment):
+    """Project model settings win for new sessions; explicit env is the fallback."""
+    try:
+        from sico.agent_resources.model import read as read_model
+
+        document = read_model(workspace)
+        if document.get("revision") is not None:
+            return document["backend"], document["provider"]
+    except (ValueError, OSError, RuntimeError):
+        pass
+    backend = str(environment.get("SICO_BACKEND", "")).strip() or "codex"
+    if backend not in {"codex", "python"}:
+        backend = "codex"
+    provider = str(environment.get("SICO_PROVIDER", "")).strip()
+    allowed = {"codex": {"responses"}, "python": {"anthropic", "openai"}}[backend]
+    if provider not in allowed:
+        provider = "responses" if backend == "codex" else "anthropic"
+    return backend, provider
 
 
 def sanitized_terminal_environment(

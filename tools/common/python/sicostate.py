@@ -8,7 +8,7 @@ from pathlib import Path, PurePosixPath
 from typing import Mapping, MutableMapping
 
 from sicoenv import value as environment_value
-from sicomigration import admission
+from sicomigration import admission, ignore_legacy
 
 ENVIRONMENT = "SICO_TEMP_DIR"
 LEGACY_ENVIRONMENT = "CAD_TEMP_DIR"
@@ -102,7 +102,7 @@ def validate_directory(path: Path) -> None:
                          "use your own project work directory (mode 0700)")
 
 
-def project_root(launch: str | Path, *, create=False) -> Path:
+def project_root(launch: str | Path, *, create=False, isolate_legacy=False) -> Path:
     """Select the single state root owned by a project launch directory."""
     launch = absolute(launch)
     if not launch.is_dir():
@@ -113,16 +113,24 @@ def project_root(launch: str | Path, *, create=False) -> Path:
     has_legacy = exists(legacy)
     if has_sico:
         validate_directory(sico)
-        admitted = admission(sico)
-        if has_legacy and admitted is None:
-            raise ValueError(".cad and .sico coexist without completed activation")
+        admission(sico)
         return sico
     if has_legacy:
         info = legacy.lstat()
         if not stat.S_ISDIR(info.st_mode):
             raise ValueError("Invalid .cad state root")
         if create:
-            raise ValueError("Legacy .cad state is read-only; run sico migrate before writing")
+            if not isolate_legacy:
+                raise ValueError("Legacy .cad state is read-only; run sico migrate before writing")
+            try:
+                sico.mkdir(mode=0o700)
+            except FileExistsError:
+                validate_directory(sico)
+                admission(sico)
+                return sico
+            validate_directory(sico)
+            ignore_legacy(sico)
+            return sico
         return legacy
     if not create:
         return sico
@@ -145,23 +153,17 @@ def project_directory(launch: str | Path, relative: str, *, create=False) -> Pat
     return path
 
 
+def startup_root(launch: str | Path) -> Path:
+    """Prepare a runnable SiCo root while keeping an existing .cad state isolated."""
+    return project_root(launch, create=True, isolate_legacy=True)
+
+
 def ensure(path: str | Path) -> Path:
     """Create only a selected root; an existing legacy root requires migration first."""
     path = absolute(path)
     if path.name != ".sico" or not path.parent.is_dir():
         raise ValueError("Expected an available launch directory and .sico root")
-    try:
-        (path.parent / ".cad").lstat()
-    except FileNotFoundError:
-        pass
-    else:
-        admission(path)
-        return path
-    try:
-        path.mkdir(mode=0o700)
-    except FileExistsError:
-        pass
-    validate_directory(path)
+    project_root(path.parent, create=True)
     admission(path)
     return path
 

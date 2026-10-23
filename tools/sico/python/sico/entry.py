@@ -1,6 +1,7 @@
 """Bootstrap the primary command from its fixed location in a SiCo installation."""
 
 from pathlib import Path
+import os
 import sys
 
 
@@ -11,6 +12,9 @@ def main(argv=None):
     from sicopaths import installation
 
     selected = installation(anchor=root)
+    from cadenv import preserve_virtuoso_environment
+
+    preserve_virtuoso_environment(os.environ)
     sys.path[:0] = [str(selected.tool("sico") / "python"),
                    str(selected.tool("ai") / "python")]
     from .interpreter import ensure_cad_python

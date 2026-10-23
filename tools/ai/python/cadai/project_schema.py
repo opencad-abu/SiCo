@@ -35,8 +35,10 @@ PROJECT_TOOLS = [
         "preflight_circuit_project",
         "Read current Virtuoso library/target/API state and explicit "
         "project directories/files/executable. No OA write, model execution or license checkout. "
-        "Filesystem checks describe the MCP host, not remote scheduler workers. Passing checks "
-        "does not qualify writes, models, licenses or simulation. Supply project expectations.",
+        "Filesystem checks describe the MCP host, not remote workers. Passing checks "
+        "does not qualify writes, models, licenses or simulation. Supply project expectations. "
+        "Circuit-only work needs no run directory; ADE creates simulation run directories, "
+        "so an absent run directory is checked through its nearest existing ancestor.",
         {
             "presentation": PRESENTATION,
             "targets": array(
@@ -70,37 +72,35 @@ PROJECT_TOOLS = [
     ),
     tool(
         "execute_circuit_operation",
-        "Journal circuit creation or an inspected schematic update, Symbol/Config/Maestro "
-        "creation or exact-history run before dispatch. operation names an existing tool; "
-        "arguments must satisfy that tool's complete schema, including request_id. Use after "
-        "project preflight and confirmed task mode. Same operation/request_id returns recovery "
-        "status without redispatch, including partial failures or lost replies. Existing schematic "
-        "content requires an inspection and user decision bound to preparation. Never replay unknown writes. "
-        "Existing direct tools remain available without this disk journal.",
+        "Journal circuit creation, inspected schematic update, Symbol/Config/Maestro creation or "
+        "exact-history run before dispatch. operation names an existing tool; arguments must "
+        "match that tool's full schema, including request_id. "
+        "Same operation/request_id returns recovery status without "
+        "redispatch, including partial failures or lost replies. Existing schematic content "
+        "needs inspection and a user decision bound to preparation; never replay unknown writes.",
         {
             "operation": enum(*OPERATIONS),
             "arguments": {"type": "object", "maxProperties": 32, "additionalProperties": True},
         },
         ("operation", "arguments"),
         True,
+        help_text="Existing direct tools remain available without this disk journal.",
     ),
     tool(
         "get_circuit_operation",
-        "Read a journalled operation after disconnect/restart. "
-        "refresh=true queries only the original live Virtuoso identity and retained receipt "
-        "and updates the local journal observation (no OA write); refresh=false reads the "
-        "local record offline without writes. Missing receipt, partial write or session "
-        "mismatch never "
-        "permits automatic replay. Use the request_id from execute_circuit_operation, not from "
-        "a preparation tool. operation_not_found means no local execution record: correct the "
-        "request identity and inspect the target, without replaying writes. "
-        "Historical success does not prove current design integrity.",
+        "Read a journalled operation after disconnect or restart. refresh=true reads the "
+        "original live Virtuoso identity and receipt only (no OA write); refresh=false reads "
+        "the local record offline. Missing receipt, partial write or session mismatch never "
+        "permits automatic replay. Use the request_id from execute_circuit_operation, not from a "
+        "preparation tool. operation_not_found means no local execution record: correct the "
+        "request identity and inspect the target without replaying writes.",
         {
             "operation": enum(*OPERATIONS),
             "request_id": REQUEST,
             "refresh": {"type": "boolean"},
         },
         ("operation", "request_id"),
+        help_text="Historical success does not prove current design integrity.",
     ),
 ]
 PROJECT_NAMES = frozenset(row["name"] for row in PROJECT_TOOLS)

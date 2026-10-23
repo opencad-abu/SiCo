@@ -68,6 +68,31 @@ def catalog_records(catalog, allowed_tiers):
                             )
     except (OSError, sqlite3.Error, KeyError, TypeError, ValueError) as exc:
         raise TemplateUnavailable("template snapshot unavailable: " + str(exc)) from exc
+    from .template_standard import derived
+    from .template_standard.reader import locate
+    from .template_standard.replay import engine_record
+
+    standard_rows, standard_revision = derived.rows(catalog)
+    if standard_rows is None:
+        from .template_standard.reader import snapshot
+
+        standard, standard_revision = snapshot(catalog)
+        standard_rows = {ref: derived.row(item) for ref, item in standard.items()}
+    for reference, row in standard_rows.items():
+        selected_origins = [o for o in row["origins"] if o["tier"] in allowed_tiers]
+        if not selected_origins:
+            continue
+        checks = row["capabilities"]
+        if (row["use"]["reuse"] != "allow"
+                or checks["placement-reference-v1"] != "passed"
+                or not any(checks[p] == "passed"
+                           for p in ("whole-reuse-v1", "core-reuse-v1"))):
+            continue
+        item, _ = locate(catalog, reference)
+        records[reference] = engine_record(item)
+        origins[reference] = [o | dict(catalog=str(item["path"] / "package.json"))
+                              for o in selected_origins]
+    catalog._standard_snapshot_revision = standard_revision
     catalog._verify_snapshot()
     selected_records = {}
     selected_origins = {}

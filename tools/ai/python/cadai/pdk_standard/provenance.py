@@ -61,6 +61,9 @@ def verify(package):
             for include in config['includes']:
                 if resources.get(include['file_ref'], {}).get('kind') != 'model':
                     fail('Model include must reference a registered model resource')
+        for card in package.document('model.json').get('cards', {}).values():
+            if resources.get(card['file_ref'], {}).get('kind') != 'model':
+                fail('Model card must reference a registered model resource')
     for resource_id, resource in resources.items():
         if 'dependency' in resource:
             dep = dependencies.get(resource['dependency'], {})

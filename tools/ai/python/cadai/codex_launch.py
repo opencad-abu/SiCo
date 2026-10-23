@@ -12,12 +12,15 @@ from cadenv import EDA_TEMP_MARKERS
 from sicosessionenv import ENVIRONMENT_NAMES as SESSION_ENVIRONMENT_NAMES
 
 from .agent_profile import INTERACTIVE_PROFILE, allowed_tool_names, validate_profile
-from .mcp_command import mcp_command
 from .codex_selection import CodexConfigurationError, codex_tool_format, require_supported_runtime
 from .launch_policy import MCP_TOOL_NAMES as _ALL_MCP_TOOLS
 from .launch_policy import assistant_instructions
+from .mcp_command import mcp_command
+from .mcp_server import SERVER_ID
+from .model_environment import RETIRED_MODEL_KEYS, publish_gateway
+from .model_environment import settings as model_settings
 from .optional_resources import ENVIRONMENT_KEYS as OPTIONAL_RESOURCE_KEYS
-from .model_environment import RETIRED_MODEL_KEYS, settings as model_settings, publish_gateway
+from .responses_compat import codex_options, unsupported_fields
 from .tool_help_schema import DOC_ENV_NAMES
 
 _SICO_API_PROVIDER = "sico-environment"
@@ -33,6 +36,8 @@ def _configured_codex_options(environment: Mapping[str, str]) -> list[str]:
 
     if model:
         options.extend(["-m", model])
+    for name, value in codex_options(model).items():
+        options.extend(["-c", f"{name}={json.dumps(value)}"])
     if api_key and not base_url:
         base_url = _OPENAI_API_BASE_URL
     if base_url:
@@ -69,7 +74,9 @@ def prepare_codex_gateway(environment: dict[str, str]):
             "The Responses wrapper requires shared SICO_API_BASE_URL "
             "(or SICO_API_URL) and SICO_API_KEY in the launch environment"
         )
-    wrapper = ResponsesWrapper(base_url, api_key)
+    wrapper = ResponsesWrapper(
+        base_url, api_key, unsupported_fields=unsupported_fields(settings["MODEL"])
+    )
     for name in ("SICO_API_KEY", "CAD_AGENT_API_KEY", "OPENAI_API_KEY"):
         if environment.get(name) == api_key:
             environment.pop(name)
@@ -143,21 +150,21 @@ def build_codex_command(
             '"SICO_API_KEY","OPENAI_API_KEY","ANTHROPIC_*","CLAUDE_CODE_*"]'
         ),
         "-c",
-        f"mcp_servers.virtuoso.command={quote(mcp[0], ensure_ascii=False)}",
+        f"mcp_servers.{SERVER_ID}.command={quote(mcp[0], ensure_ascii=False)}",
         "-c",
-        (f"mcp_servers.virtuoso.args={quote(mcp[1:], ensure_ascii=False)}"),
+        (f"mcp_servers.{SERVER_ID}.args={quote(mcp[1:], ensure_ascii=False)}"),
         "-c",
-        f"mcp_servers.virtuoso.cwd={quote(str(mcp_cwd), ensure_ascii=False)}",
+        f"mcp_servers.{SERVER_ID}.cwd={quote(str(mcp_cwd), ensure_ascii=False)}",
         "-c",
-        f"mcp_servers.virtuoso.env_vars={json.dumps(env_vars, separators=(',', ':'))}",
+        f"mcp_servers.{SERVER_ID}.env_vars={json.dumps(env_vars, separators=(',', ':'))}",
         "-c",
-        f"mcp_servers.virtuoso.enabled_tools={json.dumps(enabled_tools)}",
+        f"mcp_servers.{SERVER_ID}.enabled_tools={json.dumps(enabled_tools)}",
         "-c",
-        "mcp_servers.virtuoso.required=true",
+        f"mcp_servers.{SERVER_ID}.required=true",
         "-c",
-        "mcp_servers.virtuoso.startup_timeout_sec=10",
+        f"mcp_servers.{SERVER_ID}.startup_timeout_sec=10",
         "-c",
-        f"mcp_servers.virtuoso.tool_timeout_sec={math.ceil(timeout) + 10}",
+        f"mcp_servers.{SERVER_ID}.tool_timeout_sec={math.ceil(timeout) + 10}",
     ]
     command.extend(_configured_codex_options(source))
     if codex_tool_format(source) == "flat":

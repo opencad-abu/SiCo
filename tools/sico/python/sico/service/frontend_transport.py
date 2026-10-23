@@ -20,16 +20,23 @@ from .frontend_codec import (
 )
 from .service_channel import service_channel
 from .service_completion import ServiceCompletion
-from .service_errors import RequestUnsent, ResultUnknown
+from .service_errors import RequestUnsent, ResultUnknown, ServiceResultUnknown
 from .service_messages import ServiceRequest
 from .service_protocol import exact_fields
 
+# One frontend request either lands quickly or declares its own longer budget:
+# opening, indexing and folding a long journal is a one-off cost the caller
+# knows about, and the UI waits on the async receipt instead of blocking.
+DEFAULT_TIMEOUT = 120
+LONG_TIMEOUT = 600
+
 
 class _Pending:
-    def __init__(self, operation, params, publish, key, discard):
+    def __init__(self, operation, params, publish, key, discard, timeout=None):
         self.ready = Future()
         self.operation, self.params, self.publish = operation, params, publish
         self.key, self.discard = key, discard
+        self.timeout = timeout
         self.abandoned = threading.Event()
         self.retired = False
         self.value = None
@@ -75,7 +82,7 @@ class _Completion(ServiceCompletion):
 
 
 class FrontendLane:
-    def __init__(self, descriptor, client_id, method, *, timeout=120):
+    def __init__(self, descriptor, client_id, method, *, timeout=DEFAULT_TIMEOUT):
         self.descriptor, self.client_id, self.method = descriptor, client_id, method
         self.timeout = timeout
         self.queue = queue.Queue(maxsize=32)
@@ -89,10 +96,11 @@ class FrontendLane:
         self.thread.start()
 
     def request(self, operation, params, publish=lambda value: value, *, operation_id=None,
-                discard=None, validate=None, control=None):
+                discard=None, validate=None, control=None, timeout=None):
         if self.closed.is_set():
             raise RuntimeError("服务连接已分离，请重新连接")
-        item = _Pending(operation, params, publish, operation_id or uuid.uuid4().hex, discard)
+        item = _Pending(operation, params, publish, operation_id or uuid.uuid4().hex, discard,
+                        timeout)
         item.control = control
         item.epoch = self.epoch
         try:
@@ -125,6 +133,18 @@ class FrontendLane:
                 try:
                     item = self.queue.get(timeout=0.5)
                 except queue.Empty:
+                    if channel is None and self.state == "disconnected":
+                        try:
+                            # Restore an idle lane's authenticated transport, not its requests
+                            # or control lease. In particular attach has no regular traffic.
+                            channel = resources.enter_context(service_channel(
+                                self.descriptor, deadline=time.monotonic() + 2,
+                                client_id=self.client_id, cancelled=self._cancelled,
+                                purpose="attach"))
+                            self.connection_id = channel.identity.connection_id
+                            self.state = "connected"
+                        except Exception:
+                            resources.close()
                     if channel is not None:
                         try:
                             channel.heartbeat(deadline=time.monotonic() + 2,
@@ -159,7 +179,8 @@ class FrontendLane:
                         exc = ProtocolError(str(exc) + ": " + item.key)
                     if item.abandoned.is_set() or self.closed.is_set():
                         item.retire()
-                    if not isinstance(exc, ValueError) or isinstance(exc, ProtocolError):
+                    if (not isinstance(exc, (ValueError, ServiceResultUnknown))
+                            or isinstance(exc, ProtocolError)):
                         self.state = "disconnected"
                         channel = None
                         self.epoch += 1
@@ -174,7 +195,7 @@ class FrontendLane:
                     break
 
     def _exchange(self, channel, item):
-        deadline = time.monotonic() + self.timeout
+        deadline = time.monotonic() + (item.timeout or self.timeout)
         limit = result_budget(item.operation) if self.method == "frontend.query" else PAYLOAD_BYTES
         started = False
 
@@ -244,7 +265,7 @@ class FrontendLane:
         if value["kind"] == "protocol":
             raise ProtocolError(value["message"] + ": " + item.key)
         if value["kind"] == "unknown":
-            raise ResultUnknown(item.key, item.operation, value["message"])
+            raise ServiceResultUnknown(item.key, item.operation, value["message"])
         raise ValueError(value["message"])
 
     def _pending(self, row):

@@ -11,9 +11,9 @@ import sys
 from typing import Iterable
 
 if __package__:
-    from .skill_syntax import Frame, Token, parse
+    from .skill_syntax import Frame, Token, parse, unbalanced_tokens
 else:
-    from skill_syntax import Frame, Token, parse
+    from skill_syntax import Frame, Token, parse, unbalanced_tokens
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -141,7 +141,15 @@ def _is_wrapped_algebraic_call(frame: Frame) -> bool:
 def analyze(path: Path, source: str | None = None) -> list[Finding]:
     text = path.read_text(encoding="utf-8") if source is None else source
     _, frames = parse(text)
-    findings: list[Finding] = []
+    findings: list[Finding] = [
+        Finding(
+            path,
+            token.line,
+            "unbalanced close" if token.kind == "close" else "unclosed open",
+            token.text,
+        )
+        for token in unbalanced_tokens(text)
+    ]
     for frame in frames:
         if _is_prefix_call(text, frame):
             name = frame.first_name

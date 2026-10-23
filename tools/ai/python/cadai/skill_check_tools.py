@@ -15,10 +15,9 @@ SKILL_CHECK_TOOL = {
     "name": "check_skill",
     "title": "Check SKILL without execution",
     "description": (
-        "Check SKILL delimiters, strings, comments and the function-definition and snippet "
-        "policy (procedure, lambda, prog, let) without contacting Virtuoso. "
-        "Supply exactly one of code or path. "
-        "Rejects use of ']' to close parentheses. Returns bounded diagnostics, a source hash "
+        "Check SKILL delimiters, strings, comments and the definition/snippet policy "
+        "(procedure, lambda, prog, let) without contacting Virtuoso. Supply code or path. "
+        "Rejects ']' as a paren close. Returns bounded diagnostics, a source hash "
         "and executed=false. This is not a complete syntax or logic check."
     ),
     "inputSchema": {

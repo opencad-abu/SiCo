@@ -82,6 +82,20 @@ class ToolResult:
 
 
 @dataclass(frozen=True)
+class ToolExecution:
+    """Narrow admission capability supplied by the application boundary.
+
+    Core tool execution only needs to know whether a queued call may start.
+    Session identity, progress callbacks, and broker routing stay in the
+    transport scope that assembles this value.  Keeping the callbacks here
+    makes the core registry usable without importing transport or host code.
+    """
+
+    cancelled: Callable[[], bool] | None = None
+    before_start: Callable[[], ToolResult | None] | None = None
+
+
+@dataclass(frozen=True)
 class TextDelta:
     text: str
 

@@ -9,13 +9,23 @@ class DiagnosticQueue:
     def __init__(self, capacity=64):
         self.queue = queue.Queue(maxsize=capacity)
         self.dropped = 0
-        self.thread = threading.Thread(target=self._run, name="copilot-diagnostics", daemon=True)
-        self.thread.start()
+        self.thread = None
+        self._start_lock = threading.Lock()
+
+    def _start(self):
+        # Imports precede the old-kernel service custody fork. Only a real
+        # submission may start the logging worker, inside the process using it.
+        with self._start_lock:
+            if self.thread is None:
+                worker = threading.Thread(target=self._run, name="copilot-diagnostics", daemon=True)
+                worker.start()
+                self.thread = worker
 
     def submit(self, name, message, error=None):
         try:
+            self._start()
             self.queue.put_nowait((name, message, error))
-        except queue.Full:
+        except (queue.Full, RuntimeError):
             self.dropped += 1
 
     def _run(self):

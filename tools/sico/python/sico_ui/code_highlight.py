@@ -10,14 +10,9 @@ from __future__ import annotations
 import re
 from html import escape
 
-from .theme import (
-    CODE_BLOCK_BACKGROUND,
-    CODE_BUILTIN,
-    CODE_COMMENT,
-    CODE_KEYWORD,
-    CODE_NUMBER,
-    CODE_STRING,
-)
+from cadgui.fonts import mono_family
+
+from .theme import LIGHT_PALETTE, active_palette
 
 __all__ = (
     "CODE_COLORS", "LANGUAGES", "code_block_html", "guess_language", "highlight",
@@ -29,12 +24,25 @@ MAX_HIGHLIGHT_LINES = 2000
 
 LANGUAGES = ("python", "shell", "skill", "tcl")
 
+def code_colors():
+    """Token colours from the active palette."""
+    p = active_palette()
+    return {
+        "keyword": p.code_keyword,
+        "string": p.code_string,
+        "comment": p.code_comment,
+        "number": p.code_number,
+        "builtin": p.code_builtin,
+    }
+
+
+# Historical light-theme mapping for callers that need a concrete example.
 CODE_COLORS = {
-    "keyword": CODE_KEYWORD,
-    "string": CODE_STRING,
-    "comment": CODE_COMMENT,
-    "number": CODE_NUMBER,
-    "builtin": CODE_BUILTIN,
+    "keyword": LIGHT_PALETTE.code_keyword,
+    "string": LIGHT_PALETTE.code_string,
+    "comment": LIGHT_PALETTE.code_comment,
+    "number": LIGHT_PALETTE.code_number,
+    "builtin": LIGHT_PALETTE.code_builtin,
 }
 
 # 围栏语言标记与解释器/后缀的别名；均为小写比较。
@@ -166,7 +174,7 @@ def highlight(code, language, *, colors=None):
             or source.count("\n") > MAX_HIGHLIGHT_LINES:
         return escape(source)
     matcher, names = rules
-    palette = colors or CODE_COLORS
+    palette = colors or code_colors()
     parts, position = [], 0
     for match in matcher.finditer(source):
         if match.start() > position:
@@ -186,8 +194,10 @@ def code_block_html(code, language, *, colors=None):
     """One highlighted code block: monospace, light background, wrapped lines."""
 
     body = highlight(code, language, colors=colors)
-    return ('<pre style="font-family: monospace; white-space: pre-wrap; '
-            f'background-color: {CODE_BLOCK_BACKGROUND}; margin: 6px 0;">' + body + "</pre>")
+    return (f'<pre style="font-family: \'{mono_family()}\', monospace; '
+            'white-space: pre-wrap; '
+            f'background-color: {active_palette().code_block_background}; '
+            'margin: 6px 0;">' + body + "</pre>")
 
 
 def guess_language(source):

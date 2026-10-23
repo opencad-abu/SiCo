@@ -7,7 +7,8 @@ import math
 from .template_coords import is_integer_space
 from .template_schema import TemplateUnavailable, canonical, digest
 from .template_symbol_contacts import GRID, MAX_STUB, attach_stubs, side_of
-from .template_symbol_pins import label_positions, supply_pins
+from .template_symbol_labels import extract_labels
+from .template_symbol_pins import label_positions, suggest_port_roles, supply_pins
 
 
 def point(value, scale, unit=1):
@@ -30,7 +31,9 @@ def bounds(points):
     ]
 
 
-def outline_plan(record, plan, scale=1, roles=None):
+def outline_plan(record, plan, scale=1, roles=None, label_policy="strict"):
+    if label_policy not in {"strict", "drop", "preserve"}:
+        raise TemplateUnavailable("unsupported label policy: " + str(label_policy))
     asset = record.get("assets", {}).get("symbol")
     if not asset or asset.get("instances") or asset.get("mosaics"):
         raise TemplateUnavailable("template outline requires a captured flat symbol asset")
@@ -47,6 +50,25 @@ def outline_plan(record, plan, scale=1, roles=None):
     source_ports = {p["name"]: p for p in asset["ports"]}
     if set(source_ports) - set(ports):
         raise TemplateUnavailable("template symbol has extra ports absent from schematic")
+    label_result = extract_labels(
+        asset,
+        set(source_ports),
+        scale=scale,
+        unit=unit,
+        policy=label_policy,
+    )
+    unresolved = label_result["unresolved"] + label_result["dynamic"]
+    if label_policy == "strict" and unresolved:
+        raise TemplateUnavailable(
+            "source symbol labels are not rendered: " + ", ".join(unresolved[:8])
+        )
+    if label_policy == "preserve" and label_result["dynamic"]:
+        raise TemplateUnavailable(
+            "source symbol dynamic labels require explicit replacement: "
+            + ", ".join(label_result["dynamic"][:8])
+        )
+    annotations = label_result["annotations"] if label_policy == "preserve" else []
+    dropped = unresolved if label_policy == "drop" else []
     anchors = {}
     for pin in asset["pins"]:
         name = pin["terminal"]
@@ -152,7 +174,8 @@ def outline_plan(record, plan, scale=1, roles=None):
             )
         )
         labels.append([p["name"], *label_positions(*xy, side)])
-    box = bounds(body_points + list(anchors.values()))
+    label_points = [point for annotation in annotations for point in annotation["bbox"]]
+    box = bounds(body_points + list(anchors.values()) + label_points)
     if box[0][0] >= box[1][0] or box[0][1] >= box[1][1]:
         raise TemplateUnavailable("template selection box is degenerate")
     plan = {
@@ -168,14 +191,22 @@ def outline_plan(record, plan, scale=1, roles=None):
         "outline_pins": pins,
         "added_ports": [p["name"] for p in plan["ports"] if p["source_name"] in originally_missing],
         "port_roles": roles or {},
+        "port_role_suggestions": suggest_port_roles(plan["ports"], roles),
         "pin_labels": labels,
         "font_height": 0.0625,
         "font": "stick",
         "outline_source": asset["source"],
+        "label_policy": label_policy,
+        "annotations": annotations,
+        "annotation_count": len(annotations),
+        "annotation_overlaps": label_result["overlaps"],
+        "dropped_labels": dropped,
+        "label_expression_policy": "literal_only; dynamic_rejected; no_evaluator",
         "fixed_annotations": [
             "cdsName():ILLabel",
             "[@partName]:NLPLabel",
             "[@cellName]:NLPLabel",
+            "[@instanceName]:NLPLabel",
             "cdsTerm(terminal_name):ILLabel",
         ],
         "pin_policy": "power_top; ground_bottom; signal_side_preserved; grid_pins_touch_body",
@@ -201,16 +232,17 @@ def outline_shapes(plan):
             fig.update(ellipseBBox=ellipse[0], startAngle=ellipse[1], stopAngle=ellipse[2])
         shapes.append({"figure": fig})
 
-    def label(text, xy, justify):
+    def label(text, xy, justify, *, height=None, font=None, orient="R0"):
         shapes.append(
             {
                 "figure": dict(
                     objType="label",
                     text=text,
                     xy=xy,
-                    height=0.0625,
-                    font=plan["font"],
+                    height=plan["font_height"] if height is None else height,
+                    font=plan["font"] if font is None else font,
                     justify=justify,
+                    orient=orient,
                 )
             }
         )
@@ -230,4 +262,14 @@ def outline_shapes(plan):
     label("cdsName()", [lo[0], hi[1] + 0.125], "lowerLeft")
     label("[@partName]", [(lo[i] + hi[i]) / 2 for i in (0, 1)], "centerCenter")
     label("[@cellName]", [hi[0], hi[1] + 0.125], "lowerRight")
+    label("[@instanceName]", [lo[0], lo[1] - 0.375], "upperLeft")
+    for annotation in plan.get("annotations", []):
+        label(
+            annotation["text"],
+            annotation["xy"],
+            annotation["justify"],
+            height=annotation["height"],
+            font=annotation["font"],
+            orient=annotation["orient"],
+        )
     return shapes

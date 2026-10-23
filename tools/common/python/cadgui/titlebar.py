@@ -42,15 +42,11 @@ class SiTitleBar(QWidget):
         layout = QHBoxLayout(content)
         layout.setContentsMargins(8, 0, 4, 0)
         layout.setSpacing(6)
+        self._content_layout = layout
         # 品牌图标由调用方给：SiCo 用产品 logo，独立流程用站点 logo 或不放。
         self.mark = mark
-        if mark is not None and not mark.isNull():
-            logo = QLabel()
-            logo.setObjectName("copilotTitleLogo")
-            logo.setFixedWidth(26)
-            logo.setAlignment(Qt.AlignCenter)
-            logo.setPixmap(mark.pixmap(20, 20))
-            layout.addWidget(logo)
+        self.logo = None
+        self.set_mark(mark)
         self.title = QLabel(title)
         self.title.setObjectName("copilotTitleText")
         self.title.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -76,6 +72,22 @@ class SiTitleBar(QWidget):
         self.rule.setAttribute(Qt.WA_StyledBackground, True)
         self.rule.setFixedHeight(3)
         column.addWidget(self.rule)
+
+    def set_mark(self, mark):
+        """Swap the title-bar logo without rebuilding the title bar."""
+        self.mark = mark
+        if mark is None or mark.isNull():
+            if self.logo is not None:
+                self.logo.hide()
+            return
+        if self.logo is None:
+            self.logo = QLabel()
+            self.logo.setObjectName("copilotTitleLogo")
+            self.logo.setFixedWidth(26)
+            self.logo.setAlignment(Qt.AlignCenter)
+            self._content_layout.insertWidget(0, self.logo)
+        self.logo.setPixmap(mark.pixmap(20, 20))
+        self.logo.show()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:

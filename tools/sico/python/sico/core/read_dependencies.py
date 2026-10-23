@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-from ..transport.framing import strict_json
+from cadai.json_values import strict_json
 from sicostate import project_root
 
 DEPENDENCIES = frozenset({"pdk", "model", "parameters", "target", "decision"})

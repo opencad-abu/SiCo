@@ -1,836 +1,1701 @@
 {
-  "schema_version": 1,
-  "reviews": [
-    {
-      "path": "tools/aivw/python/aivworkbench/agent/context.py",
-      "disposition": "mixed",
-      "rationale": "The thin redact_text string fallback is explicitly registered alongside same-object exports; the actual context/redaction owners hold all state.",
-      "records": ["aivworkbench.agent.context exports from aivworkbench.agent.artifact_locator", "aivworkbench.agent.context exports from aivworkbench.agent.bounded_context", "aivworkbench.agent.context exports from aivworkbench.agent.context_page", "aivworkbench.agent.context exports from aivworkbench.agent.redaction", "aivworkbench.agent.context.redact_text"],
-      "evidence": ["tools/aivw/tests/test_foundation_owners.py"],
-      "surface_sha256": "cba3d31fbef47c201c44901dc6bd64cedfa615b613af1b2c2b56735b3ed30834"
-    },
-    {
-      "path": "tools/aivw/python/aivworkbench/agent/protocol.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["aivworkbench.agent.protocol exports from aivworkbench.agent.protocol_action", "aivworkbench.agent.protocol exports from aivworkbench.agent.protocol_codec", "aivworkbench.agent.protocol exports from aivworkbench.agent.protocol_constants", "aivworkbench.agent.protocol exports from aivworkbench.agent.protocol_envelope", "aivworkbench.agent.protocol exports from aivworkbench.agent.protocol_errors", "aivworkbench.agent.protocol exports from aivworkbench.agent.protocol_event"],
-      "evidence": ["tools/aivw/tests/test_foundation_owners.py"],
-      "surface_sha256": "cfac7116c999f4187cd6ad03728859726b11bda6d4eb807e35005f051ea39d2e"
-    },
-    {
-      "path": "tools/aivw/python/aivworkbench/agent/providers/bundle.py",
-      "disposition": "mixed",
-      "rationale": "Listed aliases forward validation/provider owners; build_relocatable_bundle remains a separately registered non-operational tombstone.",
-      "records": ["aivworkbench.agent.providers.bundle.build_relocatable_bundle", "aivworkbench.agent.providers.bundle exports from aivworkbench.agent.providers.bundle_contract", "aivworkbench.agent.providers.bundle exports from aivworkbench.agent.providers.bundle_integrity", "aivworkbench.agent.providers.bundle exports from aivworkbench.agent.providers.bundle_provider"],
-      "evidence": ["tools/aivw/tests/test_bundle_release_boundary.py"],
-      "surface_sha256": "06c444ebfe98aa5f0bb694c96f0bb1bd448c1cdf9445de58a808c382d2f14620"
-    },
-    {
-      "path": "tools/aivw/python/aivworkbench/agent/providers/bundle_contract.py",
-      "disposition": "canonical",
-      "rationale": "Legacy describes the offline response-data format. This is the unique record/strict JSON owner, not a source packager or forwarding facade. Retain while that input format is supported.",
-      "records": [],
-      "evidence": ["tools/aivw/tests/test_bundle_release_boundary.py"],
-      "surface_sha256": "a8cf90568143010d60671a1f3e1bbf4612189d1861bfb85a337e617eba6047db"
-    },
-    {
-      "path": "tools/aivw/python/aivworkbench/agent/providers/bundle_integrity.py",
-      "disposition": "canonical",
-      "rationale": "Owns validation and private import of existing offline bundle data. Metadata validation does not certify a release; source packaging remains the explicit tombstone in bundle.py.",
-      "records": [],
-      "evidence": ["tools/aivw/tests/test_bundle_release_boundary.py"],
-      "surface_sha256": "82cd9a471d0cf6a81bbaafe359e881060d2f8389ddc5f6040f46e2d0c68b09ba"
-    },
-    {
-      "path": "tools/aivw/python/aivworkbench/agent/providers/bundle_provider.py",
-      "disposition": "canonical",
-      "rationale": "The current provider for validated offline response records, using ReplayProvider. It is not a second packaging or execution authority.",
-      "records": [],
-      "evidence": ["tools/aivw/tests/test_bundle_release_boundary.py"],
-      "surface_sha256": "6f54262aafdc7f9d4d40d7197f93204986e069362775c9457ba358cde7168476"
-    },
-    {
-      "path": "tools/aivw/python/aivworkbench/agent/qualification.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["aivworkbench.agent.qualification exports from aivworkbench.agent.qualification_candidate", "aivworkbench.agent.qualification exports from aivworkbench.agent.qualification_config", "aivworkbench.agent.qualification exports from aivworkbench.agent.qualification_contract", "aivworkbench.agent.qualification exports from aivworkbench.agent.qualification_models", "aivworkbench.agent.qualification exports from aivworkbench.agent.qualification_provider", "aivworkbench.agent.qualification exports from aivworkbench.agent.qualification_replay", "aivworkbench.agent.qualification exports from aivworkbench.agent.qualification_report", "aivworkbench.agent.qualification exports from aivworkbench.agent.qualification_workflow"],
-      "evidence": ["tools/aivw/tests/test_m2_qualification.py"],
-      "surface_sha256": "7935476e25dcfd353205c2440dd7b29a5257c3c2e7ccc5b6ffd9c3377fef7f5e"
-    },
-    {
-      "path": "tools/aivw/python/aivworkbench/connectivity.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["aivworkbench.connectivity exports from aivworkbench.connectivity_compare", "aivworkbench.connectivity exports from aivworkbench.connectivity_lex", "aivworkbench.connectivity exports from aivworkbench.connectivity_model", "aivworkbench.connectivity exports from aivworkbench.connectivity_normalize", "aivworkbench.connectivity exports from aivworkbench.connectivity_si", "aivworkbench.connectivity exports from aivworkbench.connectivity_verilog"],
-      "evidence": ["tools/aivw/tests/test_connectivity_boundaries.py"],
-      "surface_sha256": "aa7a31b5233ddc8841c5abaae31e94dc04317182149381a120b926922ae86f89"
-    },
-    {
-      "path": "tools/aivw/python/aivworkbench/executors/virtuoso.py",
-      "disposition": "mixed",
-      "rationale": "Public run_snapshot/run_config_binding are registered behavioral wrappers with monkeypatch compatibility; support aliases are registered separately.",
-      "records": ["aivworkbench.executors.virtuoso.run_snapshot", "aivworkbench.executors.virtuoso.run_config_binding", "aivworkbench.executors.virtuoso exports from aivworkbench.executors.virtuoso_support"],
-      "evidence": ["tools/aivw/tests/test_executor.py"],
-      "surface_sha256": "bfd70ce406b507dfca906e9211b070578bab46eca79ac2bb03a64c4b9486e92f"
-    },
-    {
-      "path": "tools/aivw/python/aivworkbench/ldo_qualification.py",
-      "disposition": "mixed",
-      "rationale": "qualify_ldo_profile remains canonical; listed imports are same-object compatibility exports.",
-      "records": ["aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_aggregate", "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_evidence", "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_holdout", "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_negative", "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_repeat", "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_report", "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_secrets", "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_snapshot", "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_status", "aivworkbench.ldo_qualification exports from aivworkbench.ldo_snapshot_authentication"],
-      "evidence": ["tools/aivw/tests/test_ldo_qualification_owners.py"],
-      "surface_sha256": "28223abc566e8d294004ee98f8a14525e3170ce43f5e6089655347d52ccbeb89"
-    },
-    {
-      "path": "tools/aivw/python/aivworkbench/manifest.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["aivworkbench.manifest exports from aivworkbench.manifest_artifacts", "aivworkbench.manifest exports from aivworkbench.manifest_locators", "aivworkbench.manifest exports from aivworkbench.manifest_publication", "aivworkbench.manifest exports from aivworkbench.manifest_records", "aivworkbench.manifest exports from aivworkbench.manifest_resolution", "aivworkbench.manifest exports from aivworkbench.manifest_verification"],
-      "evidence": ["tools/aivw/tests/test_foundation_owners.py"],
-      "surface_sha256": "4bac84346e28577988b87a58e570cbf79f75507c09fa2412e3db7f22fb2e9895"
-    },
-    {
-      "path": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator.py",
-      "disposition": "mixed",
-      "rationale": "generate_baseline_candidate and mode selection remain canonical. Only listed contract/render/matrix aliases are migration entries.",
-      "records": ["aivworkbench.plugins.latched_dynamic_comparator exports from aivworkbench.plugins.latched_dynamic_comparator_contract", "aivworkbench.plugins.latched_dynamic_comparator exports from aivworkbench.plugins.latched_dynamic_comparator_l1", "aivworkbench.plugins.latched_dynamic_comparator exports from aivworkbench.plugins.latched_dynamic_comparator_legacy", "aivworkbench.plugins.latched_dynamic_comparator exports from aivworkbench.plugins.latched_dynamic_comparator_matrix", "aivworkbench.plugins.latched_dynamic_comparator exports from aivworkbench.plugins.latched_dynamic_comparator_model"],
-      "evidence": ["tools/aivw/tests/test_xcelium_l1.py"],
-      "surface_sha256": "24871cc6db33eb0168d03f17160325269dea7a4980c68b61b0d5ec9cd55631ab"
-    },
-    {
-      "path": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_legacy.py",
-      "disposition": "canonical",
-      "rationale": "The explicitly named legacy smoke mode is selected only when verification/test_plan is absent. L1 requires a plan and has different semantics, so it is not a drop-in replacement. Retain this current optional mode; retire only with a future contract that requires verification and migrates plan-less callers.",
-      "records": [],
-      "evidence": ["tools/aivw/tests/test_model_generation.py"],
-      "surface_sha256": "e7beaa39e840c02cab2efcafc786d5a436a0faf5e7b11fa9fbe6ca4707c11d2c"
-    },
-    {
-      "path": "tools/aivw/python/aivworkbench/plugins/xcelium_evidence.py",
-      "disposition": "mixed",
-      "rationale": "ComparatorXceliumEvidenceAdapter and adapter selection remain canonical; contracts and route imports are migration aliases.",
-      "records": ["aivworkbench.plugins.xcelium_evidence exports from aivworkbench.plugins.xcelium_evidence_contract", "aivworkbench.plugins.xcelium_evidence exports from aivworkbench.plugins.xcelium_evidence_prepare", "aivworkbench.plugins.xcelium_evidence exports from aivworkbench.plugins.xcelium_evidence_routes"],
-      "evidence": ["tools/aivw/tests/test_xcelium_evidence.py"],
-      "surface_sha256": "88a487784bc4595fe58396b0f49946758233e3faed667dcec513ed677cb1b4af"
-    },
-    {
-      "path": "tools/aivw/python/aivworkbench/pvt_adapter.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["aivworkbench.pvt_adapter exports from aivworkbench.pvt_launcher", "aivworkbench.pvt_adapter exports from aivworkbench.pvt_model_sections", "aivworkbench.pvt_adapter exports from aivworkbench.pvt_plan_builder", "aivworkbench.pvt_adapter exports from aivworkbench.pvt_plan_models", "aivworkbench.pvt_adapter exports from aivworkbench.pvt_result_evaluator"],
-      "evidence": ["tools/aivw/tests/test_pvt_adapter.py"],
-      "surface_sha256": "8f2f005efe2d36f23b72e135101f02248445828b5657e72a9b726bb25c1696db"
-    },
-    {
-      "path": "tools/ai/python/cadai/env_names.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["cadai.env_names CAD_AGENT_* fallback", "cadai.env_names pre-SICO catalog/template path variables"],
-      "evidence": ["tools/ai/python/tests/test_agent_provider_config.py", "tools/ai/python/tests/test_template_catalog.py"],
-      "surface_sha256": "9f8189dfdf19c966b61eded5366e0dd5a60d769c42f93d6ab903aa5443571f9a"
-    },
-    {
-      "path": "tools/ai/python/cadai/mcp.py",
-      "disposition": "mixed",
-      "rationale": "McpServer and the environment launch remain canonical orchestration; only the four explicitly documented aliases are migration entries. Other imports are implementation/patch seams.",
-      "records": ["cadai.mcp exports from cadai.mcp_definitions", "cadai.mcp exports from cadai.mcp_instructions", "cadai.mcp exports from cadai.mcp_transport"],
-      "evidence": ["tools/ai/python/tests/test_mcp_registry.py"],
-      "surface_sha256": "68e8961153e07f4dc4f13deae4c66915b43576ce0381fc5ddcb7631f7410240a"
-    },
-    {
-      "path": "tools/ai/python/cadai/mcp_definitions.py",
-      "disposition": "canonical",
-      "rationale": "The canonical ordered schema composition/index shared by MCP and agent adapters. Legacy in its description refers to superseded focus tools, not to this authority.",
-      "records": [],
-      "evidence": ["tools/ai/python/tests/test_mcp_registry.py"],
-      "surface_sha256": "9d072903a5688dfefbb792170e838b12fb779005e30518f3ff6da6b30315f74f"
-    },
-    {
-      "path": "tools/ai/python/cadai/mcp_workflow_handler.py",
-      "disposition": "canonical",
-      "rationale": "The unique MCP-to-SKILL workflow adapter, including native Maestro dispatch and unavailable guards. Workflow naming does not make this bounded protocol adapter redundant.",
-      "records": [],
-      "evidence": ["tools/ai/python/tests/test_workflow_tools.py"],
-      "surface_sha256": "23c4103a579d6771d9c669f14f78274b8cae3d38fb3abf053b3179fa87a0714a"
-    },
-    {
-      "path": "tools/sico/python/sico/codex/__init__.py",
-      "disposition": "canonical",
-      "rationale": "Package summary mentions an optional gateway protocol. CODEX_VERSION deliberately reuses the selected version authority; the package import contract is current.",
-      "records": [],
-      "evidence": ["tools/ai/python/tests/test_codex_selection.py"],
-      "surface_sha256": "1cb81d29c1682a50fea40c6a9bd7df3a14885f1aff2c86a121420a4a8fa0e129"
-    },
-    {
-      "path": "tools/sico/python/sico/service/workbench_publication.py",
-      "disposition": "canonical",
-      "rationale": "Owns bounded query publication. Complete snapshots are a separate compatibility API; this query publication is the recommended current path.",
-      "records": [],
-      "evidence": ["tools/ai/python/tests/test_agent_workbench_query.py"],
-      "surface_sha256": "f175f9a4506bb2ff665bf601c84d480d478a9223a788198c3189c378ddb3671e"
-    },
-    {
-      "path": "tools/sico/python/sico/service/workbench_snapshot.py",
-      "disposition": "mixed",
-      "rationale": "WorkbenchSource.snapshot/empty and WorkbenchSnapshot are complete-snapshot compatibility APIs. Shared projection helpers remain current for bounded query publication.",
-      "records": ["WorkbenchSource complete snapshot compatibility"],
-      "evidence": ["tools/ai/python/tests/test_agent_workbench_query.py"],
-      "surface_sha256": "218e06da10e9bafd07f71cf245786d78800bb37a4f0b808d2ccbfb9e539a5b8c"
-    },
-    {
-      "path": "tools/sico/python/sico_ui/chrome.py",
-      "disposition": "mixed",
-      "rationale": "chrome remains the canonical composition owner for the existing Qt window classes. Window flags/screen policy, title-bar appearance/controls, and the complete existing frameless interaction plus grips have distinct owners. The original mixin and Qt MRO are retained, not extended with shared-host helpers: drag/resize state stays solely on each window. Grip/titlebar QWidget parent references use interaction methods and do not duplicate geometry/state. Twelve reexports are exact aliases. Fifteen original top-level definitions/constants retain exact AST; FramelessWindowMixin changes only one local direction normalization, fixing camel-case corner grips that previously resized vertically only. Existing composition-level hooks and signal-time method lookup remain. Tests cover event super order, first-show centering, screen priority, state isolation and eight resize directions including minimum bounds. Native source inventory includes all three new production owners; no build/release qualification is claimed.",
-      "records": [
-        "sico_ui.chrome exports from sico_ui.window_policy",
-        "sico_ui.chrome exports from sico_ui.window_frameless",
-        "sico_ui.chrome exports from sico_ui.window_titlebar"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_agent_gui.py",
-        "tools/ai/python/tests/test_agent_composer.py",
-        "tools/ai/python/tests/test_window_chrome.py",
-        "tools/ai/python/tests/test_agent_terminal_tool.py",
-        "tools/utility/tests/test_compatibility_source_exports.py"
-      ],
-      "surface_sha256": "a272cee86249ba115f0fd4531028a5c17424843d864edc675145dd75e2ecfc19"
-    },
-    {
-      "path": "tools/sico/python/sico_ui/target_provider.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["sico_ui.target_provider exports from sico.service.targets"],
-      "evidence": ["tools/ai/python/tests/test_agent_target_provider.py"],
-      "surface_sha256": "eb792041c0a315c910ca2074561e72c11bd56d313a832c92741f72ec0ea66e68"
-    },
-    {
-      "path": "tools/ai/terminal/pyqt/cad_ai_terminal/qt_frontend.py",
-      "disposition": "mixed",
-      "rationale": "run_frontend owns lazy application startup; imported private helpers are same-object migration aliases.",
-      "records": ["cad_ai_terminal.qt_frontend exports from cad_ai_terminal.appearance", "cad_ai_terminal.qt_frontend exports from cad_ai_terminal.input_behavior", "cad_ai_terminal.qt_frontend exports from cad_ai_terminal.output_capture", "cad_ai_terminal.qt_frontend exports from cad_ai_terminal.resources"],
-      "evidence": ["tools/ai/python/tests/test_pyqt_terminal.py"],
-      "surface_sha256": "da711847956677fd339b43c9c494955af7cd421e22288a00bc12dc8410ce872d"
-    },
-    {
-      "path": "tools/ai/terminal/pyqt/cad_ai_terminal/terminal_session.py",
-      "disposition": "mixed",
-      "rationale": "create_terminal_session_class owns tab lifetime; only shared input/shell helpers are migration aliases.",
-      "records": ["cad_ai_terminal.terminal_session exports from cad_ai_terminal.input_behavior", "cad_ai_terminal.terminal_session exports from cad_ai_terminal.shell_environment"],
-      "evidence": ["tools/ai/python/tests/test_pyqt_terminal.py"],
-      "surface_sha256": "73687773a847f693d4c3deedc99598bad832417c78cb4b1b39f2ae2d6c317e1f"
-    },
-    {
-      "path": "tools/common/python/cadbatch/compat.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["cadbatch.compat.tomllib Python 3.9 adapter"],
-      "evidence": ["deploy/tests/test_flow_config_inventory.py"],
-      "surface_sha256": "0194eaf6bcc2619aa4354222af9b92f3018bd3dfcc971a1e8352d8c083b949c9"
-    },
-    {
-      "path": "tools/common/python/cadgui/library_browser.py",
-      "disposition": "mixed",
-      "rationale": "LibraryBrowserWidget remains the presentation composition. Tree/selection imports are listed migration aliases; Qt dependencies are implementation details.",
-      "records": ["cadgui.library_browser exports from cadgui.category_tree", "cadgui.library_browser exports from cadgui.library_categories", "cadgui.library_browser exports from cadgui.library_groups", "cadgui.library_browser exports from cadgui.library_sources", "cadgui.library_browser exports from cadgui.library_tree", "cadgui.library_browser exports from cadgui.tree_item"],
-      "evidence": ["tools/common/python/tests/test_cadgui_library_browser_tree.py"],
-      "surface_sha256": "a147e7966d2364a01d5a0c8f6d4412c2b812efc381c7b8141d718dba31c87dcf"
-    },
-    {
-      "path": "tools/common/python/cadgui/library_browser_controller.py",
-      "disposition": "mixed",
-      "rationale": "CatalogController remains the Qt adapter. LibraryBrowserController/LibraryCatalogController are migration spellings. CatalogLoadRequest/Result and CatalogDiagnostics are intentionally supported boundary types for injected providers.",
-      "records": ["cadgui.library_browser_controller exports from cadgui.library_browser_controller"],
-      "evidence": ["tools/common/python/tests/test_cadgui_library_browser_controller.py"],
-      "surface_sha256": "b78386c76b1fec5d1929d2e044a19d7d206de90141aa1e18c94222c496c0027e"
-    },
-    {
-      "path": "tools/common/python/cadgui/tree_item.py",
-      "disposition": "canonical",
-      "rationale": "Current one-column Qt adapter intentionally supports list-style calls plus effective ancestor visibility. Hosts and native trees use this contract; QTreeWidgetItem alone has different call/visibility semantics. Retire shorthands only after an explicit host API migration.",
-      "records": [],
-      "evidence": ["tools/common/python/tests/test_cadgui_library_browser_tree.py"],
-      "surface_sha256": "dc06a59588288e5d5e23470b04a7fac2136a2d2dbad79632859f19f35841ea92"
-    },
-    {
-      "path": "tools/common/python/cadgui/tree_list.py",
-      "disposition": "canonical",
-      "rationale": "Current row adapter for native trees. Library rows are unique physical libraries while category rows enumerate nodes; replacing it with raw tree traversal would change selection semantics. Keep until those host contracts are explicitly migrated.",
-      "records": [],
-      "evidence": ["tools/common/python/tests/test_cadgui_library_browser_tree.py"],
-      "surface_sha256": "5d95c7f3bfe0688838565eb90239069843226bce7a5c660022a8baa482b5c17c"
-    },
-    {
-      "path": "tools/common/python/cadlsf/cache.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["cadlsf.cache exports from cadlsf.cache_types", "cadlsf.cache exports from cadlsf.monitor_cache", "cadlsf.cache exports from cadlsf.session_cache"],
-      "evidence": ["tools/common/python/tests/test_cadlsf_components.py"],
-      "surface_sha256": "ea82f5c84e16c8695f93456c919720a99a353cb15b7efd38930c9eeebd220f30"
-    },
-    {
-      "path": "tools/common/python/cadlsf/collector.py",
-      "disposition": "mixed",
-      "rationale": "LsfCollector remains the public collection use-case API. Listed commands/cache/sampling/model helpers reference sole owners and are migration aliases.",
-      "records": ["cadlsf.collector exports from cadlsf.capacity", "cadlsf.collector exports from cadlsf.command_runner", "cadlsf.collector exports from cadlsf.commands", "cadlsf.collector exports from cadlsf.model", "cadlsf.collector exports from cadlsf.monitor_cache", "cadlsf.collector exports from cadlsf.monitor_topology", "cadlsf.collector exports from cadlsf.parsers", "cadlsf.collector exports from cadlsf.sampling", "cadlsf.collector exports from cadlsf.session_cache", "cadlsf.collector exports from cadlsf.session_topology", "cadlsf.collector exports from cadlsf.snapshots"],
-      "evidence": ["tools/common/python/tests/test_cadlsf_components.py"],
-      "surface_sha256": "29c2da94f91eddff80c29d394c32e32997d13f699ab245bba8117f1e5829d26f"
-    },
-    {
-      "path": "tools/common/python/cadlsf/gui/models.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["cadlsf.gui.models exports from cadlsf.gui.model_contracts", "cadlsf.gui.models exports from cadlsf.gui.model_delegates", "cadlsf.gui.models exports from cadlsf.gui.model_filters", "cadlsf.gui.models exports from cadlsf.gui.model_formatters", "cadlsf.gui.models exports from cadlsf.gui.model_tables"],
-      "evidence": ["tools/common/python/tests/test_cadlsf_gui.py"],
-      "surface_sha256": "b1afe6abd867d20233f83be1a111790876e04e9c0eed8e01658c7acd25ef7f37"
-    },
-    {
-      "path": "tools/common/python/cadlsf/gui/workers.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["cadlsf.gui.workers exports from cadlsf.gui.job_action_workers", "cadlsf.gui.workers exports from cadlsf.gui.refresh_workers", "cadlsf.gui.workers exports from cadlsf.gui.worker_collector"],
-      "evidence": ["tools/common/python/tests/test_cadlsf_gui_worker_contracts.py"],
-      "surface_sha256": "f683018b08b9bf08cf3864d003f96eb2cfe4d363d74e7ca653a163c5f63c0fb4"
-    },
-    {
-      "path": "tools/common/python/cadprofile/compat.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["cadprofile.compat.tomllib Python 3.9 adapter"],
-      "evidence": ["deploy/tests/test_flow_config_inventory.py"],
-      "surface_sha256": "0194eaf6bcc2619aa4354222af9b92f3018bd3dfcc971a1e8352d8c083b949c9"
-    },
-    {
-      "path": "tools/common/python/cadprofile/model.py",
-      "disposition": "mixed",
-      "rationale": "load_profile and path_keys remain canonical; listed schema/value/validation exports are migration aliases.",
-      "records": ["cadprofile.model exports from cadconfig.booleans", "cadprofile.model exports from cadconfig.paths", "cadprofile.model exports from cadconfig.scalars", "cadprofile.model exports from cadprofile.normalization", "cadprofile.model exports from cadprofile.schema", "cadprofile.model exports from cadprofile.validation_common", "cadprofile.model exports from cadprofile.validation_flows", "cadprofile.model exports from cadprofile.values"],
-      "evidence": ["tools/common/python/tests/test_cadprofile_core_basic.py"],
-      "surface_sha256": "543c9920058bae224345f5bcec5f41fa381a065e6dd1cedb7b33cfa46b9d0608"
-    },
-    {
-      "path": "tools/common/python/cadview/catalog.py",
-      "disposition": "mixed",
-      "rationale": "load_catalog/dbaccess_catalog remain canonical provider selection. Listed models/errors/aliases are compatibility imports; protected-worker semantics remain unchanged.",
-      "records": ["cadview.catalog exports from cadview.catalog", "cadview.catalog exports from cadview.catalog_errors", "cadview.catalog exports from cadview.catalog_filesystem", "cadview.catalog exports from cadview.catalog_model", "cadview.catalog exports from cadview.catalog_process"],
-      "evidence": ["tools/common/python/tests/test_cadview_catalog_model.py"],
-      "surface_sha256": "de93c39ea08645ce4f0d51893dff507ea5308205eba5345d2728747da99e4268"
-    },
-    {
-      "path": "tools/common/python/cadview/nl2view.py",
-      "disposition": "mixed",
-      "rationale": "main/build_parser remain the CLI entry. Listed models/environment/executable/diagnostic aliases reference their owners.",
-      "records": ["cadview.nl2view exports from cadview.errors", "cadview.nl2view exports from cadview.nl2view_diagnostics", "cadview.nl2view exports from cadview.nl2view_environment", "cadview.nl2view exports from cadview.nl2view_executables", "cadview.nl2view exports from cadview.nl2view_inputs", "cadview.nl2view exports from cadview.nl2view_models", "cadview.nl2view exports from cadview.nl2view_runner"],
-      "evidence": ["tools/common/python/tests/test_nl2view.py"],
-      "surface_sha256": "e5c9838e011b7bf46d44e47ae607c908a69427a28d6fab0d9fdb7d238371e85e"
-    },
-    {
-      "path": "tools/drc/python/drcpy/rule_select.py",
-      "disposition": "mixed",
-      "rationale": "read_rule_groups/discover_rule_groups remain discovery orchestration. Listed parsing/type/config imports are migration aliases.",
-      "records": ["drcpy.rule_select exports from drcpy.rule_groups", "drcpy.rule_select exports from drcpy.rule_select_config"],
-      "evidence": ["tools/drc/python/tests/test_rule_select_boundaries.py"],
-      "surface_sha256": "f7125eb1100cc5b44d9b9e85903119e0380653c9175f0b1f150378de8b52bc0e"
-    },
-    {
-      "path": "tools/drc/python/drcpy/rule_select_gui.py",
-      "disposition": "mixed",
-      "rationale": "run_gui remains application lifecycle. Listed selection/model/view/style/lifecycle imports are migration aliases.",
-      "records": ["drcpy.rule_select_gui exports from cadgui.environment", "drcpy.rule_select_gui exports from cadgui.lifecycle", "drcpy.rule_select_gui exports from drcpy.rule_select_dialog", "drcpy.rule_select_gui exports from drcpy.rule_select_lifecycle", "drcpy.rule_select_gui exports from drcpy.rule_select_model", "drcpy.rule_select_gui exports from drcpy.rule_select_style", "drcpy.rule_select_gui exports from drcpy.rule_select_view", "drcpy.rule_select_gui exports from drcpy.rule_selection"],
-      "evidence": ["tools/drc/python/tests/test_rule_select_boundaries.py"],
-      "surface_sha256": "9060b42fed27ca133d9bfeecca309850afb8a446f5b87181478cea08f9537cd1"
-    },
-    {
-      "path": "tools/lef/python/lefpy/compat.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["lefpy.compat.tomllib Python 3.9 adapter"],
-      "evidence": ["deploy/tests/test_flow_config_inventory.py"],
-      "surface_sha256": "0194eaf6bcc2619aa4354222af9b92f3018bd3dfcc971a1e8352d8c083b949c9"
-    },
-    {
-      "path": "tools/mtsnl/python/mtsnetlistor/catalog.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["mtsnetlistor.catalog exports from mtsnetlistor.catalog_cache", "mtsnetlistor.catalog exports from mtsnetlistor.catalog_result", "mtsnetlistor.catalog exports from mtsnetlistor.catalog_source", "mtsnetlistor.catalog exports from mtsnetlistor.catalog_target"],
-      "evidence": ["tools/mtsnl/tests/test_catalog_boundaries.py"],
-      "surface_sha256": "4fe185fe1cd73e04283bc4ea76f0ae5874ee271eaac30566390e59caeb73e860"
-    },
-    {
-      "path": "tools/mtsnl/python/mtsnetlistor/config.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["mtsnetlistor.config exports from mtsnetlistor.request_data", "mtsnetlistor.config exports from mtsnetlistor.request_input", "mtsnetlistor.config exports from mtsnetlistor.request_output", "mtsnetlistor.config exports from mtsnetlistor.toml_backend", "mtsnetlistor.config exports from mtsnetlistor.workspace_input", "mtsnetlistor.config exports from mtsnetlistor.workspace_model", "mtsnetlistor.config exports from mtsnetlistor.workspace_output"],
-      "evidence": ["tools/mtsnl/tests/test_core_compatibility.py"],
-      "surface_sha256": "a18c4dc5db36ff501591187282c4fb658678a4fe5495d9abb4b16bd8091aa922"
-    },
-    {
-      "path": "tools/mtsnl/python/mtsnetlistor/defaults.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["mtsnetlistor.defaults exports from mtsnetlistor.defaults_effective", "mtsnetlistor.defaults exports from mtsnetlistor.defaults_probe", "mtsnetlistor.defaults exports from mtsnetlistor.defaults_report", "mtsnetlistor.defaults exports from mtsnetlistor.defaults_request", "mtsnetlistor.defaults exports from mtsnetlistor.defaults_result", "mtsnetlistor.defaults exports from mtsnetlistor.defaults_snapshot", "mtsnetlistor.defaults exports from mtsnetlistor.defaults_values"],
-      "evidence": ["tools/mtsnl/tests/test_core_compatibility.py"],
-      "surface_sha256": "f4ef566d5f4fec82c317d13ffc7e0b9f2ac81068c36a92729e63c2bb872bce33"
-    },
-    {
-      "path": "tools/mtsnl/python/mtsnetlistor/gui/compat_attribute.py",
-      "disposition": "canonical",
-      "rationale": "The sole descriptor implementation for named legacy properties; it forwards one reference without copied state. Individual aliases belong to host/page records, not to an obsolete helper API. Remove the helper only when all declared alias users are gone.",
-      "records": [],
-      "evidence": ["tools/mtsnl/tests/test_gui_composition.py"],
-      "surface_sha256": "9cdc65b4a9353e52ccfab78fb4a2ca482c713f1b8cf23d5fed89f6660951717c"
-    },
-    {
-      "path": "tools/mtsnl/python/mtsnetlistor/gui/main_window.py",
-      "disposition": "mixed",
-      "rationale": "MtsMainWindow remains host composition; ProcessPage export and active-page property forwarding are separately registered migration interfaces.",
-      "records": ["MtsMainWindow active-page compatibility attributes", "mtsnetlistor.gui.main_window exports from mtsnetlistor.gui.process_page"],
-      "evidence": ["tools/mtsnl/tests/test_gui_composition.py"],
-      "surface_sha256": "b223ea385905fa154dea86d9d7cffb09618c14b42a8b0c454631b4424c3c677a"
-    },
-    {
-      "path": "tools/mtsnl/python/mtsnetlistor/model.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["mtsnetlistor.model exports from mtsnetlistor.model_design", "mtsnetlistor.model exports from mtsnetlistor.model_entries", "mtsnetlistor.model exports from mtsnetlistor.model_options", "mtsnetlistor.model exports from mtsnetlistor.model_request", "mtsnetlistor.model exports from mtsnetlistor.model_validation"],
-      "evidence": ["tools/mtsnl/tests/test_core_compatibility.py"],
-      "surface_sha256": "9af7ce00a275b8c3485e7e6ee23de03b56875e473ce2fbf70852252e3e784f25"
-    },
-    {
-      "path": "tools/mtsnl/python/mtsnetlistor/publish.py",
-      "disposition": "mixed",
-      "rationale": "publish_bundle remains the canonical partial-failure publication use case. Listed results/preflight/artifact/text exports are migration aliases.",
-      "records": ["mtsnetlistor.publish exports from mtsnetlistor.publication_artifact", "mtsnetlistor.publish exports from mtsnetlistor.publication_netlist", "mtsnetlistor.publish exports from mtsnetlistor.publication_preflight", "mtsnetlistor.publish exports from mtsnetlistor.publication_result", "mtsnetlistor.publish exports from mtsnetlistor.publication_text"],
-      "evidence": ["tools/mtsnl/tests/test_publish.py"],
-      "surface_sha256": "fd1db450faaa1d84444c59721da211443310118b6dc9b4cd9a74b10d9639840d"
-    },
-    {
-      "path": "tools/mtsnl/python/mtsnetlistor/request_input.py",
-      "disposition": "canonical",
-      "rationale": "The sole decoder of the supported v1 request format, preserving validation labels and conversion to NetlistRequest. No v2 reader exists to replace it; single-cell compatibility fields are tracked in their existing model record.",
-      "records": [],
-      "evidence": ["tools/mtsnl/tests/config_serialization_cases.py"],
-      "surface_sha256": "0c9b9af972423c6e1fec408bc06b895514ac19a3a53537d8dc066609b567553c"
-    },
-    {
-      "path": "tools/mtsnl/python/mtsnetlistor/workflow.py",
-      "disposition": "mixed",
-      "rationale": "generate_many/read_source_defaults remain public use cases. Result and single-job/defaults exports are migration aliases.",
-      "records": ["mtsnetlistor.workflow exports from mtsnetlistor.defaults_workflow", "mtsnetlistor.workflow exports from mtsnetlistor.generation_result", "mtsnetlistor.workflow exports from mtsnetlistor.generation_workflow"],
-      "evidence": ["tools/mtsnl/tests/test_process_workflow.py"],
-      "surface_sha256": "2f83c683b70325767a642bca5966569a59949d507f928b7b4a1d80661be9ec24"
-    },
-    {
-      "path": "tools/rce/python/rcepy/compat.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["rcepy.compat.tomllib Python 3.9 adapter"],
-      "evidence": ["deploy/tests/test_flow_config_inventory.py"],
-      "surface_sha256": "0194eaf6bcc2619aa4354222af9b92f3018bd3dfcc971a1e8352d8c083b949c9"
-    },
-    {
-      "path": "tools/rce/python/rcepy/config_legacy.py",
-      "disposition": "compatibility",
-      "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
-      "records": ["rcepy.config_legacy.adapt_legacy"],
-      "evidence": ["tools/common/python/tests/test_config_contract.py", "tools/rce/python/tests/test_parasitic_info_config.py"],
-      "surface_sha256": "f4e66a65d89a5a6349310e32ddbc8b1f46f3664037621bbbe4691c4eee517a72"
-    },
-    {
-      "path": "tools/rce/python/rcepy/gen_cdl.py",
-      "disposition": "canonical",
-      "rationale": "Current RCE-specific adapter from RceConfig/DesignContext to shared CdlCommandOptions. It owns no duplicate writer; callers cannot pass RCE config directly to write_cdl_env.",
-      "records": [],
-      "evidence": ["tools/rce/python/tests/test_path_resolution.py"],
-      "surface_sha256": "2b7736c51fd68c5df19d35d0f214a79f5470661807645cc833c9743167d2bc50"
-    },
-    {
-      "path": "tools/rce/python/rcepy/gen_gds.py",
-      "disposition": "canonical",
-      "rationale": "Current RCE-specific adapter from RceConfig/DesignContext to shared GdsCommandOptions. The shared writer owns output syntax; configuration mapping remains a necessary domain boundary.",
-      "records": [],
-      "evidence": ["tools/rce/python/tests/test_path_resolution.py"],
-      "surface_sha256": "8370ea295bc64a676e488b4f012c5ddba405268cd111d83a48c72e4b059f3714"
-    },
-    {
-      "path": "tools/rce/python/rcepy/generators.py",
-      "disposition": "canonical",
-      "rationale": "Canonical stage dispatcher. It selects CDL/GDS/LVS/extraction owners from typed configuration; facade wording describes orchestration rather than a retired import path.",
-      "records": [],
-      "evidence": ["tools/rce/python/tests/test_path_resolution.py"],
-      "surface_sha256": "d14da51a15348b4e53cdf440f5296044cf6c9320a1661b6cd172cd5e437e0f9a"
-    },
-    {
-      "path": "tools/utility/a_philosophy_compat.py",
-      "disposition": "internal-tool",
-      "rationale": "Internal compatibility registry validator; its description matches the scanner keyword because it audits compatibility records. No product migration API is defined here.",
-      "records": [],
-      "evidence": ["tools/utility/tests/test_a_philosophy_compat.py"],
-      "surface_sha256": "a42f3eaaa83f18d93ec2c201067112e24262971eee9076cf735d2860a510f3ab"
-    },
-    {
-      "path": "tools/utility/a_philosophy_reviews.py",
-      "disposition": "internal-tool",
-      "rationale": "Internal candidate review validator. Keyword matches describe audit work rather than a product API.",
-      "records": [],
-      "evidence": ["tools/utility/tests/test_a_philosophy_reviews.py"],
-      "surface_sha256": "3677b60da35709fbe097a12fb45c7764ad3c0d9f17cb8846e063fe81314269e8"
-    },
-    {
-      "path": "tools/sico/python/sico/service/frontend_startup.py",
-      "disposition": "canonical",
-      "rationale": "Production GUI discovery/configuration/attachment owner. It now inherits only StartupLifecycle, which owns cancellation, receipt and thread lifetime without backend/journal construction helpers. New dynamic tests trap execution owners anywhere in the GUI process.",
-      "records": [],
-      "evidence": [
-        "tools/ai/python/tests/test_agent_service_entrypoints.py",
-        "tools/ai/python/tests/test_agent_service_boundaries.py",
-        "tools/ai/python/tests/test_agent_service_process_boundaries.py"
-      ],
-      "surface_sha256": "852f415a89dfdb0a4fc96e1bf530c5ff3675b13c3400d54c0ef44f38c92143ac"
-    },
-    {
-      "path": "tools/sico/python/sico/service/remote_frontend.py",
-      "disposition": "canonical",
-      "rationale": "Canonical service client with private transport lanes and one RemoteSessions publication store. Raw session publication methods are internal; immutable views derive from SessionPublication. Explicit control/recovery and detach semantics remain. No legacy backend authority crosses this interface.",
-      "records": [],
-      "evidence": [
-        "tools/ai/python/tests/test_agent_service_publication_boundary.py",
-        "tools/ai/python/tests/test_agent_service_frontend_queries.py",
-        "tools/ai/python/tests/test_agent_service_recovery.py",
-        "tools/ai/python/tests/test_agent_service_recovery_gui.py",
-        "tools/ai/python/tests/test_agent_service_gui.py",
-        "tools/ai/python/tests/test_agent_service_boundaries.py",
-        "tools/ai/python/tests/test_agent_service_process_boundaries.py"
-      ],
-      "surface_sha256": "cfcf11161c6f976364d7cd8e66b1c6231d12fefc436508a10c47006f1e0996bb"
-    },
-    {
-      "path": "tools/ai/python/cadai/live_model.py",
-      "disposition": "mixed",
-      "rationale": "LiveModelSession remains the sole current owner of session state, locks, scheduling and event history. Only protocol constants/error/decoder and message parsers are compatibility imports from stateless owners. Runner result projection belongs to live_result; no second state store or mixin is introduced.",
-      "records": [
-        "cadai.live_model exports from cadai.live_protocol",
-        "cadai.live_model exports from cadai.live_messages"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_live_model.py",
-        "tools/ai/python/tests/test_live_ipc.py"
-      ],
-      "surface_sha256": "afdac021be57fec9c714951f6fb85546e2082d94c689c41a5e95f8891f2f3638"
-    },
-    {
-      "path": "tools/ai/python/cadai/pdk_preparation.py",
-      "disposition": "mixed",
-      "rationale": "PdkPreparation remains the sole lifecycle/state owner: selection context, jobs, ready catalogs, cache, cancellation events, pool registry and both locks. Collection helpers operate on individual checkpoint data; capture helpers receive one job/worker and explicit I/O functions; selection and quality helpers receive only required values or cache. No whole-host helper, mirrored state or forwarding property is introduced. Only the three policy constants are retained compatibility aliases. prepare/advance, details/captures and selection-prompt hook dispatch is preserved and tested; pdk_session keeps the current class entry.",
-      "records": [
-        "cadai.pdk_preparation exports from cadai.pdk_selection"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_pdk_preparation_hooks.py",
-        "tools/ai/python/tests/test_pdk_choice.py",
-        "tools/ai/python/tests/test_pdk_pool_preparation.py",
-        "tools/ai/python/tests/test_circuit_edit.py"
-      ],
-      "surface_sha256": "ab85750c9e9c4f4db2893782fd9da6557d96724b4b85d51a284912fd6c11a385"
-    },
-    {
-      "path": "tools/ai/python/cadai/schematic_snapshot.py",
-      "disposition": "mixed",
-      "rationale": "SchematicSnapshotStore remains the sole owner of snapshot registry, SQLite connections, registration/commit/rollback and close. Schema validation, JSONL indexing, artifact I/O and query-value/text projection are stateless helpers with explicit values/connections; none receives the store or its registry. All store methods retain their behavior, with text projection receiving summary data rather than a resource-bearing snapshot object. The _import_sqlite injection point remains local. Only six schema/limit/error aliases are compatibility exports; the store is not scheduled for retirement.",
-      "records": [
-        "cadai.schematic_snapshot exports from cadai.snapshot_schema"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_schematic_snapshot.py",
-        "tools/ai/python/tests/test_snapshot_lifecycle.py",
-        "tools/ai/python/tests/test_mcp_ownership.py"
-      ],
-      "surface_sha256": "d324a4a9a4a5d706aeaf4064f1fff5722bc2d0baa21db8a74a072f6400147f67"
-    },
-    {
-      "path": "tools/ai/python/cadai/launch.py",
-      "disposition": "compatibility",
-      "rationale": "Same-object compatibility exports only: executable qualification, Codex/Claude configuration, shared operational policy, terminal child environment and private home filesystem preparation have independent owners with explicit values. No owner object, forwarding wrapper/property or mirrored state is passed between modules. Existing controller/terminal_environment injection points remain unchanged; original __all__ is preserved. The six owners remain in the same package so relative executable resolution keeps its root. Bootstrap and gateway effects remain call-time, and the optional wrapper import stays lazy. Source-site managed skills link behavior is retained, not newly enabled for runtime distribution.",
-      "records": [
-        "cadai.launch exports from cadai.claude_launch",
-        "cadai.launch exports from cadai.codex_launch",
-        "cadai.launch exports from cadai.codex_selection",
-        "cadai.launch exports from cadai.launch_bootstrap",
-        "cadai.launch exports from cadai.launch_environment",
-        "cadai.launch exports from cadai.launch_executable",
-        "cadai.launch exports from cadai.launch_policy"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_launch_boundaries.py",
-        "tools/ai/python/tests/test_controller_lifecycle.py",
-        "tools/ai/python/tests/test_python_selection.py",
-        "tools/ai/python/tests/test_codex_selection.py",
-        "tools/ai/python/tests/test_claude_launch.py",
-        "deploy/tests/test_runtime_release.py:test_program_instructions_survive_absent_skills_and_remove_managed_link"
-      ],
-      "surface_sha256": "da8e6676dae85554b9a0fa34ada75aa3b9757cab8b7d7293770a0878ec989e31"
-    },
-    {
-      "path": "tools/sico/python/sico/service/background_service.py",
-      "disposition": "canonical",
-      "rationale": "Owns asynchronous background request publication and closure; BackgroundJobs owns execution. AS-07C removed the reverse import alias from background_jobs.",
-      "records": [],
-      "evidence": [
-        "tools/ai/python/tests/test_agent_service_end_cleanup.py",
-        "tools/ai/python/tests/test_agent_service_closeout.py"
-      ],
-      "surface_sha256": "a5df93bbbda6d1c7664661a4abf06cd91cb6af6bed0845a72790376ea36ee581"
-    },
-    {
-      "path": "tools/ai/python/cadai/controller.py",
-      "disposition": "mixed",
-      "rationale": "RequestDispatcher keeps transport/runtime/workspace/timeout/live_session and the unknown-execution event; run_session retains every resource acquisition and cleanup branch and all original injection points. Extracted request source/result/artifact operations receive explicit paths, values, bounds and I/O callables, never the dispatcher or a new host. Its existing methods bind these dependencies and preserve override dispatch. The live recipe closure still selects current cancellation, runner and binding hooks at call time. The hash-only legacy accessor keeps its dynamic call to the old binding hook. Only listed helper/launch aliases are retained compatibility surfaces; lifecycle owners, method hooks and limits remain current. No property forwarding or duplicate state.",
-      "records": [
-        "cadai.controller exports from cadai.controller_live",
-        "cadai.controller exports from cadai.controller_paths",
-        "cadai.controller exports from cadai.codex_launch",
-        "cadai.controller exports from cadai.launch_bootstrap",
-        "cadai.controller exports from cadai.launch_environment",
-        "cadai.controller._snapshot_generation_from_aivw hash-only accessor"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_controller_boundaries.py",
-        "tools/ai/python/tests/test_controller_live_recipe.py",
-        "tools/ai/python/tests/test_controller_lifecycle.py",
-        "tools/ai/python/tests/test_production_feedback.py",
-        "tools/ai/python/tests/test_skill_preflight_transport.py"
-      ],
-      "surface_sha256": "dacdff807093bf33e99f340cd06ddc047054c27bb2179f8c644bff53dfb2752f"
-    },
-    {
-      "path": "tools/ai/skills/schematic-to-rnm/scripts/normalize_manifest.py",
-      "disposition": "mixed",
-      "rationale": "The original normalize and CLI remain canonical orchestration. Inspection schema/envelope validation, ordered symbol interface, complete connectivity cross-check and provenance have independent stateless owners. All 24 original definitions/constants retain their AST, including the long local connectivity algorithm and error paths. Reexports retain exact identity without wrappers or copied state; no repository monkeypatch consumer of old helper globals was found. The 341-line connectivity file retains one coherent bidirectional validation responsibility and local scratch indexes, avoiding a shared host/context object. Source search path registration enables existing alias checks for these private scripts only; it is not native inventory or runtime release approval.",
-      "records": [
-        "normalize_manifest exports from rnm_inspection",
-        "normalize_manifest exports from rnm_symbol",
-        "normalize_manifest exports from rnm_connectivity",
-        "normalize_manifest exports from rnm_provenance"
-      ],
-      "evidence": [
-        "tools/ai/skills/schematic-to-rnm/tests/test_normalize_manifest.py",
-        "tools/aivw/tests/test_virtuoso_snapshot.py",
-        "tools/utility/tests/test_compatibility_source_exports.py"
-      ],
-      "surface_sha256": "82dedfefdad739f05a3f0eaf6416a4e1f350cd26c3d51aa3481c36d24f11b36d"
-    },
-    {
-      "path": "tools/ai/skills/schematic-to-rnm/scripts/check_rnm.py",
-      "disposition": "mixed",
-      "rationale": "The original main and netlist-cell loader remain canonical CLI input/report orchestration. Conservative SystemVerilog parsing and ModuleFacts, immutable Finding/severity values, conformance rules, and optional scratch-directory compilation each have one stateless owner. All 23 original definitions/constants preserve exact AST. Twenty-one helper/class/constant aliases retain exact owner identity, with no wrapper, shared host, copied state or reverse dependency. main still selects parser/checker hooks at call time. No existing repository consumer patches moved helper globals. Compiler source tests use deterministic process doubles to cover argument order, diagnostics, timeout and scratch cleanup; they do not qualify real xrun or runtime release. Private script helpers are not native build inputs.",
-      "records": [
-        "check_rnm exports from rnm_module",
-        "check_rnm exports from rnm_findings",
-        "check_rnm exports from rnm_conformance",
-        "check_rnm exports from rnm_compile"
-      ],
-      "evidence": [
-        "tools/ai/skills/schematic-to-rnm/tests/test_check_rnm.py",
-        "tools/ai/skills/schematic-to-rnm/tests/test_rnm_compile.py",
-        "tools/aivw/tests/test_m1ai_rnm.py",
-        "tools/aivw/tests/test_executor.py",
-        "tools/utility/tests/test_compatibility_source_exports.py"
-      ],
-      "surface_sha256": "c79f8b61c2b9e6f6eaa0d63c3994ed6fe00ca023993050f832473ad8b453b779"
-    },
-    {
-      "path": "tools/sico/python/sico_ui/transcript.py",
-      "disposition": "mixed",
-      "rationale": "Transcript composes the canonical Qt-independent ChatProjection with the Qt renderer. Event reduction, tool pairing and retention have one service implementation shared by live delivery and journal paging. Transcript owns only document/render state and presentation hooks. Renderer exports preserve the existing compatibility contract. The cohesive event reducer stays below the hard 500-line limit.",
-      "records": [
-        "sico_ui.transcript exports from sico_ui.transcript_render"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_agent_gui.py",
-        "tools/ai/python/tests/test_transcript_projection.py",
-        "tools/ai/python/tests/test_agent_event_contract.py",
-        "tools/ai/python/tests/test_agent_render_incremental.py",
-        "tools/ai/python/tests/test_codex_native_evidence_gui.py",
-        "tools/utility/tests/test_compatibility_source_exports.py",
-        "tools/ai/python/tests/test_chat_archive.py",
-        "tools/ai/python/tests/test_chat_scroll.py"
-      ],
-      "surface_sha256": "a18273698aedea95b8607100493fb56a256b64c5620d8d60b1683a4749f09742"
-    },
-    {
-      "path": "tools/sico/python/sico_ui/workspace.py",
-      "disposition": "mixed",
-      "rationale": "Workspace owns pane/widget state and closure. Tab geometry widgets and closing menu entries have their own class definitions, retained as same-object aliases at the old import path.",
-      "records": [
-        "sico_ui.workspace exports from sico_ui.workspace_tabs",
-        "sico_ui.workspace exports from sico_ui.workspace_closing"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_agent_gui.py"
-      ],
-      "surface_sha256": "3cfcf2ff3d45aeb49ece0b96529b5ea45d8aaafafc888084efc14edf7fdf82dd"
-    },
-    {
-      "path": "tools/sico/python/sico/storage/history.py",
-      "disposition": "mixed",
-      "rationale": "CatalogIndex owns incremental directory/catalog scans. SessionReader owns validated journal tail reads. Old reader/helper exports retain object identity; no reader cache is copied into the catalog.",
-      "records": [
-        "sico.storage.history exports from sico.storage.history_reader"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_agent_history.py",
-        "tools/ai/python/tests/test_agent_catalog.py"
-      ],
-      "surface_sha256": "39e3b2d98724f9454358f05bf70c782379a48ae7585ed58d312784cffd4c9518"
-    },
-    {
-      "path": "tools/ai/python/cadai/template_placement.py",
-      "disposition": "mixed",
-      "rationale": "Placement planning and preview retain their public entrypoints; tool schema, bounds and declarative options share one schema owner. All listed values are same-object aliases rather than copied schemas.",
-      "records": [
-        "cadai.template_placement exports from cadai.template_placement_schema"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_template_placement.py"
-      ],
-      "surface_sha256": "20548a0c616224e75c4fd26156a0d39eaaf58a45e9c173aca1121928d3d95859"
-    },
-    {
-      "path": "tools/sico/python/sico/transport/relay.py",
-      "disposition": "mixed",
-      "rationale": "Relay orchestration retains the authenticated connection and wire handling. StdioLines alone owns the reader queue/thread and SKILL line assembly; error classes and reader remain same-object exports.",
-      "records": [
-        "sico.transport.relay exports from sico.transport.relay_stdio"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_agent_transport.py"
-      ],
-      "surface_sha256": "6aa2408ce77dccb040c332358e0ef4713f1b9e378f111aaebf3f0eab2b4bb612"
-    },
-    {
-      "path": "tools/sico/python/sico/transport/router_archive.py",
-      "disposition": "mixed",
-      "rationale": "Maintenance retains lock acquisition, compression/publication/pruning order and its original failure-injection hooks. Archive record validation/paths have a single definition owner with explicitly retained aliases.",
-      "records": [
-        "sico.transport.router_archive exports from sico.transport.router_archive_records"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_agent_router_archive.py"
-      ],
-      "surface_sha256": "162f8782774e5223e16403b668e7c65c89a0df2740170fdb2939545f6cbcfc39"
-    },
-    {
-      "path": "tools/sico/python/sico/service/audit.py",
-      "disposition": "mixed",
-      "rationale": "AuditService owns its pending mailboxes, lock scopes and durable send order. Question normalization, evidence/answer records and confirmed-choice checks receive explicit values or validators. Old policy/function exports retain exact object identity; deliver_local remains the existing provider operation.",
-      "records": [
-        "sico.service.audit exports from sico.service.audit_questions",
-        "sico.service.audit exports from sico.service.audit_instructions"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_agent_audit_lifecycle.py",
-        "tools/ai/python/tests/test_agent_pdk_choice.py",
-        "tools/ai/python/tests/test_agent_target_choice.py"
-      ],
-      "surface_sha256": "eee24ceb9864acbb9136b11cc2da338a0ac5d7d7a6b86a3500eaa60bde2c1501"
-    },
-    {
-      "path": "tools/sico/python/sico/transport/broker.py",
-      "disposition": "mixed",
-      "rationale": "ContextBroker owns listener/handshake and peer publication under its condition. Peer owns request mailboxes; BindingRegistry owns session request counts; registration, routing and dispatch take explicit protocol dependencies. The original request/dispatch hooks remain callable. Peer and call-scope aliases have the listed retirement conditions.",
-      "records": [
-        "sico.transport.broker exports from sico.transport.broker_peer",
-        "sico.transport.broker exports from sico.transport.broker_scope"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_agent_transport.py",
-        "tools/ai/python/tests/test_agent_native_bindings.py",
-        "tools/ai/python/tests/test_broker_registration.py"
-      ],
-      "surface_sha256": "b2ec62502934b69eeeeed787ae0e86f1d3876459b2dfac73c1ca4908ece9b49b"
-    },
-    {
-      "path": "tools/sico/python/sico/codex/backend.py",
-      "disposition": "mixed",
-      "rationale": "CodexBackend owns task admission, active/stale state, MCP admission and connection publication/close. TaskJournal owns event buffering/progress and task projections; per-task submission and per-turn consumption use explicit journal, thread binding and collaborator operations, never the whole backend. Runtime factories and the clock remain resolved through the old module hooks. Only the instruction value alias has a retirement condition.",
-      "records": [
-        "sico.codex.backend exports from sico.codex.backend_instructions"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_codex_thread_connection.py",
-        "tools/ai/python/tests/test_agent_codex_native.py",
-        "tools/ai/python/tests/test_codex_wait_reads_lifecycle.py"
-      ],
-      "surface_sha256": "bdbf3c5b8460c04a16cca340db213e2496c8135a56460d976d1f065137c6a7d9"
-    },
-    {
-      "path": "tools/sico/python/sico_ui/transcript_audit.py",
-      "disposition": "compatibility",
-      "rationale": "Same-object exports preserve existing helper imports. The service chat module owns the implementation for both journal paging and live chat; this module owns no state and performs no work.",
-      "records": [
-        "sico_ui.transcript_audit exports from sico.service.chat_audit"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_transcript_projection.py",
-        "tools/ai/python/tests/test_chat_archive.py",
-        "tools/ai/python/tests/test_chat_scroll.py"
-      ],
-      "surface_sha256": "f59bff4ad9087f46743798276dbe1d84ced0e38f589e9ef52dbac5095626208c"
-    },
-    {
-      "path": "tools/sico/python/sico_ui/transcript_history.py",
-      "disposition": "compatibility",
-      "rationale": "Same-object exports preserve existing helper imports. The service chat module owns the implementation for both journal paging and live chat; this module owns no state and performs no work.",
-      "records": [
-        "sico_ui.transcript_history exports from sico.service.chat_retention"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_transcript_projection.py",
-        "tools/ai/python/tests/test_chat_archive.py",
-        "tools/ai/python/tests/test_chat_scroll.py"
-      ],
-      "surface_sha256": "9bf3a44c033959c8f1687d50ea5d1df30fbcba8212d28a0e13cd10f046176aae"
-    },
-    {
-      "path": "tools/sico/python/sico_ui/transcript_reconcile.py",
-      "disposition": "compatibility",
-      "rationale": "Same-object exports preserve existing helper imports. The service chat module owns the implementation for both journal paging and live chat; this module owns no state and performs no work.",
-      "records": [
-        "sico_ui.transcript_reconcile exports from sico.service.chat_reconcile"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_transcript_projection.py",
-        "tools/ai/python/tests/test_chat_archive.py",
-        "tools/ai/python/tests/test_chat_scroll.py"
-      ],
-      "surface_sha256": "ba336a326732485448006e7f3014bc121de4cc1252812c84ff745d8a7efc24c6"
-    },
-    {
-      "path": "tools/sico/python/sico_ui/transcript_text.py",
-      "disposition": "compatibility",
-      "rationale": "Same-object exports preserve existing helper imports. The service chat module owns the implementation for both journal paging and live chat; this module owns no state and performs no work.",
-      "records": [
-        "sico_ui.transcript_text exports from sico.service.chat_text"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_transcript_projection.py",
-        "tools/ai/python/tests/test_chat_archive.py",
-        "tools/ai/python/tests/test_chat_scroll.py"
-      ],
-      "surface_sha256": "8c252dde2759b1334611266017303ca2fb4d5cf3500f15422684440a5b2e11d3"
-    },
-    {
-      "path": "tools/sico/python/sico_ui/transcript_tools.py",
-      "disposition": "compatibility",
-      "rationale": "Same-object exports preserve existing helper imports. The service chat module owns the implementation for both journal paging and live chat; this module owns no state and performs no work.",
-      "records": [
-        "sico_ui.transcript_tools exports from sico.service.chat_tools"
-      ],
-      "evidence": [
-        "tools/ai/python/tests/test_transcript_projection.py",
-        "tools/ai/python/tests/test_chat_archive.py",
-        "tools/ai/python/tests/test_chat_scroll.py"
-      ],
-      "surface_sha256": "4dd003bdf1bfdfc91677b339625a320a062c2a2406137051f43e37f27c3d1ca4"
-    }
-  ]
+ "schema_version": 1,
+ "reviews": [
+  {
+   "path": "tools/sico/python/sico_ui/terminal_tool.py",
+   "disposition": "mixed",
+   "rationale": "The UI owns QTermWidget setup, terminal appearance (theme palette and body-text font), and presentation. Three historical shell environment exports are exact-object aliases to the service policy. Child startup is delegated to terminal_startup.prepare_shell, which stages captured loader paths only for default Bash initialization; the UI does not duplicate restoration or command-building policy.",
+   "records": [
+    "sico_ui.terminal_tool shell environment compatibility exports"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_agent_terminal_tool.py",
+    "tools/ai/python/tests/test_terminal_user_environment.py",
+    "tools/ai/python/tests/test_terminal_startup.py",
+    "tools/ai/python/tests/test_terminal_startup_live.py"
+   ],
+   "surface_sha256": "a6759f974a39272cb62a63f6fef15e692417a1530177aaf1ba948d012149b319"
+  },
+  {
+   "path": "tools/sico/python/sico/service/terminal_environment.py",
+   "disposition": "canonical",
+   "rationale": "This is the sole terminal child-environment policy. The legacy wording describes finite older capture provenance owned by cadenv; it does not introduce a second API or state owner. Restoration delegates to cadenv and session aliases to sicosessionenv.",
+   "records": [],
+   "evidence": [
+    "tools/ai/python/tests/test_terminal_user_environment.py",
+    "tools/common/python/tests/test_cadenv.py",
+    "tools/utility/tests/test_terminal_boundaries.py"
+   ],
+   "surface_sha256": "08881cee184aedc0597792d9080e79ac4209e4009a7173f1977b3006bffdcc72"
+  },
+  {
+   "path": "tools/aivw/python/aivworkbench/connectivity.py",
+   "disposition": "compatibility",
+   "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
+   "records": [
+    "aivworkbench.connectivity exports from aivworkbench.connectivity_compare",
+    "aivworkbench.connectivity exports from aivworkbench.connectivity_lex",
+    "aivworkbench.connectivity exports from aivworkbench.connectivity_model",
+    "aivworkbench.connectivity exports from aivworkbench.connectivity_normalize",
+    "aivworkbench.connectivity exports from aivworkbench.connectivity_si",
+    "aivworkbench.connectivity exports from aivworkbench.connectivity_verilog"
+   ],
+   "evidence": [
+    "tools/aivw/tests/test_connectivity_boundaries.py"
+   ],
+   "surface_sha256": "aa7a31b5233ddc8841c5abaae31e94dc04317182149381a120b926922ae86f89"
+  },
+  {
+   "path": "tools/aivw/python/aivworkbench/executors/virtuoso.py",
+   "disposition": "mixed",
+   "rationale": "Public run_snapshot/run_config_binding are registered behavioral wrappers with monkeypatch compatibility; support aliases are registered separately.",
+   "records": [
+    "aivworkbench.executors.virtuoso.run_snapshot",
+    "aivworkbench.executors.virtuoso.run_config_binding",
+    "aivworkbench.executors.virtuoso exports from aivworkbench.executors.virtuoso_support"
+   ],
+   "evidence": [
+    "tools/aivw/tests/test_executor.py"
+   ],
+   "surface_sha256": "bfd70ce406b507dfca906e9211b070578bab46eca79ac2bb03a64c4b9486e92f"
+  },
+  {
+   "path": "tools/aivw/python/aivworkbench/ldo_qualification.py",
+   "disposition": "mixed",
+   "rationale": "qualify_ldo_profile remains canonical; listed imports are same-object compatibility exports.",
+   "records": [
+    "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_aggregate",
+    "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_evidence",
+    "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_holdout",
+    "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_negative",
+    "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_repeat",
+    "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_report",
+    "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_secrets",
+    "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_snapshot",
+    "aivworkbench.ldo_qualification exports from aivworkbench.ldo_qualification_status",
+    "aivworkbench.ldo_qualification exports from aivworkbench.ldo_snapshot_authentication"
+   ],
+   "evidence": [
+    "tools/aivw/tests/test_ldo_qualification_owners.py"
+   ],
+   "surface_sha256": "28223abc566e8d294004ee98f8a14525e3170ce43f5e6089655347d52ccbeb89"
+  },
+  {
+   "path": "tools/aivw/python/aivworkbench/manifest.py",
+   "disposition": "compatibility",
+   "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
+   "records": [
+    "aivworkbench.manifest exports from aivworkbench.manifest_artifacts",
+    "aivworkbench.manifest exports from aivworkbench.manifest_locators",
+    "aivworkbench.manifest exports from aivworkbench.manifest_publication",
+    "aivworkbench.manifest exports from aivworkbench.manifest_records",
+    "aivworkbench.manifest exports from aivworkbench.manifest_resolution",
+    "aivworkbench.manifest exports from aivworkbench.manifest_verification"
+   ],
+   "evidence": [
+    "tools/aivw/tests/test_foundation_owners.py"
+   ],
+   "surface_sha256": "4bac84346e28577988b87a58e570cbf79f75507c09fa2412e3db7f22fb2e9895"
+  },
+  {
+   "path": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator.py",
+   "disposition": "mixed",
+   "rationale": "generate_baseline_candidate and mode selection remain canonical. Only listed contract/render/matrix aliases are migration entries.",
+   "records": [
+    "aivworkbench.plugins.latched_dynamic_comparator exports from aivworkbench.plugins.latched_dynamic_comparator_contract",
+    "aivworkbench.plugins.latched_dynamic_comparator exports from aivworkbench.plugins.latched_dynamic_comparator_l1",
+    "aivworkbench.plugins.latched_dynamic_comparator exports from aivworkbench.plugins.latched_dynamic_comparator_legacy",
+    "aivworkbench.plugins.latched_dynamic_comparator exports from aivworkbench.plugins.latched_dynamic_comparator_matrix",
+    "aivworkbench.plugins.latched_dynamic_comparator exports from aivworkbench.plugins.latched_dynamic_comparator_model"
+   ],
+   "evidence": [
+    "tools/aivw/tests/test_xcelium_l1.py"
+   ],
+   "surface_sha256": "24871cc6db33eb0168d03f17160325269dea7a4980c68b61b0d5ec9cd55631ab"
+  },
+  {
+   "path": "tools/aivw/python/aivworkbench/plugins/latched_dynamic_comparator_legacy.py",
+   "disposition": "canonical",
+   "rationale": "The explicitly named legacy smoke mode is selected only when verification/test_plan is absent. L1 requires a plan and has different semantics, so it is not a drop-in replacement. Retain this current optional mode; retire only with a future contract that requires verification and migrates plan-less callers.",
+   "records": [],
+   "evidence": [
+    "tools/aivw/tests/test_model_generation.py"
+   ],
+   "surface_sha256": "e7beaa39e840c02cab2efcafc786d5a436a0faf5e7b11fa9fbe6ca4707c11d2c"
+  },
+  {
+   "path": "tools/aivw/python/aivworkbench/plugins/xcelium_evidence.py",
+   "disposition": "mixed",
+   "rationale": "ComparatorXceliumEvidenceAdapter and adapter selection remain canonical; contracts and route imports are migration aliases.",
+   "records": [
+    "aivworkbench.plugins.xcelium_evidence exports from aivworkbench.plugins.xcelium_evidence_contract",
+    "aivworkbench.plugins.xcelium_evidence exports from aivworkbench.plugins.xcelium_evidence_prepare",
+    "aivworkbench.plugins.xcelium_evidence exports from aivworkbench.plugins.xcelium_evidence_routes"
+   ],
+   "evidence": [
+    "tools/aivw/tests/test_xcelium_evidence.py"
+   ],
+   "surface_sha256": "88a487784bc4595fe58396b0f49946758233e3faed667dcec513ed677cb1b4af"
+  },
+  {
+   "path": "tools/aivw/python/aivworkbench/pvt_adapter.py",
+   "disposition": "compatibility",
+   "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
+   "records": [
+    "aivworkbench.pvt_adapter exports from aivworkbench.pvt_launcher",
+    "aivworkbench.pvt_adapter exports from aivworkbench.pvt_model_sections",
+    "aivworkbench.pvt_adapter exports from aivworkbench.pvt_plan_builder",
+    "aivworkbench.pvt_adapter exports from aivworkbench.pvt_plan_models",
+    "aivworkbench.pvt_adapter exports from aivworkbench.pvt_result_evaluator"
+   ],
+   "evidence": [
+    "tools/aivw/tests/test_pvt_adapter.py"
+   ],
+   "surface_sha256": "8f2f005efe2d36f23b72e135101f02248445828b5657e72a9b726bb25c1696db"
+  },
+  {
+   "path": "tools/ai/python/cadai/env_names.py",
+   "disposition": "compatibility",
+   "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
+   "records": [
+    "cadai.env_names CAD_AGENT_* fallback",
+    "cadai.env_names pre-SICO catalog/template path variables"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_agent_provider_config.py",
+    "tools/ai/python/tests/test_template_catalog.py"
+   ],
+   "surface_sha256": "9f8189dfdf19c966b61eded5366e0dd5a60d769c42f93d6ab903aa5443571f9a"
+  },
+  {
+   "path": "tools/ai/python/cadai/mcp.py",
+   "disposition": "mixed",
+   "rationale": "McpServer owns per-server resources, bindings and the direct MCP call boundary; four documented exports remain same-object aliases. The call boundary now validates the canonical inputSchema before any guard or executor, and returns one correction-ready error envelope shared with the managed Agent path.",
+   "records": [
+    "cadai.mcp exports from cadai.mcp_definitions",
+    "cadai.mcp exports from cadai.mcp_instructions",
+    "cadai.mcp exports from cadai.mcp_transport",
+    "McpServer pre-preparation PdkSession constructor retry"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_mcp_registry.py",
+    "tools/ai/python/tests/test_mcp_protocol.py",
+    "tools/ai/python/tests/test_mcp_ownership.py",
+    "tools/ai/python/tests/test_mcp_error_actionability.py",
+    "tools/ai/python/tests/test_agent_circuit.py"
+   ],
+   "surface_sha256": "4924459c5e544c10f4971ed992995c507bc21f4b378155605b36cf19fe5e4b06"
+  },
+  {
+   "path": "tools/ai/python/cadai/mcp_definitions.py",
+   "disposition": "canonical",
+   "rationale": "The canonical ordered schema composition/index shared by MCP and agent adapters. The 2026-10 review covers the registered inspect tools including inspect_master_evidence; prepare_circuit_library is a hidden alias for the canonical prepare_library, and the automatic local-$defs projection is derived from the same authored schemas and expands back exactly.",
+   "records": [],
+   "evidence": [
+    "tools/ai/python/tests/test_mcp_registry.py"
+   ],
+   "surface_sha256": "d51a29810d6161fe8ca0ad7c2d8697eef8b340da97b8cf9d769ba10908c162a3"
+  },
+  {
+   "path": "tools/ai/python/cadai/mcp_workflow_handler.py",
+   "disposition": "canonical",
+   "rationale": "Canonical dispatcher for current workflow_tools and guarded call_skill. Legacy describes an operation contract, not a second handler or alias owner.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_workflow_tools.py"
+   ],
+   "surface_sha256": "ca7ba204e38962dd4fabd75a00e0676e773986462e632dcb64604ee03897bbec"
+  },
+  {
+   "path": "tools/sico/python/sico/codex/__init__.py",
+   "disposition": "canonical",
+   "rationale": "Current Codex package identity: MODEL_PROVIDER and same-object cadai.codex_selection.CODEX_VERSION. It does not load backend/runtime/service or duplicate selection policy; CODEX_VERSION remains an intentional public value.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_codex_selection.py"
+   ],
+   "surface_sha256": "1d3266866be1f245d2f1b0d77f1a3cebb774f446fe26e5d90ad39ff5f407a938"
+  },
+  {
+   "path": "tools/sico/python/sico/service/workbench_publication.py",
+   "disposition": "canonical",
+   "rationale": "Current bounded Workbench query publication validates source/scope and produces immutable projections. It does not own backend/index state; historical snapshot conversion remains separately registered.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_agent_workbench_query.py",
+    "tools/ai/python/tests/test_agent_workbench_query_boundary.py"
+   ],
+   "surface_sha256": "0f5359316df460c2aa70441a95f8e928dae03cc89cad75694aa18255ba5cb518"
+  },
+  {
+   "path": "tools/sico/python/sico/service/workbench_snapshot.py",
+   "disposition": "mixed",
+   "rationale": "Registered complete-snapshot adapter constructs immutable WorkbenchSnapshot values. query_pages/empty_query are canonical bounded access; no raw mutable index/body escape is restored. review_class is projected so the UI can distinguish blocking and supplementary decisions.",
+   "records": [
+    "WorkbenchSource complete snapshot compatibility"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_agent_workbench_query.py",
+    "tools/ai/python/tests/test_agent_pdk_update_review.py"
+   ],
+   "surface_sha256": "ba0966f8dbb5b57ba1e3a53cb104ff4feb3671031ab111b503bce23b338b48f6"
+  },
+  {
+   "path": "tools/sico/python/sico_ui/chrome.py",
+   "disposition": "mixed",
+   "rationale": "chrome remains the canonical composition owner for the existing Qt window classes. Window flags/screen policy, title-bar appearance/controls, and the complete existing frameless interaction plus grips have distinct owners. The original mixin and Qt MRO are retained, not extended with shared-host helpers: drag/resize state stays solely on each window. Grip/titlebar QWidget parent references use interaction methods and do not duplicate geometry/state. Twelve reexports are exact aliases. Fifteen original top-level definitions/constants retain exact AST; FramelessWindowMixin changes only one local direction normalization, fixing camel-case corner grips that previously resized vertically only. Existing composition-level hooks and signal-time method lookup remain. Tests cover event super order, first-show centering, screen priority, state isolation and eight resize directions including minimum bounds. Native source inventory includes all three new production owners; no build/release qualification is claimed.",
+   "records": [
+    "sico_ui.chrome exports from sico_ui.window_policy",
+    "sico_ui.chrome exports from sico_ui.window_frameless",
+    "sico_ui.chrome exports from sico_ui.window_titlebar"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_agent_gui.py",
+    "tools/ai/python/tests/test_agent_composer.py",
+    "tools/ai/python/tests/test_window_chrome.py",
+    "tools/ai/python/tests/test_agent_terminal_tool.py",
+    "tools/utility/tests/test_compatibility_source_exports.py"
+   ],
+   "surface_sha256": "a272cee86249ba115f0fd4531028a5c17424843d864edc675145dd75e2ecfc19"
+  },
+  {
+   "path": "tools/sico/python/sico_ui/target_provider.py",
+   "disposition": "compatibility",
+   "rationale": "Pure same-object alias to service.targets. No current production import was found; supported downstream migration/incompatible-release condition still governs removal, so zero internal imports is not evidence of external retirement.",
+   "records": [
+    "sico_ui.target_provider exports from sico.service.targets"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_agent_target_provider.py"
+   ],
+   "surface_sha256": "b8ae96f33f187695c221ea66972ea7189dc5c0a225d492b68c0d3fbd5b670663"
+  },
+  {
+   "path": "tools/ai/terminal/pyqt/cad_ai_terminal/qt_frontend.py",
+   "disposition": "mixed",
+   "rationale": "run_frontend owns lazy application startup; imported private helpers are same-object migration aliases.",
+   "records": [
+    "cad_ai_terminal.qt_frontend exports from cad_ai_terminal.appearance",
+    "cad_ai_terminal.qt_frontend exports from cad_ai_terminal.input_behavior",
+    "cad_ai_terminal.qt_frontend exports from cad_ai_terminal.output_capture",
+    "cad_ai_terminal.qt_frontend exports from cad_ai_terminal.resources"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_pyqt_terminal.py"
+   ],
+   "surface_sha256": "da711847956677fd339b43c9c494955af7cd421e22288a00bc12dc8410ce872d"
+  },
+  {
+   "path": "tools/ai/terminal/pyqt/cad_ai_terminal/terminal_session.py",
+   "disposition": "mixed",
+   "rationale": "TerminalSession owns one tab process and input lifecycle; the two documented input/shell helper groups are same-object compatibility exports. No duplicated shell environment or input state.",
+   "records": [
+    "cad_ai_terminal.terminal_session exports from cad_ai_terminal.input_behavior",
+    "cad_ai_terminal.terminal_session exports from cad_ai_terminal.shell_environment"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_pyqt_terminal.py"
+   ],
+   "surface_sha256": "61bbff733e750e1f323f234b6c9ca5172ecbf2fa86a2c3ef446f4714ea9dff53"
+  },
+  {
+   "path": "tools/common/python/cadbatch/compat.py",
+   "disposition": "compatibility",
+   "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
+   "records": [
+    "cadbatch.compat.tomllib Python 3.9 adapter"
+   ],
+   "evidence": [
+    "deploy/tests/test_flow_config_inventory.py"
+   ],
+   "surface_sha256": "0194eaf6bcc2619aa4354222af9b92f3018bd3dfcc971a1e8352d8c083b949c9"
+  },
+  {
+   "path": "tools/common/python/cadgui/library_browser.py",
+   "disposition": "mixed",
+   "rationale": "LibraryBrowserWidget remains the presentation composition. Tree/selection imports are listed migration aliases; Qt dependencies are implementation details.",
+   "records": [
+    "cadgui.library_browser exports from cadgui.category_tree",
+    "cadgui.library_browser exports from cadgui.library_categories",
+    "cadgui.library_browser exports from cadgui.library_groups",
+    "cadgui.library_browser exports from cadgui.library_sources",
+    "cadgui.library_browser exports from cadgui.library_tree",
+    "cadgui.library_browser exports from cadgui.tree_item"
+   ],
+   "evidence": [
+    "tools/common/python/tests/test_cadgui_library_browser_tree.py"
+   ],
+   "surface_sha256": "a147e7966d2364a01d5a0c8f6d4412c2b812efc381c7b8141d718dba31c87dcf"
+  },
+  {
+   "path": "tools/common/python/cadgui/library_browser_controller.py",
+   "disposition": "mixed",
+   "rationale": "CatalogController remains the Qt adapter. LibraryBrowserController/LibraryCatalogController are migration spellings. CatalogLoadRequest/Result and CatalogDiagnostics are intentionally supported boundary types for injected providers.",
+   "records": [
+    "cadgui.library_browser_controller exports from cadgui.library_browser_controller"
+   ],
+   "evidence": [
+    "tools/common/python/tests/test_cadgui_library_browser_controller.py"
+   ],
+   "surface_sha256": "b78386c76b1fec5d1929d2e044a19d7d206de90141aa1e18c94222c496c0027e"
+  },
+  {
+   "path": "tools/common/python/cadgui/tree_item.py",
+   "disposition": "canonical",
+   "rationale": "Current one-column Qt adapter intentionally supports list-style calls plus effective ancestor visibility. Hosts and native trees use this contract; QTreeWidgetItem alone has different call/visibility semantics. Retire shorthands only after an explicit host API migration.",
+   "records": [],
+   "evidence": [
+    "tools/common/python/tests/test_cadgui_library_browser_tree.py"
+   ],
+   "surface_sha256": "dc06a59588288e5d5e23470b04a7fac2136a2d2dbad79632859f19f35841ea92"
+  },
+  {
+   "path": "tools/common/python/cadgui/tree_list.py",
+   "disposition": "canonical",
+   "rationale": "Current row adapter for native trees. Library rows are unique physical libraries while category rows enumerate nodes; replacing it with raw tree traversal would change selection semantics. Keep until those host contracts are explicitly migrated.",
+   "records": [],
+   "evidence": [
+    "tools/common/python/tests/test_cadgui_library_browser_tree.py"
+   ],
+   "surface_sha256": "5d95c7f3bfe0688838565eb90239069843226bce7a5c660022a8baa482b5c17c"
+  },
+  {
+   "path": "tools/common/python/cadlsf/cache.py",
+   "disposition": "compatibility",
+   "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
+   "records": [
+    "cadlsf.cache exports from cadlsf.cache_types",
+    "cadlsf.cache exports from cadlsf.monitor_cache",
+    "cadlsf.cache exports from cadlsf.session_cache"
+   ],
+   "evidence": [
+    "tools/common/python/tests/test_cadlsf_components.py"
+   ],
+   "surface_sha256": "ea82f5c84e16c8695f93456c919720a99a353cb15b7efd38930c9eeebd220f30"
+  },
+  {
+   "path": "tools/common/python/cadlsf/collector.py",
+   "disposition": "mixed",
+   "rationale": "LsfCollector remains the public collection use-case API. Listed commands/cache/sampling/model helpers reference sole owners and are migration aliases.",
+   "records": [
+    "cadlsf.collector exports from cadlsf.capacity",
+    "cadlsf.collector exports from cadlsf.command_runner",
+    "cadlsf.collector exports from cadlsf.commands",
+    "cadlsf.collector exports from cadlsf.model",
+    "cadlsf.collector exports from cadlsf.monitor_cache",
+    "cadlsf.collector exports from cadlsf.monitor_topology",
+    "cadlsf.collector exports from cadlsf.parsers",
+    "cadlsf.collector exports from cadlsf.sampling",
+    "cadlsf.collector exports from cadlsf.session_cache",
+    "cadlsf.collector exports from cadlsf.session_topology",
+    "cadlsf.collector exports from cadlsf.snapshots"
+   ],
+   "evidence": [
+    "tools/common/python/tests/test_cadlsf_components.py"
+   ],
+   "surface_sha256": "29c2da94f91eddff80c29d394c32e32997d13f699ab245bba8117f1e5829d26f"
+  },
+  {
+   "path": "tools/common/python/cadlsf/gui/models.py",
+   "disposition": "compatibility",
+   "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
+   "records": [
+    "cadlsf.gui.models exports from cadlsf.gui.model_contracts",
+    "cadlsf.gui.models exports from cadlsf.gui.model_delegates",
+    "cadlsf.gui.models exports from cadlsf.gui.model_filters",
+    "cadlsf.gui.models exports from cadlsf.gui.model_formatters",
+    "cadlsf.gui.models exports from cadlsf.gui.model_tables"
+   ],
+   "evidence": [
+    "tools/common/python/tests/test_cadlsf_gui.py"
+   ],
+   "surface_sha256": "b1afe6abd867d20233f83be1a111790876e04e9c0eed8e01658c7acd25ef7f37"
+  },
+  {
+   "path": "tools/common/python/cadlsf/gui/workers.py",
+   "disposition": "compatibility",
+   "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
+   "records": [
+    "cadlsf.gui.workers exports from cadlsf.gui.job_action_workers",
+    "cadlsf.gui.workers exports from cadlsf.gui.refresh_workers",
+    "cadlsf.gui.workers exports from cadlsf.gui.worker_collector"
+   ],
+   "evidence": [
+    "tools/common/python/tests/test_cadlsf_gui_worker_contracts.py"
+   ],
+   "surface_sha256": "f683018b08b9bf08cf3864d003f96eb2cfe4d363d74e7ca653a163c5f63c0fb4"
+  },
+  {
+   "path": "tools/common/python/cadprofile/compat.py",
+   "disposition": "compatibility",
+   "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
+   "records": [
+    "cadprofile.compat.tomllib Python 3.9 adapter"
+   ],
+   "evidence": [
+    "deploy/tests/test_flow_config_inventory.py"
+   ],
+   "surface_sha256": "0194eaf6bcc2619aa4354222af9b92f3018bd3dfcc971a1e8352d8c083b949c9"
+  },
+  {
+   "path": "tools/common/python/cadprofile/model.py",
+   "disposition": "mixed",
+   "rationale": "load_profile and path_keys remain canonical; listed schema/value/validation exports are migration aliases.",
+   "records": [
+    "cadprofile.model exports from cadconfig.booleans",
+    "cadprofile.model exports from cadconfig.paths",
+    "cadprofile.model exports from cadconfig.scalars",
+    "cadprofile.model exports from cadprofile.normalization",
+    "cadprofile.model exports from cadprofile.schema",
+    "cadprofile.model exports from cadprofile.validation_common",
+    "cadprofile.model exports from cadprofile.validation_flows",
+    "cadprofile.model exports from cadprofile.values"
+   ],
+   "evidence": [
+    "tools/common/python/tests/test_cadprofile_core_basic.py"
+   ],
+   "surface_sha256": "543c9920058bae224345f5bcec5f41fa381a065e6dd1cedb7b33cfa46b9d0608"
+  },
+  {
+   "path": "tools/common/python/cadview/catalog.py",
+   "disposition": "mixed",
+   "rationale": "load_catalog/dbaccess_catalog remain canonical provider selection. Listed models/errors/aliases are compatibility imports; protected-worker semantics remain unchanged.",
+   "records": [
+    "cadview.catalog exports from cadview.catalog",
+    "cadview.catalog exports from cadview.catalog_errors",
+    "cadview.catalog exports from cadview.catalog_filesystem",
+    "cadview.catalog exports from cadview.catalog_model",
+    "cadview.catalog exports from cadview.catalog_process"
+   ],
+   "evidence": [
+    "tools/common/python/tests/test_cadview_catalog_model.py"
+   ],
+   "surface_sha256": "de93c39ea08645ce4f0d51893dff507ea5308205eba5345d2728747da99e4268"
+  },
+  {
+   "path": "tools/common/python/cadview/nl2view.py",
+   "disposition": "mixed",
+   "rationale": "main/build_parser remain the CLI entry. Listed models/environment/executable/diagnostic aliases reference their owners.",
+   "records": [
+    "cadview.nl2view exports from cadview.errors",
+    "cadview.nl2view exports from cadview.nl2view_diagnostics",
+    "cadview.nl2view exports from cadview.nl2view_environment",
+    "cadview.nl2view exports from cadview.nl2view_executables",
+    "cadview.nl2view exports from cadview.nl2view_inputs",
+    "cadview.nl2view exports from cadview.nl2view_models",
+    "cadview.nl2view exports from cadview.nl2view_runner"
+   ],
+   "evidence": [
+    "tools/common/python/tests/test_nl2view.py"
+   ],
+   "surface_sha256": "e5c9838e011b7bf46d44e47ae607c908a69427a28d6fab0d9fdb7d238371e85e"
+  },
+  {
+   "path": "tools/drc/python/drcpy/rule_select.py",
+   "disposition": "mixed",
+   "rationale": "read_rule_groups/discover_rule_groups remain discovery orchestration. Listed parsing/type/config imports are migration aliases.",
+   "records": [
+    "drcpy.rule_select exports from drcpy.rule_groups",
+    "drcpy.rule_select exports from drcpy.rule_select_config"
+   ],
+   "evidence": [
+    "tools/drc/python/tests/test_rule_select_boundaries.py"
+   ],
+   "surface_sha256": "f7125eb1100cc5b44d9b9e85903119e0380653c9175f0b1f150378de8b52bc0e"
+  },
+  {
+   "path": "tools/drc/python/drcpy/rule_select_gui.py",
+   "disposition": "mixed",
+   "rationale": "run_gui remains application lifecycle. Listed selection/model/view/style/lifecycle imports are migration aliases.",
+   "records": [
+    "drcpy.rule_select_gui exports from cadgui.environment",
+    "drcpy.rule_select_gui exports from cadgui.lifecycle",
+    "drcpy.rule_select_gui exports from drcpy.rule_select_dialog",
+    "drcpy.rule_select_gui exports from drcpy.rule_select_lifecycle",
+    "drcpy.rule_select_gui exports from drcpy.rule_select_model",
+    "drcpy.rule_select_gui exports from drcpy.rule_select_style",
+    "drcpy.rule_select_gui exports from drcpy.rule_select_view",
+    "drcpy.rule_select_gui exports from drcpy.rule_selection"
+   ],
+   "evidence": [
+    "tools/drc/python/tests/test_rule_select_boundaries.py"
+   ],
+   "surface_sha256": "9060b42fed27ca133d9bfeecca309850afb8a446f5b87181478cea08f9537cd1"
+  },
+  {
+   "path": "tools/lef/python/lefpy/compat.py",
+   "disposition": "compatibility",
+   "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
+   "records": [
+    "lefpy.compat.tomllib Python 3.9 adapter"
+   ],
+   "evidence": [
+    "deploy/tests/test_flow_config_inventory.py"
+   ],
+   "surface_sha256": "0194eaf6bcc2619aa4354222af9b92f3018bd3dfcc971a1e8352d8c083b949c9"
+  },
+  {
+   "path": "tools/mtsnl/python/mtsnetlistor/catalog.py",
+   "disposition": "compatibility",
+   "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
+   "records": [
+    "mtsnetlistor.catalog exports from mtsnetlistor.catalog_cache",
+    "mtsnetlistor.catalog exports from mtsnetlistor.catalog_result",
+    "mtsnetlistor.catalog exports from mtsnetlistor.catalog_source",
+    "mtsnetlistor.catalog exports from mtsnetlistor.catalog_target"
+   ],
+   "evidence": [
+    "tools/mtsnl/tests/test_catalog_boundaries.py"
+   ],
+   "surface_sha256": "4fe185fe1cd73e04283bc4ea76f0ae5874ee271eaac30566390e59caeb73e860"
+  },
+  {
+   "path": "tools/mtsnl/python/mtsnetlistor/config.py",
+   "disposition": "compatibility",
+   "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
+   "records": [
+    "mtsnetlistor.config exports from mtsnetlistor.request_data",
+    "mtsnetlistor.config exports from mtsnetlistor.request_input",
+    "mtsnetlistor.config exports from mtsnetlistor.request_output",
+    "mtsnetlistor.config exports from mtsnetlistor.toml_backend",
+    "mtsnetlistor.config exports from mtsnetlistor.workspace_input",
+    "mtsnetlistor.config exports from mtsnetlistor.workspace_model",
+    "mtsnetlistor.config exports from mtsnetlistor.workspace_output"
+   ],
+   "evidence": [
+    "tools/mtsnl/tests/test_core_compatibility.py"
+   ],
+   "surface_sha256": "a18c4dc5db36ff501591187282c4fb658678a4fe5495d9abb4b16bd8091aa922"
+  },
+  {
+   "path": "tools/mtsnl/python/mtsnetlistor/defaults.py",
+   "disposition": "compatibility",
+   "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
+   "records": [
+    "mtsnetlistor.defaults exports from mtsnetlistor.defaults_effective",
+    "mtsnetlistor.defaults exports from mtsnetlistor.defaults_probe",
+    "mtsnetlistor.defaults exports from mtsnetlistor.defaults_report",
+    "mtsnetlistor.defaults exports from mtsnetlistor.defaults_request",
+    "mtsnetlistor.defaults exports from mtsnetlistor.defaults_result",
+    "mtsnetlistor.defaults exports from mtsnetlistor.defaults_snapshot",
+    "mtsnetlistor.defaults exports from mtsnetlistor.defaults_values"
+   ],
+   "evidence": [
+    "tools/mtsnl/tests/test_core_compatibility.py"
+   ],
+   "surface_sha256": "f4ef566d5f4fec82c317d13ffc7e0b9f2ac81068c36a92729e63c2bb872bce33"
+  },
+  {
+   "path": "tools/mtsnl/python/mtsnetlistor/gui/compat_attribute.py",
+   "disposition": "canonical",
+   "rationale": "The sole descriptor implementation for named legacy properties; it forwards one reference without copied state. Individual aliases belong to host/page records, not to an obsolete helper API. Remove the helper only when all declared alias users are gone.",
+   "records": [],
+   "evidence": [
+    "tools/mtsnl/tests/test_gui_composition.py"
+   ],
+   "surface_sha256": "9cdc65b4a9353e52ccfab78fb4a2ca482c713f1b8cf23d5fed89f6660951717c"
+  },
+  {
+   "path": "tools/mtsnl/python/mtsnetlistor/gui/main_window.py",
+   "disposition": "mixed",
+   "rationale": "MtsMainWindow owns host tabs, WorkspaceActions and ProcessBatch, plus the canonical left-half launch placement. Active-page forwarding, ProcessPage export and workspace/batch property adapters are explicitly registered; properties reference component state, including the sole timer, rather than mirroring it.",
+   "records": [
+    "MtsMainWindow workspace action properties",
+    "MtsMainWindow batch action properties"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/mtsnl/tests/test_gui_composition.py"
+   ],
+   "surface_sha256": "e8476f94f8c6ff1b2653055d6ac909aed89a90fae1382f34682f0d1f9c8b2138"
+  },
+  {
+   "path": "tools/mtsnl/python/mtsnetlistor/model.py",
+   "disposition": "compatibility",
+   "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
+   "records": [
+    "mtsnetlistor.model exports from mtsnetlistor.model_design",
+    "mtsnetlistor.model exports from mtsnetlistor.model_entries",
+    "mtsnetlistor.model exports from mtsnetlistor.model_options",
+    "mtsnetlistor.model exports from mtsnetlistor.model_request",
+    "mtsnetlistor.model exports from mtsnetlistor.model_validation"
+   ],
+   "evidence": [
+    "tools/mtsnl/tests/test_core_compatibility.py"
+   ],
+   "surface_sha256": "9af7ce00a275b8c3485e7e6ee23de03b56875e473ce2fbf70852252e3e784f25"
+  },
+  {
+   "path": "tools/mtsnl/python/mtsnetlistor/publish.py",
+   "disposition": "mixed",
+   "rationale": "publish_bundle remains the canonical partial-failure publication use case. Listed results/preflight/artifact/text exports are migration aliases.",
+   "records": [
+    "mtsnetlistor.publish exports from mtsnetlistor.publication_artifact",
+    "mtsnetlistor.publish exports from mtsnetlistor.publication_netlist",
+    "mtsnetlistor.publish exports from mtsnetlistor.publication_preflight",
+    "mtsnetlistor.publish exports from mtsnetlistor.publication_result",
+    "mtsnetlistor.publish exports from mtsnetlistor.publication_text"
+   ],
+   "evidence": [
+    "tools/mtsnl/tests/test_publish.py"
+   ],
+   "surface_sha256": "fd1db450faaa1d84444c59721da211443310118b6dc9b4cd9a74b10d9639840d"
+  },
+  {
+   "path": "tools/mtsnl/python/mtsnetlistor/request_input.py",
+   "disposition": "canonical",
+   "rationale": "The sole decoder of the supported v1 request format, preserving validation labels and conversion to NetlistRequest. No v2 reader exists to replace it; single-cell compatibility fields are tracked in their existing model record.",
+   "records": [],
+   "evidence": [
+    "tools/mtsnl/tests/config_serialization_cases.py"
+   ],
+   "surface_sha256": "0c9b9af972423c6e1fec408bc06b895514ac19a3a53537d8dc066609b567553c"
+  },
+  {
+   "path": "tools/mtsnl/python/mtsnetlistor/workflow.py",
+   "disposition": "mixed",
+   "rationale": "generate_many/read_source_defaults remain public use cases. Result and single-job/defaults exports are migration aliases.",
+   "records": [
+    "mtsnetlistor.workflow exports from mtsnetlistor.defaults_workflow",
+    "mtsnetlistor.workflow exports from mtsnetlistor.generation_result",
+    "mtsnetlistor.workflow exports from mtsnetlistor.generation_workflow"
+   ],
+   "evidence": [
+    "tools/mtsnl/tests/test_process_workflow.py"
+   ],
+   "surface_sha256": "2f83c683b70325767a642bca5966569a59949d507f928b7b4a1d80661be9ec24"
+  },
+  {
+   "path": "tools/rce/python/rcepy/compat.py",
+   "disposition": "compatibility",
+   "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
+   "records": [
+    "rcepy.compat.tomllib Python 3.9 adapter"
+   ],
+   "evidence": [
+    "deploy/tests/test_flow_config_inventory.py"
+   ],
+   "surface_sha256": "0194eaf6bcc2619aa4354222af9b92f3018bd3dfcc971a1e8352d8c083b949c9"
+  },
+  {
+   "path": "tools/rce/python/rcepy/config_legacy.py",
+   "disposition": "compatibility",
+   "rationale": "Reviewed compatibility contract; listed import groups or explicit historical adapters have one owner and a verifiable caller-migration exit condition.",
+   "records": [
+    "rcepy.config_legacy.adapt_legacy"
+   ],
+   "evidence": [
+    "tools/common/python/tests/test_config_contract.py",
+    "tools/rce/python/tests/test_parasitic_info_config.py"
+   ],
+   "surface_sha256": "f4e66a65d89a5a6349310e32ddbc8b1f46f3664037621bbbe4691c4eee517a72"
+  },
+  {
+   "path": "tools/rce/python/rcepy/gen_cdl.py",
+   "disposition": "canonical",
+   "rationale": "Current NetlistConfig/context adapter to the shared cadstage CDL writer. Compatibility wrapper wording describes request adaptation, not a duplicate netlist generator or retired public alias.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/rce/python/tests/test_path_resolution.py"
+   ],
+   "surface_sha256": "ddf68bd55727dba2eff1659bb4f60b43ea2ab0767513bbfc17adbc03c96a86fd"
+  },
+  {
+   "path": "tools/rce/python/rcepy/gen_gds.py",
+   "disposition": "canonical",
+   "rationale": "Current NetlistConfig/context adapter to the shared cadstage GDS writer. The shared stage owns generation; this module owns the RCE request translation.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/rce/python/tests/test_path_resolution.py"
+   ],
+   "surface_sha256": "bcbd6f4730e8cb464b0f2ad5cbea671efb5352f9d0851740e088343759c8874e"
+  },
+  {
+   "path": "tools/rce/python/rcepy/generators.py",
+   "disposition": "canonical",
+   "rationale": "Current RCE stage orchestration uses gen_cdl/gen_gds adapters and shared writers. Compatibility of input configuration does not make this orchestration a retired facade.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/rce/python/tests/test_path_resolution.py"
+   ],
+   "surface_sha256": "3a9b004f00a74ab4e3cac656a898bd35655d15ccc85aebf5430a65e29d74d0b5"
+  },
+  {
+   "path": "tools/utility/a_philosophy_compat.py",
+   "disposition": "internal-tool",
+   "rationale": "Internal compatibility registry validator; its description matches the scanner keyword because it audits compatibility records. No product migration API is defined here.",
+   "records": [],
+   "evidence": [
+    "tools/utility/tests/test_a_philosophy_compat.py"
+   ],
+   "surface_sha256": "a42f3eaaa83f18d93ec2c201067112e24262971eee9076cf735d2860a510f3ab"
+  },
+  {
+   "path": "tools/utility/a_philosophy_reviews.py",
+   "disposition": "internal-tool",
+   "rationale": "Internal candidate review validator. Keyword matches describe audit work rather than a product API.",
+   "records": [],
+   "evidence": [
+    "tools/utility/tests/test_a_philosophy_reviews.py"
+   ],
+   "surface_sha256": "3677b60da35709fbe097a12fb45c7764ad3c0d9f17cb8846e063fe81314269e8"
+  },
+  {
+   "path": "tools/sico/python/sico/service/frontend_startup.py",
+   "disposition": "canonical",
+   "rationale": "Current remote GUI startup facade composes configuration, discovery, leases and frontend attachment. It neither constructs a backend nor exposes local controller handles; no compatibility retirement is required.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_agent_service_entrypoints.py",
+    "tools/ai/python/tests/test_agent_service_boundaries.py"
+   ],
+   "surface_sha256": "7c7659b7e651d4b84e407192f3b1ad005054c7dfab7d01817c760f3e1e46bfc8"
+  },
+  {
+   "path": "tools/sico/python/sico/service/remote_frontend.py",
+   "disposition": "canonical",
+   "rationale": "Current remote frontend API composes connection, lease/control, recovery, replay and replacement-service rebinding capabilities. ask_head exposes a read-only durable receipt with the live queue head for advisory wake validation; it neither acquires control nor replays input. navigation_labels submits project-level label commands through the existing command lane without exposing label storage, controllers or a second write path. Private transport remains encapsulated; explicit unsupported quick input is an interface rejection, not a hidden local fallback.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_agent_service_frontend_queries.py",
+    "tools/ai/python/tests/test_ask_queue_review.py",
+    "tools/ai/python/tests/test_ask_activation_gui.py",
+    "tools/ai/python/tests/test_agent_service_publication_boundary.py",
+    "tools/ai/python/tests/test_agent_service_recovery.py"
+   ],
+   "surface_sha256": "149996cc35b3bf758a70ddbb11183c3558cc70fc7564ec05a84028afdd5f13fc"
+  },
+  {
+   "path": "tools/ai/python/cadai/live_model.py",
+   "disposition": "mixed",
+   "rationale": "LiveModelSession remains the sole current owner of session state, locks, scheduling and event history. Only protocol constants/error/decoder and message parsers are compatibility imports from stateless owners. Runner result projection belongs to live_result; no second state store or mixin is introduced.",
+   "records": [
+    "cadai.live_model exports from cadai.live_protocol",
+    "cadai.live_model exports from cadai.live_messages"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_live_model.py",
+    "tools/ai/python/tests/test_live_ipc.py"
+   ],
+   "surface_sha256": "afdac021be57fec9c714951f6fb85546e2082d94c689c41a5e95f8891f2f3638"
+  },
+  {
+   "path": "tools/ai/python/cadai/pdk_preparation.py",
+   "disposition": "mixed",
+   "rationale": "PdkPreparation remains the sole lifecycle/state owner: selection context, jobs, ready catalogs, cache, cancellation events, pool registry and both locks. Collection helpers operate on individual checkpoint data; capture helpers receive one job/worker and explicit I/O functions; selection and quality helpers receive only required values or cache. The session-scoped PdkInit collaborator and its guard/with_init/ensure helpers live in cadai.pdk_init, so inspect and guard delegate instead of duplicating initialization policy. No whole-host helper, mirrored state or forwarding property is introduced. Only the three policy constants are retained compatibility aliases. prepare/advance, details/captures and selection-prompt hook dispatch is preserved and tested; pdk_session keeps the current class entry plus the init_pdk tool mapping. C5 moves device iteration and pool acquisition to pdk_capture using the same owned job/pool state; _captures remains the real override hook under existing preparation locks. current_selection reuses the last inspect evidence for a local host-choice check; it adds no scan or selection authority.",
+   "records": [
+    "cadai.pdk_preparation exports from cadai.pdk_selection"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_pdk_preparation_hooks.py",
+    "tools/ai/python/tests/test_pdk_choice.py",
+    "tools/ai/python/tests/test_pdk_pool_preparation.py",
+    "tools/ai/python/tests/test_circuit_edit.py",
+    "docs/SICO_EQ08_C5_REVIEW.md"
+   ],
+   "surface_sha256": "72af8b28d4c0e3d55436bfbc2dea14da0d9cb9f74e6202cee35e72d21b95a15d"
+  },
+  {
+   "path": "tools/ai/python/cadai/schematic_snapshot.py",
+   "disposition": "mixed",
+   "rationale": "SchematicSnapshotStore remains the sole owner of snapshot registry, SQLite connections, registration/commit/rollback and close. Its shared read-only connection is now explicitly cross-thread with one store lock serializing every registry/connection operation, so MCP request threads cannot trigger sqlite thread-affinity errors. Schema validation, JSONL indexing, artifact I/O and query-value/text projection remain stateless helpers with explicit values/connections; none receives the store or its registry. All store methods retain their behavior, with text projection receiving summary data rather than a resource-bearing snapshot object. The _import_sqlite injection point remains local. Only six schema/limit/error aliases are compatibility exports; the store is not scheduled for retirement.",
+   "records": [
+    "cadai.schematic_snapshot exports from cadai.snapshot_schema"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_schematic_snapshot.py",
+    "tools/ai/python/tests/test_snapshot_lifecycle.py",
+    "tools/ai/python/tests/test_mcp_ownership.py"
+   ],
+   "surface_sha256": "1ff31e6fa654f2e8d8dce14a75d3ee2c404dcc1736d0e4bf0bf9cb4a078fa947"
+  },
+  {
+   "path": "tools/ai/python/cadai/launch.py",
+   "disposition": "compatibility",
+   "rationale": "Same-object compatibility exports only: executable qualification, Codex/Claude configuration, shared operational policy, terminal child environment and private home filesystem preparation have independent owners with explicit values. No owner object, forwarding wrapper/property or mirrored state is passed between modules. Existing controller/terminal_environment injection points remain unchanged; original __all__ is preserved. The six owners remain in the same package so relative executable resolution keeps its root. Bootstrap and gateway effects remain call-time, and the optional wrapper import stays lazy. Source-site managed skills link behavior is retained, not newly enabled for runtime distribution.",
+   "records": [
+    "cadai.launch exports from cadai.claude_launch",
+    "cadai.launch exports from cadai.codex_launch",
+    "cadai.launch exports from cadai.codex_selection",
+    "cadai.launch exports from cadai.launch_bootstrap",
+    "cadai.launch exports from cadai.launch_environment",
+    "cadai.launch exports from cadai.launch_executable",
+    "cadai.launch exports from cadai.launch_policy"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_launch_boundaries.py",
+    "tools/ai/python/tests/test_controller_lifecycle.py",
+    "tools/ai/python/tests/test_python_selection.py",
+    "tools/ai/python/tests/test_codex_selection.py",
+    "tools/ai/python/tests/test_claude_launch.py",
+    "deploy/tests/test_runtime_release.py:test_program_instructions_survive_absent_skills_and_remove_managed_link"
+   ],
+   "surface_sha256": "da8e6676dae85554b9a0fa34ada75aa3b9757cab8b7d7293770a0878ec989e31"
+  },
+  {
+   "path": "tools/sico/python/sico/service/background_service.py",
+   "disposition": "canonical",
+   "rationale": "Owns asynchronous background request publication and closure; BackgroundJobs owns execution. AS-07C removed the reverse import alias from background_jobs.",
+   "records": [],
+   "evidence": [
+    "tools/ai/python/tests/test_agent_service_end_cleanup.py",
+    "tools/ai/python/tests/test_agent_service_closeout.py"
+   ],
+   "surface_sha256": "a5df93bbbda6d1c7664661a4abf06cd91cb6af6bed0845a72790376ea36ee581"
+  },
+  {
+   "path": "tools/ai/python/cadai/controller.py",
+   "disposition": "mixed",
+   "rationale": "RequestDispatcher/run_session own request and resource lifecycles. The five registered same-object helper groups and hash-only snapshot accessor retain call-time embedding/patch seams; authoritative binding validation stays in controller_live. No duplicate controller state.",
+   "records": [
+    "cadai.controller exports from cadai.controller_live",
+    "cadai.controller exports from cadai.controller_paths",
+    "cadai.controller exports from cadai.codex_launch",
+    "cadai.controller exports from cadai.launch_bootstrap",
+    "cadai.controller exports from cadai.launch_environment",
+    "cadai.controller._snapshot_generation_from_aivw hash-only accessor"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_controller_boundaries.py",
+    "tools/ai/python/tests/test_controller_lifecycle.py",
+    "tools/ai/python/tests/test_controller_live_recipe.py"
+   ],
+   "surface_sha256": "618ca7980502a0f8ab080f9348081f6a31c2885b1b89107429477838faae2169"
+  },
+  {
+   "path": "tools/ai/skills/schematic-to-rnm/scripts/normalize_manifest.py",
+   "disposition": "mixed",
+   "rationale": "The original normalize and CLI remain canonical orchestration. Inspection schema/envelope validation, ordered symbol interface, complete connectivity cross-check and provenance have independent stateless owners. All 24 original definitions/constants retain their AST, including the long local connectivity algorithm and error paths. Reexports retain exact identity without wrappers or copied state; no repository monkeypatch consumer of old helper globals was found. The 341-line connectivity file retains one coherent bidirectional validation responsibility and local scratch indexes, avoiding a shared host/context object. Source search path registration enables existing alias checks for these private scripts only; it is not native inventory or runtime release approval.",
+   "records": [
+    "normalize_manifest exports from rnm_inspection",
+    "normalize_manifest exports from rnm_symbol",
+    "normalize_manifest exports from rnm_connectivity",
+    "normalize_manifest exports from rnm_provenance"
+   ],
+   "evidence": [
+    "tools/ai/skills/schematic-to-rnm/tests/test_normalize_manifest.py",
+    "tools/aivw/tests/test_virtuoso_snapshot.py",
+    "tools/utility/tests/test_compatibility_source_exports.py"
+   ],
+   "surface_sha256": "82dedfefdad739f05a3f0eaf6416a4e1f350cd26c3d51aa3481c36d24f11b36d"
+  },
+  {
+   "path": "tools/ai/skills/schematic-to-rnm/scripts/check_rnm.py",
+   "disposition": "mixed",
+   "rationale": "The original main and netlist-cell loader remain canonical CLI input/report orchestration. Conservative SystemVerilog parsing and ModuleFacts, immutable Finding/severity values, conformance rules, and optional scratch-directory compilation each have one stateless owner. All 23 original definitions/constants preserve exact AST. Twenty-one helper/class/constant aliases retain exact owner identity, with no wrapper, shared host, copied state or reverse dependency. main still selects parser/checker hooks at call time. No existing repository consumer patches moved helper globals. Compiler source tests use deterministic process doubles to cover argument order, diagnostics, timeout and scratch cleanup; they do not qualify real xrun or runtime release. Private script helpers are not native build inputs.",
+   "records": [
+    "check_rnm exports from rnm_module",
+    "check_rnm exports from rnm_findings",
+    "check_rnm exports from rnm_conformance",
+    "check_rnm exports from rnm_compile"
+   ],
+   "evidence": [
+    "tools/ai/skills/schematic-to-rnm/tests/test_check_rnm.py",
+    "tools/ai/skills/schematic-to-rnm/tests/test_rnm_compile.py",
+    "tools/aivw/tests/test_m1ai_rnm.py",
+    "tools/aivw/tests/test_executor.py",
+    "tools/utility/tests/test_compatibility_source_exports.py"
+   ],
+   "surface_sha256": "c79f8b61c2b9e6f6eaa0d63c3994ed6fe00ca023993050f832473ad8b453b779"
+  },
+  {
+   "path": "tools/sico/python/sico_ui/transcript.py",
+   "disposition": "mixed",
+   "rationale": "Transcript composes the canonical Qt-independent ChatProjection with the Qt renderer. Event reduction, tool pairing and retention have one service implementation shared by live delivery and journal paging. Transcript owns only document/render state and presentation hooks. Renderer exports preserve the existing compatibility contract. The cohesive event reducer stays below the hard 500-line limit.",
+   "records": [
+    "sico_ui.transcript exports from sico_ui.transcript_render"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_agent_gui.py",
+    "tools/ai/python/tests/test_transcript_projection.py",
+    "tools/ai/python/tests/test_agent_event_contract.py",
+    "tools/ai/python/tests/test_agent_render_incremental.py",
+    "tools/ai/python/tests/test_codex_native_evidence_gui.py",
+    "tools/utility/tests/test_compatibility_source_exports.py",
+    "tools/ai/python/tests/test_chat_archive.py",
+    "tools/ai/python/tests/test_chat_scroll.py"
+   ],
+   "surface_sha256": "a18273698aedea95b8607100493fb56a256b64c5620d8d60b1683a4749f09742"
+  },
+  {
+   "path": "tools/sico/python/sico_ui/workspace.py",
+   "disposition": "mixed",
+   "rationale": "Workspace owns pane selection/lifecycle. PaneTabs and closing helpers remain registered same-object exports to component owners, including the home_window consumer; per-pane state is not mirrored on the Window. Appearance and help menu actions delegate to their owning dialogs/dispatchers and do not add a second workspace model. Status-footer construction, row sizing and compact font selection delegate to status_footer for the platform/session, service and model stacks.",
+   "records": [
+    "sico_ui.workspace exports from sico_ui.workspace_tabs",
+    "sico_ui.workspace exports from sico_ui.workspace_closing"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_agent_appearance_gui.py",
+    "tools/ai/python/tests/test_agent_gui.py",
+    "tools/ai/python/tests/test_agent_panel_rail.py"
+   ],
+   "surface_sha256": "b51c571487c204a6aeb54c98ec9ec5b6ce534ef65df971cb00f0f50e8cbffbbe"
+  },
+  {
+   "path": "tools/sico/python/sico/storage/history.py",
+   "disposition": "mixed",
+   "rationale": "CatalogIndex owns only incremental catalog metadata/cache state, including read_session, component checks, bounded retry after changed offsets and immutable migration evidence checks. SessionReader owns validated journal reads and tail windows; four historical exports retain exact object identity. Repository importers were re-enumerated, including deferred consumers. JSON decoding now uses the existing shared value owner without transport imports; catalog metadata scans still deliberately use the unchanged non-strict envelope path. Cache hits do not bypass component checks, partial tails remain untouched by readers, and damaged histories remain explicit.",
+   "records": [
+    "sico.storage.history exports from sico.storage.history_reader"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_agent_history.py",
+    "tools/ai/python/tests/test_agent_catalog.py",
+    "tools/ai/python/tests/test_agent_session_load_scale.py",
+    "tools/ai/python/tests/test_storage_json_contract.py",
+    "tools/utility/tests/test_storage_boundaries.py"
+   ],
+   "surface_sha256": "7dabd56fdded2d768ffb93909a156b69e50fdfe9543826f1a89062b57b5522a6"
+  },
+  {
+   "path": "tools/ai/python/cadai/template_placement.py",
+   "disposition": "mixed",
+   "rationale": "Placement planning and preview retain their public entrypoints; tool schema, bounds and declarative options share one schema owner. All listed values are same-object aliases rather than copied schemas.",
+   "records": [
+    "cadai.template_placement exports from cadai.template_placement_schema"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_template_placement.py"
+   ],
+   "surface_sha256": "20548a0c616224e75c4fd26156a0d39eaaf58a45e9c173aca1121928d3d95859"
+  },
+  {
+   "path": "tools/sico/python/sico/transport/relay.py",
+   "disposition": "mixed",
+   "rationale": "Relay is the current framed I/O lifecycle, cancellation and late-reply owner. Only registered relay_stdio readers are compatibility exports; persisted evidence helpers are legitimate downward storage dependencies.",
+   "records": [
+    "sico.transport.relay exports from sico.transport.relay_stdio"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_agent_transport.py",
+    "tools/ai/python/tests/test_agent_notice_backpressure.py"
+   ],
+   "surface_sha256": "82238ba1540b216b56ed8148950388ce36c06174dd0b6b0bd1c077572ff244aa"
+  },
+  {
+   "path": "tools/sico/python/sico/transport/router_archive.py",
+   "disposition": "mixed",
+   "rationale": "capture_archive_owner, seal_generation and maintain_router_logs remain canonical archive orchestration: ancestry attestation, writer/reader locks, publication and pruning order retain their failure-injection hooks. Registered record exports remain same-object aliases of router_archive_records. Boot and process observation now use the read-only OS identity owner without service imports; uncertain host evidence still preserves journals. CLI, launch, InstanceBridge and router_journal consumers were reviewed separately from the retained record aliases.",
+   "records": [
+    "sico.transport.router_archive exports from sico.transport.router_archive_records"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_agent_router_archive.py",
+    "tools/ai/python/tests/test_router_owner_evidence.py",
+    "tools/utility/tests/test_platform_boundaries.py"
+   ],
+   "surface_sha256": "a973def2465926542ef232a8e6e5ec3e671b48df94243eab379b912201d186db"
+  },
+  {
+   "path": "tools/sico/python/sico/service/audit.py",
+   "disposition": "mixed",
+   "rationale": "EQ-08 review: AuditService retains evidence validation, durable decisions and delivery. Question values are owned by core.audit_questions and native child record projection by codex.input_records. InputRequests still solely owns mailbox identity and waiting state; delivery consumes before publication and sends outside the lock. Native approval guidance is owned by codex.audit_instructions. Supplementary native release is delegated to audit_supplementary so AuditService stays within its file limit; the class policy is owned by core.review_classes. Historical question and instruction exports are registered exact-object aliases; no duplicate implementation or state is introduced. Root business questions can now detach from resolved/terminated native RPCs without changing task/evidence ownership; audit_continuation owns validated one-shot turn/start dispatch and its durable receipt. Approvals, elicitations, children and registration/dispatch races remain terminal. InputRequests owns the only pending mailbox and transient registration guard. Source observation now distinguishes temporary pre-dispatch getter failures with core.target_validation.TargetUnconfirmed; AuditService, audit_delivery and audit_continuation retain the existing mailbox and answer in waiting_user without consuming or dispatching. InputRequests remains the sole state owner; confirmed invalidation and post-dispatch uncertainty keep their existing terminal/reconcile boundaries. Supplementary ownership review is recorded in docs/SICO_WINDOW_ASK_PLAN.md. Deletion-review state and admission are delegated to audit_destructive so AuditService does not become a second review implementation.",
+   "records": [
+    "sico.service.audit question value aliases",
+    "sico.service.audit exports from sico.service.audit_instructions"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_codex_turn_loop_audit_wait.py",
+    "tools/ai/python/tests/test_audit_continuation_runtime.py",
+    "tools/ai/python/tests/test_agent_audit_lifecycle.py",
+    "tools/ai/python/tests/test_agent_pdk_choice.py",
+    "tools/ai/python/tests/test_agent_target_choice.py",
+    "tools/ai/python/tests/test_interaction_owner.py",
+    "tools/ai/python/tests/test_interaction_capabilities.py",
+    "tools/utility/tests/test_interaction_boundaries.py",
+    "tools/ai/python/tests/test_approval_contracts.py",
+    "tools/utility/tests/test_approval_boundaries.py",
+    "tools/ai/python/tests/test_runtime_guidance.py",
+    "tools/utility/tests/test_runtime_guidance_boundaries.py",
+    "tools/ai/python/tests/test_backend_target_contract.py",
+    "tools/ai/python/tests/test_delete_review.py",
+    "docs/SICO_DELETE_REVIEW.md",
+    "docs/SICO_WINDOW_ASK_PLAN.md"
+   ],
+   "surface_sha256": "6ebec9d3872a81f70e611caa2a20bd587a3b5fc73553f70669ebbd8a6b4626bc"
+  },
+  {
+   "path": "tools/sico/python/sico/transport/broker.py",
+   "disposition": "mixed",
+   "rationale": "ContextBroker is the current transport registration/router lifecycle owner. Peer and scope exports are same-object compatibility groups; tool_dispatch now consumes broker_scope directly. Cancellation and runtime ownership remain with their existing components.",
+   "records": [
+    "sico.transport.broker exports from sico.transport.broker_peer",
+    "sico.transport.broker exports from sico.transport.broker_scope"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_agent_transport.py",
+    "tools/ai/python/tests/test_agent_native_bindings.py",
+    "tools/ai/python/tests/test_broker_registration.py"
+   ],
+   "surface_sha256": "c9f483287101682a6dce365041a6469a360a05a9da43a2c4f5d05fdcc5db8891"
+  },
+  {
+   "path": "tools/sico/python/sico/codex/backend.py",
+   "disposition": "mixed",
+   "rationale": "EQ-12 review: CodexBackend remains the native task and thread owner after EQ-08 composition closure. Runtime assembly, interrupted-task settlement and stopped-process recovery are delegated to runtime_assembly/runtime_lifecycle, which own cleanup confirmation, safe pre-dispatch recovery and metadata RPC scope; backend retains task admission, turn state and native receipt decoding. User-stopped tasks become terminal cancellation records with unconfirmed tool evidence instead of entering the reconcile prompt. Its immutable support declaration and shared core target-method rule add no second state owner. The retained instruction alias and optional exclusive terminal route remain unchanged; the terminal handle owns no process.",
+   "records": [
+    "sico.codex.backend exports from sico.codex.backend_instructions"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_codex_thread_connection.py",
+    "tools/ai/python/tests/test_agent_codex_native.py",
+    "tools/ai/python/tests/test_codex_wait_reads_lifecycle.py",
+    "tools/ai/python/tests/test_interaction_owner.py",
+    "tools/ai/python/tests/test_interaction_capabilities.py",
+    "tools/utility/tests/test_interaction_boundaries.py",
+    "tools/ai/python/tests/test_backend_support.py",
+    "tools/ai/python/tests/test_backend_target_contract.py",
+    "tools/ai/python/tests/test_codex_runtime_recovery.py",
+    "tools/ai/python/tests/test_codex_metadata_recovery.py",
+    "tools/ai/python/tests/test_codex_native_projection.py",
+    "tools/ai/python/tests/test_interaction_cancel.py",
+    "tools/ai/python/tests/test_codex_turn_inputs_lifecycle.py"
+   ],
+   "surface_sha256": "8e362bdb4a5f266f943237e36a1004d4ab2914470e6c83c027026ae0aea96ae5"
+  },
+  {
+   "path": "tools/sico/python/sico_ui/transcript_audit.py",
+   "disposition": "compatibility",
+   "rationale": "Pure same-object chat_audit projection exports; service is the authority. Projection fixtures and supported downstream callers retain the old path until the registered import-API retirement.",
+   "records": [
+    "sico_ui.transcript_audit exports from sico.service.chat_audit"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_transcript_projection.py",
+    "tools/ai/python/tests/test_chat_archive.py"
+   ],
+   "surface_sha256": "0a42f23cb46adb3c70bcb861922d19b449084eb8b748bc8cd1e771b87ff9286a"
+  },
+  {
+   "path": "tools/sico/python/sico_ui/transcript_history.py",
+   "disposition": "compatibility",
+   "rationale": "Pure same-object chat_retention aliases. No current repository imports; retain the explicitly documented external import contract until downstream migration/incompatible API, with identity checks.",
+   "records": [
+    "sico_ui.transcript_history exports from sico.service.chat_retention"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_transcript_projection.py",
+    "tools/ai/python/tests/test_chat_archive.py"
+   ],
+   "surface_sha256": "a519386ad413276100795e6ff08e7ffcdbe9225eaee499b71807a261e0e26883"
+  },
+  {
+   "path": "tools/sico/python/sico_ui/transcript_reconcile.py",
+   "disposition": "compatibility",
+   "rationale": "Pure same-object chat_reconcile projection aliases. No second algorithm or state; projection fixtures and supported downstream paths have an explicit retirement condition.",
+   "records": [
+    "sico_ui.transcript_reconcile exports from sico.service.chat_reconcile"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_transcript_projection.py",
+    "tools/ai/python/tests/test_chat_archive.py"
+   ],
+   "surface_sha256": "7b1f7f330a46c3c65404c65613b3b72e5181598a5b7be2cf03fffa334ab43a8d"
+  },
+  {
+   "path": "tools/sico/python/sico_ui/transcript_text.py",
+   "disposition": "compatibility",
+   "rationale": "Pure same-object chat_text formatting aliases; projection fixtures are actual callers. Service owns formatting and no UI implementation is duplicated.",
+   "records": [
+    "sico_ui.transcript_text exports from sico.service.chat_text"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_transcript_projection.py",
+    "tools/ai/python/tests/test_chat_archive.py"
+   ],
+   "surface_sha256": "5bb14ff3add8e98a1b76830841382949dcf0c3e73cc3f05f2c33014ebe5149b5"
+  },
+  {
+   "path": "tools/sico/python/sico_ui/transcript_tools.py",
+   "disposition": "compatibility",
+   "rationale": "Pure same-object chat_tools projection aliases, currently without repository importers. External retirement condition remains explicit; identity checks verify no duplicate implementation.",
+   "records": [
+    "sico_ui.transcript_tools exports from sico.service.chat_tools"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_transcript_projection.py",
+    "tools/ai/python/tests/test_chat_archive.py"
+   ],
+   "surface_sha256": "fcf0dd1d0e60cc9d18c52a0eb333a9fe92f00cfaa98ea98c7723889cf4cf9a73"
+  },
+  {
+   "path": "tools/ai/python/cadai/template_project.py",
+   "disposition": "compatibility",
+   "rationale": "Explicit legacy SQLite projection remains for tpl_ catalogs; standard JSON publication uses the independently validated projection authority.",
+   "records": [
+    "cadai.template_project.project_record legacy SQLite projection"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_template_project.py",
+    "tools/ai/python/tests/test_template_standard_projection.py"
+   ],
+   "surface_sha256": "61f044872d8d14db1ddf8ee3eaa87cc1c19a4ece1b885618655222aa18dbf24a"
+  },
+  {
+   "path": "tools/sico/python/sico/service/host_contract.py",
+   "disposition": "mixed",
+   "rationale": "host_identity, validate_reference and validate_query own service protocol error adaptation and request validation. capture_payload and PAYLOAD_LIMIT are exact aliases of the transport payload boundary; digest is an exact alias of the runtime-free core value contract. No payload validator or digest implementation remains here. Internal imports used by the canonical adapters are not alternate public operations.",
+   "records": [
+    "sico.service.host_contract bridge payload aliases",
+    "sico.service.host_contract stable digest alias"
+   ],
+   "evidence": [
+    "tools/utility/tests/test_transport_boundaries.py",
+    "tools/ai/python/tests/test_agent_host_payloads.py",
+    "tools/ai/python/tests/test_agent_service_host.py"
+   ],
+   "surface_sha256": "60f17e1b6aff20925d04699315e29688866cdf2e80df834442efe407d96f6746"
+  },
+  {
+   "path": "tools/ai/python/cadai/tool_help_schema.py",
+   "disposition": "canonical",
+   "rationale": "Canonical definition of the cds_help manual tool. The former tool_help name is a hidden call alias owned by mcp_definitions.ALIASES; this module keeps no second definition.",
+   "records": [],
+   "evidence": [
+    "tools/ai/python/tests/test_mcp_help.py"
+   ],
+   "surface_sha256": "794192a1a88f109297dbc0771d04a5bbd62d17caaef1ba7bd88cef847cd31bf6"
+  },
+  {
+   "path": "tools/sico/python/sico/service/background_environment.py",
+   "disposition": "mixed",
+   "rationale": "worker_environment and guardian_environment own worker materialization and guardian interpreter selection. The five bridge snapshot names are same-object aliases of the transport contract, with no second validation or capture implementation. Provenance, explicit empty values, credential exclusion and protocol errors retain their established semantics.",
+   "records": [
+    "sico.service.background_environment bridge environment aliases"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_platform_environment_contract.py",
+    "tools/ai/python/tests/test_sico_eda_environment.py",
+    "tools/utility/tests/test_platform_boundaries.py"
+   ],
+   "surface_sha256": "2d61a85806b404043023da35b7ebed211b78d10996507ee0394216482dcbacff"
+  },
+  {
+   "path": "tools/sico/python/sico/service/background_watchdog.py",
+   "disposition": "mixed",
+   "rationale": "process_alive, guardian resumption and watch_worker retain supervision, deadlines and descendant cleanup. boot_id and process_identity are same-object aliases of the read-only OS identity owner. Process observation introduces no service, transport or signalling dependency; watchdog failure handling and process-control hooks remain unchanged.",
+   "records": [
+    "sico.service.background_watchdog process identity aliases"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_process_identity.py",
+    "tools/ai/python/tests/test_agent_b3_recovery.py",
+    "tools/utility/tests/test_platform_boundaries.py"
+   ],
+   "surface_sha256": "3e71be9daa874bb9ac45208af7ce58eb046242d49e5af7d6aff468a7ffffc729"
+  },
+  {
+   "path": "tools/sico/python/sico/providers/config.py",
+   "disposition": "mixed",
+   "rationale": "Provider selection, file/environment precedence, credential lookup and construction remain canonical. validate_config is a same-object alias of the shared configuration owner; no second validator remains. Snapshot and migration readers now import that owner directly without loading provider implementations.",
+   "records": [
+    "sico.providers.config provider validation alias"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_configuration_contracts.py",
+    "tools/ai/python/tests/test_agent_provider_config.py",
+    "tools/ai/python/tests/test_session_snapshot_contract.py"
+   ],
+   "surface_sha256": "a1cce1e40fa117b304748cb67a7f9c829aed92490e37181469ce0c2f37dd8608"
+  },
+  {
+   "path": "tools/sico/python/sico/codex/settings.py",
+   "disposition": "mixed",
+   "rationale": "CodexSettings owns live credential/environment capture and executable resolution. The shared idle default, idle budget validation and captured option validator have exact aliases with one implementation in configuration.codex. Existing timeout precedence and endpoint/error behavior remain covered by protocol regressions.",
+   "records": [
+    "sico.codex.settings captured option validation aliases"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_configuration_contracts.py",
+    "tools/ai/python/tests/test_agent_codex_protocol.py",
+    "tools/ai/python/tests/test_session_snapshot_contract.py"
+   ],
+   "surface_sha256": "c43247ac47725259d7507f51a878b538f61fdae0fa55bfeeb2d007c78f005822"
+  },
+  {
+   "path": "tools/sico/python/sico/service/lsf_config.py",
+   "disposition": "compatibility",
+   "rationale": "This module only re-exports LsfConfig, label and lsf_settings from configuration.lsf. The class retains record normalization, budget checks and shared-path containment; scheduling and process execution stay in service/codex consumers. Exact class identity protects isinstance and dataclass users through the old import path.",
+   "records": [
+    "sico.service.lsf_config batch configuration aliases"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_configuration_contracts.py",
+    "tools/ai/python/tests/test_agent_service_lsf_boundaries.py",
+    "tools/ai/python/tests/test_agent_service_lsf_node.py"
+   ],
+   "surface_sha256": "2ecf86ca7944b3ae0c2c45b583a65a2e6e1d64cf20fe64735c91f30d33e60c3c"
+  },
+  {
+   "path": "tools/sico/python/sico/codex/local_process.py",
+   "disposition": "compatibility",
+   "rationale": "Only a same-object LocalProcess export remains. The shared owner manages the lifetime control pipe, stdin closure and bounded supervisor wait; protocol readers retain stdout custody. SSH readiness and temporary sockets remain in transport, RPC cancellation remains in Codex, and scheduler reconciliation remains in GatewayJob. All repository production consumers use the shared owner.",
+   "records": [
+    "sico.codex.local_process local process owner alias"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_local_process.py",
+    "tools/ai/python/tests/test_bridge_tunnel_lifecycle.py",
+    "tools/utility/tests/test_local_process_boundaries.py"
+   ],
+   "surface_sha256": "c0012e3fc3ea1ced47390e11fbb76625ba03f54f565f6fa755e0d7ff254a81bf"
+  },
+  {
+   "path": "tools/sico/python/sico/service/lsf_commands.py",
+   "disposition": "compatibility",
+   "rationale": "Only same-object aliases of the shared LSF bounded command runner and finite scheduler environment remain. Consumers and retirement conditions were reviewed; no duplicate execution or parsing implementation remains.",
+   "records": [
+    "sico.service.lsf_commands shared LSF aliases"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_lsf_shared_control.py",
+    "tools/ai/python/tests/test_agent_service_lsf.py",
+    "tools/utility/tests/test_lsf_boundaries.py"
+   ],
+   "surface_sha256": "9ab4cffacbac131573c0447ef7d30ae5591060d8ce953a97d19cc4cba4faa724"
+  },
+  {
+   "path": "tools/sico/python/sico/service/lsf_output.py",
+   "disposition": "compatibility",
+   "rationale": "Only same-object aliases of the shared LSF strict scheduler output parser remain. Consumers and retirement conditions were reviewed; no duplicate execution or parsing implementation remains.",
+   "records": [
+    "sico.service.lsf_output shared LSF aliases"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_lsf_shared_control.py",
+    "tools/ai/python/tests/test_agent_service_lsf.py",
+    "tools/utility/tests/test_lsf_boundaries.py"
+   ],
+   "surface_sha256": "64a923df8f545000a63913f55e8c55ec6f0017393a72b9bb60073df2f63581f8"
+  },
+  {
+   "path": "tools/sico/python/sico/service/audit_runtime.py",
+   "disposition": "mixed",
+   "rationale": "EQ-12 review: AuditRuntime adds one explicit require capability operation. Native child/approval callbacks check backend support before accessing Codex state; target validation remains a supplied task operation. Existing InputScope and input-assembly aliases retain identical object identity and retirement conditions; no second mailbox or mutable task copy is introduced.",
+   "records": [
+    "sico.service.audit_runtime scope alias",
+    "sico.service.audit_runtime input composition aliases"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_input_assembly.py",
+    "tools/ai/python/tests/test_interaction_capabilities.py",
+    "tools/utility/tests/test_input_assembly_boundaries.py",
+    "tools/ai/python/tests/test_backend_support.py",
+    "tools/ai/python/tests/test_backend_target_contract.py"
+   ],
+   "surface_sha256": "2691d04cddcd303a08d79f35c8541199723b841fbde5655bc6a6591fcfbbe721"
+  },
+  {
+   "path": "tools/sico/python/sico/service/audit_questions.py",
+   "disposition": "compatibility",
+   "rationale": "EQ-08 review: This module only retains five exact-object aliases to the core question contract; all production consumers use the owner and retirement conditions are recorded.",
+   "records": [
+    "sico.service.audit_questions question values compatibility exports"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_approval_contracts.py",
+    "tools/utility/tests/test_approval_boundaries.py"
+   ],
+   "surface_sha256": "b37cf075e6dadd9db8e6b03a4724ec0aad7d5d003c7b825f6b775bb6969e241b"
+  },
+  {
+   "path": "tools/sico/python/sico/service/audit_records.py",
+   "disposition": "mixed",
+   "rationale": "EQ-08 review: Service evidence preparation, native binding validation and host reply projection remain here. Native question/approval record construction and child attribution have one Codex owner; this historical function is an exact-object alias with no wrapper or duplicated state.",
+   "records": [
+    "sico.service.audit_records native record projector compatibility exports"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_approval_contracts.py",
+    "tools/utility/tests/test_approval_boundaries.py"
+   ],
+   "surface_sha256": "5c7d03ae72e8036b0b7e881452b8901148a55f967731ccde489ca66d8fe02cf7"
+  },
+  {
+   "path": "tools/sico/python/sico/service/audit_instructions.py",
+   "disposition": "compatibility",
+   "rationale": "EQ-08 review: The service module retains only the exact Codex instruction value; it owns no decision behavior.",
+   "records": [
+    "sico.service.audit_instructions.INSTRUCTIONS compatibility export"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_runtime_guidance.py",
+    "tools/utility/tests/test_runtime_guidance_boundaries.py",
+    "tools/ai/python/tests/test_agent_workbench.py"
+   ],
+   "surface_sha256": "3c56e825d76119a729f4d1f4e12cdbb22d198df89a3e5d1f37ecd6e6c6bad004"
+  },
+  {
+   "path": "tools/sico/python/sico/service/workbench.py",
+   "disposition": "mixed",
+   "rationale": "EQ-08 review: WorkbenchService and attach_workbench retain application tool behavior and assembly. Only INSTRUCTIONS becomes an exact alias of core.workbench_instructions shared by both backends; no state or service implementation moves into core. Broader application composition remains outside this review.",
+   "records": [
+    "sico.service.workbench.INSTRUCTIONS compatibility export"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_runtime_guidance.py",
+    "tools/utility/tests/test_runtime_guidance_boundaries.py",
+    "tools/ai/python/tests/test_agent_workbench.py"
+   ],
+   "surface_sha256": "619209cffdd57562f9c6903a537016cb01e0b043863a5520dda424511deae81d"
+  },
+  {
+   "path": "tools/ai/python/cadai/result_tools.py",
+   "disposition": "mixed",
+   "rationale": "EQ-08 review: result_tools retains result tool definitions, input validation, native capture and tool dispatch. Content-addressed publication and reads have one implementation in result_store. Historical ResultStore/schema/limit exports are exact aliases, production artifact consumers use the owner, and workbench no longer inherits a writer to read archived material. Existing capture release and tool result contracts are unchanged.",
+   "records": [
+    "cadai.result_tools artifact storage compatibility exports"
+   ],
+   "evidence": [
+    "tools/ai/python/tests/test_result_store.py",
+    "tools/utility/tests/test_result_store_boundaries.py",
+    "tools/ai/python/tests/test_agent_results.py",
+    "tools/ai/python/tests/test_result_contract.py"
+   ],
+   "surface_sha256": "5b9a746c86e9c71b57f3d9fba651041910ff76426925d85377889c7d97882a4a"
+  },
+  {
+   "path": "tools/ai/python/cadai/pdk_builtin.py",
+   "disposition": "canonical",
+   "rationale": "Current reader of standard bundled analogLib/basic data, with session catalog projection. No gzip fallback or alternative source authority; checks package versions, qualification and library binding.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_pdk_builtin.py"
+   ],
+   "surface_sha256": "98c7743c6f519e523264e71e69449095c3b5c51432ef30e27b79909f90ed526e"
+  },
+  {
+   "path": "tools/ai/python/cadai/pdk_standard/catalog.py",
+   "disposition": "canonical",
+   "rationale": "Current standard-package to prepared-session adapter. Requires valid qualification/provenance, live binding and use permission; a transient prepared projection is not a competing persisted schema. selection_status and annotate_candidates are light select-only preparation facts; full provenance and publication checks remain in prepared/get_pdk_data.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_pdk_standard_consumer_boundary.py",
+    "tools/ai/python/tests/test_pdk_preparation.py"
+   ],
+   "surface_sha256": "fb597eddb283c1e9bbc779e579258a45cd4b4438e2d55f5cbe8c2bc9c80d62b0"
+  },
+  {
+   "path": "tools/ai/python/cadai/pdk_standard/refresh.py",
+   "disposition": "canonical",
+   "rationale": "Explicit refresh verification compares captured source and published package before regeneration. Legacy is an input classification; refresh does not authorize use or silently probe during design.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_pdk_standard_refresh.py"
+   ],
+   "surface_sha256": "8798c6458cbe87d37b0fc48c80c57ca09fad21fb91632703f439e6456733a317"
+  },
+  {
+   "path": "tools/ai/python/cadai/template_catalog.py",
+   "disposition": "mixed",
+   "rationale": "TemplateCatalog owns lookup across current ctpl packages and retained tpl/SQLite references. Standard-first discovery and explicit legacy builder options preserve fixed references; historical support is registered, not another current publication authority. An empty query is marked terminal for direct creation, and workspace path aliases are canonicalized before the derived-query cache is checked.",
+   "records": [
+    "TemplateCatalog retained tpl/SQLite references"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_template_standard.py",
+    "tools/ai/python/tests/test_template_library_reader.py",
+    "tools/ai/python/tests/test_template_standard_migrate.py"
+   ],
+   "surface_sha256": "023628f5d8afd3bc7b04ae8d0f2bbd8b7198b5624bb27a47d09c0d28046b2e9d"
+  },
+  {
+   "path": "tools/ai/python/cadai/template_catalog_health.py",
+   "disposition": "canonical",
+   "rationale": "Read-only maintenance audit compares retained capture asset coverage with one published catalog and reports stale, missing or empty symbol geometry. It never writes a catalog, capture or OA view.",
+   "records": [],
+   "evidence": [
+    "tools/ai/python/tests/test_template_catalog_health.py"
+   ],
+   "surface_sha256": "bd94aef1ec966eaccbc6f66ebebcc5cdf070a0d720c80b2446e588d95e42c80e"
+  },
+  {
+   "path": "tools/ai/python/cadai/template_symbol_family.py",
+   "disposition": "canonical",
+   "rationale": "Reusable symbol families store one normalized body/stub geometry with terminal slots. A target schematic binds terminal names, directions and widths at plan time; the module never copies or mutates a source symbol view.",
+   "records": [],
+   "evidence": [
+    "tools/ai/python/tests/test_template_symbol_family.py"
+   ],
+   "surface_sha256": "289df0cc94eeb60beb6817548dd9e4409bd48033810df2a30e5164f4fc5e8058"
+  },
+  {
+   "path": "tools/ai/python/cadai/template_symbol_family_registry.py",
+   "disposition": "canonical",
+   "rationale": "Builds canonical family files and a versioned private index from captured records, and loads the same index for preview. It owns no geometry planning and never writes OA or shared catalogs.",
+   "records": [],
+   "evidence": [
+    "tools/ai/python/tests/test_template_symbol_family.py"
+   ],
+   "surface_sha256": "1fad21f4312311992c3b7859dff4551c79d17731ecfd66f8d43e4432a6d43a31"
+  },
+  {
+   "path": "tools/ai/python/cadai/template_classification_legacy.py",
+   "disposition": "compatibility",
+   "rationale": "Frozen classifier for retained unversioned raw captures selected by template_classification. Replaying that version preserves pinned semantics and reference identity; v2 remains the current classifier.",
+   "records": [
+    "Frozen template legacy classification"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_template_classification.py",
+    "tools/ai/python/tests/test_template_standard_versions.py"
+   ],
+   "surface_sha256": "9a8167d57a6049b1802b38096722b1f981d27b9820e041647b0805338ed3f5bc"
+  },
+  {
+   "path": "tools/ai/python/cadai/template_classification_v1.py",
+   "disposition": "compatibility",
+   "rationale": "Frozen v1 classifier selected explicitly by retained capture version. It cannot replace v2 for new captures or silently reclassify archives.",
+   "records": [
+    "Frozen template v1 classification"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_template_classification.py",
+    "tools/ai/python/tests/test_template_standard_versions.py"
+   ],
+   "surface_sha256": "8e66a0ab90f768db64250ad3f36fb384b198c9ecb0884de3de914bcc3abbad86"
+  },
+  {
+   "path": "tools/ai/python/cadai/template_prepare.py",
+   "disposition": "mixed",
+   "rationale": "Canonical bounded prepare pipeline validates exact/core mappings, snapshots and budgets. _legacy_use is the registered exact-mode v1 template-use projection; core adaptation has distinct current semantics and neither duplicates persistent template state.",
+   "records": [
+    "Template preparation exact v1 use projection"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_template_prepare_facade.py",
+    "tools/ai/python/tests/test_template_prepare_guard.py",
+    "tools/ai/python/tests/test_template_prepare_workflow.py"
+   ],
+   "surface_sha256": "27bda54ce6305361631a8116a940ad9c7be31d49cd74c7a452722850121bd963"
+  },
+  {
+   "path": "tools/ai/python/cadai/template_standard/migrate.py",
+   "disposition": "canonical",
+   "rationale": "Explicit one-way import uses the current compiler and immutable retained evidence. It preserves legacy_refs/derived_from without rewriting SQLite references, inferring native fingerprints or granting missing usage permission.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_template_standard_migrate.py",
+    "tools/ai/python/tests/test_template_standard_derived.py"
+   ],
+   "surface_sha256": "28d548bc7b4de26995da7be23b8db9af08193a41b24441a52446c24ea1624316"
+  },
+  {
+   "path": "tools/ai/python/cadai/template_standard/replay.py",
+   "disposition": "canonical",
+   "rationale": "Current replay/engine projection validates retained request, capture digest, package reference and qualification before reconstructing a transient engine record. Creation admission stays here: circuit reuse consumes reuse/placement profiles; Symbol reference consumes reference permission and, only for source outlines, symbol-reference-v1. Symbol planning separately validates the full schematic interface, without requiring unrelated internal-circuit reuse qualification. No second persisted owner or implicit legacy conversion.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_template_standard_projection.py",
+    "tools/ai/python/tests/test_template_projection_boundaries.py",
+    "tools/ai/python/tests/test_template_symbol_standard_gate.py"
+   ],
+   "surface_sha256": "e02388829f157f0acb2286227c4cc0001c55cab4e21f6c02737cf280296ba3d6"
+  },
+  {
+   "path": "tools/ai/python/cadai/template_topology.py",
+   "disposition": "canonical",
+   "rationale": "Current bounded electrical/topology validation used by qualification, matching and storage. Legacy wording describes data accepted by this validator; no superseded topology implementation is exported.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_template_electrical_readiness.py",
+    "tools/ai/python/tests/test_template_reuse_schema.py"
+   ],
+   "surface_sha256": "7cb924a046138645d90e9ba0f19d26558ecdd0dec0835315c3cb675af086f2c0"
+  },
+  {
+   "path": "tools/ai/python/cadai/tool_help.py",
+   "disposition": "canonical",
+   "rationale": "cds_help is the current validated discovery/search/read operation. tool_help is an advertised-name alias owned and registered at mcp_definitions; the implementation itself is not a legacy facade.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_cds_help.py",
+    "tools/ai/python/tests/test_tool_help_index.py"
+   ],
+   "surface_sha256": "1f9fe2f07da9ea540e505d1dc0e7f885167e2e57743d2a30f28ca01f6a56d000"
+  },
+  {
+   "path": "tools/lef/python/lefpy/environment.py",
+   "disposition": "compatibility",
+   "rationale": "Pure same-object restore_eda_temp_environment facade over cadenv, used by lefpy.runner and common environment tests. The missing registration is now explicit; no vendor environment logic is copied.",
+   "records": [
+    "lefpy.environment EDA restoration alias"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/common/python/tests/test_cadenv.py"
+   ],
+   "surface_sha256": "03eda55684dfb927351e25275a580c85f99e04ede1537edaf3d6dc10d0d146cd"
+  },
+  {
+   "path": "tools/sico/python/sico/codex/feature_groups.py",
+   "disposition": "canonical",
+   "rationale": "Current feature group defaults, validation, journal restore, the session-scoped FeatureSetting and the project default shared by GUI and RPC. The project_instructions group explicitly carries the AGENTS.md/AGENT.md discovery budget and fallback names; Codex remains the single native reader. Native plugins default off because Codex 0.162.1 couples them to GitHub plugin-directory synchronization; explicitly enabling plugins restores both, and selected unavailable plugins are reported before task dispatch. Compatibility describes provider policy defaults, not a second implementation; project and session choices are recorded by the single owner.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "docs/SICO_AGENT_RESOURCE_MANIFEST.md",
+    "tools/ai/python/tests/test_codex_feature_groups.py",
+    "tools/ai/python/tests/test_agent_feature_settings.py",
+    "tools/ai/python/tests/test_codex_plugins_disabled_runtime.py"
+   ],
+   "surface_sha256": "332796d6955b07824eeeb1cf369f734b7cb55a842ab4665cb1e45970e7309edf"
+  },
+  {
+   "path": "tools/sico/python/sico/codex/profile_setting.py",
+   "disposition": "mixed",
+   "rationale": "Current automatic adaptive product envelope and scope recording, with explicit session choices retained for embeddings and CI. Legacy project/default/migration records are migrated once to adaptive, legacy tool-profile.json is no longer consumed by product sessions, and bound runtime selection cannot change.",
+   "records": [
+    "ProfileSetting task-bearing journal without profile event"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_agent_tool_profile.py"
+   ],
+   "surface_sha256": "b5ec7d8e594c5e9fa0f4713b5bfba6144f616ce45a864e1128cc6b533da138c9"
+  },
+  {
+   "path": "tools/sico/python/sico/adapters/tool_profiles.py",
+   "disposition": "canonical",
+   "rationale": "Single host-profile declaration table. adaptive is the product-default automatic envelope and is derived from mixed_design plus pdk_maintenance; mixed_design remains an explicit design-only envelope, desktop_compat remains the legacy migration/explicit surface, and verification keeps its separate whitelist. prepare_library is the canonical circuit-profile library preflight; prepare_circuit_library remains a hidden compatibility alias. plan_copilot_stages records ordered pre-execution stage plans in the circuit profile and engineering_report group; simulation selects existing planned stages to stay within its frozen byte budget. update_copilot_stage records model-judged stage status in the circuit/simulation profiles; planned stages are not execution facts and accepted stays non-writable. list_project_extensions is a read-only circuit-profile capability for discovering installed or built-in CDF callback support; it does not register code or execute callbacks. resolve_pdk_baseline performs the user-confirmed sync/keep choice when the workspace and shared standard baselines differ; it does not collect or publish PDK data. Terminal tools are added only when the registered catalog contains them, preserving profile scope for sessions without a qualified terminal.",
+   "records": [],
+   "evidence": [
+    "tools/ai/python/tests/test_tool_profiles.py",
+    "tools/ai/python/tests/test_agent_tool_profile.py"
+   ],
+   "surface_sha256": "988c1178cd74ed5361f594cb74e6f0c0df86e5d479ca617b849fed4ee523e07e"
+  },
+  {
+   "path": "tools/sico/python/sico/codex/resource_selection.py",
+   "disposition": "mixed",
+   "rationale": "Current session resource selection plus registered evidence-only old-journal reconstruction. Latest failed/new-format incomplete inventory is rejected; successful reconstruction freezes a single snapshot and clears legacy candidates.",
+   "records": [
+    "ResourceSelection evidenced pre-selection journals"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_agent_settings_service.py",
+    "tools/ai/python/tests/test_codex_resources.py",
+    "tools/ai/python/tests/test_agent_resource_sessions.py"
+   ],
+   "surface_sha256": "07d6672335d3ee1c51a8525ebd3dece4cbf78e08a3678d927b1ba84db11e2038"
+  },
+  {
+   "path": "tools/sico/python/sico/migration/__init__.py",
+   "disposition": "canonical",
+   "rationale": "Namespace for explicit SiCo migration commands. No compatibility exports or startup migration side effects.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_sico_migration_prepare.py"
+   ],
+   "surface_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+   "path": "tools/sico/python/sico/migration/classification.py",
+   "disposition": "canonical",
+   "rationale": "Canonical explicit migration classifier distinguishes known source trees, current records and review-only unknown material. Historical names are input classes, not permission to import runtime or silently migrate.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_sico_migration_prepare.py",
+    "tools/ai/python/tests/test_sico_migration_material.py",
+    "tools/ai/python/tests/test_sico_migration_native.py"
+   ],
+   "surface_sha256": "cef34441f54f24635b6a20d16766b822fb3e005b2502b5c57144d82d9c8c58ab"
+  },
+  {
+   "path": "tools/sico/python/sico/migration/native_paths.py",
+   "disposition": "canonical",
+   "rationale": "Canonical finite path classifier for explicit native-history migration. Known runtime artifacts are classified intentionally; unknown paths stay review-only and are never broad cleanup targets.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_sico_migration_native.py",
+    "tools/ai/python/tests/test_sico_migration_material.py"
+   ],
+   "surface_sha256": "45fee75961539fbe15ecdf5049e3f7d3bd9a48dec46ea1a88ea8969963578111"
+  },
+  {
+   "path": "tools/sico/python/sico/service/remote_agent_settings.py",
+   "disposition": "canonical",
+   "rationale": "Current DTO client for agent settings, the separate project agent-mode setting, and structured data-root overrides. Preview source IDs are the documented query contract; epoch/source validation rejects late responses and no mutable backend is exposed. Saves return an explicit outcome and revision.",
+   "records": [],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_agent_settings_service.py"
+   ],
+   "surface_sha256": "83409b2b11e2953dc55d5881da3bc7ac83458b3d0b002f4614572f9697c4adbc"
+  },
+  {
+   "path": "tools/sico/python/sico/service/service_custody.py",
+   "disposition": "mixed",
+   "rationale": "Current service lifecycle wrapper with registered no-pidfd target support. Only the unreaped direct-child custodian signals, with peer UID/parent/start-time checks; process identity cannot be inferred from a stale PID record. A pre-fork ownership failure is returned through the existing bootstrap channel by service_entry, while the active-thread fork guard remains enforced.",
+   "records": [
+    "Service custody on supported kernels without pidfds"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_agent_service_force_stop.py"
+   ],
+   "surface_sha256": "4e7da12bfe4a3c837e5e7000ddc4930245981039f2ec6cce7d155baeaea17f80"
+  },
+  {
+   "path": "tools/sico/python/sico_ui/session_recovery.py",
+   "disposition": "mixed",
+   "rationale": "Normal conversation continuation delegates to SessionPage. Hidden paused inspect/restore controls are a registered diagnostic contract with scope/authorization/late-receipt checks, not a second normal continuation policy.",
+   "records": [
+    "SessionRecovery paused diagnostic controls"
+   ],
+   "evidence": [
+    "docs/SICO_EQ08_C5_REVIEW.md",
+    "tools/ai/python/tests/test_agent_service_recovery_gui.py"
+   ],
+   "surface_sha256": "5464a432abab3ef9c059a7e87bd5a484f3ab97d7635e5c89716f39592efa1f9a"
+  },
+  {
+   "path": "tools/ai/python/cadai/responses_compat.py",
+   "disposition": "canonical",
+   "rationale": "Single provider-compatibility table for Responses envelope fields. Profile selection, Codex option derivation and path stripping are one responsibility; stripping only walks registered envelope paths and never reads input or tool payloads.",
+   "records": [],
+   "evidence": [
+    "tools/ai/python/tests/test_responses_compat.py",
+    "tools/ai/python/tests/test_agent_codex_protocol.py"
+   ],
+   "surface_sha256": "5c3a21951b5c0e1f4eb9574f39bf477cde30b11395b011a60bdc56a5cba3f34d"
+  }
+ ]
 }

@@ -21,6 +21,7 @@ from cadgui.chrome import apply_main_window_frameless as apply_main_window_frame
 from cadgui.chrome import dialog_frameless_flags as dialog_frameless_flags
 from cadgui.chrome import half_screen_rect as half_screen_rect
 from cadgui.chrome import main_window_frameless_flags as main_window_frameless_flags
+from cadgui.chrome import refresh_family_style as refresh_family_style
 
 from sico import PRODUCT_NAME
 
@@ -37,6 +38,10 @@ class SiWindowMixin(_SiWindowMixin):
         if mark is None:
             mark = logo_icon()
         return super().install_chrome(title, controls, mark=mark)
+
+    def refresh_appearance(self, _preferences=None):
+        """Swap the theme-specific product mark on an already-open window."""
+        self.set_chrome_mark(logo_icon())
 
 
 class SiMainWindow(SiWindowMixin, _SiMainWindow):

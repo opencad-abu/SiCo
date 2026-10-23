@@ -106,6 +106,12 @@ def qrc_filter_cap(cfg: RceConfig) -> str:
     return ""
 
 
+def qrc_floating_net_option(cfg: RceConfig) -> str:
+    """Return the GUI-owned filter_cap choice that removes floating nets."""
+    remove = "true" if cfg.flag("extract", "remove_floating_nets") else "false"
+    return f"-exclude_floating_nets {remove}"
+
+
 def qrc_filter_res(cfg: RceConfig) -> str:
     value = cfg.text("filter", "res_value")
     if not value:

@@ -1,7 +1,7 @@
 ; Public ADE customization callbacks, composed with any existing site callbacks.
 
 unless(and(boundp('sicoMenusVersion)
-           sicoMenusVersion=="20260921.sico.menus.v1")
+           sicoMenusVersion=="20261020.sico.menus.v2")
 
 unless(boundp('sicoMenuTargets) sicoMenuTargets=makeTable("sicoMenuTargets" nil))
 unless(boundp('sicoMenuOrder) sicoMenuOrder=nil)
@@ -17,14 +17,14 @@ unless(boundp('sicoAdeMenuPolling) sicoAdeMenuPolling=nil)
 procedure(sicoWindowForSession(session)
   let((found protected)
     foreach(win hiGetWindowList()
-      protected=errset(axlGetWindowSession(win) nil)
+      protected=errset(aiWindowAdeSession(win) nil)
       when(and(protected car(protected)==session) found=win))
     found))
 
 procedure(sicoWindowForResult(session testName)
   let((found protected axlSession tests)
     foreach(win hiGetWindowList()
-      protected=errset(axlGetWindowSession(win) nil)
+      protected=errset(aiWindowAdeSession(win) nil)
       axlSession=when(protected car(protected))
       when(axlSession
         when(axlSession==session found=win)
@@ -94,7 +94,7 @@ procedure(sicoResultsMenu(@rest arguments)
     binding=makeTable("sicoResultsTarget" nil)
     binding['window]=window binding['entry]="ade_results"
     when(window
-      protected=errset(axlGetWindowSession(window) nil)
+      protected=errset(aiWindowAdeSession(window) nil)
       when(protected binding['adeSession]=car(protected)))
     binding['resultSession]=adeSession
     binding['testName]=testName
@@ -127,7 +127,7 @@ procedure(sicoInstallAdeMenus()
 
 procedure(sicoAdeWindowP(win)
   let((protected)
-    protected=errset(axlGetWindowSession(win) nil)
+    protected=errset(aiWindowAdeSession(win) nil)
     when(protected car(protected))))
 
 procedure(sicoAdeMenuBinding(win)
@@ -154,7 +154,7 @@ procedure(sicoInstallAdeWindowMenus(@optional args)
   let((aiwInstalled aiwBanners aiwMenu)
     aiwInstalled=0
     when(and(isCallable('hiGetWindowList) isCallable('hiGetBannerMenus)
-             isCallable('hiInsertBannerMenu) isCallable('axlGetWindowSession))
+             isCallable('hiInsertBannerMenu) isCallable('aiWindowAdeSession))
       foreach(win hiGetWindowList()
         when(sicoAdeWindowP(win)
           aiwBanners=errset(hiGetBannerMenus(win) nil)
@@ -184,7 +184,7 @@ procedure(sicoStartAdeMenuPoll()
   sicoAdeMenuPolling)
 
 procedure(sicoMenusRevision()
-  "20260921.sico.menus.v1")
+  "20261020.sico.menus.v2")
 
-sicoMenusVersion="20260921.sico.menus.v1"
+sicoMenusVersion="20261020.sico.menus.v2"
 )

@@ -2,14 +2,366 @@
   "schema_version": 1,
   "compatibility": [
     {
+      "legacy": "sico_ui.terminal_tool shell environment compatibility exports",
+      "source": "tools/sico/python/sico_ui/terminal_tool.py",
+      "replacement": "tools/sico/python/sico/service/terminal_environment.py",
+      "owner": "tools/sico/python/sico/service/terminal_environment.py",
+      "exports": {
+        "LOGIN_SHELLS": "LOGIN_SHELLS",
+        "SHELL_ENV_DROP": "SHELL_ENV_DROP",
+        "shell_command": "shell_command"
+      },
+      "consumers": ["tools/ai/python/tests/test_agent_terminal_tool.py"],
+      "external_consumers": "Supported downstream imports require migration confirmation before retirement.",
+      "evidence": ["tools/ai/python/tests/test_agent_terminal_tool.py", "tools/ai/python/tests/test_terminal_user_environment.py"],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported downstream callers to sico.service.terminal_environment and verify no old imports remain except identity tests; remove only these aliases in the next incompatible API version."
+    },
+    {
+      "legacy": "AssistantWindow router_actions command slots",
+      "source": "tools/sico/python/sico_ui/window.py",
+      "replacement": "tools/sico/python/sico_ui/router_actions.py",
+      "owner": "tools/sico/python/sico_ui/router_actions.py",
+      "consumers": [],
+      "external_consumers": "Internal T07 Qt forwarding slots; repository signal, navigation, dialog, notice and test consumers migrated in EQ-08 C4. No documented external slot protocol.",
+      "evidence": [
+        "tools/ai/docs/T07_STATE_OWNERSHIP.md",
+        "docs/SICO_EQ08_CLOSEOUT.md",
+        "tools/ai/python/tests/test_window_command_owners.py",
+        "tools/utility/tests/test_window_slot_boundaries.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Completed in EQ-08 C4: removed router_receipt_scope, refresh_router_receipt, query_router_receipt, router_cancel_scope, refresh_task_panel, cancel_router_request. Consumers use window.router_actions. No forwarding state or alias remains."
+    },
+    {
+      "legacy": "AssistantWindow actions command slots",
+      "source": "tools/sico/python/sico_ui/window.py",
+      "replacement": "tools/sico/python/sico_ui/window_actions.py",
+      "owner": "tools/sico/python/sico_ui/window_actions.py",
+      "consumers": [],
+      "external_consumers": "Internal T07 Qt forwarding slots; repository signal, navigation, dialog, notice and test consumers migrated in EQ-08 C4. No documented external slot protocol.",
+      "evidence": [
+        "tools/ai/docs/T07_STATE_OWNERSHIP.md",
+        "docs/SICO_EQ08_CLOSEOUT.md",
+        "tools/ai/python/tests/test_window_command_owners.py",
+        "tools/utility/tests/test_window_slot_boundaries.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Completed in EQ-08 C4: removed reconnect_instance, update_host_notices, run_command, rename_session, delete_session, initialize_context, queue_input, submit, _attachment_pasted, show_pending_audit, open_audit_ids, target_family, target_picker_provider, pick_design_target, resolve_target_choice, answer_audit. Consumers use window.actions. No forwarding state or alias remains."
+    },
+    {
+      "legacy": "AssistantWindow renderer command slots",
+      "source": "tools/sico/python/sico_ui/window.py",
+      "replacement": "tools/sico/python/sico_ui/window_presentation.py",
+      "owner": "tools/sico/python/sico_ui/window_presentation.py",
+      "consumers": [],
+      "external_consumers": "Internal T07 Qt forwarding slots; repository signal, navigation, dialog, notice and test consumers migrated in EQ-08 C4. No documented external slot protocol.",
+      "evidence": [
+        "tools/ai/docs/T07_STATE_OWNERSHIP.md",
+        "docs/SICO_EQ08_CLOSEOUT.md",
+        "tools/ai/python/tests/test_window_command_owners.py",
+        "tools/utility/tests/test_window_slot_boundaries.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Completed in EQ-08 C4: removed receive, update_session, _update_token_usage, _fit_token_usage, refresh_status, refresh_busy_cursor, cancel_task, resume_queue, abandon_interrupted, _resume_after_reconcile, queue_hold_reason, _tick_activity, sync_activity_animation, flush, replay_caught_up. Consumers use window.renderer. No forwarding state or alias remains."
+    },
+    {
+      "legacy": "AssistantWindow details command slots",
+      "source": "tools/sico/python/sico_ui/window.py",
+      "replacement": "tools/sico/python/sico_ui/detail_navigation.py",
+      "owner": "tools/sico/python/sico_ui/detail_navigation.py",
+      "consumers": [],
+      "external_consumers": "Internal T07 Qt forwarding slots; repository signal, navigation, dialog, notice and test consumers migrated in EQ-08 C4. No documented external slot protocol.",
+      "evidence": [
+        "tools/ai/docs/T07_STATE_OWNERSHIP.md",
+        "docs/SICO_EQ08_CLOSEOUT.md",
+        "tools/ai/python/tests/test_window_command_owners.py",
+        "tools/utility/tests/test_window_slot_boundaries.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Completed in EQ-08 C4: removed open_object, open_object_link, toggle_tool_details, current_transcript, open_tool_reference, return_from_detail, update_latest, scroll_to_bottom, show_latest. Consumers use window.details; show_latest is retired in favor of scroll_to_bottom. No forwarding state or alias remains."
+    },
+    {
+      "legacy": "AssistantWindow page command slots",
+      "source": "tools/sico/python/sico_ui/window.py",
+      "replacement": "tools/sico/python/sico_ui/session_activation.py",
+      "owner": "tools/sico/python/sico_ui/session_activation.py",
+      "consumers": [],
+      "external_consumers": "Internal T07 Qt forwarding slots; repository signal, navigation, dialog, notice and test consumers migrated in EQ-08 C4. No documented external slot protocol.",
+      "evidence": [
+        "tools/ai/docs/T07_STATE_OWNERSHIP.md",
+        "docs/SICO_EQ08_CLOSEOUT.md",
+        "tools/ai/python/tests/test_window_command_owners.py",
+        "tools/utility/tests/test_window_slot_boundaries.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Completed in EQ-08 C4: removed activate_session, preview_session, return_from_preview. Consumers use window.page. No forwarding state or alias remains."
+    },
+    {
+      "legacy": "DetailNavigation.show_latest",
+      "source": "tools/sico/python/sico_ui/detail_navigation.py",
+      "replacement": "tools/sico/python/sico_ui/detail_navigation.py",
+      "owner": "tools/sico/python/sico_ui/detail_navigation.py",
+      "consumers": [],
+      "external_consumers": "Internal legacy commands recorded in T07, with no documented external integration.",
+      "evidence": [
+        "tools/ai/docs/T07_STATE_OWNERSHIP.md",
+        "docs/SICO_EQ08_CLOSEOUT.md",
+        "tools/ai/python/tests/test_window_command_owners.py",
+        "tools/utility/tests/test_window_slot_boundaries.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Completed in EQ-08 C4: No repository caller; scroll_to_bottom retains scroll-only behavior without session navigation."
+    },
+    {
+      "legacy": "SessionBinding.begin_close / close_grace_expired",
+      "source": "tools/sico/python/sico_ui/session_binding.py",
+      "replacement": "tools/sico/python/sico_ui/close_lifecycle.py",
+      "owner": "tools/sico/python/sico_ui/close_lifecycle.py",
+      "consumers": [],
+      "external_consumers": "Internal legacy commands recorded in T07, with no documented external integration.",
+      "evidence": [
+        "tools/ai/docs/T07_STATE_OWNERSHIP.md",
+        "docs/SICO_EQ08_CLOSEOUT.md",
+        "tools/ai/python/tests/test_window_command_owners.py",
+        "tools/utility/tests/test_window_slot_boundaries.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Completed in EQ-08 C4: The local entrypoint test now calls lifecycle.request; close_grace_expired has no repository caller. CloseLifecycle remains the sole close/deadline owner."
+    },
+    {
+      "legacy": "SessionController bindings command aliases",
+      "source": "tools/sico/python/sico/service/controller.py",
+      "replacement": "tools/sico/python/sico/service/binding_commands.py",
+      "owner": "tools/sico/python/sico/service/binding_commands.py",
+      "consumers": [],
+      "external_consumers": "Internal callable aliases recorded by T07; all repository direct, reflective and queued consumers migrated in EQ-08 C3. Frontend wire commands retain their names and authorization. C4 separately retired Window slots; C5 separately retired SessionTokens.internal_token.",
+      "evidence": [
+        "tools/ai/docs/T07_STATE_OWNERSHIP.md",
+        "docs/SICO_EQ08_CLOSEOUT.md",
+        "tools/ai/python/tests/test_controller_command_owners.py",
+        "tools/utility/tests/test_controller_alias_boundaries.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Completed in EQ-08 C3: removed reserve_submission, release_submission, attach_targets, poll_binding_events, propose_binding, resolve_binding, select_binding_target, configure_bindings, release_binding, release_binding_resource, reconcile_binding_operation, released_targets; consumers use controller.bindings and the existing component. No forwarding alias or duplicate state remains."
+    },
+    {
+      "legacy": "SessionController backend_commands command aliases",
+      "source": "tools/sico/python/sico/service/controller.py",
+      "replacement": "tools/sico/python/sico/service/backend_commands.py",
+      "owner": "tools/sico/python/sico/service/backend_commands.py",
+      "consumers": [],
+      "external_consumers": "Internal callable aliases recorded by T07; all repository direct, reflective and queued consumers migrated in EQ-08 C3. Frontend wire commands retain their names and authorization. C4 separately retired Window slots; C5 separately retired SessionTokens.internal_token.",
+      "evidence": [
+        "tools/ai/docs/T07_STATE_OWNERSHIP.md",
+        "docs/SICO_EQ08_CLOSEOUT.md",
+        "tools/ai/python/tests/test_controller_command_owners.py",
+        "tools/utility/tests/test_controller_alias_boundaries.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Completed in EQ-08 C3: removed turn_input_status, resource_status, steer, steering_scope, check_target_request, answer_audit, elicitation; consumers use controller.backend_commands and the existing component. No forwarding alias or duplicate state remains."
+    },
+    {
+      "legacy": "SessionController thread_commands command aliases",
+      "source": "tools/sico/python/sico/service/controller.py",
+      "replacement": "tools/sico/python/sico/service/thread_commands.py",
+      "owner": "tools/sico/python/sico/service/thread_commands.py",
+      "consumers": [],
+      "external_consumers": "Internal callable aliases recorded by T07; all repository direct, reflective and queued consumers migrated in EQ-08 C3. Frontend wire commands retain their names and authorization. C4 separately retired Window slots; C5 separately retired SessionTokens.internal_token.",
+      "evidence": [
+        "tools/ai/docs/T07_STATE_OWNERSHIP.md",
+        "docs/SICO_EQ08_CLOSEOUT.md",
+        "tools/ai/python/tests/test_controller_command_owners.py",
+        "tools/utility/tests/test_controller_alias_boundaries.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Completed in EQ-08 C3: removed thread_scope, thread_status, thread_operation; consumers use controller.thread_commands and the existing component. No forwarding alias or duplicate state remains."
+    },
+    {
+      "legacy": "SessionController reconciliation command aliases",
+      "source": "tools/sico/python/sico/service/controller.py",
+      "replacement": "tools/sico/python/sico/service/reconcile_commands.py",
+      "owner": "tools/sico/python/sico/service/reconcile_commands.py",
+      "consumers": [],
+      "external_consumers": "Internal callable aliases recorded by T07; all repository direct, reflective and queued consumers migrated in EQ-08 C3. Frontend wire commands retain their names and authorization. C4 separately retired Window slots; C5 separately retired SessionTokens.internal_token.",
+      "evidence": [
+        "tools/ai/docs/T07_STATE_OWNERSHIP.md",
+        "docs/SICO_EQ08_CLOSEOUT.md",
+        "tools/ai/python/tests/test_controller_command_owners.py",
+        "tools/utility/tests/test_controller_alias_boundaries.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Completed in EQ-08 C3: removed query_interrupted, resolve_interrupted; consumers use controller.reconciliation and the existing component. No forwarding alias or duplicate state remains."
+    },
+    {
+      "legacy": "SessionController router command aliases",
+      "source": "tools/sico/python/sico/service/controller.py",
+      "replacement": "tools/sico/python/sico/service/router_commands.py",
+      "owner": "tools/sico/python/sico/service/router_commands.py",
+      "consumers": [],
+      "external_consumers": "Internal callable aliases recorded by T07; all repository direct, reflective and queued consumers migrated in EQ-08 C3. Frontend wire commands retain their names and authorization. C4 separately retired Window slots; C5 separately retired SessionTokens.internal_token.",
+      "evidence": [
+        "tools/ai/docs/T07_STATE_OWNERSHIP.md",
+        "docs/SICO_EQ08_CLOSEOUT.md",
+        "tools/ai/python/tests/test_controller_command_owners.py",
+        "tools/utility/tests/test_controller_alias_boundaries.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Completed in EQ-08 C3: removed poll_router_status, cancel_router_request, router_receipt; consumers use controller.router and the existing component. No forwarding alias or duplicate state remains."
+    },
+    {
+      "legacy": "SessionController updates command aliases",
+      "source": "tools/sico/python/sico/service/controller.py",
+      "replacement": "tools/sico/python/sico/service/session_updates.py",
+      "owner": "tools/sico/python/sico/service/session_updates.py",
+      "consumers": [],
+      "external_consumers": "Internal callable aliases recorded by T07; all repository direct, reflective and queued consumers migrated in EQ-08 C3. Frontend wire commands retain their names and authorization. C4 separately retired Window slots; C5 separately retired SessionTokens.internal_token.",
+      "evidence": [
+        "tools/ai/docs/T07_STATE_OWNERSHIP.md",
+        "docs/SICO_EQ08_CLOSEOUT.md",
+        "tools/ai/python/tests/test_controller_command_owners.py",
+        "tools/utility/tests/test_controller_alias_boundaries.py"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Completed in EQ-08 C3: removed read_updates, _state_snapshot; consumers use controller.updates and the existing component. No forwarding alias or duplicate state remains."
+    },
+    {
       "legacy": "cadai.mcp exports from cadai.mcp_definitions",
       "source": "tools/ai/python/cadai/mcp.py",
       "replacement": "tools/ai/python/cadai/mcp_definitions.py",
       "owner": "tools/ai/python/cadai/mcp_definitions.py",
-      "exports": {"TOOLS": "TOOLS", "_TOOLS_BY_NAME": "TOOLS_BY_NAME"},
-      "consumers": ["tools/ai/python/cadai/cli.py", "tools/ai/python/cadai/launch.py", "tools/ai/python/cadai/mcp_environment.py", "tools/sico/python/sico/adapters/assistant_tools.py", "tools/sico/python/sico/adapters/circuit.py", "tools/sico/python/sico/adapters/results.py", "tools/ai/python/tests/circuit_create_support.py", "tools/ai/python/tests/pdk_ipc_worker.py", "tools/ai/python/tests/pdk_pool_native_worker.py", "tools/ai/python/tests/template_xxxx28_support.py", "tools/ai/python/tests/template_symbol_fixture.py", "tools/ai/python/tests/test_ac_measure.py", "tools/ai/python/tests/test_ac_response.py", "tools/ai/python/tests/test_ac_specs.py", "tools/ai/python/tests/test_ac_specs_gui.py", "tools/ai/python/tests/test_ac_transport.py", "tools/ai/python/tests/test_agent_assistant_tools.py", "tools/ai/python/tests/test_agent_circuit.py", "tools/ai/python/tests/test_agent_circuit_errors.py", "tools/ai/python/tests/test_agent_pdk_choice.py", "tools/ai/python/tests/test_agent_results.py", "tools/ai/python/tests/test_cdf_callbacks_native.py", "tools/ai/python/tests/test_cdf_tools.py", "tools/ai/python/tests/test_cdf_update.py", "tools/ai/python/tests/test_circuit_config.py", "tools/ai/python/tests/test_circuit_create.py", "tools/ai/python/tests/test_circuit_gate.py", "tools/ai/python/tests/test_circuit_gate_gui.py", "tools/ai/python/tests/test_circuit_geometry.py", "tools/ai/python/tests/test_circuit_library.py", "tools/ai/python/tests/test_circuit_matrix.py", "tools/ai/python/tests/test_circuit_matrix_gui.py", "tools/ai/python/tests/test_circuit_native_transport.py", "tools/ai/python/tests/test_circuit_opamp.py", "tools/ai/python/tests/test_circuit_opamp_gui.py", "tools/ai/python/tests/test_circuit_project.py", "tools/ai/python/tests/test_circuit_project_gui.py", "tools/ai/python/tests/test_circuit_rc_gui.py", "tools/ai/python/tests/test_circuit_rebuild.py", "tools/ai/python/tests/test_circuit_rebuild_gui.py", "tools/ai/python/tests/test_circuit_recipe.py", "tools/ai/python/tests/test_circuit_release_contract.py", "tools/ai/python/tests/test_circuit_spec.py", "tools/ai/python/tests/test_circuit_templates.py", "tools/ai/python/tests/test_circuit_tools.py", "tools/ai/python/tests/test_claude_launch.py", "tools/ai/python/tests/test_codex_integration.py", "tools/ai/python/tests/test_document_tools.py", "tools/ai/python/tests/test_draw_symbol.py", "tools/ai/python/tests/test_entry_context.py", "tools/ai/python/tests/test_inspection.py", "tools/ai/python/tests/test_live_ipc.py", "tools/ai/python/tests/test_mcp.py", "tools/ai/python/tests/test_mcp_cdf_handler.py", "tools/ai/python/tests/test_mcp_creation_edit_handlers.py", "tools/ai/python/tests/test_mcp_measurement_handler.py", "tools/ai/python/tests/test_mcp_pdk_handler.py", "tools/ai/python/tests/test_mcp_project_library_handlers.py", "tools/ai/python/tests/test_mcp_protocol.py", "tools/ai/python/tests/test_mcp_registry.py", "tools/ai/python/tests/test_mcp_resource_handler.py", "tools/ai/python/tests/test_mcp_simulation_handler.py", "tools/ai/python/tests/test_mcp_template_handler.py", "tools/ai/python/tests/test_mcp_transport.py", "tools/ai/python/tests/test_measurement_catalog.py", "tools/ai/python/tests/test_measurement_catalog_semantics.py", "tools/ai/python/tests/test_pdk_binding.py", "tools/ai/python/tests/test_pdk_choice.py", "tools/ai/python/tests/test_pdk_session.py", "tools/ai/python/tests/test_result_contract.py", "tools/ai/python/tests/test_result_gui.py", "tools/ai/python/tests/test_schematic_snapshot.py", "tools/ai/python/tests/test_search.py", "tools/ai/python/tests/test_simulation_recipe.py", "tools/ai/python/tests/test_skill_preflight_transport.py", "tools/ai/python/tests/test_skill_reference.py", "tools/ai/python/tests/test_skill_reference_fallback.py", "tools/ai/python/tests/test_socket_server.py", "tools/ai/python/tests/test_template_circuit_transport.py", "tools/ai/python/tests/test_template_library_mcp.py", "tools/ai/python/tests/test_template_symbol.py", "tools/ai/python/tests/test_template_transport.py", "tools/ai/python/tests/test_tool_help.py", "tools/ai/python/tests/test_tool_help_index.py", "tools/ai/python/tests/test_transport.py", "tools/ai/python/tests/test_waveform_pair.py", "tools/ai/python/tests/test_waveform_specs.py", "tools/ai/python/tests/test_waveform_transport.py", "tools/ai/python/tests/test_workflow_tools.py", "deploy/tests/fixtures/mcp_layers_native_probe.py", "deploy/tests/test_runtime_release.py"],
+      "exports": {
+        "TOOLS": "TOOLS",
+        "_TOOLS_BY_NAME": "TOOLS_BY_NAME"
+      },
+      "consumers": [
+        "deploy/tests/fixtures/mcp_layers_native_probe.py",
+        "deploy/tests/test_runtime_release.py",
+        "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/cadai/headless_session.py",
+        "tools/ai/python/cadai/launch.py",
+        "tools/ai/python/cadai/launch_policy.py",
+        "tools/ai/python/cadai/mcp_environment.py",
+        "tools/ai/python/tests/circuit_create_support.py",
+        "tools/ai/python/tests/pdk_ipc_worker.py",
+        "tools/ai/python/tests/pdk_pool_native_worker.py",
+        "tools/ai/python/tests/template_smic28_support.py",
+        "tools/ai/python/tests/template_symbol_fixture.py",
+        "tools/ai/python/tests/test_ac_measure.py",
+        "tools/ai/python/tests/test_ac_response.py",
+        "tools/ai/python/tests/test_ac_specs.py",
+        "tools/ai/python/tests/test_ac_specs_gui.py",
+        "tools/ai/python/tests/test_ac_transport.py",
+        "tools/ai/python/tests/test_agent_assistant_tools.py",
+        "tools/ai/python/tests/test_agent_circuit.py",
+        "tools/ai/python/tests/test_agent_circuit_errors.py",
+        "tools/ai/python/tests/test_agent_pdk_choice.py",
+        "tools/ai/python/tests/test_agent_results.py",
+        "tools/ai/python/tests/test_cdf_callbacks_native.py",
+        "tools/ai/python/tests/test_cdf_tools.py",
+        "tools/ai/python/tests/test_cdf_update.py",
+        "tools/ai/python/tests/test_cds_help.py",
+        "tools/ai/python/tests/test_circuit_config.py",
+        "tools/ai/python/tests/test_circuit_create.py",
+        "tools/ai/python/tests/test_circuit_edit.py",
+        "tools/ai/python/tests/test_circuit_gate.py",
+        "tools/ai/python/tests/test_circuit_gate_gui.py",
+        "tools/ai/python/tests/test_circuit_geometry.py",
+        "tools/ai/python/tests/test_circuit_library.py",
+        "tools/ai/python/tests/test_circuit_matrix.py",
+        "tools/ai/python/tests/test_circuit_matrix_gui.py",
+        "tools/ai/python/tests/test_circuit_native_transport.py",
+        "tools/ai/python/tests/test_circuit_opamp.py",
+        "tools/ai/python/tests/test_circuit_opamp_gui.py",
+        "tools/ai/python/tests/test_circuit_project.py",
+        "tools/ai/python/tests/test_circuit_project_gui.py",
+        "tools/ai/python/tests/test_circuit_rc_gui.py",
+        "tools/ai/python/tests/test_circuit_rebuild.py",
+        "tools/ai/python/tests/test_circuit_rebuild_gui.py",
+        "tools/ai/python/tests/test_circuit_recipe.py",
+        "tools/ai/python/tests/test_circuit_release_contract.py",
+        "tools/ai/python/tests/test_circuit_spec.py",
+        "tools/ai/python/tests/test_circuit_templates.py",
+        "tools/ai/python/tests/test_circuit_tools.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_codex_integration.py",
+        "tools/ai/python/tests/test_document_tools.py",
+        "tools/ai/python/tests/test_draw_symbol.py",
+        "tools/ai/python/tests/test_entry_context.py",
+        "tools/ai/python/tests/test_inspection.py",
+        "tools/ai/python/tests/test_live_ipc.py",
+        "tools/ai/python/tests/test_mcp.py",
+        "tools/ai/python/tests/test_mcp_cdf_handler.py",
+        "tools/ai/python/tests/test_mcp_creation_edit_handlers.py",
+        "tools/ai/python/tests/test_mcp_environment.py",
+        "tools/ai/python/tests/test_mcp_help.py",
+        "tools/ai/python/tests/test_mcp_measurement_handler.py",
+        "tools/ai/python/tests/test_mcp_ownership.py",
+        "tools/ai/python/tests/test_mcp_pdk_handler.py",
+        "tools/ai/python/tests/test_mcp_project_library_handlers.py",
+        "tools/ai/python/tests/test_mcp_protocol.py",
+        "tools/ai/python/tests/test_mcp_registry.py",
+        "tools/ai/python/tests/test_mcp_resource_handler.py",
+        "tools/ai/python/tests/test_mcp_simulation_handler.py",
+        "tools/ai/python/tests/test_mcp_template_handler.py",
+        "tools/ai/python/tests/test_mcp_transport.py",
+        "tools/ai/python/tests/test_measurement_catalog.py",
+        "tools/ai/python/tests/test_measurement_catalog_semantics.py",
+        "tools/ai/python/tests/test_optional_resources_startup.py",
+        "tools/ai/python/tests/test_pdk_binding.py",
+        "tools/ai/python/tests/test_pdk_choice.py",
+        "tools/ai/python/tests/test_pdk_session.py",
+        "tools/ai/python/tests/test_result_contract.py",
+        "tools/ai/python/tests/test_result_gui.py",
+        "tools/ai/python/tests/test_schematic_snapshot.py",
+        "tools/ai/python/tests/test_search.py",
+        "tools/ai/python/tests/test_simulation_recipe.py",
+        "tools/ai/python/tests/test_skill_preflight_transport.py",
+        "tools/ai/python/tests/test_skill_reference.py",
+        "tools/ai/python/tests/test_skill_reference_fallback.py",
+        "tools/ai/python/tests/test_skill_result.py",
+        "tools/ai/python/tests/test_socket_server.py",
+        "tools/ai/python/tests/test_template_adaptation.py",
+        "tools/ai/python/tests/test_template_capture_complete.py",
+        "tools/ai/python/tests/test_template_circuit_transport.py",
+        "tools/ai/python/tests/test_template_extract_reuse.py",
+        "tools/ai/python/tests/test_template_library_mcp.py",
+        "tools/ai/python/tests/test_template_prepare_workflow.py",
+        "tools/ai/python/tests/test_template_projection_boundaries.py",
+        "tools/ai/python/tests/test_template_reuse_input.py",
+        "tools/ai/python/tests/test_template_reuse_schema.py",
+        "tools/ai/python/tests/test_template_symbol.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_tool_help_index.py",
+        "tools/ai/python/tests/test_tool_output_audit.py",
+        "tools/ai/python/tests/test_transport.py",
+        "tools/ai/python/tests/test_waveform_pair.py",
+        "tools/ai/python/tests/test_waveform_specs.py",
+        "tools/ai/python/tests/test_waveform_transport.py",
+        "tools/ai/python/tests/test_workflow_tools.py",
+        "tools/sico/python/sico/adapters/assistant_tools.py",
+        "tools/sico/python/sico/adapters/circuit.py",
+        "tools/sico/python/sico/adapters/results.py"
+      ],
       "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
-      "evidence": ["tools/ai/python/tests/test_mcp_registry.py"],
+      "evidence": [
+        "tools/ai/python/tests/test_mcp_registry.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
       "status": "retained",
       "allow_exposure": true,
       "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
@@ -19,10 +371,123 @@
       "source": "tools/ai/python/cadai/mcp.py",
       "replacement": "tools/ai/python/cadai/mcp_instructions.py",
       "owner": "tools/ai/python/cadai/mcp_instructions.py",
-      "exports": {"SERVER_INSTRUCTIONS": "SERVER_INSTRUCTIONS"},
-      "consumers": ["tools/ai/python/cadai/cli.py", "tools/ai/python/cadai/launch.py", "tools/ai/python/cadai/mcp_environment.py", "tools/sico/python/sico/adapters/assistant_tools.py", "tools/sico/python/sico/adapters/circuit.py", "tools/sico/python/sico/adapters/results.py", "tools/ai/python/tests/circuit_create_support.py", "tools/ai/python/tests/pdk_ipc_worker.py", "tools/ai/python/tests/pdk_pool_native_worker.py", "tools/ai/python/tests/template_xxxx28_support.py", "tools/ai/python/tests/template_symbol_fixture.py", "tools/ai/python/tests/test_ac_measure.py", "tools/ai/python/tests/test_ac_response.py", "tools/ai/python/tests/test_ac_specs.py", "tools/ai/python/tests/test_ac_specs_gui.py", "tools/ai/python/tests/test_ac_transport.py", "tools/ai/python/tests/test_agent_assistant_tools.py", "tools/ai/python/tests/test_agent_circuit.py", "tools/ai/python/tests/test_agent_circuit_errors.py", "tools/ai/python/tests/test_agent_pdk_choice.py", "tools/ai/python/tests/test_agent_results.py", "tools/ai/python/tests/test_cdf_callbacks_native.py", "tools/ai/python/tests/test_cdf_tools.py", "tools/ai/python/tests/test_cdf_update.py", "tools/ai/python/tests/test_circuit_config.py", "tools/ai/python/tests/test_circuit_create.py", "tools/ai/python/tests/test_circuit_gate.py", "tools/ai/python/tests/test_circuit_gate_gui.py", "tools/ai/python/tests/test_circuit_geometry.py", "tools/ai/python/tests/test_circuit_library.py", "tools/ai/python/tests/test_circuit_matrix.py", "tools/ai/python/tests/test_circuit_matrix_gui.py", "tools/ai/python/tests/test_circuit_native_transport.py", "tools/ai/python/tests/test_circuit_opamp.py", "tools/ai/python/tests/test_circuit_opamp_gui.py", "tools/ai/python/tests/test_circuit_project.py", "tools/ai/python/tests/test_circuit_project_gui.py", "tools/ai/python/tests/test_circuit_rc_gui.py", "tools/ai/python/tests/test_circuit_rebuild.py", "tools/ai/python/tests/test_circuit_rebuild_gui.py", "tools/ai/python/tests/test_circuit_recipe.py", "tools/ai/python/tests/test_circuit_release_contract.py", "tools/ai/python/tests/test_circuit_spec.py", "tools/ai/python/tests/test_circuit_templates.py", "tools/ai/python/tests/test_circuit_tools.py", "tools/ai/python/tests/test_claude_launch.py", "tools/ai/python/tests/test_codex_integration.py", "tools/ai/python/tests/test_document_tools.py", "tools/ai/python/tests/test_draw_symbol.py", "tools/ai/python/tests/test_entry_context.py", "tools/ai/python/tests/test_inspection.py", "tools/ai/python/tests/test_live_ipc.py", "tools/ai/python/tests/test_mcp.py", "tools/ai/python/tests/test_mcp_cdf_handler.py", "tools/ai/python/tests/test_mcp_creation_edit_handlers.py", "tools/ai/python/tests/test_mcp_measurement_handler.py", "tools/ai/python/tests/test_mcp_pdk_handler.py", "tools/ai/python/tests/test_mcp_project_library_handlers.py", "tools/ai/python/tests/test_mcp_protocol.py", "tools/ai/python/tests/test_mcp_registry.py", "tools/ai/python/tests/test_mcp_resource_handler.py", "tools/ai/python/tests/test_mcp_simulation_handler.py", "tools/ai/python/tests/test_mcp_template_handler.py", "tools/ai/python/tests/test_mcp_transport.py", "tools/ai/python/tests/test_measurement_catalog.py", "tools/ai/python/tests/test_measurement_catalog_semantics.py", "tools/ai/python/tests/test_pdk_binding.py", "tools/ai/python/tests/test_pdk_choice.py", "tools/ai/python/tests/test_pdk_session.py", "tools/ai/python/tests/test_result_contract.py", "tools/ai/python/tests/test_result_gui.py", "tools/ai/python/tests/test_schematic_snapshot.py", "tools/ai/python/tests/test_search.py", "tools/ai/python/tests/test_simulation_recipe.py", "tools/ai/python/tests/test_skill_preflight_transport.py", "tools/ai/python/tests/test_skill_reference.py", "tools/ai/python/tests/test_skill_reference_fallback.py", "tools/ai/python/tests/test_socket_server.py", "tools/ai/python/tests/test_template_circuit_transport.py", "tools/ai/python/tests/test_template_library_mcp.py", "tools/ai/python/tests/test_template_symbol.py", "tools/ai/python/tests/test_template_transport.py", "tools/ai/python/tests/test_tool_help.py", "tools/ai/python/tests/test_tool_help_index.py", "tools/ai/python/tests/test_transport.py", "tools/ai/python/tests/test_waveform_pair.py", "tools/ai/python/tests/test_waveform_specs.py", "tools/ai/python/tests/test_waveform_transport.py", "tools/ai/python/tests/test_workflow_tools.py", "deploy/tests/fixtures/mcp_layers_native_probe.py", "deploy/tests/test_runtime_release.py"],
+      "exports": {
+        "SERVER_INSTRUCTIONS": "SERVER_INSTRUCTIONS"
+      },
+      "consumers": [
+        "deploy/tests/fixtures/mcp_layers_native_probe.py",
+        "deploy/tests/test_runtime_release.py",
+        "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/cadai/headless_session.py",
+        "tools/ai/python/cadai/launch.py",
+        "tools/ai/python/cadai/launch_policy.py",
+        "tools/ai/python/cadai/mcp_environment.py",
+        "tools/ai/python/tests/circuit_create_support.py",
+        "tools/ai/python/tests/pdk_ipc_worker.py",
+        "tools/ai/python/tests/pdk_pool_native_worker.py",
+        "tools/ai/python/tests/template_smic28_support.py",
+        "tools/ai/python/tests/template_symbol_fixture.py",
+        "tools/ai/python/tests/test_ac_measure.py",
+        "tools/ai/python/tests/test_ac_response.py",
+        "tools/ai/python/tests/test_ac_specs.py",
+        "tools/ai/python/tests/test_ac_specs_gui.py",
+        "tools/ai/python/tests/test_ac_transport.py",
+        "tools/ai/python/tests/test_agent_assistant_tools.py",
+        "tools/ai/python/tests/test_agent_circuit.py",
+        "tools/ai/python/tests/test_agent_circuit_errors.py",
+        "tools/ai/python/tests/test_agent_pdk_choice.py",
+        "tools/ai/python/tests/test_agent_results.py",
+        "tools/ai/python/tests/test_cdf_callbacks_native.py",
+        "tools/ai/python/tests/test_cdf_tools.py",
+        "tools/ai/python/tests/test_cdf_update.py",
+        "tools/ai/python/tests/test_cds_help.py",
+        "tools/ai/python/tests/test_circuit_config.py",
+        "tools/ai/python/tests/test_circuit_create.py",
+        "tools/ai/python/tests/test_circuit_edit.py",
+        "tools/ai/python/tests/test_circuit_gate.py",
+        "tools/ai/python/tests/test_circuit_gate_gui.py",
+        "tools/ai/python/tests/test_circuit_geometry.py",
+        "tools/ai/python/tests/test_circuit_library.py",
+        "tools/ai/python/tests/test_circuit_matrix.py",
+        "tools/ai/python/tests/test_circuit_matrix_gui.py",
+        "tools/ai/python/tests/test_circuit_native_transport.py",
+        "tools/ai/python/tests/test_circuit_opamp.py",
+        "tools/ai/python/tests/test_circuit_opamp_gui.py",
+        "tools/ai/python/tests/test_circuit_project.py",
+        "tools/ai/python/tests/test_circuit_project_gui.py",
+        "tools/ai/python/tests/test_circuit_rc_gui.py",
+        "tools/ai/python/tests/test_circuit_rebuild.py",
+        "tools/ai/python/tests/test_circuit_rebuild_gui.py",
+        "tools/ai/python/tests/test_circuit_recipe.py",
+        "tools/ai/python/tests/test_circuit_release_contract.py",
+        "tools/ai/python/tests/test_circuit_spec.py",
+        "tools/ai/python/tests/test_circuit_templates.py",
+        "tools/ai/python/tests/test_circuit_tools.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_codex_integration.py",
+        "tools/ai/python/tests/test_document_tools.py",
+        "tools/ai/python/tests/test_draw_symbol.py",
+        "tools/ai/python/tests/test_entry_context.py",
+        "tools/ai/python/tests/test_inspection.py",
+        "tools/ai/python/tests/test_live_ipc.py",
+        "tools/ai/python/tests/test_mcp.py",
+        "tools/ai/python/tests/test_mcp_cdf_handler.py",
+        "tools/ai/python/tests/test_mcp_creation_edit_handlers.py",
+        "tools/ai/python/tests/test_mcp_environment.py",
+        "tools/ai/python/tests/test_mcp_help.py",
+        "tools/ai/python/tests/test_mcp_measurement_handler.py",
+        "tools/ai/python/tests/test_mcp_ownership.py",
+        "tools/ai/python/tests/test_mcp_pdk_handler.py",
+        "tools/ai/python/tests/test_mcp_project_library_handlers.py",
+        "tools/ai/python/tests/test_mcp_protocol.py",
+        "tools/ai/python/tests/test_mcp_registry.py",
+        "tools/ai/python/tests/test_mcp_resource_handler.py",
+        "tools/ai/python/tests/test_mcp_simulation_handler.py",
+        "tools/ai/python/tests/test_mcp_template_handler.py",
+        "tools/ai/python/tests/test_mcp_transport.py",
+        "tools/ai/python/tests/test_measurement_catalog.py",
+        "tools/ai/python/tests/test_measurement_catalog_semantics.py",
+        "tools/ai/python/tests/test_optional_resources_startup.py",
+        "tools/ai/python/tests/test_pdk_binding.py",
+        "tools/ai/python/tests/test_pdk_choice.py",
+        "tools/ai/python/tests/test_pdk_session.py",
+        "tools/ai/python/tests/test_result_contract.py",
+        "tools/ai/python/tests/test_result_gui.py",
+        "tools/ai/python/tests/test_schematic_snapshot.py",
+        "tools/ai/python/tests/test_search.py",
+        "tools/ai/python/tests/test_simulation_recipe.py",
+        "tools/ai/python/tests/test_skill_preflight_transport.py",
+        "tools/ai/python/tests/test_skill_reference.py",
+        "tools/ai/python/tests/test_skill_reference_fallback.py",
+        "tools/ai/python/tests/test_skill_result.py",
+        "tools/ai/python/tests/test_socket_server.py",
+        "tools/ai/python/tests/test_template_adaptation.py",
+        "tools/ai/python/tests/test_template_capture_complete.py",
+        "tools/ai/python/tests/test_template_circuit_transport.py",
+        "tools/ai/python/tests/test_template_extract_reuse.py",
+        "tools/ai/python/tests/test_template_library_mcp.py",
+        "tools/ai/python/tests/test_template_prepare_workflow.py",
+        "tools/ai/python/tests/test_template_projection_boundaries.py",
+        "tools/ai/python/tests/test_template_reuse_input.py",
+        "tools/ai/python/tests/test_template_reuse_schema.py",
+        "tools/ai/python/tests/test_template_symbol.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_tool_help_index.py",
+        "tools/ai/python/tests/test_tool_output_audit.py",
+        "tools/ai/python/tests/test_transport.py",
+        "tools/ai/python/tests/test_waveform_pair.py",
+        "tools/ai/python/tests/test_waveform_specs.py",
+        "tools/ai/python/tests/test_waveform_transport.py",
+        "tools/ai/python/tests/test_workflow_tools.py",
+        "tools/sico/python/sico/adapters/assistant_tools.py",
+        "tools/sico/python/sico/adapters/circuit.py",
+        "tools/sico/python/sico/adapters/results.py"
+      ],
       "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
-      "evidence": ["tools/ai/python/tests/test_mcp_registry.py"],
+      "evidence": [
+        "tools/ai/python/tests/test_mcp_registry.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
       "status": "retained",
       "allow_exposure": true,
       "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
@@ -32,10 +497,123 @@
       "source": "tools/ai/python/cadai/mcp.py",
       "replacement": "tools/ai/python/cadai/mcp_transport.py",
       "owner": "tools/ai/python/cadai/mcp_transport.py",
-      "exports": {"SocketClient": "SocketClient"},
-      "consumers": ["tools/ai/python/cadai/cli.py", "tools/ai/python/cadai/launch.py", "tools/ai/python/cadai/mcp_environment.py", "tools/sico/python/sico/adapters/assistant_tools.py", "tools/sico/python/sico/adapters/circuit.py", "tools/sico/python/sico/adapters/results.py", "tools/ai/python/tests/circuit_create_support.py", "tools/ai/python/tests/pdk_ipc_worker.py", "tools/ai/python/tests/pdk_pool_native_worker.py", "tools/ai/python/tests/template_xxxx28_support.py", "tools/ai/python/tests/template_symbol_fixture.py", "tools/ai/python/tests/test_ac_measure.py", "tools/ai/python/tests/test_ac_response.py", "tools/ai/python/tests/test_ac_specs.py", "tools/ai/python/tests/test_ac_specs_gui.py", "tools/ai/python/tests/test_ac_transport.py", "tools/ai/python/tests/test_agent_assistant_tools.py", "tools/ai/python/tests/test_agent_circuit.py", "tools/ai/python/tests/test_agent_circuit_errors.py", "tools/ai/python/tests/test_agent_pdk_choice.py", "tools/ai/python/tests/test_agent_results.py", "tools/ai/python/tests/test_cdf_callbacks_native.py", "tools/ai/python/tests/test_cdf_tools.py", "tools/ai/python/tests/test_cdf_update.py", "tools/ai/python/tests/test_circuit_config.py", "tools/ai/python/tests/test_circuit_create.py", "tools/ai/python/tests/test_circuit_gate.py", "tools/ai/python/tests/test_circuit_gate_gui.py", "tools/ai/python/tests/test_circuit_geometry.py", "tools/ai/python/tests/test_circuit_library.py", "tools/ai/python/tests/test_circuit_matrix.py", "tools/ai/python/tests/test_circuit_matrix_gui.py", "tools/ai/python/tests/test_circuit_native_transport.py", "tools/ai/python/tests/test_circuit_opamp.py", "tools/ai/python/tests/test_circuit_opamp_gui.py", "tools/ai/python/tests/test_circuit_project.py", "tools/ai/python/tests/test_circuit_project_gui.py", "tools/ai/python/tests/test_circuit_rc_gui.py", "tools/ai/python/tests/test_circuit_rebuild.py", "tools/ai/python/tests/test_circuit_rebuild_gui.py", "tools/ai/python/tests/test_circuit_recipe.py", "tools/ai/python/tests/test_circuit_release_contract.py", "tools/ai/python/tests/test_circuit_spec.py", "tools/ai/python/tests/test_circuit_templates.py", "tools/ai/python/tests/test_circuit_tools.py", "tools/ai/python/tests/test_claude_launch.py", "tools/ai/python/tests/test_codex_integration.py", "tools/ai/python/tests/test_document_tools.py", "tools/ai/python/tests/test_draw_symbol.py", "tools/ai/python/tests/test_entry_context.py", "tools/ai/python/tests/test_inspection.py", "tools/ai/python/tests/test_live_ipc.py", "tools/ai/python/tests/test_mcp.py", "tools/ai/python/tests/test_mcp_cdf_handler.py", "tools/ai/python/tests/test_mcp_creation_edit_handlers.py", "tools/ai/python/tests/test_mcp_measurement_handler.py", "tools/ai/python/tests/test_mcp_pdk_handler.py", "tools/ai/python/tests/test_mcp_project_library_handlers.py", "tools/ai/python/tests/test_mcp_protocol.py", "tools/ai/python/tests/test_mcp_registry.py", "tools/ai/python/tests/test_mcp_resource_handler.py", "tools/ai/python/tests/test_mcp_simulation_handler.py", "tools/ai/python/tests/test_mcp_template_handler.py", "tools/ai/python/tests/test_mcp_transport.py", "tools/ai/python/tests/test_measurement_catalog.py", "tools/ai/python/tests/test_measurement_catalog_semantics.py", "tools/ai/python/tests/test_pdk_binding.py", "tools/ai/python/tests/test_pdk_choice.py", "tools/ai/python/tests/test_pdk_session.py", "tools/ai/python/tests/test_result_contract.py", "tools/ai/python/tests/test_result_gui.py", "tools/ai/python/tests/test_schematic_snapshot.py", "tools/ai/python/tests/test_search.py", "tools/ai/python/tests/test_simulation_recipe.py", "tools/ai/python/tests/test_skill_preflight_transport.py", "tools/ai/python/tests/test_skill_reference.py", "tools/ai/python/tests/test_skill_reference_fallback.py", "tools/ai/python/tests/test_socket_server.py", "tools/ai/python/tests/test_template_circuit_transport.py", "tools/ai/python/tests/test_template_library_mcp.py", "tools/ai/python/tests/test_template_symbol.py", "tools/ai/python/tests/test_template_transport.py", "tools/ai/python/tests/test_tool_help.py", "tools/ai/python/tests/test_tool_help_index.py", "tools/ai/python/tests/test_transport.py", "tools/ai/python/tests/test_waveform_pair.py", "tools/ai/python/tests/test_waveform_specs.py", "tools/ai/python/tests/test_waveform_transport.py", "tools/ai/python/tests/test_workflow_tools.py", "deploy/tests/fixtures/mcp_layers_native_probe.py", "deploy/tests/test_runtime_release.py"],
+      "exports": {
+        "SocketClient": "SocketClient"
+      },
+      "consumers": [
+        "deploy/tests/fixtures/mcp_layers_native_probe.py",
+        "deploy/tests/test_runtime_release.py",
+        "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/cadai/headless_session.py",
+        "tools/ai/python/cadai/launch.py",
+        "tools/ai/python/cadai/launch_policy.py",
+        "tools/ai/python/cadai/mcp_environment.py",
+        "tools/ai/python/tests/circuit_create_support.py",
+        "tools/ai/python/tests/pdk_ipc_worker.py",
+        "tools/ai/python/tests/pdk_pool_native_worker.py",
+        "tools/ai/python/tests/template_smic28_support.py",
+        "tools/ai/python/tests/template_symbol_fixture.py",
+        "tools/ai/python/tests/test_ac_measure.py",
+        "tools/ai/python/tests/test_ac_response.py",
+        "tools/ai/python/tests/test_ac_specs.py",
+        "tools/ai/python/tests/test_ac_specs_gui.py",
+        "tools/ai/python/tests/test_ac_transport.py",
+        "tools/ai/python/tests/test_agent_assistant_tools.py",
+        "tools/ai/python/tests/test_agent_circuit.py",
+        "tools/ai/python/tests/test_agent_circuit_errors.py",
+        "tools/ai/python/tests/test_agent_pdk_choice.py",
+        "tools/ai/python/tests/test_agent_results.py",
+        "tools/ai/python/tests/test_cdf_callbacks_native.py",
+        "tools/ai/python/tests/test_cdf_tools.py",
+        "tools/ai/python/tests/test_cdf_update.py",
+        "tools/ai/python/tests/test_cds_help.py",
+        "tools/ai/python/tests/test_circuit_config.py",
+        "tools/ai/python/tests/test_circuit_create.py",
+        "tools/ai/python/tests/test_circuit_edit.py",
+        "tools/ai/python/tests/test_circuit_gate.py",
+        "tools/ai/python/tests/test_circuit_gate_gui.py",
+        "tools/ai/python/tests/test_circuit_geometry.py",
+        "tools/ai/python/tests/test_circuit_library.py",
+        "tools/ai/python/tests/test_circuit_matrix.py",
+        "tools/ai/python/tests/test_circuit_matrix_gui.py",
+        "tools/ai/python/tests/test_circuit_native_transport.py",
+        "tools/ai/python/tests/test_circuit_opamp.py",
+        "tools/ai/python/tests/test_circuit_opamp_gui.py",
+        "tools/ai/python/tests/test_circuit_project.py",
+        "tools/ai/python/tests/test_circuit_project_gui.py",
+        "tools/ai/python/tests/test_circuit_rc_gui.py",
+        "tools/ai/python/tests/test_circuit_rebuild.py",
+        "tools/ai/python/tests/test_circuit_rebuild_gui.py",
+        "tools/ai/python/tests/test_circuit_recipe.py",
+        "tools/ai/python/tests/test_circuit_release_contract.py",
+        "tools/ai/python/tests/test_circuit_spec.py",
+        "tools/ai/python/tests/test_circuit_templates.py",
+        "tools/ai/python/tests/test_circuit_tools.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_codex_integration.py",
+        "tools/ai/python/tests/test_document_tools.py",
+        "tools/ai/python/tests/test_draw_symbol.py",
+        "tools/ai/python/tests/test_entry_context.py",
+        "tools/ai/python/tests/test_inspection.py",
+        "tools/ai/python/tests/test_live_ipc.py",
+        "tools/ai/python/tests/test_mcp.py",
+        "tools/ai/python/tests/test_mcp_cdf_handler.py",
+        "tools/ai/python/tests/test_mcp_creation_edit_handlers.py",
+        "tools/ai/python/tests/test_mcp_environment.py",
+        "tools/ai/python/tests/test_mcp_help.py",
+        "tools/ai/python/tests/test_mcp_measurement_handler.py",
+        "tools/ai/python/tests/test_mcp_ownership.py",
+        "tools/ai/python/tests/test_mcp_pdk_handler.py",
+        "tools/ai/python/tests/test_mcp_project_library_handlers.py",
+        "tools/ai/python/tests/test_mcp_protocol.py",
+        "tools/ai/python/tests/test_mcp_registry.py",
+        "tools/ai/python/tests/test_mcp_resource_handler.py",
+        "tools/ai/python/tests/test_mcp_simulation_handler.py",
+        "tools/ai/python/tests/test_mcp_template_handler.py",
+        "tools/ai/python/tests/test_mcp_transport.py",
+        "tools/ai/python/tests/test_measurement_catalog.py",
+        "tools/ai/python/tests/test_measurement_catalog_semantics.py",
+        "tools/ai/python/tests/test_optional_resources_startup.py",
+        "tools/ai/python/tests/test_pdk_binding.py",
+        "tools/ai/python/tests/test_pdk_choice.py",
+        "tools/ai/python/tests/test_pdk_session.py",
+        "tools/ai/python/tests/test_result_contract.py",
+        "tools/ai/python/tests/test_result_gui.py",
+        "tools/ai/python/tests/test_schematic_snapshot.py",
+        "tools/ai/python/tests/test_search.py",
+        "tools/ai/python/tests/test_simulation_recipe.py",
+        "tools/ai/python/tests/test_skill_preflight_transport.py",
+        "tools/ai/python/tests/test_skill_reference.py",
+        "tools/ai/python/tests/test_skill_reference_fallback.py",
+        "tools/ai/python/tests/test_skill_result.py",
+        "tools/ai/python/tests/test_socket_server.py",
+        "tools/ai/python/tests/test_template_adaptation.py",
+        "tools/ai/python/tests/test_template_capture_complete.py",
+        "tools/ai/python/tests/test_template_circuit_transport.py",
+        "tools/ai/python/tests/test_template_extract_reuse.py",
+        "tools/ai/python/tests/test_template_library_mcp.py",
+        "tools/ai/python/tests/test_template_prepare_workflow.py",
+        "tools/ai/python/tests/test_template_projection_boundaries.py",
+        "tools/ai/python/tests/test_template_reuse_input.py",
+        "tools/ai/python/tests/test_template_reuse_schema.py",
+        "tools/ai/python/tests/test_template_symbol.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_tool_help_index.py",
+        "tools/ai/python/tests/test_tool_output_audit.py",
+        "tools/ai/python/tests/test_transport.py",
+        "tools/ai/python/tests/test_waveform_pair.py",
+        "tools/ai/python/tests/test_waveform_specs.py",
+        "tools/ai/python/tests/test_waveform_transport.py",
+        "tools/ai/python/tests/test_workflow_tools.py",
+        "tools/sico/python/sico/adapters/assistant_tools.py",
+        "tools/sico/python/sico/adapters/circuit.py",
+        "tools/sico/python/sico/adapters/results.py"
+      ],
       "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
-      "evidence": ["tools/ai/python/tests/test_mcp_registry.py"],
+      "evidence": [
+        "tools/ai/python/tests/test_mcp_registry.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
       "status": "retained",
       "allow_exposure": true,
       "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
@@ -45,10 +623,16 @@
       "source": "tools/sico/python/sico_ui/target_provider.py",
       "replacement": "tools/sico/python/sico/service/targets.py",
       "owner": "tools/sico/python/sico/service/targets.py",
-      "exports": {"BridgeTargetProvider": "BridgeTargetProvider", "TargetBridgeError": "TargetBridgeError"},
+      "exports": {
+        "BridgeTargetProvider": "BridgeTargetProvider",
+        "TargetBridgeError": "TargetBridgeError"
+      },
       "consumers": [],
       "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
-      "evidence": ["tools/ai/python/tests/test_agent_target_provider.py"],
+      "evidence": [
+        "tools/ai/python/tests/test_agent_target_provider.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
       "status": "retained",
       "allow_exposure": true,
       "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
@@ -110,10 +694,20 @@
       "source": "tools/ai/terminal/pyqt/cad_ai_terminal/terminal_session.py",
       "replacement": "tools/ai/terminal/pyqt/cad_ai_terminal/input_behavior.py",
       "owner": "tools/ai/terminal/pyqt/cad_ai_terminal/input_behavior.py",
-      "exports": {"INPUT_METHOD_CURSOR_SYNC_MS": "INPUT_METHOD_CURSOR_SYNC_MS", "_refresh_input_method_cursor": "_refresh_input_method_cursor", "apply_scroll_policy": "apply_scroll_policy"},
-      "consumers": ["tools/ai/terminal/pyqt/cad_ai_terminal/qt_frontend.py"],
+      "exports": {
+        "INPUT_METHOD_CURSOR_SYNC_MS": "INPUT_METHOD_CURSOR_SYNC_MS",
+        "_refresh_input_method_cursor": "_refresh_input_method_cursor",
+        "apply_scroll_policy": "apply_scroll_policy"
+      },
+      "consumers": [
+        "tools/ai/python/tests/terminal_fixtures.py",
+        "tools/ai/terminal/pyqt/cad_ai_terminal/qt_frontend.py"
+      ],
       "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
-      "evidence": ["tools/ai/python/tests/test_pyqt_terminal.py"],
+      "evidence": [
+        "tools/ai/python/tests/test_pyqt_terminal.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
       "status": "retained",
       "allow_exposure": true,
       "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
@@ -123,10 +717,18 @@
       "source": "tools/ai/terminal/pyqt/cad_ai_terminal/terminal_session.py",
       "replacement": "tools/ai/terminal/pyqt/cad_ai_terminal/shell_environment.py",
       "owner": "tools/ai/terminal/pyqt/cad_ai_terminal/shell_environment.py",
-      "exports": {"sanitize_shell_environment": "sanitize_shell_environment"},
-      "consumers": ["tools/ai/terminal/pyqt/cad_ai_terminal/qt_frontend.py"],
+      "exports": {
+        "sanitize_shell_environment": "sanitize_shell_environment"
+      },
+      "consumers": [
+        "tools/ai/python/tests/terminal_fixtures.py",
+        "tools/ai/terminal/pyqt/cad_ai_terminal/qt_frontend.py"
+      ],
       "external_consumers": "Supported external imports cannot be enumerated from the repository; retirement requires downstream migration confirmation.",
-      "evidence": ["tools/ai/python/tests/test_pyqt_terminal.py"],
+      "evidence": [
+        "tools/ai/python/tests/test_pyqt_terminal.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
       "status": "retained",
       "allow_exposure": true,
       "exit_condition": "Migrate imports of these listed symbols in the known module consumers and all supported external callers of the listed symbols to this owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. Locally defined orchestration operations remain supported."
@@ -136,8 +738,16 @@
       "source": "tools/sico/python/sico/service/workbench_snapshot.py",
       "replacement": "tools/sico/python/sico/service/workbench_data.py:WorkbenchSource.query_pages",
       "owner": "tools/sico/python/sico/service/workbench_data.py",
-      "consumers": ["tools/sico/python/sico/service/workbench_data.py", "tools/ai/python/tests/test_agent_workbench_query.py"],
-      "evidence": ["tools/ai/python/tests/test_agent_workbench_query.py"],
+      "consumers": [
+        "tools/ai/python/tests/test_agent_pdk_update_review.py",
+        "tools/ai/python/tests/test_agent_workbench_query.py",
+        "tools/sico/python/sico/service/workbench_data.py",
+        "tools/sico/python/sico/service/workbench_publication.py"
+      ],
+      "evidence": [
+        "tools/ai/python/tests/test_agent_workbench_query.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
       "status": "retained",
       "allow_exposure": true,
       "exit_condition": "Move supported snapshot/empty consumers to bounded query_pages/empty_query and migrate complete-snapshot fixtures; remove snapshot/empty and WorkbenchSnapshot in the next incompatible service API version. Keep shared projection helpers used by query publication."
@@ -218,8 +828,7 @@
         "tools/ai/python/cadai/mcp_instructions.py",
         "tools/ai/python/cadai/pdk_session.py",
         "tools/sico/python/sico/codex/backend.py",
-        "tools/sico/python/sico/core/loop.py",
-        "tools/ai/python/tests/pdk_acceptance_xxxx28.py",
+        "tools/ai/python/tests/pdk_acceptance_smic28.py",
         "tools/ai/python/tests/pdk_pool_native_worker.py",
         "tools/ai/python/tests/test_circuit_edit.py",
         "tools/ai/python/tests/test_pdk_choice.py",
@@ -302,7 +911,7 @@
         "tools/ai/python/tests/test_template_library_launch.py",
         "tools/ai/python/tests/test_template_transport.py",
         "tools/ai/python/tests/test_terminal_environment.py",
-        "tools/ai/python/tests/test_tool_help.py",
+        "tools/ai/python/tests/test_cds_help.py",
         "deploy/tests/test_runtime_release.py"
       ],
       "external_consumers": "Known repository consumers import launch helpers through this facade, including controller injection points and Agent Codex runtime/settings. Constant and error aliases have no direct repository importer; supported downstream imports still require migration confirmation. Imported implementation dependencies and underscore helpers are not additional public APIs.",
@@ -349,7 +958,7 @@
         "tools/ai/python/tests/test_template_library_launch.py",
         "tools/ai/python/tests/test_template_transport.py",
         "tools/ai/python/tests/test_terminal_environment.py",
-        "tools/ai/python/tests/test_tool_help.py",
+        "tools/ai/python/tests/test_cds_help.py",
         "deploy/tests/test_runtime_release.py"
       ],
       "external_consumers": "Known repository consumers import launch helpers through this facade, including controller injection points and Agent Codex runtime/settings. Constant and error aliases have no direct repository importer; supported downstream imports still require migration confirmation. Imported implementation dependencies and underscore helpers are not additional public APIs.",
@@ -395,7 +1004,7 @@
         "tools/ai/python/tests/test_template_library_launch.py",
         "tools/ai/python/tests/test_template_transport.py",
         "tools/ai/python/tests/test_terminal_environment.py",
-        "tools/ai/python/tests/test_tool_help.py",
+        "tools/ai/python/tests/test_cds_help.py",
         "deploy/tests/test_runtime_release.py"
       ],
       "external_consumers": "Known repository consumers import launch helpers through this facade, including controller injection points and Agent Codex runtime/settings. Constant and error aliases have no direct repository importer; supported downstream imports still require migration confirmation. Imported implementation dependencies and underscore helpers are not additional public APIs.",
@@ -442,7 +1051,7 @@
         "tools/ai/python/tests/test_template_library_launch.py",
         "tools/ai/python/tests/test_template_transport.py",
         "tools/ai/python/tests/test_terminal_environment.py",
-        "tools/ai/python/tests/test_tool_help.py",
+        "tools/ai/python/tests/test_cds_help.py",
         "deploy/tests/test_runtime_release.py"
       ],
       "external_consumers": "Known repository consumers import launch helpers through this facade, including controller injection points and Agent Codex runtime/settings. Constant and error aliases have no direct repository importer; supported downstream imports still require migration confirmation. Imported implementation dependencies and underscore helpers are not additional public APIs.",
@@ -489,7 +1098,7 @@
         "tools/ai/python/tests/test_template_library_launch.py",
         "tools/ai/python/tests/test_template_transport.py",
         "tools/ai/python/tests/test_terminal_environment.py",
-        "tools/ai/python/tests/test_tool_help.py",
+        "tools/ai/python/tests/test_cds_help.py",
         "deploy/tests/test_runtime_release.py"
       ],
       "external_consumers": "Known repository consumers import launch helpers through this facade, including controller injection points and Agent Codex runtime/settings. Constant and error aliases have no direct repository importer; supported downstream imports still require migration confirmation. Imported implementation dependencies and underscore helpers are not additional public APIs.",
@@ -538,7 +1147,7 @@
         "tools/ai/python/tests/test_template_library_launch.py",
         "tools/ai/python/tests/test_template_transport.py",
         "tools/ai/python/tests/test_terminal_environment.py",
-        "tools/ai/python/tests/test_tool_help.py",
+        "tools/ai/python/tests/test_cds_help.py",
         "deploy/tests/test_runtime_release.py"
       ],
       "external_consumers": "Known repository consumers import launch helpers through this facade, including controller injection points and Agent Codex runtime/settings. Constant and error aliases have no direct repository importer; supported downstream imports still require migration confirmation. Imported implementation dependencies and underscore helpers are not additional public APIs.",
@@ -586,7 +1195,7 @@
         "tools/ai/python/tests/test_template_library_launch.py",
         "tools/ai/python/tests/test_template_transport.py",
         "tools/ai/python/tests/test_terminal_environment.py",
-        "tools/ai/python/tests/test_tool_help.py",
+        "tools/ai/python/tests/test_cds_help.py",
         "deploy/tests/test_runtime_release.py"
       ],
       "external_consumers": "Known repository consumers import launch helpers through this facade, including controller injection points and Agent Codex runtime/settings. Constant and error aliases have no direct repository importer; supported downstream imports still require migration confirmation. Imported implementation dependencies and underscore helpers are not additional public APIs.",
@@ -613,13 +1222,14 @@
       },
       "consumers": [
         "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/cadai/headless_session.py",
         "tools/ai/python/tests/circuit_create_support.py",
         "tools/ai/python/tests/controller_launch_cases.py",
         "tools/ai/python/tests/controller_request_cases.py",
         "tools/ai/python/tests/controller_snapshot_cases.py",
         "tools/ai/python/tests/pdk_ipc_worker.py",
         "tools/ai/python/tests/pdk_pool_native_worker.py",
-        "tools/ai/python/tests/template_xxxx28_support.py",
+        "tools/ai/python/tests/template_smic28_support.py",
         "tools/ai/python/tests/template_symbol_fixture.py",
         "tools/ai/python/tests/test_circuit_gate_gui.py",
         "tools/ai/python/tests/test_circuit_matrix_gui.py",
@@ -642,7 +1252,8 @@
         "tools/ai/python/tests/test_controller.py",
         "tools/ai/python/tests/test_controller_lifecycle.py",
         "tools/ai/python/tests/test_controller_boundaries.py",
-        "tools/ai/python/tests/test_terminal_override.py"
+        "tools/ai/python/tests/test_terminal_override.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
       ],
       "status": "retained",
       "allow_exposure": true,
@@ -659,13 +1270,14 @@
       },
       "consumers": [
         "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/cadai/headless_session.py",
         "tools/ai/python/tests/circuit_create_support.py",
         "tools/ai/python/tests/controller_launch_cases.py",
         "tools/ai/python/tests/controller_request_cases.py",
         "tools/ai/python/tests/controller_snapshot_cases.py",
         "tools/ai/python/tests/pdk_ipc_worker.py",
         "tools/ai/python/tests/pdk_pool_native_worker.py",
-        "tools/ai/python/tests/template_xxxx28_support.py",
+        "tools/ai/python/tests/template_smic28_support.py",
         "tools/ai/python/tests/template_symbol_fixture.py",
         "tools/ai/python/tests/test_circuit_gate_gui.py",
         "tools/ai/python/tests/test_circuit_matrix_gui.py",
@@ -688,7 +1300,8 @@
         "tools/ai/python/tests/test_controller.py",
         "tools/ai/python/tests/test_controller_lifecycle.py",
         "tools/ai/python/tests/test_controller_boundaries.py",
-        "tools/ai/python/tests/test_terminal_override.py"
+        "tools/ai/python/tests/test_terminal_override.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
       ],
       "status": "retained",
       "allow_exposure": true,
@@ -704,13 +1317,14 @@
       },
       "consumers": [
         "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/cadai/headless_session.py",
         "tools/ai/python/tests/circuit_create_support.py",
         "tools/ai/python/tests/controller_launch_cases.py",
         "tools/ai/python/tests/controller_request_cases.py",
         "tools/ai/python/tests/controller_snapshot_cases.py",
         "tools/ai/python/tests/pdk_ipc_worker.py",
         "tools/ai/python/tests/pdk_pool_native_worker.py",
-        "tools/ai/python/tests/template_xxxx28_support.py",
+        "tools/ai/python/tests/template_smic28_support.py",
         "tools/ai/python/tests/template_symbol_fixture.py",
         "tools/ai/python/tests/test_circuit_gate_gui.py",
         "tools/ai/python/tests/test_circuit_matrix_gui.py",
@@ -733,7 +1347,8 @@
         "tools/ai/python/tests/test_controller.py",
         "tools/ai/python/tests/test_controller_lifecycle.py",
         "tools/ai/python/tests/test_controller_boundaries.py",
-        "tools/ai/python/tests/test_terminal_override.py"
+        "tools/ai/python/tests/test_terminal_override.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
       ],
       "status": "retained",
       "allow_exposure": true,
@@ -749,13 +1364,14 @@
       },
       "consumers": [
         "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/cadai/headless_session.py",
         "tools/ai/python/tests/circuit_create_support.py",
         "tools/ai/python/tests/controller_launch_cases.py",
         "tools/ai/python/tests/controller_request_cases.py",
         "tools/ai/python/tests/controller_snapshot_cases.py",
         "tools/ai/python/tests/pdk_ipc_worker.py",
         "tools/ai/python/tests/pdk_pool_native_worker.py",
-        "tools/ai/python/tests/template_xxxx28_support.py",
+        "tools/ai/python/tests/template_smic28_support.py",
         "tools/ai/python/tests/template_symbol_fixture.py",
         "tools/ai/python/tests/test_circuit_gate_gui.py",
         "tools/ai/python/tests/test_circuit_matrix_gui.py",
@@ -778,7 +1394,8 @@
         "tools/ai/python/tests/test_controller.py",
         "tools/ai/python/tests/test_controller_lifecycle.py",
         "tools/ai/python/tests/test_controller_boundaries.py",
-        "tools/ai/python/tests/test_terminal_override.py"
+        "tools/ai/python/tests/test_terminal_override.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
       ],
       "status": "retained",
       "allow_exposure": true,
@@ -794,13 +1411,14 @@
       },
       "consumers": [
         "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/cadai/headless_session.py",
         "tools/ai/python/tests/circuit_create_support.py",
         "tools/ai/python/tests/controller_launch_cases.py",
         "tools/ai/python/tests/controller_request_cases.py",
         "tools/ai/python/tests/controller_snapshot_cases.py",
         "tools/ai/python/tests/pdk_ipc_worker.py",
         "tools/ai/python/tests/pdk_pool_native_worker.py",
-        "tools/ai/python/tests/template_xxxx28_support.py",
+        "tools/ai/python/tests/template_smic28_support.py",
         "tools/ai/python/tests/template_symbol_fixture.py",
         "tools/ai/python/tests/test_circuit_gate_gui.py",
         "tools/ai/python/tests/test_circuit_matrix_gui.py",
@@ -823,7 +1441,8 @@
         "tools/ai/python/tests/test_controller.py",
         "tools/ai/python/tests/test_controller_lifecycle.py",
         "tools/ai/python/tests/test_controller_boundaries.py",
-        "tools/ai/python/tests/test_terminal_override.py"
+        "tools/ai/python/tests/test_terminal_override.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
       ],
       "status": "retained",
       "allow_exposure": true,
@@ -835,12 +1454,36 @@
       "replacement": "tools/ai/python/cadai/controller_live.py:snapshot_binding_from_aivw",
       "owner": "tools/ai/python/cadai/controller_live.py",
       "consumers": [
-        "tools/ai/python/tests/test_controller_boundaries.py"
+        "tools/ai/python/cadai/cli.py",
+        "tools/ai/python/cadai/headless_session.py",
+        "tools/ai/python/tests/controller_launch_cases.py",
+        "tools/ai/python/tests/controller_request_cases.py",
+        "tools/ai/python/tests/controller_snapshot_cases.py",
+        "tools/ai/python/tests/pdk_ipc_worker.py",
+        "tools/ai/python/tests/pdk_pool_native_worker.py",
+        "tools/ai/python/tests/template_smic28_support.py",
+        "tools/ai/python/tests/template_symbol_fixture.py",
+        "tools/ai/python/tests/test_circuit_gate_gui.py",
+        "tools/ai/python/tests/test_circuit_matrix_gui.py",
+        "tools/ai/python/tests/test_circuit_native_transport.py",
+        "tools/ai/python/tests/test_circuit_opamp_gui.py",
+        "tools/ai/python/tests/test_circuit_rc_gui.py",
+        "tools/ai/python/tests/test_circuit_rebuild_gui.py",
+        "tools/ai/python/tests/test_claude_launch.py",
+        "tools/ai/python/tests/test_controller_boundaries.py",
+        "tools/ai/python/tests/test_controller_lifecycle.py",
+        "tools/ai/python/tests/test_live_ipc.py",
+        "tools/ai/python/tests/test_production_feedback.py",
+        "tools/ai/python/tests/test_result_gui.py",
+        "tools/ai/python/tests/test_skill_preflight_transport.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_terminal_override.py"
       ],
       "external_consumers": "No production repository caller of the hash-only accessor was found. Preserve the existing binding-hook dispatch for supported external consumers until they migrate.",
       "evidence": [
         "tools/ai/python/tests/test_controller_boundaries.py",
-        "tools/ai/python/tests/test_controller_live_recipe.py"
+        "tools/ai/python/tests/test_controller_live_recipe.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
       ],
       "status": "retained",
       "allow_exposure": true,
@@ -1090,7 +1733,6 @@
       "consumers": [
         "tools/sico/python/sico_ui/composer.py",
         "tools/sico/python/sico_ui/event_detail.py",
-        "tools/sico/python/sico_ui/resources.py",
         "tools/sico/python/sico_ui/startup.py",
         "tools/sico/python/sico_ui/target_picker.py",
         "tools/sico/python/sico_ui/terminal_tool.py",
@@ -1125,7 +1767,6 @@
       "consumers": [
         "tools/sico/python/sico_ui/composer.py",
         "tools/sico/python/sico_ui/event_detail.py",
-        "tools/sico/python/sico_ui/resources.py",
         "tools/sico/python/sico_ui/startup.py",
         "tools/sico/python/sico_ui/target_picker.py",
         "tools/sico/python/sico_ui/terminal_tool.py",
@@ -1163,7 +1804,6 @@
       "consumers": [
         "tools/sico/python/sico_ui/composer.py",
         "tools/sico/python/sico_ui/event_detail.py",
-        "tools/sico/python/sico_ui/resources.py",
         "tools/sico/python/sico_ui/startup.py",
         "tools/sico/python/sico_ui/target_picker.py",
         "tools/sico/python/sico_ui/terminal_tool.py",
@@ -1238,16 +1878,18 @@
         "EvenTabPanel": "EvenTabPanel"
       },
       "consumers": [
+        "tools/ai/python/tests/agent_gui_contract_theme_menu_cases.py",
+        "tools/ai/python/tests/test_agent_panel_rail.py",
         "tools/sico/python/sico_ui/centers.py",
+        "tools/sico/python/sico_ui/home_window.py",
         "tools/sico/python/sico_ui/navigation.py",
         "tools/sico/python/sico_ui/tool_results.py",
-        "tools/sico/python/sico_ui/window.py",
-        "tools/ai/python/tests/agent_gui_contract_theme_menu_cases.py",
-        "tools/ai/python/tests/test_agent_panel_rail.py"
+        "tools/sico/python/sico_ui/window.py"
       ],
       "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
       "evidence": [
-        "tools/ai/python/tests/test_agent_gui.py"
+        "tools/ai/python/tests/test_agent_gui.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
       ],
       "status": "retained",
       "allow_exposure": true,
@@ -1262,16 +1904,18 @@
         "ClosingMenuEntry": "ClosingMenuEntry"
       },
       "consumers": [
+        "tools/ai/python/tests/agent_gui_contract_theme_menu_cases.py",
+        "tools/ai/python/tests/test_agent_panel_rail.py",
         "tools/sico/python/sico_ui/centers.py",
+        "tools/sico/python/sico_ui/home_window.py",
         "tools/sico/python/sico_ui/navigation.py",
         "tools/sico/python/sico_ui/tool_results.py",
-        "tools/sico/python/sico_ui/window.py",
-        "tools/ai/python/tests/agent_gui_contract_theme_menu_cases.py",
-        "tools/ai/python/tests/test_agent_panel_rail.py"
+        "tools/sico/python/sico_ui/window.py"
       ],
       "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
       "evidence": [
-        "tools/ai/python/tests/test_agent_gui.py"
+        "tools/ai/python/tests/test_agent_gui.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
       ],
       "status": "retained",
       "allow_exposure": true,
@@ -1289,28 +1933,42 @@
         "SessionReader": "SessionReader"
       },
       "consumers": [
-        "tools/sico/python/sico/service/catalog.py",
-        "tools/sico/python/sico/service/lsf_bundle.py",
-        "tools/sico/python/sico/service/lsf_evidence.py",
-        "tools/sico/python/sico/service/recovery_facts.py",
-        "tools/sico/python/sico/service/replay.py",
-        "tools/sico/python/sico/storage/host_routes.py",
-        "tools/sico/python/sico/storage/inbox_records.py",
-        "tools/sico/python/sico/storage/session_snapshot.py",
         "tools/ai/python/tests/agent_lsf_live_site.py",
         "tools/ai/python/tests/agent_service_matrix_fixtures.py",
         "tools/ai/python/tests/agent_sessions_harness.py",
         "tools/ai/python/tests/test_agent_catalog.py",
         "tools/ai/python/tests/test_agent_desktop.py",
+        "tools/ai/python/tests/test_agent_empty_native.py",
         "tools/ai/python/tests/test_agent_event_contract.py",
         "tools/ai/python/tests/test_agent_history.py",
         "tools/ai/python/tests/test_agent_processes.py",
+        "tools/ai/python/tests/test_agent_service_damaged_native.py",
+        "tools/ai/python/tests/test_agent_service_damaged_record.py",
+        "tools/ai/python/tests/test_agent_service_record_delete_edges.py",
+        "tools/ai/python/tests/test_agent_service_record_remediation.py",
+        "tools/ai/python/tests/test_agent_service_record_review.py",
         "tools/ai/python/tests/test_agent_session_load_scale.py",
         "tools/ai/python/tests/test_agent_session_names.py",
         "tools/ai/python/tests/test_agent_session_names_native.py",
         "tools/ai/python/tests/test_agent_workbench.py",
         "tools/ai/python/tests/test_agent_workbench_query_boundary.py",
-        "tools/ai/python/tests/test_codex_native_a2.py"
+        "tools/ai/python/tests/test_codex_native_a2.py",
+        "tools/ai/python/tests/test_sico_migration_history_policy.py",
+        "tools/ai/python/tests/test_sico_migration_material.py",
+        "tools/ai/python/tests/test_storage_json_contract.py",
+        "tools/sico/python/sico/cli.py",
+        "tools/sico/python/sico/service/agent_settings.py",
+        "tools/sico/python/sico/service/catalog.py",
+        "tools/sico/python/sico/service/damaged_record.py",
+        "tools/sico/python/sico/service/lsf_bundle.py",
+        "tools/sico/python/sico/service/lsf_evidence.py",
+        "tools/sico/python/sico/service/reconcile_cli.py",
+        "tools/sico/python/sico/service/record_deletion.py",
+        "tools/sico/python/sico/service/recovery_facts.py",
+        "tools/sico/python/sico/service/replay.py",
+        "tools/sico/python/sico/storage/host_routes.py",
+        "tools/sico/python/sico/storage/inbox_records.py",
+        "tools/sico/python/sico/storage/session_snapshot.py"
       ],
       "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
       "evidence": [
@@ -1384,6 +2042,13 @@
         "StdioLines": "StdioLines"
       },
       "consumers": [
+        "tools/ai/python/tests/agent_transport_contract_wire_cases.py",
+        "tools/ai/python/tests/test_agent_bridge_control.py",
+        "tools/ai/python/tests/test_agent_circuit_errors.py",
+        "tools/ai/python/tests/test_agent_notice_backpressure.py",
+        "tools/ai/python/tests/test_agent_router_durable.py",
+        "tools/ai/python/tests/test_circuit_output_capture.py",
+        "tools/ai/python/tests/test_skill_result.py",
         "tools/sico/python/sico/cli.py",
         "tools/sico/python/sico/service/background_worker.py",
         "tools/sico/python/sico/service/composer.py",
@@ -1395,17 +2060,12 @@
         "tools/sico/python/sico/transport/broker_registration.py",
         "tools/sico/python/sico/transport/instance_bridge.py",
         "tools/sico/python/sico/transport/router.py",
-        "tools/sico/python/sico/transport/skill_diagnostics.py",
-        "tools/ai/python/tests/agent_transport_contract_wire_cases.py",
-        "tools/ai/python/tests/test_agent_bridge_control.py",
-        "tools/ai/python/tests/test_agent_circuit_errors.py",
-        "tools/ai/python/tests/test_agent_notice_backpressure.py",
-        "tools/ai/python/tests/test_agent_router_durable.py",
-        "tools/ai/python/tests/test_circuit_output_capture.py"
+        "tools/sico/python/sico/transport/skill_diagnostics.py"
       ],
       "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
       "evidence": [
-        "tools/ai/python/tests/test_agent_transport.py"
+        "tools/ai/python/tests/test_agent_transport.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
       ],
       "status": "retained",
       "allow_exposure": true,
@@ -1454,10 +2114,10 @@
       "exit_condition": "Migrate the listed symbol imports in supported consumers to their named owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. The original orchestration entry remains supported."
     },
     {
-      "legacy": "sico.service.audit exports from sico.service.audit_questions",
+      "legacy": "sico.service.audit question value aliases",
       "source": "tools/sico/python/sico/service/audit.py",
-      "replacement": "tools/sico/python/sico/service/audit_questions.py",
-      "owner": "tools/sico/python/sico/service/audit_questions.py",
+      "replacement": "tools/sico/python/sico/core/audit_questions.py",
+      "owner": "tools/sico/python/sico/core/audit_questions.py",
       "exports": {
         "NEW_WINDOW_OPTION": "NEW_WINDOW_OPTION",
         "QUESTION": "QUESTION",
@@ -1466,50 +2126,45 @@
         "same_host_questions": "same_host_questions"
       },
       "consumers": [
-        "tools/sico/python/sico/adapters/circuit.py",
-        "tools/sico/python/sico/codex/backend.py",
-        "tools/sico/python/sico/service/workbench.py",
-        "tools/sico/python/sico_ui/target_picker.py",
         "tools/ai/python/tests/agent_transport_contract_wire_cases.py",
         "tools/ai/python/tests/test_agent_target_decision.py",
-        "tools/ai/python/tests/test_pdk_choice.py"
+        "tools/ai/python/tests/test_pdk_choice.py",
+        "tools/ai/python/tests/test_interaction_capabilities.py",
+        "tools/ai/python/tests/test_approval_contracts.py"
       ],
       "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
       "evidence": [
         "tools/ai/python/tests/test_agent_audit_lifecycle.py",
         "tools/ai/python/tests/test_agent_pdk_choice.py",
-        "tools/ai/python/tests/test_agent_target_choice.py"
+        "tools/ai/python/tests/test_agent_target_choice.py",
+        "tools/ai/python/tests/test_approval_contracts.py",
+        "tools/utility/tests/test_approval_boundaries.py"
       ],
       "status": "retained",
       "allow_exposure": true,
-      "exit_condition": "Migrate the listed symbol imports in supported consumers to their named owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. The original orchestration entry remains supported."
+      "exit_condition": "All in-repository production consumers use core.audit_questions. Migrate supported downstream question imports to that owner and retain only alias identity tests, then remove these historical exports in the next incompatible API release. AuditService remains the service owner."
     },
     {
       "legacy": "sico.service.audit exports from sico.service.audit_instructions",
       "source": "tools/sico/python/sico/service/audit.py",
-      "replacement": "tools/sico/python/sico/service/audit_instructions.py",
-      "owner": "tools/sico/python/sico/service/audit_instructions.py",
+      "replacement": "tools/sico/python/sico/codex/audit_instructions.py",
+      "owner": "tools/sico/python/sico/codex/audit_instructions.py",
       "exports": {
         "INSTRUCTIONS": "INSTRUCTIONS"
       },
       "consumers": [
-        "tools/sico/python/sico/adapters/circuit.py",
-        "tools/sico/python/sico/codex/backend.py",
-        "tools/sico/python/sico/service/workbench.py",
-        "tools/sico/python/sico_ui/target_picker.py",
-        "tools/ai/python/tests/agent_transport_contract_wire_cases.py",
-        "tools/ai/python/tests/test_agent_target_decision.py",
-        "tools/ai/python/tests/test_pdk_choice.py"
+        "tools/ai/python/tests/test_interaction_capabilities.py",
+        "tools/ai/python/tests/test_runtime_guidance.py"
       ],
       "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
       "evidence": [
-        "tools/ai/python/tests/test_agent_audit_lifecycle.py",
-        "tools/ai/python/tests/test_agent_pdk_choice.py",
-        "tools/ai/python/tests/test_agent_target_choice.py"
+        "tools/ai/python/tests/test_runtime_guidance.py",
+        "tools/utility/tests/test_runtime_guidance_boundaries.py",
+        "tools/ai/python/tests/test_interaction_capabilities.py"
       ],
       "status": "retained",
       "allow_exposure": true,
-      "exit_condition": "Migrate the listed symbol imports in supported consumers to their named owner; verify no old imports remain, then remove only these aliases in the next incompatible API release. The original orchestration entry remains supported."
+      "exit_condition": "Migrate supported downstream imports to codex.audit_instructions and retain only alias identity tests, then remove the historical service audit export in the next incompatible API release."
     },
     {
       "legacy": "sico.transport.broker exports from sico.transport.broker_peer",
@@ -1520,17 +2175,6 @@
         "Peer": "Peer"
       },
       "consumers": [
-        "tools/sico/python/sico/cli.py",
-        "tools/sico/python/sico/codex/tool_dispatch.py",
-        "tools/sico/python/sico/core/loop.py",
-        "tools/sico/python/sico/core/tools.py",
-        "tools/sico/python/sico/service/background_worker.py",
-        "tools/sico/python/sico/service/frontend_attach.py",
-        "tools/sico/python/sico/service/session_recovery.py",
-        "tools/sico/python/sico/service/targets.py",
-        "tools/sico/python/sico/transport/bridge_client.py",
-        "tools/sico/python/sico/transport/instance_bridge.py",
-        "tools/sico/python/sico/transport/reconciliation.py",
         "tools/ai/python/tests/agent_gui_contract_history_replay_cases.py",
         "tools/ai/python/tests/agent_local_harness.py",
         "tools/ai/python/tests/agent_native_binding_contract_admission_cases.py",
@@ -1567,18 +2211,33 @@
         "tools/ai/python/tests/test_agent_session_bindings.py",
         "tools/ai/python/tests/test_agent_session_controller.py",
         "tools/ai/python/tests/test_agent_task_shutdown.py",
+        "tools/ai/python/tests/test_broker_registration.py",
         "tools/ai/python/tests/test_cdf_callbacks_native.py",
         "tools/ai/python/tests/test_circuit_output_capture.py",
         "tools/ai/python/tests/test_circuit_output_capture_gui.py",
         "tools/ai/python/tests/test_entry_context.py",
         "tools/ai/python/tests/test_entry_context_gui.py",
+        "tools/ai/python/tests/test_pdk_cdf_native.py",
         "tools/ai/python/tests/test_pdk_pool.py",
-        "tools/ai/python/tests/test_wait_read_bridge.py"
+        "tools/ai/python/tests/test_wait_read_bridge.py",
+        "tools/sico/python/sico/cli.py",
+        "tools/sico/python/sico/codex/tool_dispatch.py",
+        "tools/sico/python/sico/core/tools.py",
+        "tools/sico/python/sico/service/background_worker.py",
+        "tools/sico/python/sico/service/frontend_attach.py",
+        "tools/sico/python/sico/service/reconcile_commands.py",
+        "tools/sico/python/sico/service/session_creation.py",
+        "tools/sico/python/sico/service/session_recovery.py",
+        "tools/sico/python/sico/service/targets.py",
+        "tools/sico/python/sico/transport/bridge_client.py",
+        "tools/sico/python/sico/transport/instance_bridge.py",
+        "tools/sico/python/sico/transport/reconciliation.py"
       ],
       "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
       "evidence": [
         "tools/ai/python/tests/test_agent_transport.py",
-        "tools/ai/python/tests/test_agent_native_bindings.py"
+        "tools/ai/python/tests/test_agent_native_bindings.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
       ],
       "status": "retained",
       "allow_exposure": true,
@@ -1594,17 +2253,6 @@
         "skill_call_context": "skill_call_context"
       },
       "consumers": [
-        "tools/sico/python/sico/cli.py",
-        "tools/sico/python/sico/codex/tool_dispatch.py",
-        "tools/sico/python/sico/core/loop.py",
-        "tools/sico/python/sico/core/tools.py",
-        "tools/sico/python/sico/service/background_worker.py",
-        "tools/sico/python/sico/service/frontend_attach.py",
-        "tools/sico/python/sico/service/session_recovery.py",
-        "tools/sico/python/sico/service/targets.py",
-        "tools/sico/python/sico/transport/bridge_client.py",
-        "tools/sico/python/sico/transport/instance_bridge.py",
-        "tools/sico/python/sico/transport/reconciliation.py",
         "tools/ai/python/tests/agent_gui_contract_history_replay_cases.py",
         "tools/ai/python/tests/agent_local_harness.py",
         "tools/ai/python/tests/agent_native_binding_contract_admission_cases.py",
@@ -1641,18 +2289,33 @@
         "tools/ai/python/tests/test_agent_session_bindings.py",
         "tools/ai/python/tests/test_agent_session_controller.py",
         "tools/ai/python/tests/test_agent_task_shutdown.py",
+        "tools/ai/python/tests/test_broker_registration.py",
         "tools/ai/python/tests/test_cdf_callbacks_native.py",
         "tools/ai/python/tests/test_circuit_output_capture.py",
         "tools/ai/python/tests/test_circuit_output_capture_gui.py",
         "tools/ai/python/tests/test_entry_context.py",
         "tools/ai/python/tests/test_entry_context_gui.py",
+        "tools/ai/python/tests/test_pdk_cdf_native.py",
         "tools/ai/python/tests/test_pdk_pool.py",
-        "tools/ai/python/tests/test_wait_read_bridge.py"
+        "tools/ai/python/tests/test_wait_read_bridge.py",
+        "tools/sico/python/sico/cli.py",
+        "tools/sico/python/sico/codex/tool_dispatch.py",
+        "tools/sico/python/sico/core/tools.py",
+        "tools/sico/python/sico/service/background_worker.py",
+        "tools/sico/python/sico/service/frontend_attach.py",
+        "tools/sico/python/sico/service/reconcile_commands.py",
+        "tools/sico/python/sico/service/session_creation.py",
+        "tools/sico/python/sico/service/session_recovery.py",
+        "tools/sico/python/sico/service/targets.py",
+        "tools/sico/python/sico/transport/bridge_client.py",
+        "tools/sico/python/sico/transport/instance_bridge.py",
+        "tools/sico/python/sico/transport/reconciliation.py"
       ],
       "external_consumers": "Supported external imports require downstream migration confirmation before retirement.",
       "evidence": [
         "tools/ai/python/tests/test_agent_transport.py",
-        "tools/ai/python/tests/test_agent_native_bindings.py"
+        "tools/ai/python/tests/test_agent_native_bindings.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
       ],
       "status": "retained",
       "allow_exposure": true,
@@ -1731,7 +2394,8 @@
       "evidence": [
         "tools/ai/python/tests/test_transcript_projection.py",
         "tools/ai/python/tests/test_chat_archive.py",
-        "tools/ai/python/tests/test_chat_scroll.py"
+        "tools/ai/python/tests/test_chat_scroll.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
       ],
       "status": "retained",
       "allow_exposure": true,
@@ -1752,7 +2416,8 @@
       "evidence": [
         "tools/ai/python/tests/test_transcript_projection.py",
         "tools/ai/python/tests/test_chat_archive.py",
-        "tools/ai/python/tests/test_chat_scroll.py"
+        "tools/ai/python/tests/test_chat_scroll.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
       ],
       "status": "retained",
       "allow_exposure": true,
@@ -1773,7 +2438,8 @@
       "evidence": [
         "tools/ai/python/tests/test_transcript_projection.py",
         "tools/ai/python/tests/test_chat_archive.py",
-        "tools/ai/python/tests/test_chat_scroll.py"
+        "tools/ai/python/tests/test_chat_scroll.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
       ],
       "status": "retained",
       "allow_exposure": true,
@@ -1796,7 +2462,8 @@
       "evidence": [
         "tools/ai/python/tests/test_transcript_projection.py",
         "tools/ai/python/tests/test_chat_archive.py",
-        "tools/ai/python/tests/test_chat_scroll.py"
+        "tools/ai/python/tests/test_chat_scroll.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
       ],
       "status": "retained",
       "allow_exposure": true,
@@ -1817,11 +2484,795 @@
       "evidence": [
         "tools/ai/python/tests/test_transcript_projection.py",
         "tools/ai/python/tests/test_chat_archive.py",
-        "tools/ai/python/tests/test_chat_scroll.py"
+        "tools/ai/python/tests/test_chat_scroll.py",
+        "docs/SICO_EQ08_C5_REVIEW.md"
       ],
       "status": "retained",
       "allow_exposure": true,
       "exit_condition": "Migrate supported imports to the service chat module, verify downstream callers no longer use this UI helper module, then remove this alias-only module at the next incompatible API version. No duplicate projection implementation is retained."
+    },
+    {
+      "legacy": "sico-capture-flat-v1 fixed reference normalization",
+      "source": "tools/ai/python/cadai/template_standard/geometry.py:routing",
+      "replacement": "tools/ai/python/cadai/template_standard/routes.py:project",
+      "owner": "tools/ai/python/cadai/template_standard/collect.py",
+      "consumers": [
+        "tools/ai/python/cadai/template_standard/content.py",
+        "tools/ai/python/cadai/template_standard/routes.py"
+      ],
+      "evidence": [
+        "tools/ai/python/tests/test_template_standard_versions.py"
+      ],
+      "status": "retained",
+      "allow_exposure": false,
+      "exit_condition": "New requests pin sico-capture-flat-v3; v1/v2 requests retain their pinned projections. Keep v1 normalization only for immutable saved requests and unqualified source geometry projection. Retire saved v1 packages and their pinned request/report evidence, migrate incomplete projection, then remove this branch at an explicitly incompatible reader version; never relabel an existing ctpl_ reference."
+    },
+    {
+      "legacy": "sico.service.host_contract bridge payload aliases",
+      "source": "tools/sico/python/sico/service/host_contract.py",
+      "replacement": "tools/sico/python/sico/transport/host_payload_contract.py",
+      "owner": "tools/sico/python/sico/transport/host_payload_contract.py",
+      "exports": {
+        "capture_payload": "capture_payload",
+        "PAYLOAD_LIMIT": "PAYLOAD_LIMIT"
+      },
+      "consumers": [
+        "tools/sico/python/sico/service/host_admission.py",
+        "tools/ai/python/tests/test_agent_service_host_boundaries.py",
+        "tools/utility/tests/test_transport_boundaries.py"
+      ],
+      "external_consumers": "Repository search cannot enumerate downstream callers; verify supported external imports before removal.",
+      "evidence": [
+        "tools/utility/tests/test_transport_boundaries.py",
+        "tools/ai/python/tests/test_agent_host_payloads.py",
+        "tools/ai/python/tests/test_agent_service_host.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate HostAdmission and supported callers of the listed exports to the declared owner; verify no old imports remain, then remove only these aliases in the next incompatible API version. Service host_identity, validate_reference and validate_query remain canonical protocol adapters."
+    },
+    {
+      "legacy": "sico.service.host_contract stable digest alias",
+      "source": "tools/sico/python/sico/service/host_contract.py",
+      "replacement": "tools/sico/python/sico/core/host_contracts.py",
+      "owner": "tools/sico/python/sico/core/host_contracts.py",
+      "exports": {
+        "digest": "digest"
+      },
+      "consumers": [
+        "tools/sico/python/sico/service/host_admission.py",
+        "tools/utility/tests/test_transport_boundaries.py"
+      ],
+      "external_consumers": "Repository search cannot enumerate downstream callers; verify supported external imports before removal.",
+      "evidence": [
+        "tools/utility/tests/test_transport_boundaries.py",
+        "tools/ai/python/tests/test_agent_host_payloads.py",
+        "tools/ai/python/tests/test_agent_service_host.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate HostAdmission and supported callers of the listed exports to the declared owner; verify no old imports remain, then remove only these aliases in the next incompatible API version. Service host_identity, validate_reference and validate_query remain canonical protocol adapters."
+    },
+    {
+      "legacy": "sico.service.background_environment bridge environment aliases",
+      "source": "tools/sico/python/sico/service/background_environment.py",
+      "replacement": "tools/sico/python/sico/transport/platform_environment.py",
+      "owner": "tools/sico/python/sico/transport/platform_environment.py",
+      "exports": {
+        "EDA_NAMES": "EDA_NAMES",
+        "CAPTURED_NAMES": "CAPTURED_NAMES",
+        "SNAPSHOT_NAMES": "SNAPSHOT_NAMES",
+        "capture_environment": "capture_environment",
+        "validate_environment": "validate_environment"
+      },
+      "consumers": [
+        "tools/sico/python/sico/service/background_worker.py",
+        "tools/sico/python/sico/service/background_jobs.py",
+        "tools/sico/python/sico/service/background_commands.py",
+        "tools/sico/python/sico/service/platform_connection.py",
+        "tools/sico/python/sico/service/execution_backend.py",
+        "tools/sico/python/sico/service/lsf_bundle.py",
+        "tools/ai/python/tests/agent_lsf_live_site.py",
+        "tools/ai/python/tests/test_agent_service_lsf_node.py",
+        "tools/ai/python/tests/test_sico_eda_environment.py",
+        "tools/ai/python/tests/test_platform_environment_contract.py"
+      ],
+      "external_consumers": "Supported downstream imports require migration confirmation before alias retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_platform_environment_contract.py",
+        "tools/ai/python/tests/test_sico_eda_environment.py",
+        "tools/utility/tests/test_platform_boundaries.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported consumers of these five exports to the transport contract; verify no old imports remain, then remove only these aliases in the next incompatible API version. worker_environment and guardian_environment remain canonical service operations."
+    },
+    {
+      "legacy": "sico.service.background_watchdog process identity aliases",
+      "source": "tools/sico/python/sico/service/background_watchdog.py",
+      "replacement": "tools/sico/python/sico/process_identity.py",
+      "owner": "tools/sico/python/sico/process_identity.py",
+      "exports": {
+        "boot_id": "boot_id",
+        "process_identity": "process_identity"
+      },
+      "consumers": [
+        "tools/sico/python/sico/service/background_worker.py",
+        "tools/sico/python/sico/service/background_recovery.py",
+        "tools/sico/python/sico/service/background_custody.py",
+        "tools/sico/python/sico/service/project_service.py",
+        "tools/sico/python/sico/service/service_discovery.py",
+        "tools/sico/python/sico/service/service_force_stop.py",
+        "tools/sico/python/sico/service/service_peer.py",
+        "tools/sico/python/sico/service/service_retirement.py",
+        "tools/ai/python/tests/agent_service_launch_fixtures.py",
+        "tools/ai/python/tests/test_agent_b3_recovery.py",
+        "tools/ai/python/tests/test_agent_local_entrypoints.py",
+        "tools/ai/python/tests/test_agent_service_retirement.py",
+        "tools/ai/python/tests/test_process_identity.py"
+      ],
+      "external_consumers": "Supported downstream imports require migration confirmation before alias retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_process_identity.py",
+        "tools/ai/python/tests/test_agent_b3_recovery.py",
+        "tools/utility/tests/test_platform_boundaries.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported consumers of boot_id and process_identity to their read-only owner; verify no old imports remain, then remove only these aliases in the next incompatible API version. Watchdog process supervision and signalling remain canonical service operations."
+    },
+    {
+      "legacy": "sico.providers.config provider validation alias",
+      "source": "tools/sico/python/sico/providers/config.py",
+      "replacement": "tools/sico/python/sico/configuration/provider.py",
+      "owner": "tools/sico/python/sico/configuration/provider.py",
+      "exports": {
+        "validate_config": "validate_config"
+      },
+      "consumers": [
+        "tools/ai/python/tests/test_configuration_contracts.py"
+      ],
+      "external_consumers": "No remaining production cross-module imports of validate_config use the old path; provider construction still calls this alias internally. Supported downstream imports require migration confirmation.",
+      "evidence": [
+        "tools/ai/python/tests/test_configuration_contracts.py",
+        "tools/ai/python/tests/test_agent_provider_config.py",
+        "tools/ai/python/tests/test_session_snapshot_contract.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported downstream validate_config imports to configuration.provider and verify no old imports remain before removing only this alias in the next incompatible API version. Configuration selection, credential lookup and provider construction remain canonical here."
+    },
+    {
+      "legacy": "sico.codex.settings captured option validation aliases",
+      "source": "tools/sico/python/sico/codex/settings.py",
+      "replacement": "tools/sico/python/sico/configuration/codex.py",
+      "owner": "tools/sico/python/sico/configuration/codex.py",
+      "exports": {
+        "DEFAULT_IDLE_TIMEOUT": "DEFAULT_IDLE_TIMEOUT",
+        "codex_idle_timeout": "codex_idle_timeout",
+        "validate_codex": "validate_codex"
+      },
+      "consumers": [
+        "tools/sico/python/sico/codex/backend.py",
+        "tools/ai/python/tests/test_agent_codex_protocol.py",
+        "tools/ai/python/tests/test_configuration_contracts.py"
+      ],
+      "external_consumers": "Supported downstream imports require migration confirmation before removal.",
+      "evidence": [
+        "tools/ai/python/tests/test_configuration_contracts.py",
+        "tools/ai/python/tests/test_agent_codex_protocol.py",
+        "tools/ai/python/tests/test_session_snapshot_contract.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate the listed imports and supported downstream callers to configuration.codex, then remove only these aliases in the next incompatible API version. CodexSettings, executable selection, tool timeout and base label remain canonical runtime behavior."
+    },
+    {
+      "legacy": "sico.service.lsf_config batch configuration aliases",
+      "source": "tools/sico/python/sico/service/lsf_config.py",
+      "replacement": "tools/sico/python/sico/configuration/lsf.py",
+      "owner": "tools/sico/python/sico/configuration/lsf.py",
+      "exports": {
+        "LsfConfig": "LsfConfig",
+        "label": "label",
+        "lsf_settings": "lsf_settings"
+      },
+      "consumers": [
+        "tools/sico/python/sico/service/background_config.py",
+        "tools/sico/python/sico/service/lsf_evidence.py",
+        "tools/ai/python/tests/agent_lsf_fixtures.py",
+        "tools/ai/python/tests/test_agent_service_lsf_acceptance.py",
+        "tools/ai/python/tests/test_configuration_contracts.py"
+      ],
+      "external_consumers": "Supported downstream imports and serialized references to the historical class module require migration confirmation before removal.",
+      "evidence": [
+        "tools/ai/python/tests/test_configuration_contracts.py",
+        "tools/ai/python/tests/test_agent_service_lsf_boundaries.py",
+        "tools/ai/python/tests/test_agent_service_lsf_node.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate all listed symbols and supported downstream imports to configuration.lsf; verify no old imports or historical serialized class references remain before deleting this compatibility-only module in the next incompatible API version."
+    },
+    {
+      "legacy": "sico.codex.local_process local process owner alias",
+      "source": "tools/sico/python/sico/codex/local_process.py",
+      "replacement": "tools/sico/python/sico/local_process.py",
+      "owner": "tools/sico/python/sico/local_process.py",
+      "exports": {
+        "LocalProcess": "LocalProcess"
+      },
+      "consumers": [
+        "tools/ai/python/tests/test_local_process.py"
+      ],
+      "external_consumers": "All repository production consumers and the native acceptance fixture now use sico.local_process; supported downstream imports still require migration confirmation.",
+      "evidence": [
+        "tools/ai/python/tests/test_local_process.py",
+        "tools/ai/python/tests/test_agent_service_local_descendants.py",
+        "tools/utility/tests/test_local_process_boundaries.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Confirm supported downstream imports migrated to sico.local_process and no old imports remain except the compatibility identity regression, then remove this compatibility-only module in the next incompatible API version."
+    },
+    {
+      "legacy": "sico.service.lsf_commands shared LSF aliases",
+      "source": "tools/sico/python/sico/service/lsf_commands.py",
+      "replacement": "tools/sico/python/sico/lsf/commands.py",
+      "owner": "tools/sico/python/sico/lsf/commands.py",
+      "exports": {
+        "command_environment": "command_environment",
+        "run_command": "run_command"
+      },
+      "consumers": [
+        "tools/ai/python/tests/test_lsf_shared_control.py"
+      ],
+      "external_consumers": "Repository production callers now use sico.lsf directly. Supported downstream imports require migration confirmation before removal.",
+      "evidence": [
+        "tools/ai/python/tests/test_lsf_shared_control.py",
+        "tools/ai/python/tests/test_agent_service_lsf.py",
+        "tools/utility/tests/test_lsf_boundaries.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Confirm supported downstream imports migrated to sico.lsf.commands and no old imports remain except alias identity tests, then remove only this compatibility module in the next incompatible API version."
+    },
+    {
+      "legacy": "sico.service.lsf_output shared LSF aliases",
+      "source": "tools/sico/python/sico/service/lsf_output.py",
+      "replacement": "tools/sico/python/sico/lsf/output.py",
+      "owner": "tools/sico/python/sico/lsf/output.py",
+      "exports": {
+        "STATES": "STATES",
+        "FIELDS": "FIELDS",
+        "missing": "missing",
+        "submitted": "submitted",
+        "jobs": "jobs",
+        "history": "history"
+      },
+      "consumers": [
+        "tools/ai/python/tests/test_lsf_shared_control.py"
+      ],
+      "external_consumers": "Repository production callers now use sico.lsf directly. Supported downstream imports require migration confirmation before removal.",
+      "evidence": [
+        "tools/ai/python/tests/test_lsf_shared_control.py",
+        "tools/ai/python/tests/test_agent_service_lsf.py",
+        "tools/utility/tests/test_lsf_boundaries.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Confirm supported downstream imports migrated to sico.lsf.output and no old imports remain except alias identity tests, then remove only this compatibility module in the next incompatible API version."
+    },
+    {
+      "legacy": "sico.service.audit_runtime scope alias",
+      "source": "tools/sico/python/sico/service/audit_runtime.py",
+      "replacement": "tools/sico/python/sico/core/input_scope.py",
+      "owner": "tools/sico/python/sico/core/input_scope.py",
+      "exports": {
+        "InputScope": "InputScope"
+      },
+      "consumers": [
+        "tools/ai/python/tests/test_input_assembly.py"
+      ],
+      "external_consumers": "Repository backend and workbench callers use the canonical input assembly. Historical downstream imports must be confirmed migrated before removing aliases.",
+      "evidence": [
+        "tools/ai/python/tests/test_input_assembly.py",
+        "tools/utility/tests/test_input_assembly_boundaries.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported downstream imports to core/input_scope.py and confirm no old imports remain except alias identity tests; remove only these exports in the next incompatible API version. AuditRuntime and assemble remain current service adapters."
+    },
+    {
+      "legacy": "sico.service.audit_runtime input composition aliases",
+      "source": "tools/sico/python/sico/service/audit_runtime.py",
+      "replacement": "tools/sico/python/sico/codex/input_assembly.py",
+      "owner": "tools/sico/python/sico/codex/input_assembly.py",
+      "exports": {
+        "capture": "capture",
+        "request_owner": "request_owner",
+        "child_inputs": "child_inputs"
+      },
+      "consumers": [
+        "tools/sico/python/sico/service/audit_runtime.py",
+        "tools/ai/python/tests/test_input_assembly.py"
+      ],
+      "external_consumers": "Repository backend and workbench callers use the canonical input assembly. Historical downstream imports must be confirmed migrated before removing aliases.",
+      "evidence": [
+        "tools/ai/python/tests/test_input_assembly.py",
+        "tools/utility/tests/test_input_assembly_boundaries.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported downstream imports to codex/input_assembly.py and confirm no old imports remain except alias identity tests; remove only these exports in the next incompatible API version. AuditRuntime and assemble remain current service adapters."
+    },
+    {
+      "legacy": "sico.service.audit_questions question values compatibility exports",
+      "source": "tools/sico/python/sico/service/audit_questions.py",
+      "replacement": "tools/sico/python/sico/core/audit_questions.py",
+      "owner": "tools/sico/python/sico/core/audit_questions.py",
+      "exports": {
+        "NEW_WINDOW_OPTION": "NEW_WINDOW_OPTION",
+        "QUESTION": "QUESTION",
+        "bounded": "bounded",
+        "questions": "questions",
+        "same_host_questions": "same_host_questions"
+      },
+      "consumers": [
+        "tools/ai/python/tests/test_interaction_capabilities.py",
+        "tools/ai/python/tests/test_approval_contracts.py"
+      ],
+      "external_consumers": "Supported downstream imports require migration confirmation before retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_approval_contracts.py",
+        "tools/utility/tests/test_approval_boundaries.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Production callers already use the named owner. Confirm supported downstream migration and no remaining old imports except alias identity tests, then remove these aliases in the next incompatible API release."
+    },
+    {
+      "legacy": "sico.service.audit_records native record projector compatibility exports",
+      "source": "tools/sico/python/sico/service/audit_records.py",
+      "replacement": "tools/sico/python/sico/codex/input_records.py",
+      "owner": "tools/sico/python/sico/codex/input_records.py",
+      "exports": {
+        "native_record": "native_record"
+      },
+      "consumers": [
+        "tools/ai/python/tests/test_approval_contracts.py"
+      ],
+      "external_consumers": "Supported downstream imports require migration confirmation before retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_approval_contracts.py",
+        "tools/utility/tests/test_approval_boundaries.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Production callers already use the named owner. Confirm supported downstream migration and no remaining old imports except alias identity tests, then remove these aliases in the next incompatible API release."
+    },
+    {
+      "legacy": "sico.service.audit_instructions.INSTRUCTIONS compatibility export",
+      "source": "tools/sico/python/sico/service/audit_instructions.py",
+      "replacement": "tools/sico/python/sico/codex/audit_instructions.py",
+      "owner": "tools/sico/python/sico/codex/audit_instructions.py",
+      "exports": {
+        "INSTRUCTIONS": "INSTRUCTIONS"
+      },
+      "consumers": [
+        "tools/ai/python/tests/test_runtime_guidance.py"
+      ],
+      "external_consumers": "Supported downstream imports require migration confirmation before retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_runtime_guidance.py",
+        "tools/utility/tests/test_runtime_guidance_boundaries.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported downstream imports to codex.audit_instructions and confirm no old imports remain except alias identity tests, then remove this compatibility module in the next incompatible API release."
+    },
+    {
+      "legacy": "sico.service.workbench.INSTRUCTIONS compatibility export",
+      "source": "tools/sico/python/sico/service/workbench.py",
+      "replacement": "tools/sico/python/sico/core/workbench_instructions.py",
+      "owner": "tools/sico/python/sico/core/workbench_instructions.py",
+      "exports": {
+        "INSTRUCTIONS": "INSTRUCTIONS"
+      },
+      "consumers": [
+        "tools/ai/python/tests/test_runtime_guidance.py"
+      ],
+      "external_consumers": "Supported downstream imports require migration confirmation before retirement.",
+      "evidence": [
+        "tools/ai/python/tests/test_runtime_guidance.py",
+        "tools/utility/tests/test_runtime_guidance_boundaries.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "Migrate supported downstream imports to core.workbench_instructions and confirm no old imports remain except alias identity tests, then remove this compatibility export in the next incompatible API release."
+    },
+    {
+      "legacy": "cadai.result_tools artifact storage compatibility exports",
+      "source": "tools/ai/python/cadai/result_tools.py",
+      "replacement": "tools/ai/python/cadai/result_store.py",
+      "owner": "tools/ai/python/cadai/result_store.py",
+      "exports": {
+        "ResultStore": "ResultStore",
+        "ARTIFACT_SCHEMAS": "ARTIFACT_SCHEMAS",
+        "MAX_BYTES": "MAX_BYTES"
+      },
+      "consumers": [
+        "tools/ai/python/tests/ac_spec_fixture.py",
+        "tools/ai/python/tests/measurement_catalog_fixture.py",
+        "tools/ai/python/tests/waveform_spec_fixture.py",
+        "tools/ai/python/tests/test_ac_measure.py",
+        "tools/ai/python/tests/test_ac_response.py",
+        "tools/ai/python/tests/test_agent_results.py",
+        "tools/ai/python/tests/test_agent_workbench.py",
+        "tools/ai/python/tests/test_measurement_catalog_semantics.py",
+        "tools/ai/python/tests/test_result_contract.py",
+        "tools/ai/python/tests/test_sico_migration_material.py",
+        "tools/ai/python/tests/test_sico_result_state.py",
+        "tools/ai/python/tests/test_waveform_measure.py",
+        "tools/ai/python/tests/test_waveform_pair.py",
+        "tools/ai/python/tests/test_result_store.py"
+      ],
+      "external_consumers": "Supported downstream imports and ResultStore subclasses need migration confirmation before the historical exports can retire.",
+      "evidence": [
+        "tools/ai/python/tests/test_result_store.py",
+        "tools/utility/tests/test_result_store_boundaries.py",
+        "tools/ai/python/tests/test_result_contract.py"
+      ],
+      "status": "retained",
+      "allow_exposure": true,
+      "exit_condition": "All production storage consumers now use result_store. Migrate remaining fixtures and supported downstream imports/subclasses to that owner, retain alias identity coverage, then remove only these aliases in the next incompatible API release; result tool execution stays supported."
+    },
+    {
+      "legacy": "McpServer pre-preparation PdkSession constructor retry",
+      "source": "tools/ai/python/cadai/mcp.py",
+      "replacement": "tools/ai/python/cadai/pdk_session.py",
+      "owner": "tools/ai/python/cadai/pdk_session.py",
+      "consumers": [],
+      "external_consumers": "C5 distinguishes module importers from consumers of each exported symbol; supported archived data and external integrations remain within the documented contract.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Completed in EQ-08 C5: the only old fixture now accepts workspace/entry. Constructor errors propagate once; no retry without captured configuration."
+    },
+    {
+      "legacy": "TemplateCatalog retained tpl/SQLite references",
+      "source": "tools/ai/python/cadai/template_catalog.py",
+      "replacement": "tools/ai/python/cadai/template_standard/reader.py",
+      "owner": "tools/ai/python/cadai/template_standard/reader.py",
+      "consumers": [
+        "tools/ai/python/cadai/mcp_creation_handler.py",
+        "tools/ai/python/cadai/mcp_template_handler.py",
+        "tools/ai/python/cadai/template_circuit.py",
+        "tools/ai/python/cadai/template_placement.py",
+        "tools/ai/python/cadai/template_prepare.py",
+        "tools/ai/python/cadai/template_routing.py",
+        "tools/ai/python/cadai/template_symbol.py",
+        "tools/ai/python/tests/template_circuit_fixture.py",
+        "tools/ai/python/tests/template_gate_source.py",
+        "tools/ai/python/tests/template_pdk_support.py",
+        "tools/ai/python/tests/template_qualification_fixture.py",
+        "tools/ai/python/tests/template_smic28_fixture.py",
+        "tools/ai/python/tests/template_standard_builtin_acceptance.py",
+        "tools/ai/python/tests/template_symbol_fixture.py",
+        "tools/ai/python/tests/test_circuit_templates.py",
+        "tools/ai/python/tests/test_draw_symbol.py",
+        "tools/ai/python/tests/test_optional_resources_startup.py",
+        "tools/ai/python/tests/test_pdk_flow_gui.py",
+        "tools/ai/python/tests/test_template_boundaries.py",
+        "tools/ai/python/tests/test_template_builtin_install.py",
+        "tools/ai/python/tests/test_template_capture_boundaries.py",
+        "tools/ai/python/tests/test_template_capture_boundaries_native.py",
+        "tools/ai/python/tests/test_template_capture_complete.py",
+        "tools/ai/python/tests/test_template_circuit_pg.py",
+        "tools/ai/python/tests/test_template_classification.py",
+        "tools/ai/python/tests/test_template_custom_gates.py",
+        "tools/ai/python/tests/test_template_electrical_readiness.py",
+        "tools/ai/python/tests/test_template_extract_reuse.py",
+        "tools/ai/python/tests/test_template_gate_schematic_native.py",
+        "tools/ai/python/tests/test_template_library_identity_native.py",
+        "tools/ai/python/tests/test_template_library_launch.py",
+        "tools/ai/python/tests/test_template_library_reader.py",
+        "tools/ai/python/tests/test_template_library_tiers.py",
+        "tools/ai/python/tests/test_template_placement.py",
+        "tools/ai/python/tests/test_template_port_policy.py",
+        "tools/ai/python/tests/test_template_prepare_cache.py",
+        "tools/ai/python/tests/test_template_prepare_evidence_budget.py",
+        "tools/ai/python/tests/test_template_prepare_facade.py",
+        "tools/ai/python/tests/test_template_projection_boundaries.py",
+        "tools/ai/python/tests/test_template_relation_evidence.py",
+        "tools/ai/python/tests/test_template_reuse_input.py",
+        "tools/ai/python/tests/test_template_reuse_input_guards.py",
+        "tools/ai/python/tests/test_template_reuse_p2_native.py",
+        "tools/ai/python/tests/test_template_reuse_schema.py",
+        "tools/ai/python/tests/test_template_route_deform.py",
+        "tools/ai/python/tests/test_template_route_local_order.py",
+        "tools/ai/python/tests/test_template_route_pending.py",
+        "tools/ai/python/tests/test_template_route_tracks.py",
+        "tools/ai/python/tests/test_template_routing.py",
+        "tools/ai/python/tests/test_template_routing_native.py",
+        "tools/ai/python/tests/test_template_shared_terminals.py",
+        "tools/ai/python/tests/test_template_smic28_gui.py",
+        "tools/ai/python/tests/test_template_snapshot.py",
+        "tools/ai/python/tests/test_template_standard.py",
+        "tools/ai/python/tests/test_template_standard_derived.py",
+        "tools/ai/python/tests/test_template_standard_migrate.py",
+        "tools/ai/python/tests/test_template_standard_overlay.py",
+        "tools/ai/python/tests/test_template_standard_projection.py",
+        "tools/ai/python/tests/test_template_standard_symbol.py",
+        "tools/ai/python/tests/test_template_standard_versions.py",
+        "tools/ai/python/tests/test_template_symbol.py",
+        "tools/ai/python/tests/test_template_training.py",
+        "tools/ai/python/tests/test_template_transport.py",
+        "tools/ai/python/tests/test_template_views.py",
+        "tools/ai/reference/circuit_templates/install_standard.py"
+      ],
+      "external_consumers": "C5 distinguishes module importers from consumers of each exported symbol; supported archived data and external integrations remain within the documented contract.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
+      "status": "retained",
+      "allow_exposure": false,
+      "exit_condition": "Retire only when the published archive support policy drops tpl references and supported catalogs have an explicitly verified migration. New standard ctpl packages remain authoritative; never rewrite old references implicitly."
+    },
+    {
+      "legacy": "Frozen template legacy classification",
+      "source": "tools/ai/python/cadai/template_classification_legacy.py",
+      "replacement": "tools/ai/python/cadai/template_classification.py",
+      "owner": "tools/ai/python/cadai/template_classification.py",
+      "consumers": [
+        "tools/ai/python/cadai/template_classification.py"
+      ],
+      "external_consumers": "C5 distinguishes module importers from consumers of each exported symbol; supported archived data and external integrations remain within the documented contract.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
+      "status": "retained",
+      "allow_exposure": false,
+      "exit_condition": "Retire this frozen classifier only when retained captures with its version are no longer supported or an explicit archive migration preserves their pinned identity; never reclassify them silently with v2."
+    },
+    {
+      "legacy": "Frozen template v1 classification",
+      "source": "tools/ai/python/cadai/template_classification_v1.py",
+      "replacement": "tools/ai/python/cadai/template_classification.py",
+      "owner": "tools/ai/python/cadai/template_classification.py",
+      "consumers": [
+        "tools/ai/python/cadai/template_classification.py"
+      ],
+      "external_consumers": "C5 distinguishes module importers from consumers of each exported symbol; supported archived data and external integrations remain within the documented contract.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
+      "status": "retained",
+      "allow_exposure": false,
+      "exit_condition": "Retire this frozen classifier only when retained captures with its version are no longer supported or an explicit archive migration preserves their pinned identity; never reclassify them silently with v2."
+    },
+    {
+      "legacy": "Template preparation exact v1 use projection",
+      "source": "tools/ai/python/cadai/template_prepare.py",
+      "replacement": "tools/ai/python/cadai/template_circuit.py",
+      "owner": "tools/ai/python/cadai/template_circuit.py",
+      "consumers": [
+        "tools/ai/python/cadai/mcp_bindings.py",
+        "tools/ai/python/cadai/mcp_definitions.py",
+        "tools/ai/python/cadai/mcp_template_handler.py",
+        "tools/ai/python/tests/test_template_multi_omit.py",
+        "tools/ai/python/tests/test_template_prepare_cache.py",
+        "tools/ai/python/tests/test_template_prepare_evidence_budget.py",
+        "tools/ai/python/tests/test_template_prepare_facade.py",
+        "tools/ai/python/tests/test_template_prepare_guard.py",
+        "tools/ai/python/tests/test_template_prepare_options.py",
+        "tools/ai/python/tests/test_template_prepare_workflow.py",
+        "tools/ai/python/tests/test_template_ready_cache.py",
+        "tools/ai/python/tests/test_template_reuse_input_guards.py"
+      ],
+      "external_consumers": "C5 distinguishes module importers from consumers of each exported symbol; supported archived data and external integrations remain within the documented contract.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
+      "status": "retained",
+      "allow_exposure": false,
+      "exit_condition": "Retain while exact-mode fixed template references use the v1 template-use contract. Retire with a versioned consumer migration and equivalent mapping/qualification checks; core adaptation stays a separate current mode."
+    },
+    {
+      "legacy": "lefpy.environment EDA restoration alias",
+      "source": "tools/lef/python/lefpy/environment.py",
+      "replacement": "tools/common/python/cadenv.py",
+      "owner": "tools/common/python/cadenv.py",
+      "consumers": [
+        "tools/common/python/tests/test_cadenv.py",
+        "tools/lef/python/lefpy/runner.py"
+      ],
+      "external_consumers": "C5 distinguishes module importers from consumers of each exported symbol; supported archived data and external integrations remain within the documented contract.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
+      "status": "retained",
+      "allow_exposure": false,
+      "exit_condition": "Migrate lefpy.runner and supported site imports to cadenv, then remove this alias-only module at an incompatible import-API release.",
+      "exports": {
+        "restore_eda_temp_environment": "restore_eda_temp_environment"
+      }
+    },
+    {
+      "legacy": "MtsMainWindow workspace action properties",
+      "source": "tools/mtsnl/python/mtsnetlistor/gui/main_window.py",
+      "replacement": "tools/mtsnl/python/mtsnetlistor/gui/workspace_actions.py",
+      "owner": "tools/mtsnl/python/mtsnetlistor/gui/workspace_actions.py",
+      "consumers": [
+        "tools/mtsnl/python/mtsnetlistor/gui/app.py",
+        "tools/mtsnl/tests/gui_defaults_dialect_cases.py",
+        "tools/mtsnl/tests/gui_defaults_queue_cases.py",
+        "tools/mtsnl/tests/gui_defaults_revision_cases.py",
+        "tools/mtsnl/tests/gui_defaults_values_cases.py",
+        "tools/mtsnl/tests/gui_generation_identity_cases.py",
+        "tools/mtsnl/tests/gui_layout_cases.py",
+        "tools/mtsnl/tests/gui_log_cases.py",
+        "tools/mtsnl/tests/gui_process_tab_cases.py",
+        "tools/mtsnl/tests/gui_project_cases.py",
+        "tools/mtsnl/tests/gui_publication_handoff_cases.py",
+        "tools/mtsnl/tests/gui_publication_target_cases.py",
+        "tools/mtsnl/tests/gui_result_cases.py",
+        "tools/mtsnl/tests/gui_source_catalog_cases.py",
+        "tools/mtsnl/tests/gui_source_guard_cases.py",
+        "tools/mtsnl/tests/gui_source_selection_cases.py",
+        "tools/mtsnl/tests/gui_table_cases.py",
+        "tools/mtsnl/tests/gui_window_fixtures.py",
+        "tools/mtsnl/tests/gui_workspace_io_cases.py",
+        "tools/mtsnl/tests/gui_workspace_transaction_cases.py",
+        "tools/mtsnl/tests/test_gui_composition.py",
+        "tools/mtsnl/tests/test_gui_draft_ownership.py",
+        "tools/mtsnl/tests/test_gui_worker_log.py"
+      ],
+      "external_consumers": "C5 distinguishes module importers from consumers of each exported symbol; supported archived data and external integrations remain within the documented contract.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
+      "status": "retained",
+      "allow_exposure": false,
+      "exit_condition": "Move scripted _workspace_config/_save_workspace_config/_load_workspace_config/_replace_workspace/_show_workspace_error consumers to explicit WorkspaceActions before removing host property adapters; never copy workspace state."
+    },
+    {
+      "legacy": "MtsMainWindow batch action properties",
+      "source": "tools/mtsnl/python/mtsnetlistor/gui/main_window.py",
+      "replacement": "tools/mtsnl/python/mtsnetlistor/gui/process_batch.py",
+      "owner": "tools/mtsnl/python/mtsnetlistor/gui/process_batch.py",
+      "consumers": [
+        "tools/mtsnl/python/mtsnetlistor/gui/app.py",
+        "tools/mtsnl/tests/gui_defaults_dialect_cases.py",
+        "tools/mtsnl/tests/gui_defaults_queue_cases.py",
+        "tools/mtsnl/tests/gui_defaults_revision_cases.py",
+        "tools/mtsnl/tests/gui_defaults_values_cases.py",
+        "tools/mtsnl/tests/gui_generation_identity_cases.py",
+        "tools/mtsnl/tests/gui_layout_cases.py",
+        "tools/mtsnl/tests/gui_log_cases.py",
+        "tools/mtsnl/tests/gui_process_tab_cases.py",
+        "tools/mtsnl/tests/gui_project_cases.py",
+        "tools/mtsnl/tests/gui_publication_handoff_cases.py",
+        "tools/mtsnl/tests/gui_publication_target_cases.py",
+        "tools/mtsnl/tests/gui_result_cases.py",
+        "tools/mtsnl/tests/gui_source_catalog_cases.py",
+        "tools/mtsnl/tests/gui_source_guard_cases.py",
+        "tools/mtsnl/tests/gui_source_selection_cases.py",
+        "tools/mtsnl/tests/gui_table_cases.py",
+        "tools/mtsnl/tests/gui_window_fixtures.py",
+        "tools/mtsnl/tests/gui_workspace_io_cases.py",
+        "tools/mtsnl/tests/gui_workspace_transaction_cases.py",
+        "tools/mtsnl/tests/test_gui_composition.py",
+        "tools/mtsnl/tests/test_gui_draft_ownership.py",
+        "tools/mtsnl/tests/test_gui_worker_log.py"
+      ],
+      "external_consumers": "C5 distinguishes module importers from consumers of each exported symbol; supported archived data and external integrations remain within the documented contract.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
+      "status": "retained",
+      "allow_exposure": false,
+      "exit_condition": "Move scripts and fixtures using _run_all*, _run_next_process, _poll_run_all, _finish_run_all and _cancel_all to ProcessBatch before retiring properties. run_all/cancel_all remain supported host actions; no duplicate timer/state."
+    },
+    {
+      "legacy": "ProfileSetting task-bearing journal without profile event",
+      "source": "tools/sico/python/sico/codex/profile_setting.py",
+      "replacement": "tools/sico/python/sico/codex/profile_setting.py:ProfileSetting",
+      "owner": "tools/sico/python/sico/codex/profile_setting.py:ProfileSetting",
+      "consumers": [
+        "tools/ai/python/tests/test_agent_tool_profile.py",
+        "tools/sico/python/sico/codex/backend.py",
+        "tools/sico/python/sico/codex/runtime_assembly.py"
+      ],
+      "external_consumers": "C5 distinguishes module importers from consumers of each exported symbol; supported archived data and external integrations remain within the documented contract.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md"
+  ],
+  "status": "retained",
+  "allow_exposure": false,
+  "exit_condition": "Retire only when journals without codex.tool.profile are no longer supported. Missing/default/project records migrate once to the automatic host surface; explicit session profiles remain frozen for their session."
+},
+    {
+      "legacy": "ResourceSelection evidenced pre-selection journals",
+      "source": "tools/sico/python/sico/codex/resource_selection.py",
+      "replacement": "tools/sico/python/sico/agent_resources/snapshot.py",
+      "owner": "tools/sico/python/sico/agent_resources/snapshot.py",
+      "consumers": [
+        "tools/sico/python/sico/codex/resources.py"
+      ],
+      "external_consumers": "C5 distinguishes module importers from consumers of each exported symbol; supported archived data and external integrations remain within the documented contract.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
+      "status": "retained",
+      "allow_exposure": false,
+      "exit_condition": "Retire when supported journals all contain codex.resources.selected or undergo an explicit evidenced migration. Reject incomplete/new-format and latest failed inventories; do not guess an older successful choice."
+    },
+    {
+      "legacy": "Service custody on supported kernels without pidfds",
+      "source": "tools/sico/python/sico/service/service_custody.py",
+      "replacement": "tools/common/python/sicoprocess.py",
+      "owner": "tools/common/python/sicoprocess.py",
+      "consumers": [
+        "tools/sico/python/sico/service/service_entry.py",
+        "tools/sico/python/sico/service/service_force_stop.py"
+      ],
+      "external_consumers": "C5 distinguishes module importers from consumers of each exported symbol; supported archived data and external integrations remain within the documented contract.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
+      "status": "retained",
+      "allow_exposure": false,
+      "exit_condition": "Retire only after supported target-host policy requires working pidfds and the no-pidfd path is no longer needed. Until then only an unreaped direct-child owner can signal; persisted PID alone never authorizes termination."
+    },
+    {
+      "legacy": "SessionRecovery paused diagnostic controls",
+      "source": "tools/sico/python/sico_ui/session_recovery.py",
+      "replacement": "tools/sico/python/sico_ui/session_activation.py",
+      "owner": "tools/sico/python/sico_ui/session_activation.py",
+      "consumers": [
+        "tools/sico/python/sico_ui/service_connection.py"
+      ],
+      "external_consumers": "C5 distinguishes module importers from consumers of each exported symbol; supported archived data and external integrations remain within the documented contract.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
+      "status": "retained",
+      "allow_exposure": false,
+      "exit_condition": "Normal continuation uses SessionPage.continue_session. Retire inspect/restore/paused-input controls only after supported diagnostic clients migrate and the diagnostic interface is explicitly withdrawn; keep authorization, scope and late-receipt checks."
+    },
+    {
+      "legacy": "SessionTokens Controller-input adapter",
+      "source": "tools/sico/python/sico/service/worker.py",
+      "replacement": "tools/sico/python/sico/service/session_tokens.py",
+      "owner": "tools/sico/python/sico/service/session_tokens.py",
+      "consumers": [],
+      "external_consumers": "C5 distinguishes module importers from consumers of each exported symbol; supported archived data and external integrations remain within the documented contract.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
+      "status": "removed",
+      "allow_exposure": false,
+      "exit_condition": "Completed in EQ-08 C5: all repository Worker inputs use SessionToken. Raw Controller and lookalike objects are rejected at admission; runtime is resolved again at execution."
+    },
+    {
+      "legacy": "MCP tool_help advertised-name alias",
+      "source": "tools/ai/python/cadai/mcp_definitions.py",
+      "replacement": "tools/ai/python/cadai/tool_help.py:cds_help",
+      "owner": "tools/ai/python/cadai/tool_help.py:cds_help",
+      "consumers": [
+        "tools/ai/python/cadai/mcp_registry.py",
+        "tools/ai/python/tests/test_cds_help.py"
+      ],
+      "external_consumers": "C5 distinguishes module importers from consumers of each exported symbol; supported archived data and external integrations remain within the documented contract.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md"
+      ],
+      "status": "retained",
+      "allow_exposure": false,
+      "exit_condition": "Retire tool_help only after supported MCP callers migrate to advertised cds_help and an incompatible tool API explicitly removes the alias. Both spellings resolve to one binding; no second implementation."
     }
   ]
 }

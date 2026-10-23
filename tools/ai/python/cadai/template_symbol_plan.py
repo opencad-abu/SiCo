@@ -16,7 +16,7 @@ from .template_schema import (
 )
 
 VERSION = "cad.template.symbol.v1"
-PORT_PATTERN = r"[A-Za-z_][A-Za-z0-9_!]*(?:<[0-9]+(?::[0-9]+)?>)?"
+PORT_PATTERN = r"[A-Za-z_][A-Za-z0-9_!+-]*(?:<[0-9]+(?::[0-9]+)?>)?"
 SIGNALS = {
     "analog",
     "clock",
@@ -47,10 +47,30 @@ def members(name):
 
 
 def make_plan(record, args):
+    from .template_standard.replay import require_symbol
+
+    requested_style = args.get("style", "auto")
+    label_policy = args.get("label_policy", "strict")
+    if label_policy not in {"strict", "drop", "preserve"}:
+        raise TemplateError("unsupported label_policy: " + str(label_policy))
+    require_symbol(record, "rectangular_module" if requested_style == "auto" else requested_style)
     require_legacy_consumer(record)
     topology = record.get("topology")
     if not topology:
         raise TemplateUnavailable("symbol creation requires a schematic topology template")
+    family = args.get("family")
+    family_error = None
+    if requested_style in {"symbol_family", "auto"} and family:
+        try:
+            from .template_symbol_family import family_plan
+
+            return family_plan(record, family, {**args, "requested_style": requested_style})
+        except (TemplateError, TemplateUnavailable) as exc:
+            if requested_style == "symbol_family":
+                raise
+            family_error = str(exc)[:512]
+    elif requested_style == "symbol_family":
+        raise TemplateUnavailable("symbol_family requires a family record")
     ports, nets = topology["ports"], {n["id"]: n for n in topology["nets"]}
     if (
         any(n["num_bits"] > 1 for n in nets.values())
@@ -145,6 +165,15 @@ def make_plan(record, args):
         "fixed_annotations": ["cdsTerm(terminal_name)", "[@instanceName]"],
         "pin_policy": PIN_POLICY,
         "style": "rectangular_module",
+        "requested_style": requested_style,
+        "fallback_reason": None,
+        "family_error": family_error,
+        "label_policy": label_policy,
+        "annotations": [],
+        "annotation_count": 0,
+        "annotation_overlaps": [],
+        "dropped_labels": [],
+        "label_expression_policy": "literal_only; dynamic_rejected; no_evaluator",
         "interface_basis": "schematic_template",
         "source_symbol_differences": record.get("assets", {})
         .get("symbol", {})
@@ -165,10 +194,34 @@ def make_plan(record, args):
         )
     if len(canonical(plan).encode()) > 75000:
         raise TemplateUnavailable("symbol plan exceeds response budget")
-    if args.get("style") == "template_outline":
-        from .template_symbol_outline import outline_plan
+    if requested_style in {"auto", "template_outline"}:
+        if "symbol" not in record.get("assets", {}):
+            if requested_style == "template_outline" or args.get("port_roles"):
+                raise TemplateUnavailable("symbol outline unavailable: no captured symbol asset")
+            plan["fallback_reason"] = {
+                "code": "no_symbol_asset",
+                "message": "template has no captured symbol outline",
+            }
+            return {**plan, "preview_digest": digest(plan)}
+        try:
+            require_symbol(record, "template_outline")
+            from .template_symbol_outline import outline_plan
 
-        return outline_plan(record, plan, args.get("outline_scale", 1), args.get("port_roles", {}))
+            return outline_plan(
+                record,
+                plan,
+                args.get("outline_scale", 1),
+                args.get("port_roles", {}),
+                label_policy,
+            )
+        except (TemplateError, TemplateUnavailable) as exc:
+            if requested_style == "template_outline" or args.get("port_roles"):
+                raise
+            plan["fallback_reason"] = {
+                "code": "outline_unavailable",
+                "message": str(exc)[:512],
+            }
+            return {**plan, "preview_digest": digest(plan)}
     if args.get("port_roles"):
         raise TemplateError("port_roles requires style=template_outline")
     return {**plan, "preview_digest": digest(plan)}
@@ -178,7 +231,7 @@ def write_preview(plan, root):
     """Render the actual OA plan; never interpret labels taken from a reference."""
     directory = root / (plan["preview_digest"] + "-symbol-v1")
     directory.mkdir(parents=True, exist_ok=True)
-    if plan["style"] == "template_outline":
+    if plan["style"] in {"template_outline", "symbol_family"}:
         from .template_symbol_outline import outline_shapes
 
         lo, hi = plan["selection_box"]

@@ -13,10 +13,28 @@ from dataclasses import dataclass
 from typing import Any
 
 from .agent_profile import SUPPORTED_PROFILES, allowed_tool_names
+from .mcp_wire_schema import wire_input_schema
 
 
 class RegistryError(ValueError):
     """Raised when a tool registry cannot be constructed safely."""
+
+
+def wire_row(definition: Mapping[str, Any]) -> dict[str, Any]:
+    """Project one definition onto the four fields an MCP tool row carries.
+
+    Definitions may carry domain metadata and on-demand help text; neither is
+    part of an advertised row.  The stdio bridge and the server list share this
+    one projection so a new definition key can never leak by accident.
+    """
+    missing = [field for field in ("name", "description", "inputSchema", "annotations")
+               if field not in definition]
+    if missing:
+        raise RegistryError("definition lacks MCP fields: " + ", ".join(missing))
+    result = {field: definition[field]
+              for field in ("name", "description", "inputSchema", "annotations")}
+    result["inputSchema"] = wire_input_schema(definition)
+    return result
 
 
 def build_registry(
@@ -71,6 +89,26 @@ def require_registered_names(
     )
     if missing:
         raise RegistryError("handler tools missing from MCP registry: " + ", ".join(missing))
+
+
+def validate_aliases(
+    by_name: Mapping[str, Mapping[str, Any]],
+    aliases: Mapping[str, str],
+) -> None:
+    """Hidden call names resolve to one canonical tool and never shadow one.
+
+    Aliases exist for renamed tools whose old name must keep dispatching (for
+    example ``tool_help`` after the rename to ``cds_help``).  They are never
+    advertised, never carry a second schema and never bypass the canonical
+    tool's profile or host checks.
+    """
+    for alias, target in aliases.items():
+        if not isinstance(alias, str) or not alias or not isinstance(target, str) or not target:
+            raise RegistryError("MCP tool aliases require non-empty names")
+        if alias in by_name:
+            raise RegistryError(f"alias shadows a canonical MCP tool name: {alias}")
+        if target not in by_name:
+            raise RegistryError(f"MCP alias target is not registered: {alias} -> {target}")
 
 
 def require_bidirectional_bindings(
@@ -162,6 +200,8 @@ __all__ = [
     "RegistryError",
     "build_registry",
     "require_bidirectional_bindings",
+    "validate_aliases",
+    "wire_row",
     "ToolDefinition",
     "ToolArgumentError",
     "bind_tools",

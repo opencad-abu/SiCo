@@ -3,7 +3,7 @@
 ;------------------------------------------------------------------------------
 
 unless(and(boundp('sicoBatchCoreVersion)
-             sicoBatchCoreVersion=="20260923.batch.commands.v3")
+             sicoBatchCoreVersion=="20261020.batch.commands.v4")
 
 unless(boundp('cadBatchSerial)
   cadBatchSerial=0)
@@ -87,7 +87,7 @@ procedure(cadBatchJobName(flow batchId taskId)
 )
 
 procedure(cadBatchPythonExe(flow)
-  or(cadBatchAdapterPythonExe(flow) "python3")
+  or(cadBatchAdapterPythonExe(flow) SICO_installedPython() "python3")
 )
 
 procedure(cadBatchPythonEntry()
@@ -284,8 +284,8 @@ procedure(cadBatchIpcPostFunc(cid exitStatus)
 )
 
 procedure(cadBatchCoreRevision()
-  "20260923.batch.commands.v3"
+  "20261020.batch.commands.v4"
 )
 
-sicoBatchCoreVersion="20260923.batch.commands.v3"
+sicoBatchCoreVersion="20261020.batch.commands.v4"
 )

@@ -2,7 +2,12 @@
 
 Entry-context definitions replace the legacy focus-based aliases. No schema is
 redeclared here; MCP and the managed-agent adapters consume this same index.
+``ALIASES`` records hidden compatibility call names: dispatch resolves them to
+one canonical tool before any profile or host check, and they are never
+advertised or given a second definition.
 """
+
+from __future__ import annotations
 
 from . import mcp_bridge_schema as bridge
 from . import mcp_inspection_schema as inspection
@@ -21,8 +26,10 @@ from .circuit_tools import CIRCUIT_TOOLS
 from .document_tools import DOCUMENT_TOOLS
 from .entry_context import NAMES as ENTRY_NAMES
 from .entry_context import TOOLS as ENTRY_TOOLS
+from .mcp_help_schema import MCP_HELP_TOOL
 from .mcp_live_handler import LIVE_MODEL_TOOLS
-from .mcp_registry import build_registry
+from .mcp_registry import build_registry, validate_aliases
+from .schema_refs import auto_factor
 from .measurement_catalog import CATALOG_TOOLS
 from .pdk_binding_schema import BINDING_TOOLS
 from .pdk_schema import PDK_TOOLS
@@ -37,7 +44,7 @@ from .template_placement import TOOLS as TEMPLATE_PLACEMENT_TOOLS
 from .template_prepare import TOOLS as TEMPLATE_PREPARE_TOOLS
 from .template_schema import TOOLS as TEMPLATE_TOOLS
 from .template_symbol import TOOLS as TEMPLATE_SYMBOL_TOOLS
-from .tool_help_schema import TOOL_HELP_TOOL
+from .tool_help_schema import CDS_HELP_TOOL
 from .waveform_schema import WAVEFORM_TOOLS
 from .waveform_spec_schema import SPEC_TOOLS
 
@@ -53,13 +60,21 @@ _BASE_TOOLS = [
     snapshot.EXPORT_SCHEMATIC_TEXT,
     inspection.INSPECT_LAYOUT,
     inspection.INSPECT_SYMBOL_PORTS,
+    inspection.INSPECT_MASTER_EVIDENCE,
     inspection.LIST_LIBRARIES,
     inspection.INSPECT_LIBRARY,
     inspection.INSPECT_CONFIG_BINDING,
     bridge.EVAL_SKILL,
     bridge.LOAD_SKILL_FILE,
-    SKILL_CHECK_TOOL, SEARCH_TOOL, TOOL_HELP_TOOL,
+    SKILL_CHECK_TOOL, SEARCH_TOOL, CDS_HELP_TOOL, MCP_HELP_TOOL,
 ]
+
+# Hidden compatibility call names, never advertised and never given their own
+# schema; add an exit condition here when the compatibility window closes.
+ALIASES = {
+    "tool_help": "cds_help",
+    "prepare_circuit_library": "prepare_library",
+}
 
 TOOLS, TOOLS_BY_NAME = build_registry(
     _BASE_TOOLS,
@@ -73,3 +88,17 @@ TOOLS, TOOLS_BY_NAME = build_registry(
     replace_names=ENTRY_NAMES,
     replacements=ENTRY_TOOLS,
 )
+# Repeated authored subtrees are projected to one local $defs entry.  The
+# explicit schemas above remain the single source; auto_factor expands the
+# result back and refuses a mismatch.  Hand-factored schemas keep their names.
+for _tool in TOOLS:
+    _tool["inputSchema"], _ = auto_factor(_tool["inputSchema"])
+validate_aliases(TOOLS_BY_NAME, ALIASES)
+
+
+def resolve_tool_name(name: str) -> str | None:
+    """Canonical tool name for one callable name, or None when unknown."""
+    if name in TOOLS_BY_NAME:
+        return name
+    target = ALIASES.get(name)
+    return target if target in TOOLS_BY_NAME else None

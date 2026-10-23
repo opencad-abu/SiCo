@@ -4,7 +4,7 @@ from .ac_measure import measure_ac
 from .ac_schema import AC_MEASURE_SCHEMA, AC_TOOLS
 from .circuit_spec_schema import CircuitSpecError, validate
 from .result_contract import ResultError
-from .result_tools import ResultStore
+from .result_store import ResultStore
 from .waveform_tools import capture_waveform
 
 

@@ -1,0 +1,348 @@
+{
+  "absolute_floors": {
+    "approval": "PROPOSED_NOT_APPROVED",
+    "current_a": 1e-06,
+    "timing_s": 1e-07,
+    "voltage_v": 0.001
+  },
+  "baseline": {
+    "full_m3_complete": false,
+    "path": "/zone.disk/ssd1/path/to/sico-src/ai-verification-workbench/docs/IMPLEMENTATION_PLAN_LDO_MVP.md",
+    "sha256": "07a811aefeee349ecefa00b5b0c0026925697be8d70f3f395002049cac2748a2",
+    "stage": "M3"
+  },
+  "candidate_finally_frozen": false,
+  "checkpoint_version": 10,
+  "commit_or_push": "NOT_PERFORMED",
+  "completed_scope": [
+    "both_targets_complete_800us_public_references_live_source_rechecked",
+    "MASTER_17_of_17_reference_fidelity",
+    "AON_22_of_24_reference_fidelity_with_two_explicit_startup_breakpoint_exceptions",
+    "unchanged_candidate_full_Xcelium_execution_17_and_24_cases",
+    "candidate_repeat_identical_sample_values",
+    "full_matrix_correlation_to_both_reference_versions"
+  ],
+  "current_full_matrix_results": {
+    "AON": {
+      "artifact_counts": {
+        "control": 1,
+        "payload": 1017
+      },
+      "artifacts_verified": true,
+      "control_core_sha256": "3dff47cc630be4493c66447b3a85e8d0afa40f6773ac4c40c25bd8388e30566e",
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T081529.700856Z-refined-matrix-69676a3c3514/manifest.json",
+      "control_manifest_sha256": "ff5767737d055a9184cf4ec395801bc0f29b14472efc7828e4703d9cf61665cc",
+      "locator_counts": {
+        "control": 0,
+        "payload": 0
+      },
+      "payload_core_sha256": "49b5b04e8cf58e23c83f44b6c9246788893303e20c629431031bf8176b018819",
+      "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.refined_matrix/runs/20260908T081529.700856Z-refined-matrix-69676a3c3514/payload-manifest.json",
+      "payload_manifest_sha256": "a68ea95e644093f1cf3858ee276ff08aa446328a2f3866431d6f08484963f5f7",
+      "request_digest": "69676a3c3514a00a67d5091f1a99df7da8d4f649b0134ce5fee02a66c4d8dd0b",
+      "result": {
+        "candidate_failures": [
+          "startup_rate_0",
+          "startup_rate_1",
+          "startup_rate_2",
+          "supply_fall_rate_0",
+          "enable_rise_rate_0",
+          "enable_rise_rate_1",
+          "enable_rise_then_enable_fall"
+        ],
+        "candidate_repeat": "PASS",
+        "candidate_sha256": "c519a85910751534a6d9a1149f0b1bf2de22241b57f5cbd7e7fc49d6c8be8e20",
+        "cases": 24,
+        "crosscheck_passed": 17,
+        "final_freeze": false,
+        "formal_reference_qualified": false,
+        "holdout_evaluated": false,
+        "live_source_recheck": "PASS",
+        "physical_stimuli_unchanged": true,
+        "public_passed": 17,
+        "qualification": "NOT_ESTABLISHED",
+        "reference_fidelity_failures": [
+          "startup_rate_0",
+          "startup_rate_1"
+        ],
+        "reference_fidelity_passed": 22,
+        "reference_trapezoidal_ringing_cases": [],
+        "source_generation": "351942e09e4444b4ae89b098e9e5bc0d3fde90ff3d57ca9c7afee0296e20a0ee",
+        "status": "BLOCKED_CONTRACT"
+      },
+      "run_id": "20260908T081529.700856Z-refined-matrix-69676a3c3514",
+      "run_status": "BLOCKED_CONTRACT",
+      "status": "PASS",
+      "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.refined_matrix/runs/20260908T081529.700856Z-refined-matrix-69676a3c3514/summary.json",
+      "summary_sha256": "7e8bda7ab4956a3fa4c933a5a3b4cb416f230eb40c165b6fe73a4de1451d6015",
+      "target": "AON"
+    },
+    "MASTER": {
+      "artifact_counts": {
+        "control": 1,
+        "payload": 723
+      },
+      "artifacts_verified": true,
+      "control_core_sha256": "a76ce4aef7d884e2a9b8cb651346d320de5505365163e632fad4153666940d17",
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T080924.120788Z-refined-matrix-4fd10a9f7564/manifest.json",
+      "control_manifest_sha256": "95025b9dfc294932b6daacb92f8eb5db06452dafb4f9196605d268a7edfbe591",
+      "locator_counts": {
+        "control": 0,
+        "payload": 0
+      },
+      "payload_core_sha256": "12ec1edd0d647b0e6b023d1baf8cdc678d5b8a96de77ec2f9d440a20a843c1bb",
+      "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.refined_matrix/runs/20260908T080924.120788Z-refined-matrix-4fd10a9f7564/payload-manifest.json",
+      "payload_manifest_sha256": "fa80223fa7eb35149c8c50baac705d70e1764707bfbdaeb8f18d20969d991eb4",
+      "request_digest": "4fd10a9f756495118ac68a8f4dbf44bc8b3aaecf820473123fa5f00f37cf09b3",
+      "result": {
+        "candidate_failures": [
+          "startup_rate_0",
+          "startup_rate_1",
+          "startup_rate_2"
+        ],
+        "candidate_repeat": "PASS",
+        "candidate_sha256": "723d519fc8392711ddd5d45bd3801baa9356590fa626efafb9473b187c1e7372",
+        "cases": 17,
+        "crosscheck_passed": 14,
+        "final_freeze": false,
+        "formal_reference_qualified": false,
+        "holdout_evaluated": false,
+        "live_source_recheck": "PASS",
+        "physical_stimuli_unchanged": true,
+        "public_passed": 14,
+        "qualification": "NOT_ESTABLISHED",
+        "reference_fidelity_failures": [],
+        "reference_fidelity_passed": 17,
+        "reference_trapezoidal_ringing_cases": [],
+        "source_generation": "7b67ef6da4a3172ca4339f2368982bf7e0f33c0b290e14889fc1573d47fec8a8",
+        "status": "BLOCKED_CONTRACT"
+      },
+      "run_id": "20260908T080924.120788Z-refined-matrix-4fd10a9f7564",
+      "run_status": "BLOCKED_CONTRACT",
+      "status": "PASS",
+      "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.refined_matrix/runs/20260908T080924.120788Z-refined-matrix-4fd10a9f7564/summary.json",
+      "summary_sha256": "745b105d66d836c95c1257d2e8df9a65c2f2f7ae4e2448c78471199fc409f158",
+      "target": "MASTER"
+    }
+  },
+  "evidence_audit": {
+    "artifact_counts": {
+      "control": 1,
+      "payload": 1
+    },
+    "artifacts_verified": true,
+    "control_core_sha256": "12d8107715542f4ed4e26f2e6f461ad1ba547518b900bcd794134fddc34e0808",
+    "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T082324.763525Z-refined-reference-audit-d2d27ab8d73d/manifest.json",
+    "control_manifest_sha256": "a028459e9d94a57416b1336dfc3a2162524c7df7fafc88d4dfe9503e2ac79882",
+    "failed_reference_runs": [
+      {
+        "artifact_counts": {
+          "control": 2,
+          "payload": 378
+        },
+        "artifacts_verified": true,
+        "control_core_sha256": "37c188f8b5e5c12346b092015a1501dbbb92ec18a053a8cfbdcbbeb58e573e7f",
+        "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T080130.425674Z-recipe-run-3826f930d853/manifest.json",
+        "control_manifest_sha256": "e6f20ad9d59cf38f5c9c709676972c80ac2c947791d8716a2104879704e41663",
+        "locator_counts": {
+          "control": 0,
+          "payload": 0
+        },
+        "payload_core_sha256": "b7104ca9cace029f5d423ae3e55911d554ac57f92b9200bfca96072bc9c34d73",
+        "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.rnm_candidate/runs/20260908T080130.425674Z-recipe-run-3826f930d853/payload-manifest.json",
+        "payload_manifest_sha256": "1ee3a4adee989784dc2c1364665a824f14cd3968c1567acc722011560d07fc72",
+        "request_digest": "3826f930d853639d0b9c60fbbac513036d50f5c68bfb1da452f3f803bdcfc7d6",
+        "run_id": "20260908T080130.425674Z-recipe-run-3826f930d853",
+        "run_status": "BLOCKED_WORKFLOW",
+        "status": "PASS"
+      },
+      {
+        "artifact_counts": {
+          "control": 2,
+          "payload": 378
+        },
+        "artifacts_verified": true,
+        "control_core_sha256": "2e493639f0355e305a195da396ad93ec7bfbd892184e3cb2e446245d7d297819",
+        "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T080214.096932Z-recipe-run-86d37405965d/manifest.json",
+        "control_manifest_sha256": "cffe649ee37afeb6faddda7cdd4170181c3016b57e9446ca5ce3c8f4ba8d306c",
+        "locator_counts": {
+          "control": 0,
+          "payload": 0
+        },
+        "payload_core_sha256": "df5866eec8517594e6350bcb5d8fbf04565d70927232dcc34f26f6bd34a9fc9f",
+        "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.rnm_candidate/runs/20260908T080214.096932Z-recipe-run-86d37405965d/payload-manifest.json",
+        "payload_manifest_sha256": "e3fcc9ac371866c1fd48ed0715aa1f1eebc48e4780339ec8aa6d91bc4e37fa5c",
+        "request_digest": "86d37405965d1aae24798668d6e6c8b115052eb8bc1cd0db05e85f55471fdbe7",
+        "run_id": "20260908T080214.096932Z-recipe-run-86d37405965d",
+        "run_status": "BLOCKED_WORKFLOW",
+        "status": "PASS"
+      }
+    ],
+    "inputs": [
+      {
+        "artifact_counts": {
+          "control": 1,
+          "payload": 723
+        },
+        "artifacts_verified": true,
+        "control_core_sha256": "a76ce4aef7d884e2a9b8cb651346d320de5505365163e632fad4153666940d17",
+        "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T080924.120788Z-refined-matrix-4fd10a9f7564/manifest.json",
+        "control_manifest_sha256": "95025b9dfc294932b6daacb92f8eb5db06452dafb4f9196605d268a7edfbe591",
+        "locator_counts": {
+          "control": 0,
+          "payload": 0
+        },
+        "payload_core_sha256": "12ec1edd0d647b0e6b023d1baf8cdc678d5b8a96de77ec2f9d440a20a843c1bb",
+        "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.refined_matrix/runs/20260908T080924.120788Z-refined-matrix-4fd10a9f7564/payload-manifest.json",
+        "payload_manifest_sha256": "fa80223fa7eb35149c8c50baac705d70e1764707bfbdaeb8f18d20969d991eb4",
+        "request_digest": "4fd10a9f756495118ac68a8f4dbf44bc8b3aaecf820473123fa5f00f37cf09b3",
+        "result": {
+          "candidate_failures": [
+            "startup_rate_0",
+            "startup_rate_1",
+            "startup_rate_2"
+          ],
+          "candidate_repeat": "PASS",
+          "candidate_sha256": "723d519fc8392711ddd5d45bd3801baa9356590fa626efafb9473b187c1e7372",
+          "cases": 17,
+          "crosscheck_passed": 14,
+          "final_freeze": false,
+          "formal_reference_qualified": false,
+          "holdout_evaluated": false,
+          "live_source_recheck": "PASS",
+          "physical_stimuli_unchanged": true,
+          "public_passed": 14,
+          "qualification": "NOT_ESTABLISHED",
+          "reference_fidelity_failures": [],
+          "reference_fidelity_passed": 17,
+          "reference_trapezoidal_ringing_cases": [],
+          "source_generation": "7b67ef6da4a3172ca4339f2368982bf7e0f33c0b290e14889fc1573d47fec8a8",
+          "status": "BLOCKED_CONTRACT"
+        },
+        "run_id": "20260908T080924.120788Z-refined-matrix-4fd10a9f7564",
+        "run_status": "BLOCKED_CONTRACT",
+        "status": "PASS",
+        "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.refined_matrix/runs/20260908T080924.120788Z-refined-matrix-4fd10a9f7564/summary.json",
+        "summary_sha256": "745b105d66d836c95c1257d2e8df9a65c2f2f7ae4e2448c78471199fc409f158",
+        "target": "MASTER"
+      },
+      {
+        "artifact_counts": {
+          "control": 1,
+          "payload": 1017
+        },
+        "artifacts_verified": true,
+        "control_core_sha256": "3dff47cc630be4493c66447b3a85e8d0afa40f6773ac4c40c25bd8388e30566e",
+        "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T081529.700856Z-refined-matrix-69676a3c3514/manifest.json",
+        "control_manifest_sha256": "ff5767737d055a9184cf4ec395801bc0f29b14472efc7828e4703d9cf61665cc",
+        "locator_counts": {
+          "control": 0,
+          "payload": 0
+        },
+        "payload_core_sha256": "49b5b04e8cf58e23c83f44b6c9246788893303e20c629431031bf8176b018819",
+        "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.refined_matrix/runs/20260908T081529.700856Z-refined-matrix-69676a3c3514/payload-manifest.json",
+        "payload_manifest_sha256": "a68ea95e644093f1cf3858ee276ff08aa446328a2f3866431d6f08484963f5f7",
+        "request_digest": "69676a3c3514a00a67d5091f1a99df7da8d4f649b0134ce5fee02a66c4d8dd0b",
+        "result": {
+          "candidate_failures": [
+            "startup_rate_0",
+            "startup_rate_1",
+            "startup_rate_2",
+            "supply_fall_rate_0",
+            "enable_rise_rate_0",
+            "enable_rise_rate_1",
+            "enable_rise_then_enable_fall"
+          ],
+          "candidate_repeat": "PASS",
+          "candidate_sha256": "c519a85910751534a6d9a1149f0b1bf2de22241b57f5cbd7e7fc49d6c8be8e20",
+          "cases": 24,
+          "crosscheck_passed": 17,
+          "final_freeze": false,
+          "formal_reference_qualified": false,
+          "holdout_evaluated": false,
+          "live_source_recheck": "PASS",
+          "physical_stimuli_unchanged": true,
+          "public_passed": 17,
+          "qualification": "NOT_ESTABLISHED",
+          "reference_fidelity_failures": [
+            "startup_rate_0",
+            "startup_rate_1"
+          ],
+          "reference_fidelity_passed": 22,
+          "reference_trapezoidal_ringing_cases": [],
+          "source_generation": "351942e09e4444b4ae89b098e9e5bc0d3fde90ff3d57ca9c7afee0296e20a0ee",
+          "status": "BLOCKED_CONTRACT"
+        },
+        "run_id": "20260908T081529.700856Z-refined-matrix-69676a3c3514",
+        "run_status": "BLOCKED_CONTRACT",
+        "status": "PASS",
+        "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.refined_matrix/runs/20260908T081529.700856Z-refined-matrix-69676a3c3514/summary.json",
+        "summary_sha256": "7e8bda7ab4956a3fa4c933a5a3b4cb416f230eb40c165b6fe73a4de1451d6015",
+        "target": "AON"
+      }
+    ],
+    "locator_counts": {
+      "control": 0,
+      "payload": 0
+    },
+    "payload_core_sha256": "b0f2498ae2379bc6a6c5686b09176030715758bd70cbcbf04066cfd73dbc4693",
+    "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/aivw.refined_reference.audit/runs/20260908T082324.763525Z-refined-reference-audit-d2d27ab8d73d/payload-manifest.json",
+    "payload_manifest_sha256": "5c9c396f22a567102d569d25d5c9dbf3448ecc3066773b23a94c27f5d580382b",
+    "request_digest": "d2d27ab8d73d6d1da2562da61713280b63a2eda689822d57f5d5fc07c1d0ba1b",
+    "run_id": "20260908T082324.763525Z-refined-reference-audit-d2d27ab8d73d",
+    "run_status": "PASS_EVIDENCE_AUDIT",
+    "status": "PASS",
+    "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/aivw.refined_reference.audit/runs/20260908T082324.763525Z-refined-reference-audit-d2d27ab8d73d/summary.json",
+    "summary_sha256": "9b14c7bf7a26c959fa0fd690fa36cb3a7437ab61218ce5baadb5ef3dd78d950f"
+  },
+  "formal_reference_promoted": false,
+  "formal_status": "BLOCKED_CONTRACT",
+  "holdout_evaluated": false,
+  "kind": "ldo-dynamic-checkpoint",
+  "previous_checkpoint": {
+    "path": "/zone.disk/ssd1/path/to/sico-src/ai-verification-workbench/recipes/ldo/dynamic_checkpoint_evidence_v9.json",
+    "sha256": "d952fadfc9f1cc701d1c14a28178f01ef758497fdbbb47e8804ddfee46ff64bb"
+  },
+  "progress_document": {
+    "path": "/zone.disk/ssd1/path/to/sico-src/ai-verification-workbench/docs/LDO_REFINED_PUBLIC_REFERENCE_PROGRESS.md",
+    "sha256": "2fad2ffca2071de1e317f2f3e88126e5350d8c9986b73a821e8efeb30e0edc3f"
+  },
+  "publication": "NOT_PERFORMED",
+  "qualification": "NOT_ESTABLISHED",
+  "reference_run_configuration": {
+    "holdout_evaluated": false,
+    "kind": "full-refined-public-matrix-correlation",
+    "qualification": "NOT_ESTABLISHED",
+    "targets": {
+      "AON": {
+        "candidate": "20260908T052604.979276Z-transition-response-b112f98886ac",
+        "crosscheck": "20260908T080511.989034Z-recipe-run-ab0ce43cd984",
+        "old_public": "20260908T002018.129961Z-recipe-run-658ff7e7d809",
+        "reference": "20260908T080511.161319Z-recipe-run-a59cdc5ffe20"
+      },
+      "MASTER": {
+        "candidate": "20260908T073136.127521Z-tail-refit-38d7249223ca",
+        "crosscheck": "20260908T080212.970816Z-recipe-run-fd54d4ee35e5",
+        "old_public": "20260908T001838.659739Z-recipe-run-d98265d71c14",
+        "reference": "20260908T080129.259791Z-recipe-run-4178cd65898d"
+      }
+    }
+  },
+  "remaining": [
+    "AON_startup_rate_0_and_1_breakpoint_current_reference_fidelity",
+    "both_targets_startup_model_recalibration_on_refined_public_reference",
+    "AON_fast_supply_fall_and_enable_rise_model_recalibration",
+    "identical_input_full_public_reference_repeats",
+    "absolute_floor_contract_approval",
+    "actual_model_provider_qualification",
+    "private_evaluator_capability_isolation",
+    "final_candidate_freeze_and_two_hidden_repeats_after_admission",
+    "candidate_bound_AMS_config_and_system_verification"
+  ],
+  "schema_version": 1,
+  "source_oa_modified": false,
+  "tests": {
+    "compile_json_whitespace": "PASS",
+    "full_aivw_passed": 685
+  }
+}

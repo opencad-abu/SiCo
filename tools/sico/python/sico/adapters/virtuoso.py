@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cadai.mcp_wire_schema import compact_schema
+
 from ..core.contracts import ToolResult
 from ..core.tools import ReadTool, ToolRegistry, no_arguments
 from ..transport.methods import QueryUnavailable
@@ -14,8 +16,9 @@ from .documents import register_documents
 from .entry_context import register_context
 
 
-def context_tools(broker, journal=None) -> ToolRegistry:
+def context_tools(broker, journal=None, terminal=None) -> ToolRegistry:
     registry = ToolRegistry()
+    registry.schema_projector = compact_schema
     registry.routed = True
     registry.session_factory = lambda session: context_tools(broker, session)
 
@@ -32,6 +35,7 @@ def context_tools(broker, journal=None) -> ToolRegistry:
             {"type": "object", "properties": {}, "additionalProperties": False},
             no_arguments,
             read_context,
+            effect="read",
         )
     )
     registry.register(
@@ -43,6 +47,7 @@ def context_tools(broker, journal=None) -> ToolRegistry:
             {"type": "object", "properties": {}, "additionalProperties": False},
             no_arguments,
             lambda inputs, context: ToolResult(data=broker.read(context, "get_project_context")),
+            effect="read",
         )
     )
     register_ade(registry, broker)
@@ -52,6 +57,10 @@ def context_tools(broker, journal=None) -> ToolRegistry:
     if journal is not None:
         register_bindings(registry, broker, journal.session_id)
         register_artifacts(registry, journal)
-        register_circuit(registry, broker, journal.root.parents[2])
+        register_circuit(registry, broker, journal.root.parents[2], journal)
         register_assistant_tools(registry, broker, journal, journal.root.parents[2])
+    if terminal is not None:
+        from .terminal import register_terminal
+
+        register_terminal(registry, terminal)
     return registry

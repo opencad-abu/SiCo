@@ -201,7 +201,7 @@ def ai_temp_root(value: str | Path) -> Path:
 
     Accept either ``.sico[/ai]`` or legacy ``.cad[/ai]`` and normalize once.
     realpath() can
-    turn a shared mount alias into a host-only path that other nodes cannot read.
+    turn /workarea into a host-only /zone.disk path that other nodes cannot read.
     """
     return state_path(value, legacy=True) / "ai"
 

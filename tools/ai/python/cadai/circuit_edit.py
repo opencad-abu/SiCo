@@ -23,14 +23,10 @@ CONFIRM_CHOICES = {"approved": "执行这次修改", "rejected": "取消"}
 EDIT_TOOLS = [
     tool(
         "prepare_circuit_edit",
-        "Prepare an approved in-place edit of an existing schematic: recompute the plan, "
-        "compare it with the inspected target and return a review for the user. "
-        "Nothing is written here; the edit only runs through execute_circuit_edit with the "
-        "review digest after the user agreed. mode=rebuild replaces every instance, wire, "
-        "label, port and net of the current cellview with the planned circuit (the AI owns "
-        "the cellview once approved); the inspected target_ref and the reviewed contents "
-        "are re-verified natively before the first deletion. Retain prepare_ref, "
-        "review_digest and request_id; reuse identical request_id after unknown status.",
+        "Prepare an approved in-place schematic edit and return a review; nothing is written. "
+        "execute_circuit_edit must send the review digest after approval. mode=rebuild replaces "
+        "the current cellview after native target revalidation. Retain prepare_ref, review_digest "
+        "and request_id; reuse request_id after unknown status.",
         {
             **GEOMETRY_ARGS,
             "spec": SELECTED_SPEC,
@@ -101,6 +97,7 @@ EDIT_TOOLS = [
         },
         ("prepare_ref", "geometry_plan_digest", "request_id", "approval_digest"),
         True,
+        destructive=True,
     ),
 ]
 EDIT_NAMES = frozenset(entry["name"] for entry in EDIT_TOOLS)
@@ -181,11 +178,16 @@ def review(args, workspace=None):
 
 def question(review_body, review_digest):
     target = "/".join(review_body["target"])
+    action = {
+        "rebuild": "清空现有内容后重建",
+        "reroute": "只重画指定网络",
+        "patch": "只修改列出的对象",
+    }[review_body["mode"]]
     return {
         "id": "circuit_edit",
         "header": "电路修改",
         "question": (
-            f"将按审阅过的计划重画 {target}：清空现有内容后重建 "
+            f"将按审阅过的计划修改 {target}：{action} "
             f"{len(review_body['instances'])} 个器件、{len(review_body['ports'])} 个端口、"
             f"{review_body['wires']['connections']} 条连接"
             f"（审阅摘要 {review_digest[:12]}…）。是否执行？"
@@ -262,10 +264,10 @@ def call_edit(name, args, client, workspace=None, pdk_bindings=None):
             args = {**args, "approval_digest": args["approval"]["review_digest"]}
         return execute_edit(args, client, workspace=workspace, pdk_bindings=pdk_bindings)
     validate(args, next(entry["inputSchema"] for entry in EDIT_TOOLS if entry["name"] == name))
-    if "binding_refs" in args and pdk_bindings is not None:
-        args = pdk_bindings.resolve_request(args)
-    elif "binding_refs" in args:
+    if "binding_refs" in args and pdk_bindings is None:
         raise CircuitSpecError("Selected device data expired; bind the selected devices again")
+    if pdk_bindings is not None:
+        args = pdk_bindings.resolve_request(args)
     if args["edit"]["mode"] == "reroute" and not args["edit"].get("nets"):
         raise CircuitSpecError("a single-net re-route names the nets it redraws")
     missing = sorted(set(GEOMETRY_ARGS) - set(args))
@@ -297,6 +299,10 @@ def call_edit(name, args, client, workspace=None, pdk_bindings=None):
         "stage": "edit_review",
         "next_action": "ask_user_to_approve_circuit_edit",
         "user_input_required": True,
+        "review_required": True,
+        "review_kind": "circuit_edit",
+        "approval_label": CONFIRM_CHOICES["approved"],
+        "rejection_label": CONFIRM_CHOICES["rejected"],
         "selection_question": question(body, review_digest),
         "review": body,
         "review_digest": review_digest,

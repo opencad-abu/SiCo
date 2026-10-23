@@ -1,5 +1,6 @@
 """Async recovery observations and explicit paused-runtime creation for one service."""
 
+from .frontend_transport import LONG_TIMEOUT
 from .recovery_contract import recovery_view
 from .service_session_dto import SessionAddress
 
@@ -15,7 +16,8 @@ class RemoteRecovery:
 
     def inspect(self, session_id, operation_id=None):
         return self.api._queries.request("recovery", dict(session_id=session_id,
-            operation_id=operation_id), lambda row: self._publish(row, session_id, operation_id))
+            operation_id=operation_id), lambda row: self._publish(row, session_id, operation_id),
+            timeout=LONG_TIMEOUT)
 
     def continue_session(self, session_id):
         from .service_protocol import exact_fields
@@ -32,7 +34,7 @@ class RemoteRecovery:
             return token
 
         return self.api._commands.request("continue_session", dict(session_id=session_id,
-            source_session_id=self.api.initial_id), publish)
+            source_session_id=self.api.initial_id), publish, timeout=LONG_TIMEOUT)
 
     def open_history(self, session_id):
         from .frontend_session import FrontendSession
@@ -47,13 +49,14 @@ class RemoteRecovery:
                 self.api.initial_id = session_id
             return FrontendSession(self.api, token)
         return self.api._queries.request("recovery", dict(session_id=session_id, operation_id=None),
-                                        publish)
+                                        publish, timeout=LONG_TIMEOUT)
 
     def restore(self, view, operation_id, credentials=None):
         session_id, version = view["session_id"], view["version"]
         return self.api._commands.request("recover_session", dict(session_id=session_id,
             version=version, credentials=dict(credentials or {})),
-            lambda row: self._publish(row, session_id, operation_id), operation_id=operation_id)
+            lambda row: self._publish(row, session_id, operation_id), operation_id=operation_id,
+            timeout=LONG_TIMEOUT)
 
     def input_result(self, address, operation_id):
         from .service_messages import ServiceRequest

@@ -66,13 +66,15 @@ def _signal_children(number):
 
 
 def _reap():
+    reaped = 0
     while True:
         try:
             pid, _status = os.waitpid(-1, os.WNOHANG)
         except ChildProcessError:
-            return
+            return reaped
         if pid == 0:
-            return
+            return reaped
+        reaped += 1
 
 
 def require_pidfds():
@@ -125,7 +127,34 @@ def reap_descendants(grace=.5):
         time.sleep(.02)
 
 
-def run(control, command, *, forward_status=False, pass_fds=()):
+def reap_descendants_bounded(grace=.5, deadline=None):
+    """Reap direct children until none remain or the evidence deadline expires.
+
+    Only this single-threaded owner's unreaped children are signalled, so a
+    persisted PID is never used as a signal target. The result is bounded and
+    deliberately reports remaining children instead of claiming cleanup.
+    """
+    started = time.monotonic()
+    terminate_by = started + max(0, grace)
+    hard_deadline = terminate_by if deadline is None else max(started, deadline)
+    reaped = 0
+    while True:
+        reaped += _reap()
+        children = _children(os.getpid())
+        if not children:
+            return dict(stopped=True, remaining=0, reaped=reaped)
+        now = time.monotonic()
+        if now >= hard_deadline:
+            _signal_children(signal.SIGKILL)
+            time.sleep(.02)
+            reaped += _reap()
+            children = _children(os.getpid())
+            return dict(stopped=not children, remaining=len(children), reaped=reaped)
+        _signal_children(signal.SIGTERM if now < terminate_by else signal.SIGKILL)
+        time.sleep(.02)
+
+
+def run(control, command, *, forward_status=False, pass_fds=(), status_fd=None):
     enable_subreaper()
     os.set_inheritable(control, False)
     stopped = []
@@ -138,7 +167,20 @@ def run(control, command, *, forward_status=False, pass_fds=()):
             if ready:
                 os.read(control, 1)  # Explicit stop or owner EOF, including SIGKILL.
                 break
+        if child.returncode is None:
+            try:
+                child.wait(timeout=.05)
+            except subprocess.TimeoutExpired:
+                pass
         status = child.returncode
+        if status_fd is not None:
+            try:
+                payload = ("stopped" if status is None else str(status)) + "\n"
+                os.write(status_fd, payload.encode("ascii"))
+            except OSError:
+                pass
+            finally:
+                os.close(status_fd)
         reap_descendants()
         return (status if status is not None else 1) if forward_status else 0
     finally:

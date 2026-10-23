@@ -16,7 +16,8 @@ from PyQt5.QtWidgets import (
 
 from sico.service.tool_display import TITLES, result_html, table
 
-from .presentation import BusyCursor, style_tables
+from .presentation import BusyCursor, style_document
+from .preview_gallery import DocumentImages, preview_artifact_name
 from .receipts import DataReceipt
 from .workspace import EvenTabWidget
 
@@ -58,6 +59,8 @@ class ToolResults(QSplitter):
         preview_layout = QVBoxLayout(preview)
         self.preview_notice = QLabel("创建电路后显示原理图预览。")
         self.svg_preview = QSvgWidget()
+        self.preview_images = DocumentImages(preview)
+        preview_layout.addWidget(self.preview_images.button)
         preview_layout.addWidget(self.preview_notice)
         preview_layout.addWidget(self.svg_preview, 1)
         self.details.addTab(preview, "原理图预览")
@@ -73,6 +76,7 @@ class ToolResults(QSplitter):
         self.summary.clear()
         self.fields.clear()
         self.svg_preview.load(QByteArray())
+        self.preview_images.clear()
         self._receipt.clear()
         self._busy.set(False)
         self._select_generation += 1
@@ -115,6 +119,7 @@ class ToolResults(QSplitter):
         self.summary.clear()
         self.fields.clear()
         self.svg_preview.load(QByteArray())
+        self.preview_images.clear()
         self.preview_notice.setText("此记录暂无原理图预览。")
         if item is None:
             return
@@ -139,11 +144,11 @@ class ToolResults(QSplitter):
             return
         self._receipt.watch(
             future,
-            lambda prepared: self._render_prepared(generation, prepared),
+            lambda prepared: self._render_prepared(generation, prepared, result),
             failed,
         )
 
-    def _render_prepared(self, generation, prepared):
+    def _render_prepared(self, generation, prepared, result=None):
         if generation != self._select_generation:
             return
         self._busy.set(False)
@@ -157,12 +162,14 @@ class ToolResults(QSplitter):
             "保存后的原理图；Cadence 参数表达式可能保留原样。"
             if images else "此记录暂无原理图预览。"))
         if images:
+            name, sha256 = preview_artifact_name(result or {})
+            self.preview_images.refresh(images, name, sha256)
             self.svg_preview.load(QByteArray(images[0]))
             if not self.svg_preview.renderer().isValid():
                 self.preview_notice.setText("原理图预览无法显示，原始 SVG 文件保留。")
         # 结果表格与数据明细里的表格同样用统一的灰边。
-        style_tables(self.summary.document())
-        style_tables(self.fields.document())
+        style_document(self.summary.document())
+        style_document(self.fields.document())
 
     def closeEvent(self, event):
         self._receipt.clear()

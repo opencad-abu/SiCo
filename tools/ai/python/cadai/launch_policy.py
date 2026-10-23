@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .agent_profile import INTERACTIVE_PROFILE, validate_profile
 from .mcp import TOOLS as MCP_TOOLS
+from .mcp_server import SERVER_ID
 
 MCP_TOOL_NAMES = tuple(tool["name"] for tool in MCP_TOOLS)
 
@@ -21,11 +22,13 @@ SKILL_PREFLIGHT_INSTRUCTIONS = (
 
 
 LOCAL_HELP_INSTRUCTIONS = (
-    "不知道 Virtuoso 手册或结果嘈杂时，用 tool_help action=index。"
+    "不知道 Virtuoso 手册或结果嘈杂时，用 cds_help action=index。"
     "已知手册、页面或 API 时，直接 search/read 或使用 API 查询。"
     "仅作映射的索引条目指向其他手册。"
-    "用 tool_help 处理已安装的 Cadence HTML 手册：先发现、再搜索，然后阅读"
+    "用 cds_help 处理已安装的 Cadence HTML 手册：先发现、再搜索，然后阅读"
     "返回的页面并保留其安装/版本与来源路径。"
+    "需要核对 SiCo 工具契约（用途、执行入口、输入结构）时用只读的 mcp_help；"
+    "已知工具可直接调用，不必先读帮助。"
     "本机文本和文件名搜索使用 Search；终端里也可用捆绑的 rg。"
     "Search 默认使用字面模式；正则设 fixed_strings=false，"
     "文件名用 mode=files 配 globs。搜索不完整时请缩小范围。"
@@ -36,7 +39,7 @@ def assistant_instructions(profile: str = INTERACTIVE_PROFILE) -> str:
     """Startup context shared by both managed AI Assistant clients."""
     validate_profile(profile)
     context = (
-        "你是 Cadence Virtuoso 内的 AI Assistant，通过 virtuoso MCP server 连接到当前 "
+        f"你是 Cadence Virtuoso 内的 AI Assistant，通过 {SERVER_ID} MCP server 连接到当前 "
         "Virtuoso 进程。"
         "实时 Virtuoso 上下文具有权威性；不要根据终端工作目录猜测活动设计。"
         "发布说明由本程序和 MCP server 提供。"
@@ -46,9 +49,9 @@ def assistant_instructions(profile: str = INTERACTIVE_PROFILE) -> str:
     )
     if profile == INTERACTIVE_PROFILE:
         context += (
-            "设计任务先用 get_entry_context 获取捕获的来源（不是当前"
-            "焦点），再做改动前检查相关 library/cell/view。"
-            "没有捕获到来源时，使用 list_windows 并确认 window_ref。"
+            "工程级任务先用 get_project_context；只有已有 window_ref/cellview 时才用 "
+            "get_entry_context 获取捕获的来源（不是当前焦点），再做改动前检查相关 "
+            "library/cell/view。没有捕获到来源时不要重装 SKILL，也不要反复读取入口上下文。"
             "旧接口 get_context 只是当前焦点的观察。"
             "任务开始时确认前台/后台偏好。"
             "Virtuoso 的设计、库、原理图、版图和 Maestro 任务都"
@@ -57,7 +60,7 @@ def assistant_instructions(profile: str = INTERACTIVE_PROFILE) -> str:
             "一个经典 SKILL 表达式，用 load_skill_file 加载多形式 .il/.ils "
             "脚本。"
             "参考工具需要单独配置的站点资源；不可用时改"
-            "用 tool_help 查站点已安装的 EDA 手册。"
+            "用 cds_help 查站点已安装的 EDA 手册。"
             + LOCAL_HELP_INSTRUCTIONS
             + SKILL_PREFLIGHT_INSTRUCTIONS
             + "优先使用这些工具，而不是直接的操作系统或 shell 命令。"

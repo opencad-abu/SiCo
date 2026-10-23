@@ -12,9 +12,18 @@ from .workspace import select
 from .publication import require as require_publication
 
 
-def obtain(service, device, purpose='circuit'):
+def obtain(service, device, purpose='circuit', *, live=True, verify_content=True):
+    """Resolve the confirmed rule for one device.
+
+    ``live=False`` skips the captured-source comparison so a caller (bind
+    preflight) can check cheap published confirmations against a light
+    identity stub; ``verify_content=False`` similarly skips rehashing every
+    package file for that fail-fast check. The full bind read keeps both
+    defaults as the authority.
+    """
     package = select(service.workspace, device['target']['library'], service.environment)
-    verify(package)
+    if verify_content:
+        verify(package)
     require_publication(package)
     rows = package.document('device.json')['items']
     selected = [(key, row) for key, row in rows.items() if row['cell'] == device['target']['cell']
@@ -36,7 +45,8 @@ def obtain(service, device, purpose='circuit'):
     cdf = package.document(row['dir'] + '/cdf.json')
     symbol = package.document(row['dir'] + '/symbol.json')
     simulation = package.document(row['dir'] + '/simulation.json')
-    observed(package, key, device, {*cdf['depends_on'], *symbol['depends_on'], *simulation['depends_on']})
+    if live:
+        observed(package, key, device, {*cdf['depends_on'], *symbol['depends_on'], *simulation['depends_on']})
     from .resource_check import check as check_resource
     resources = package.document('file.json')['items']
     model = package.document('model.json') if package.available('model.json') else {'configs': {}}
@@ -47,23 +57,51 @@ def obtain(service, device, purpose='circuit'):
     return {'revision': package.revision, 'device': key, 'cdf': cdf, 'symbol': symbol, 'simulation': simulation, 'use': purpose}
 
 
-def bind(service, device, args):
-    rule = obtain(service, device, args.get('use', 'circuit'))
+def spectre(rule):
+    """The published spectre interface of a bound device; refuse instead of crashing.
+
+    A published rule may carry no spectre interface (readiness reports
+    ``spectre_interface_missing``); binding such a device for simulation must
+    fail as a policy gap, never as an unhandled StopIteration.
+    """
+    interfaces = [i for i in rule['simulation']['interfaces'].values() if i['simulator'] == 'spectre']
+    if not interfaces:
+        fail('No published spectre interface for this device '
+             '(readiness: spectre_interface_missing); bind a simulation-capable device '
+             'or republish the PDK data', 'pdk_policy_mismatch')
+    return interfaces[0]
+
+
+def contract(rule, args):
+    """Cheap caller confirmations that need only the published rule.
+
+    Split from ``bind`` so a session can fail fast before any live detail
+    read: the required writable set and callback order are published facts,
+    and a wrong attempt must not pay minutes of bridge work first.
+    """
     cdf = rule['cdf']
-    interface = next(i for i in rule['simulation']['interfaces'].values() if i['simulator'] == 'spectre')
+    interface = spectre(rule)
     if args.get('netlist_terminal_map', interface['terminal_map']) != interface['terminal_map']:
         fail('Netlist terminal mapping differs from published PDK', 'pdk_policy_mismatch')
     allowed = {n for n, p in cdf['parameters'].items() if p['write'] in {'allow', 'conditional'}}
     supplied = {p['name'] for p in args['writable_parameters']}
     if supplied != allowed:
-        fail('Writable parameters must match the confirmed standard set: ' + ', '.join(sorted(allowed)),
-             'pdk_policy_mismatch')
+        fail('Writable parameters must match the confirmed standard set: '
+             + ', '.join(sorted(allowed))
+             + '；以 get_pdk_data(section=\'cdf\') 的 write 标记为准', 'pdk_policy_mismatch')
     if cdf['execution']['mode'] == 'cdf' and args.get('callback_order') != cdf['execution']['order']:
-        fail('Callback order differs from confirmed CDF execution', 'pdk_policy_mismatch')
-    if cdf['execution']['mode'] == 'literal' and any(c['presence'] != 'absent' for c in device['callbacks']['items']):
-        fail('Literal policy conflicts with observed callbacks', 'pdk_policy_mismatch')
+        fail('Callback order differs from confirmed CDF execution'
+             '；execution.order 以 get_pdk_data(section=\'cdf\') 为准', 'pdk_policy_mismatch')
     if args.get('extension_ref') and args['extension_ref'] != cdf['execution'].get('implementation_ref', 'builtin:cdf-callbacks:v1'):
         fail('Execution implementation differs from confirmed CDF rules', 'pdk_policy_mismatch')
+
+
+def bind(service, device, args):
+    rule = obtain(service, device, args.get('use', 'circuit'))
+    contract(rule, args)
+    if rule['cdf']['execution']['mode'] == 'literal' and any(
+            c['presence'] != 'absent' for c in device['callbacks']['items']):
+        fail('Literal policy conflicts with observed callbacks', 'pdk_policy_mismatch')
     return rule
 
 
@@ -73,7 +111,33 @@ def geometry(rule, body, pins):
         fail('Live body bounds differ from confirmed symbol', 'pdk_source_changed')
     actual = {p['name']: p['anchors'] for p in pins}
     if actual != {n: p['anchors'] for n, p in expected['terminals'].items()}:
-        fail('Pin anchors/escapes differ from confirmed symbol', 'pdk_policy_mismatch')
+        fail('Pin anchors/escapes differ from confirmed symbol: '
+             + anchor_difference(actual, expected['terminals']), 'pdk_policy_mismatch')
+
+
+def anchor_difference(actual, expected, limit=2):
+    """Name the first differing pins so a caller can correct the escapes once."""
+    details = []
+    for name in sorted(set(actual) | set(expected)):
+        have = actual.get(name)
+        want = expected[name]['anchors'] if name in expected else None
+        if have == want:
+            continue
+        if have is None:
+            details.append(f'terminal {name}: missing, expected {want}')
+        elif want is None:
+            details.append(f'terminal {name}: unexpected, observed {have}')
+        else:
+            for index in range(max(len(have), len(want))):
+                observed = have[index] if index < len(have) else None
+                wanted = want[index] if index < len(want) else None
+                if observed != wanted:
+                    details.append(
+                        f'terminal {name} pin {index}: observed {observed} expected {wanted}')
+                    break
+        if len(details) >= limit:
+            break
+    return '; '.join(details) or 'structure differs'
 
 
 def value(raw, parameter):

@@ -41,6 +41,15 @@ PROFILES = {
             "33e24327fdcbbb7a2d244c72ddecf67bb38d8b0035c3064c32928df53aff5880"),
     },
 }
+PROFILES["0.162.1"] = {
+    **PROFILES["0.156.1"],
+    "state_5.sqlite": (
+        "b615498dec9987f394021f1495db284d0852efbaea5f8a7227e7b07f2263db54",
+        "18eb589f3d477d32355fdfdac390177879d513bc5dcde0f77fa321e02e37ef26"),
+    "thread_history_1.sqlite": (
+        "aa7bc79f517e9372ac6598b854663a9ea6ff2a77cb60ddae9822edd2836a957d",
+        "a316549328954d48a38600f103969acc0261804c66090aa345c0ceb3d99a224e"),
+}
 DATABASES = frozenset(_LEGACY_0154)
 
 

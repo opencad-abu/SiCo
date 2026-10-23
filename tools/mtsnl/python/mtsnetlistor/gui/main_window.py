@@ -32,6 +32,9 @@ from .process_page import ProcessPage
 class MtsMainWindow(SiMainWindow):
     """Host isolated process pages and run them in deterministic order."""
 
+    # SiCo 摆位：MTS 主窗口占左半屏，右侧留给同会话的终端/查看器。
+    launch_half = "left"
+
     def __init__(
         self,
         *,
@@ -114,6 +117,12 @@ class MtsMainWindow(SiMainWindow):
 
         page = self._active_page() if "process_tabs" in self.__dict__ else None
         return page.statusBar() if page is not None else super().statusBar()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not getattr(self, "_placed", False):
+            self._placed = True
+            self.place_on_launch_half(self.parentWidget())
 
     def __getattr__(self, name: str):
         """Route the established single-page test/integration API to active tab."""

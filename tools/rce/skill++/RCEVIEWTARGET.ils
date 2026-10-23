@@ -86,14 +86,8 @@ procedure(rceFirstExistingFile(dir names)
 procedure(rceNativeViewDeviceMapDefault(form)
   let((cornerDir envValue found)
     cornerDir=rceEffectiveCornerDir(form)
-    case(form~>extTool~>value
-      ("CalXRC"
-        envValue=SICO_envValue("RCE_CALIBRE_VIEW_CELLMAP")
-        or(envValue
-            when(cornerDir strcat(cornerDir "/calview.cellmap"))
-            "")
-      )
-      ("StarRC"
+    cond(
+      (form~>extTool~>value=="StarRC"
         envValue=SICO_envValue("RCE_STARRC_OA_DEVICE_MAP")
         found=when(cornerDir
           rceFirstExistingFile(cornerDir
@@ -101,6 +95,12 @@ procedure(rceNativeViewDeviceMapDefault(form)
               "device_mapping_file" "DFII_DEVICE_MAP")))
         or(envValue found
             when(cornerDir strcat(cornerDir "/OA_DEVICE_MAP"))
+            "")
+      )
+      (RCE_calibrePexToolP(form~>extTool~>value)
+        envValue=SICO_envValue("RCE_CALIBRE_VIEW_CELLMAP")
+        or(envValue
+            when(cornerDir strcat(cornerDir "/calview.cellmap"))
             "")
       )
       (t "")

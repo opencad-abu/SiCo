@@ -15,10 +15,12 @@ def register_artifacts(registry, journal):
                 raise ValueError("Artifact offsets and limits must be integers")
         if inputs.get("offset", 0) < 0:
             raise ValueError("Artifact offset must be >= 0 characters")
-        if not 1 <= inputs.get("limit", 4000) <= 4000:
-            raise ValueError("Artifact limit must be between 1 and 4000 characters")
+        if inputs.get("limit", 4000) < 1:
+            raise ValueError("Artifact limit must be at least 1 character")
 
     def read(inputs, context):
+        inputs = dict(inputs)
+        inputs["limit"] = min(inputs.get("limit", 4000), 4000)
         try:
             return ToolResult(data=journal.read_artifact(**inputs))
         except ValueError as exc:

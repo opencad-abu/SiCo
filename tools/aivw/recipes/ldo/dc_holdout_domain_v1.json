@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "kind": "qualification-domain",
+  "domain_id": "ldo_static_dc_fixed_enable_v1",
+  "scope": "rnm_correlation_only_not_product_supply_window",
+  "targets": {
+    "LDO_MASTER": {"supply_v": [4.85, 5.15], "load_ohm": [5000.0, 20000.0], "fixed_controls_v": {}},
+    "LDO_AON": {"supply_v": [2.425, 2.575], "load_ohm": [5000.0, 20000.0], "fixed_controls_v": {"EN": 2.5}}
+  },
+  "reference_v": 0.0,
+  "temperature_c": 27.0,
+  "model_section": "tt",
+  "samples": {"latin_hypercube_interior": 12, "boundary_cases": 8},
+  "repeat_runs": 2,
+  "product_applicability": "nominal_supply_only",
+  "correlation": {"unit": "V", "relative": 0.05, "absolute": null, "normalization": "reference_magnitude"},
+  "unsupported": ["transient", "enable_transition", "enable_intermediate_voltage", "current_output", "nonzero_reference", "other_PVT", "outside_declared_domain"],
+  "qualification": "dc_slice_only_full_M3_not_established"
+}

@@ -16,6 +16,17 @@ def references(value):
     return set()
 
 
+def operands(cdf, names=None):
+    """Parameters whose values conditional input rules and joint rules read."""
+    parameters = cdf["parameters"]
+    found = set()
+    for name in parameters if names is None else names:
+        parameter = parameters[name]
+        found |= references({key: value for key, value in parameter.items()
+                             if key in {"write_when", "required_when", "domain"}})
+    return found | references(cdf.get("rules", {}))
+
+
 def rows(cdf):
     parameters = cdf["parameters"]
     expressions = [

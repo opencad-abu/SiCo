@@ -38,11 +38,11 @@ class MetadataService:
                     except Exception:
                         logging.getLogger(__name__).exception("Process observation failed")
                 try:
-                    controller.poll_router_status()
+                    controller.router.poll_router_status()
                 except Exception:
                     logging.getLogger(__name__).exception("Session router polling failed")
                 try:
-                    controller.poll_binding_events()
+                    controller.bindings.poll_binding_events()
                     if self._observed is not None:
                         self._observed(controller)
                 except Exception:
@@ -73,6 +73,6 @@ def format_result_json(value):
 
 
 def native_record_title(native):
-    from ..storage.native_origin import native_title
+    from ..core.native_origin import native_title
 
     return native_title(native)

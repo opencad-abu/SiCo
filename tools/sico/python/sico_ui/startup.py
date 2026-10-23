@@ -72,7 +72,7 @@ class StartupView(QObject):
         "context": "正在确认设计目标…",
         "history": "正在加载会话记录…",
         "config": "正在加载模型配置…",
-        "credentials": "等待输入 API Key…",
+        "credentials": "等待输入 API 密钥…",
         "provider": "正在准备模型配置…",
         "session": "正在准备会话…",
         "discovery": "正在发现或启动项目服务…",
@@ -83,6 +83,9 @@ class StartupView(QObject):
     def __init__(self, startup, reader, notice, *, quit_application=None, shutdown_guard=None):
         super().__init__()
         self.startup = startup
+        # A hosted desktop (run_desktop) can report the failure to the launcher;
+        # an independent one must present it locally.
+        self.hosted = notice is not None
         self.notice = notice or (lambda *_args, **_kwargs: None)
         self.quit_application = quit_application
         self.shutdown_guard = shutdown_guard
@@ -155,6 +158,18 @@ class StartupView(QObject):
         self.configuration.clear()
         self.ready.clear()
         self._dismiss()
+        phase = getattr(error, "phase", None)
+        if self.hosted and isinstance(phase, str):
+            try:
+                self.notice("startup_failed", phase=phase)
+            except ValueError:
+                pass
+        if self.hosted and phase == "window":
+            # The refusal belongs to the project, not this doomed desktop. The
+            # launcher prints one actionable line in the invoking CIW instead of
+            # opening a second modal dialog and then dumping a traceback.
+            self.control.shutdown()
+            return
         # 没有窗口可用，也没有 InfoApp 宿主：用一个自绘的单按钮提示停下来。
         notice(None, PRODUCT_NAME + " " + getattr(error, "title", "启动失败"), str(error))
         self.control.shutdown()
@@ -173,7 +188,6 @@ class StartupView(QObject):
         window.lifecycle.attach_guard(self.shutdown_guard)
         if self.quit_application is not None:
             window.closed.connect(self.quit_application)
-        window.setWindowTitle(window.windowTitle() + " / " + window.page.session.session_id[:8])
         if result.attach_targets:
             window.quick_input = QuickInput(window, self.notice)
         self.control.attach(window)
@@ -193,7 +207,7 @@ class StartupView(QObject):
                 if window.binding.failed or window.binding.cursor is None:
                     return
                 if result.initialize:
-                    window.initialize_context()
+                    window.actions.initialize_context()
 
         self._initial_timer.timeout.connect(initialize)
         self._initial_timer.start(25)

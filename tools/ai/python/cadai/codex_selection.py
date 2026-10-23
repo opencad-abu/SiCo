@@ -8,7 +8,7 @@ from collections.abc import Mapping
 
 from .env_names import value as env_value
 
-CODEX_VERSION = "0.156.1"
+CODEX_VERSION = "0.162.1"
 LEGACY_ENV = "SICO_LEGACY_0114"
 
 
@@ -37,11 +37,12 @@ def codex_tool_format(environment: Mapping[str, str], configured: str | None = N
     return {"1": "flat", "0": "native"}.get(switch, selected)
 
 
-def verify_codex_version(executable: str, environment: Mapping[str, str]) -> None:
-    require_supported_runtime(environment)
-    expected = CODEX_VERSION
-    # A version probe needs no model credentials or host application variables.
-    probe_environment = {
+def probe_environment(environment: Mapping[str, str]) -> dict[str, str]:
+    """Credential-free environment for Codex executable probes.
+
+    Probes read no model credentials and no host application variables.
+    """
+    return {
         name: environment[name]
         for name in (
             "PATH", "HOME", "USER", "LOGNAME", "LANG", "LC_ALL",
@@ -49,10 +50,15 @@ def verify_codex_version(executable: str, environment: Mapping[str, str]) -> Non
         )
         if name in environment
     }
+
+
+def verify_codex_version(executable: str, environment: Mapping[str, str]) -> None:
+    require_supported_runtime(environment)
+    expected = CODEX_VERSION
     try:
         result = subprocess.run(
             [executable, "--version"],
-            env=probe_environment,
+            env=probe_environment(environment),
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,

@@ -57,7 +57,7 @@ procedure(rceStartReserved(form reservation)
       (rceNativeViewOutputP(outputType)
         viewTarget=rceReductionViewTarget(form rceNativeViewTarget(form))
         when(viewTarget
-          setupPath=if(member(form~>extTool~>value '("CalXRC" "XRC")) then
+          setupPath=if(RCE_calibrePexToolP(form~>extTool~>value) then
             strcat(runPathPrefix "/log/calibreview.setup")
           else
             nil

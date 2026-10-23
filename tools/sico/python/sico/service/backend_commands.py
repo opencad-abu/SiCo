@@ -15,16 +15,18 @@ class SessionBackendCommands:
         self.changed = changed
 
     def turn_input_status(self):
+        self.loop.support.require("turn_options")
         with self._lock:
             view = self.execution()
             self._check_input("Turn input settings")
             controls = getattr(self.loop, "turn_options", None)
             if controls is None:
                 raise ValueError("当前后端不支持回合设置")
-            return controls.status(busy=view.busy)
+            return controls.status(busy=view.busy or view.task.get("status") == "needs_reconcile")
 
     def resource_status(self):
         """Inspect registered resources only while this worker owns the idle RPC stream."""
+        self.loop.support.require("resources")
         with self._lock:
             view = self.execution()
             if view.closing or view.shutdown:
@@ -32,12 +34,41 @@ class SessionBackendCommands:
             resources = getattr(self.loop, "resources", None)
             if resources is None:
                 raise ValueError("当前后端不支持 Codex 外部资源")
-            if view.busy:
+            if view.busy or view.task.get("status") == "needs_reconcile":
                 return {**json_copy(resources.published), "busy": True}
             return resources.status()
 
+    def feature_settings(self):
+        """Read this session's feature overrides and whether they are still writable."""
+        self.loop.support.require("feature_settings")
+        with self._lock:
+            view = self.execution()
+            if view.closing or view.shutdown or view.fault:
+                raise ValueError("会话正在结束")
+            settings = getattr(self.loop, "features", None)
+            if settings is None:
+                raise ValueError("当前后端不支持 Codex 特性设置")
+            return settings.read()
+
+    def configure_features(self, groups):
+        """Replace the session override map; the next runtime applies it."""
+        self.loop.support.require("feature_settings")
+        with self._lock:
+            view = self.execution()
+            if view.closing or view.shutdown or view.fault:
+                raise ValueError("会话正在结束")
+            if view.busy:
+                raise ValueError("任务执行中不能修改 Codex 特性；请结束任务后新建会话")
+            settings = getattr(self.loop, "features", None)
+            if settings is None:
+                raise ValueError("当前后端不支持 Codex 特性设置")
+            result = settings.save(groups)
+            self.changed()
+            return result
+
     def steer(self, text, *, scope, request_id):
         """Enqueue one supplement for the exact turn captured by the composer."""
+        self.loop.support.require("steering")
         with self._lock:
             view = self.execution()
             self._check_input(text)
@@ -98,6 +129,7 @@ class SessionBackendCommands:
 
     def elicitation(self, audit_id, *, scope, response=None, reply_id=None):
         """Answer or inspect one live MCP interaction; never starts a login flow."""
+        self.loop.support.require("elicitation")
         with self._lock:
             view = self.execution()
             self._check_input("MCP interaction")

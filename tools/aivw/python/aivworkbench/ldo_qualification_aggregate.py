@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping, Sequence
 
-from .agent.context import redact_secrets
+from .contract import redact_secrets
 from .ldo_qualification_evidence import validate_topology_evidence
 from .ldo_qualification_holdout import validate_holdout_blindness
 from .ldo_qualification_repeat import compare_repeat_runs

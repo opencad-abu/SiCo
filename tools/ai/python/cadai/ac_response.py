@@ -8,7 +8,7 @@ from .ac_response_schema import RESPONSE_SCHEMA, RESPONSE_TOOLS
 from .circuit_spec_schema import CircuitSpecError, validate
 from .measurement_recipe_fields import recipe_fields
 from .result_contract import ResultError, finite
-from .result_tools import ResultStore
+from .result_store import ResultStore
 from .waveform_measure import MeasurementIssue, convert
 
 

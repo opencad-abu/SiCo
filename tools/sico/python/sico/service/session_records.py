@@ -3,7 +3,7 @@
 from ..core.contracts import RunState, identifier
 from ..core.tools import ToolRegistry
 from ..providers.config import provider_from_config
-from ..storage.journal import SessionJournal
+from ..storage.journal import BULK_KINDS, SessionJournal
 from ..storage.names import MAX_NAME_CHARS, compact_name
 from ..transport.framing import ProtocolError
 from .backend import create_backend
@@ -90,7 +90,8 @@ def _write_record(hub, wire, params, facts, reviewed):
 
 
 def _mutate(owner, journal, facts, params):
-    threads = [row["payload"].get("thread_id") for row in journal.events()
+    threads = [row["payload"].get("thread_id")
+               for row in journal.events(exclude=BULK_KINDS)
                if row["kind"] == "codex.thread"]
     if not threads:
         kind = "codex.thread.deleted" if params["action"] == "delete" else "codex.thread.name"

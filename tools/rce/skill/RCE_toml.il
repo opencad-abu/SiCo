@@ -3,7 +3,7 @@
 ;------------------------------------------------------------------------------
 
 unless(and(boundp('rceTomlVersion)
-             rceTomlVersion=="20260818.common.compat.v2")
+             rceTomlVersion=="20261020.common.compat.v3")
 
 unless(and(boundp('cadContextBuilding) cadContextBuilding)
   let((commonSkill)
@@ -64,17 +64,19 @@ procedure(RCE_pythonEntry()
 
 procedure(RCE_pythonExe()
   let((pythonRoot)
-    pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
     or(SICO_envValue("RCE_PYTHON")
-       SICO_envValue("SICO_PYTHON")
-       when(pythonRoot
-         simplifyFilename(strcat(pythonRoot "/bin/python3") t))
-       "python3"))
+       SICO_installedPython()
+       progn(
+         pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
+         or(SICO_envValue("SICO_PYTHON")
+            when(pythonRoot
+              simplifyFilename(strcat(pythonRoot "/bin/python3") t))
+            "python3"))))
 )
 
 procedure(RCE_tomlRevision()
-  "20260803.multi.corner.v5"
+  "20261020.multi.corner.v6"
 )
 
-rceTomlVersion="20260818.common.compat.v2"
+rceTomlVersion="20261020.common.compat.v3"
 )

@@ -240,14 +240,24 @@ def validate_asset(header, rows, footer, legacy=False, capture_v2=False):
             and r["instance_terminal_count"] != net_counts[r["name"]]
         ):
             raise TemplateError("net endpoint count mismatch")
-        if r["kind"] == "instance" and r.get("terminal_names"):
+        # A layout instance's pin instances carry layout pin names, not the device
+        # terminal names the same master reports for interface evidence; the two
+        # vocabularies are validated separately (native content keeps terminals).
+        if (
+            r["kind"] == "instance"
+            and r.get("terminal_names")
+            and header.get("asset") != "layout"
+        ):
             inventory = set(r["terminal_names"])
             if endpoint_names[r["name"]] - inventory:
                 raise TemplateError("saved endpoint is absent from master terminal inventory")
     if semantics == "explicit_evidence_v2":
         from .template_capture_electrical import validate_electrical_capture
 
-        validate_electrical_capture(rows)
+        validate_electrical_capture(rows, asset=header.get("asset"))
+    from .template_native_content import validate as validate_native
+
+    validate_native(header, rows, footer, capture_v2=capture_v2)
     _geometry(header)
 
 

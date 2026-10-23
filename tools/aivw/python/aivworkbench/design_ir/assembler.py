@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from ..agent.context import ArtifactLocator, BoundedContext
+from ..contract import ArtifactLocator, BoundedContext
 from .assembler_io import (
     MAX_DESIGN_IR_FIELD_BYTES,
     MAX_DESIGN_IR_RECORDS,

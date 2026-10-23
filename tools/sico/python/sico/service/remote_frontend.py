@@ -9,7 +9,7 @@ from sicostate import project_directory
 from ..transport.framing import ProtocolError
 from .frontend_assets import input_value
 from .frontend_session import FrontendSession
-from .frontend_transport import FrontendLane
+from .frontend_transport import LONG_TIMEOUT, FrontendLane
 from .remote_catalog import RemoteCatalog
 from .remote_control import RemoteControl
 from .remote_queries import RemoteSource
@@ -34,6 +34,7 @@ class RemoteFrontend:
         self._force_stop = None
         self.catalog = RemoteCatalog(self)
         client = uuid.uuid4().hex
+        self._client_id = client
         self._attach = FrontendLane(descriptor, client, "frontend.attach")
         self._events = FrontendLane(descriptor, client, "frontend.events")
         self._queries = FrontendLane(descriptor, client, "frontend.query")
@@ -44,6 +45,12 @@ class RemoteFrontend:
         from .remote_platforms import RemotePlatforms
 
         self.platforms = RemotePlatforms(self)
+        from .remote_agent_settings import RemoteAgentSettings
+
+        self.agent_settings = RemoteAgentSettings(self)
+        from .remote_feature_defaults import RemoteFeatureDefaults
+
+        self.feature_defaults = RemoteFeatureDefaults(self)
 
     @property
     def detached(self):
@@ -94,6 +101,12 @@ class RemoteFrontend:
             raise ValueError("会话运行实例已变化，请重新连接")
         return token
 
+    def ask_head(self, session_id, input_id):
+        from .service_business_dto import InputResult
+
+        return self._queries.request("ask_head", dict(session_id=session_id, input_id=input_id),
+                                     lambda row: None if row is None else InputResult.from_record(row))
+
     def session(self, session_id):
         row = self._sessions.get(session_id)
         return row.address.session if row else None
@@ -126,7 +139,8 @@ class RemoteFrontend:
             if SessionAddress.from_record(row["address"]).session.session_id != session_id:
                 raise ProtocolError("Attached session changed")
             return self._sessions.publish(row)
-        return self._attach.request("attach", dict(session_id=session_id), publish)
+        return self._attach.request("attach", dict(session_id=session_id), publish,
+                                    timeout=LONG_TIMEOUT)
 
     def create_session(self, context):
         def publish(row):
@@ -172,11 +186,20 @@ class RemoteFrontend:
             return self.command(token, "rename", name)
         return self._record_command(session_id, "rename", name)
 
+    def navigation_labels(self, action, *, expected_revision=None, **params):
+        if not isinstance(action, str) or not action:
+            raise ValueError("标签操作无效")
+        return self._commands.request(
+            "navigation_labels",
+            dict(action=action, expected_revision=expected_revision, **params),
+        )
+
     def review_deletion(self, session_id):
         from .recovery_contract import validate_review
 
         return self._queries.request("deletion_review", dict(session_id=session_id),
-                                     lambda row: validate_review(row, session_id))
+                                     lambda row: validate_review(row, session_id),
+                                     timeout=LONG_TIMEOUT)
 
     def delete_session(self, session_id, *, review_version=None):
         return self._record_command(session_id, "delete", None, review_version=review_version)
@@ -200,12 +223,19 @@ class RemoteFrontend:
                              resume=resume)
 
     def reconnect_session(self, token, feed):
-        """Rebuild the displayed window from its captured durable start on a new connection."""
+        """Capture the resume cursor of this page's own replay, if it has one.
+
+        服务窗口重连时原样重放捕获的窗口起点；只读历史窗口没有续播游标，
+        返回 ``False`` 让调用方按自然窗口重新准备。
+        """
         self.handle(token)
         if (not isinstance(feed, RemoteFeed) or feed._api is not self
-                or feed._wire_cursor.address.session != token or feed._wire_cursor.readonly):
+                or feed._wire_cursor.address.session != token):
             raise ValueError("重连回放属于其他页面或运行实例")
+        if feed._wire_cursor.readonly:
+            return False
         self._reconnect = feed._wire_cursor
+        return True
 
     def _prepare(self, session_id, runtime, activation, messages, readonly, *, resume=None):
         params = dict(session_id=session_id, runtime_id=runtime, activation=activation,
@@ -213,7 +243,7 @@ class RemoteFrontend:
                       resume=None if resume is None else resume.record())
         return self._events.request("prepare", params,
             lambda row: publish_replay(self, params, row),
-            discard=lambda prepared: prepared.stream.close())
+            discard=lambda prepared: prepared.stream.close(), timeout=LONG_TIMEOUT)
 
     def preview_session(self, session_id, activation=0, messages=0):
         token = self.session(session_id)
@@ -315,6 +345,28 @@ class RemoteFrontend:
         for lane in (self._attach, self._events, self._queries, self._commands):
             lane.close()
         self._admin.close()
+
+    def _rebind_service(self, descriptor):
+        """Replace a stopped service with its current descriptor, keeping this API object."""
+        if descriptor == self.descriptor:
+            return False
+        old_lanes = (self._attach, self._events, self._queries, self._commands)
+        old_admin = self._admin
+        self.descriptor = descriptor
+        self._sessions = RemoteSessions(descriptor)
+        self._reconnect = None
+        self._force_stop = None
+        client = uuid.uuid4().hex
+        self._client_id = client
+        self._attach = FrontendLane(descriptor, client, "frontend.attach")
+        self._events = FrontendLane(descriptor, client, "frontend.events")
+        self._queries = FrontendLane(descriptor, client, "frontend.query")
+        self._commands = FrontendLane(descriptor, client, "frontend.command")
+        self._admin = ServiceClient(descriptor, client_id=client)
+        for lane in old_lanes:
+            lane.close()
+        old_admin.close()
+        return True
 
     @property
     def desktop_busy(self):

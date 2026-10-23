@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "name": "amsLDO-AON-behavior-evidence-required-v1",
+  "status": "blocked_pending_block_characterization",
+  "target": {
+    "cell": "LDO_AON",
+    "module": "LDO_AON"
+  },
+  "behavior": {
+    "reference_only": false,
+    "equation": null,
+    "supply_window": null,
+    "EN_thresholds": null,
+    "transient_model": null
+  },
+  "parameters": {},
+  "required_evidence": [
+    "block_DC_and_load_characterization",
+    "block_transient",
+    "approved_correlation_tolerances",
+    "hidden_holdout"
+  ]
+}

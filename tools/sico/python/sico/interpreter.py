@@ -19,10 +19,26 @@ def cad_python(environment=None):
     root = value(env, "SICO_PYTHON_ROOT", ("CAD_PYTHON_ROOT",))
     if ("SICO_PYTHON" in env and not explicit) or ("SICO_PYTHON_ROOT" in env and not root):
         raise ValueError("Explicit SICO_PYTHON/SICO_PYTHON_ROOT must not be empty")
-    root = root or "/software/pkgs/python/3.9.13"
-    path = Path(explicit or str(Path(root) / "bin/python3")).expanduser()
+    selected = current(env)
+    bundled = selected.runtime_python
+    if bundled is not None:
+        # One installation owns one interpreter. Stale modulefile selectors
+        # must not make the source launcher disagree with the native launcher.
+        return str(bundled)
+    dev = selected.dev_python
+    if explicit:
+        path = Path(explicit).expanduser()
+    elif root:
+        path = Path(root).expanduser() / "bin/python3"
+    elif dev is not None:
+        path = dev
+    else:
+        path = Path("/software/pkgs/python/3.9.13/bin/python3")
     if not path.is_absolute() or not path.is_file() or not os.access(path, os.X_OK):
-        raise ValueError("SICO_PYTHON must select an available absolute Python executable")
+        raise ValueError(
+            "SiCo Python is unavailable: set $SICO_HOME/runtime/python or "
+            "etc/config/dev-runtime"
+        )
     return str(path)  # Preserve site NAS aliases.
 
 

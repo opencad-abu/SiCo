@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from ..agent.context import ArtifactLocator
+from ..contract import ArtifactLocator
 from .assembler_io import payload_artifact, sha256_file
 
 CONFIG_BINDING_SCHEMA_VERSION = "aivw.config.binding.v1"

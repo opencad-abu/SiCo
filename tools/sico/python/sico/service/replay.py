@@ -6,7 +6,7 @@ from ..core.contracts import BoundContext
 from ..storage.history import SessionReader
 from ..storage.index import CONTEXT_KINDS
 from .event_stream import EventStream
-from .events import SESSION_CONTRACT, EventCursor
+from ..core.session_events import SESSION_CONTRACT, EventCursor
 from .preview_source import PreviewSource
 from .published import freeze
 
@@ -46,6 +46,9 @@ def prepare_replay(controller, identity, activation, messages, sessions=None, af
                              history_sequence=controller.history_sequence)
         cursor.sequence = start - 1
         cursor.native_origins = origins
+        seat = journal_window_seat(controller.journal.records, start)
+        if seat is not None:
+            cursor.seed(seat)
         stream = EventStream(controller, cursor, activation, committed)
         stream.sessions = sessions
         if sessions is not None:
@@ -83,6 +86,7 @@ class PreviewWindow:
     context: dict
     deleted: bool
     origins: object = None
+    seat: object = None
 
 
 def _open_window(journal, messages):
@@ -92,15 +96,18 @@ def _open_window(journal, messages):
         start = journal.replay_start(messages) if messages else 1
         committed = len(journal.records)
         deleted = journal.deleted
-        context = {}
-        for row in reversed(journal.records):
-            if row["kind"] not in {"session.created", "task.started"}:
-                continue
-            value = row["payload"].get("context")
-            if isinstance(value, dict):
-                context = value
-                break
-    return PreviewWindow(start, 0, committed, context, deleted, journal.native_origins(start - 1))
+        seat = journal_window_seat(journal.records, start)
+        context = journal.latest_context()
+    return PreviewWindow(start, 0, committed, context, deleted, journal.native_origins(start - 1),
+                         seat)
+
+
+def journal_window_seat(records, start):
+    """Task state written before a window that begins mid-task, else ``None``."""
+
+    if start <= 1 or records[start - 1]["kind"] == "task.started":
+        return None
+    return records[start - 2]["state"]["task"]
 
 
 def _closed_window(reader, messages):
@@ -109,7 +116,7 @@ def _closed_window(reader, messages):
     window = reader.tail_window(messages)
     origins = reader.origins_before(window.offset) if window.start > 1 else None
     return PreviewWindow(window.start, window.offset, window.committed, window.context,
-                         window.deleted, origins)
+                         window.deleted, origins, window.seat)
 
 
 def _open_task_window(journal):
@@ -197,6 +204,8 @@ def prepare_preview(sessions, session_id, runtime, activation, messages=0, task_
     cursor.sequence = window.start - 1
     if window.origins is not None:
         cursor.native_origins = window.origins
+    if window.seat is not None:
+        cursor.seed(window.seat)
     stream = EventStream(None, cursor, activation, window.committed, reader=reader, events=source,
                          preview_offset=window.offset)
     stream.sessions, stream.preview_owner = sessions, controller

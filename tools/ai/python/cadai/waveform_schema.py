@@ -1,7 +1,8 @@
 """Bounded waveform capture and deterministic, explicit measurement recipes."""
 
 from .circuit_schema import string_schema, tool
-from .circuit_spec_schema import array, enum, obj
+from .circuit_spec_schema import array, enum, obj, ref
+from .schema_refs import factor
 
 WAVE_SCHEMA = "cad.maestro.waveform.v1"
 MEASUREMENT_SCHEMA = "cad.waveform.measurements.v1"
@@ -46,6 +47,25 @@ PAIR_RECIPE = obj(
         "denominator_floor": QUANTITY,
     },
     ("id", "operation", "interpolation", "result_unit"),
+)
+# The explicit recipe above stays the one authored source (recipe-union
+# consumers read it); the wire schema is its factored projection, which
+# expands back to the same contract.
+PAIR_DEFS = {
+    "quantity": QUANTITY,
+    "window": WINDOW,
+    "event": obj(
+        {
+            "window": ref("window"),
+            "threshold": ref("quantity"),
+            "direction": enum("rising", "falling", "either"),
+            "occurrence": {"type": "integer", "minimum": 1, "maximum": MAX_SAMPLES},
+        }
+    ),
+}
+PAIR_ARGUMENTS, PAIR_ARGUMENT_DEFS = factor(
+    {"input_ref": REF, "output_ref": REF, "recipes": array(PAIR_RECIPE, 32, 1)},
+    PAIR_DEFS,
 )
 
 WAVEFORM_TOOLS = [
@@ -94,22 +114,21 @@ WAVEFORM_TOOLS = [
     ),
     tool(
         "measure_waveform_pair",
-        "Measure two immutable real waveform_refs offline from the SAME exact history/test/corner/"
-        "point/analysis and result snapshot. Input/output roles are explicit. "
-        "delay requires input_event and output_event "
-        "(window, threshold, direction, 1-based occurrence), "
-        "pairing=explicit_occurrences "
-        "and a time result_unit. Returns SIGNED output crossing time minus input crossing time; "
-        "no automatic next-edge pairing. gain_sample requires at; "
-        "gain_rms requires one shared window "
-        "(includes DC). Gains return output/input, result_unit=1, with compatible voltage/current/"
-        "dimensionless units and an explicit nonnegative denominator_floor quantity. "
-        "abs(input)<=floor is an error, including equality/zero. "
-        "Each waveform uses its own sampling "
-        "grid and linear interpolation, no extrapolation. Returns constituent values and sources, "
-        "and per-recipe scalar/missing/error status. No complex AC or spec qualification.",
-        {"input_ref": REF, "output_ref": REF, "recipes": array(PAIR_RECIPE, 32, 1)},
+        "Measure two real waveform_refs offline from the same exact history/test/corner/point/"
+        "analysis and result snapshot; roles are explicit. delay needs input_event and "
+        "output_event (window, threshold, direction, 1-based occurrence), "
+        "pairing=explicit_occurrences and a time result_unit; it returns SIGNED output minus "
+        "input crossing time, with no automatic next-edge pairing. gain_sample needs at; gain_rms "
+        "needs one shared window (includes DC). Gains return output/input, result_unit=1, with "
+        "compatible voltage/current/dimensionless units and explicit nonnegative "
+        "denominator_floor; abs(input)<=floor errors, including equality/zero. Each waveform "
+        "keeps its own grid with linear interpolation, no extrapolation. No complex AC or spec "
+        "qualification.",
+        PAIR_ARGUMENTS,
         ("input_ref", "output_ref", "recipes"),
+        help_text=(
+            "Returns constituent values and sources, and per-recipe scalar/missing/error status."),
+        defs=PAIR_ARGUMENT_DEFS,
     ),
 ]
 WAVEFORM_NAMES = frozenset(t["name"] for t in WAVEFORM_TOOLS)

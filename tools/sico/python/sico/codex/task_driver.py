@@ -18,10 +18,13 @@ class TaskDriver:
         self.finish, self.close, self.consume_turn = finish, close, consume_turn
         self.attachment_instruction = attachment_instruction
         self.settings_status = "not_sent"
+        self.turn_start_rejected = False
         self.binding = binding
+        self.cancelled = lambda: False
 
     def drive(self, text, cancelled, *, context, input_id, origin, attachments, inputs,
               turn_options, operation):
+        self.cancelled = cancelled
         yield from self.journal.drain()
         if cancelled():
             if turn_options:
@@ -47,6 +50,9 @@ class TaskDriver:
         self.options.check_inputs(inputs or [], turn_options)
         extra_inputs = wire_inputs(self.journal.journal, inputs or [],
                                    self.options.catalog["skills"])
+        # CAD object references are model-visible text facts, not upstream
+        # Responses input parts. Keep them in reference_text only.
+        extra_inputs = [row for row in extra_inputs if row.get("type") != "object_ref"]
         settings = self.options.params(turn_options) if turn_options else {}
         names = {tool["name"] for tool in self.schemas()}
         method = self.context_method(context)
@@ -108,21 +114,26 @@ class TaskDriver:
             yield from self.thread_ops.consume(operation, cancelled)
             return
         self.settings_status = "unconfirmed"
-        result = rpc.request(
-            "turn/start",
-            {
-                "threadId": self.binding.thread_id,
-                "input": [{
-                    "type": "text",
-                    "text": text + (
-                        "\n\n" + self.attachment_instruction(attachments)
-                        if attachments else ""
-                    ) + reference_text(inputs or []),
-                }, *extra_inputs],
-                "clientUserMessageId": input_id,
-                **settings,
-            },
-        )
+        try:
+            result = rpc.request(
+                "turn/start",
+                {
+                    "threadId": self.binding.thread_id,
+                    "input": [{
+                        "type": "text",
+                        "text": text + (
+                            "\n\n" + self.attachment_instruction(attachments)
+                            if attachments else ""
+                        ) + reference_text(inputs or []),
+                    }, *extra_inputs],
+                    "clientUserMessageId": input_id,
+                    **settings,
+                },
+            )
+        except RpcRejected:
+            self.turn_start_rejected = True
+            self.settings_status = "rejected"
+            raise
         turn_id = result["turn"]["id"]
         self.settings_status = "accepted"
         if turn_options:
@@ -137,19 +148,30 @@ class TaskDriver:
         if turn_options and self.settings_status != "accepted":
             self.journal.emit("codex.turn.settings", {
                 "thread_id": self.binding.thread_id, "options": turn_options,
-                "status": "rejected" if isinstance(exc, RpcRejected) else self.settings_status,
+                "status": self.settings_status,
             })
         # Stop the old process and settle its in-flight read before another task can start.
-        self.close()
+        failure = exc
+        cleanup_error = None
+        try:
+            self.close()
+        except Exception as exc:
+            cleanup_error = exc
         message = (
-            str(exc)
-            if isinstance(exc, (RpcError, NeedsReconcile, ValueError))
-            else "Codex backend unavailable; check configuration"
+            str(failure)
+            if isinstance(failure, (RpcError, NeedsReconcile, ValueError))
+            else "Codex backend unavailable; check configuration (%s: %s)"
+                 % (type(failure).__name__, str(failure)[:300] or "no message")
         )
         status = "needs_reconcile"
-        if isinstance(exc, GoalStopped) and not self.source_status()[0]:
+        if self.cancelled():
             status = "cancelled"
-        elif operation and isinstance(exc, RpcRejected):
+        elif isinstance(failure, GoalStopped) and not self.source_status()[0]:
+            status = "cancelled"
+        elif ((operation or self.turn_start_rejected) and isinstance(failure, RpcRejected)):
             status = "failed"
+        if cleanup_error is not None:
+            message += ("；Codex runtime cleanup unconfirmed (%s); ownership retained, "
+                        "no request was replayed" % type(cleanup_error).__name__)
         self.finish(status, message)
         yield from self.journal.drain()

@@ -1,10 +1,11 @@
-"""MCP handler for local search, documents, skill checks, and references."""
+"""MCP handler for local search, help, documents, skill checks, and references."""
 
 from __future__ import annotations
 
 from typing import Any
 
 from .document_tools import DOCUMENT_NAMES, DocumentError, call_document_tool
+from .mcp_help import mcp_help
 from .search import search
 from .skill_check_tools import check_skill
 from .skill_reference import (
@@ -14,10 +15,12 @@ from .skill_reference import (
     SkillReferenceUnavailable,
 )
 from .socket_server import RequestFailure
-from .tool_help import tool_help
+from .tool_help import cds_help
 
-
-RESOURCE_NAMES = frozenset({"Search", "tool_help", "check_skill"} | DOCUMENT_NAMES | SKILL_REFERENCE_TOOL_NAMES)
+RESOURCE_NAMES = frozenset(
+    {"Search", "cds_help", "mcp_help", "check_skill"}
+    | DOCUMENT_NAMES | SKILL_REFERENCE_TOOL_NAMES
+)
 
 
 class ResourceHandlerArgumentError(ValueError):
@@ -34,9 +37,10 @@ def dispatch_resource(
     """Dispatch one bounded resource tool without owning server resources."""
     if name not in RESOURCE_NAMES:
         raise ValueError(f"unknown resource tool: {name}")
-    if name in {"Search", "tool_help"}:
+    if name in {"Search", "cds_help", "mcp_help"}:
+        handler = {"Search": search, "cds_help": cds_help, "mcp_help": mcp_help}[name]
         try:
-            detail = (search if name == "Search" else tool_help)(arguments, workspace)
+            detail = handler(arguments, workspace)
         except RequestFailure as exc:
             if exc.code == "invalid_params":
                 raise ResourceHandlerArgumentError(str(exc)) from exc

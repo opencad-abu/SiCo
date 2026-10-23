@@ -6,16 +6,23 @@ import time
 from copy import deepcopy
 from pathlib import Path
 
+from cadai.mcp_server import BUILTIN_IDS, KNOWLEDGE_ID, RESERVED_IDS
+
+from ..agent_resources import fingerprints
 from .resource_config import ResourceConfig
+from .resource_selection import ResourceSelection
 from .rpc import RpcError
 
 
 class ExternalResources:
     def __init__(self, backend, records):
         self.backend, self.config = backend, None
+        self.selection = ResourceSelection(backend, records)
+        self._origin, self._drift = "defaults", []
         self.snapshot = {"status": "not_started", "rows": [], "skills": [], "plugins": [],
                          "dependencies": [], "issues": []}
         self.managed, self.installed, self.bound = set(), {}, []
+        self.skill_definitions = {}
         for event in records:
             if event["kind"] == "codex.thread":
                 self.bound = event["payload"].get("capability_roots", [])
@@ -25,6 +32,13 @@ class ExternalResources:
                                     if row.get("plugin_id"))
                 self.installed.update(self.snapshot.get("installed", {}))
         self.published = deepcopy(self.snapshot)
+        self.metrics = self.snapshot.get("mcp_metrics", [])
+
+    def _builtin_rows(self, present=()):
+        """Built-in and derived MCP rows in reserved-id order."""
+        known = set(present)
+        return [{"id": name} for name in RESERVED_IDS
+                if name in BUILTIN_IDS or name in known]
 
     def publish(self):
         self.snapshot["installed"] = deepcopy(self.installed)
@@ -33,32 +47,65 @@ class ExternalResources:
             self.backend._event("codex.resources.updated", snapshot)
             self.published = snapshot
 
-    def prepare(self):
+    def prepare(self, *, capture=True):
         self.config = None
         self.snapshot = {"status": "pending", "configured": True, "rows": [], "skills": [],
                          "plugins": [], "dependencies": [], "issues": []}
         try:
-            self.config = ResourceConfig(
-                self.backend.provider, str(self.backend.journal.root.parents[2]),
-            )
+            selected, baseline, self._origin = self.selection.resolve()
+            self.config = ResourceConfig(selected)
+            observed = fingerprints.capture(self.config.rows, manifest=selected["manifest"])
+            self._drift = fingerprints.compare(baseline, observed) if baseline is not None else []
+            knowledge_enabled = any(
+                row["enabled"] for row in
+                self.config.document["manifest"]["knowledge_sources"])
             self.snapshot = {"status": "pending", "manifest": self.config.path,
                              "sha256": self.config.digest, "configured": self.config.configured,
                              "rows": self.config.rows, "skills": [], "plugins": [],
-                             "dependencies": [], "issues": []}
+                             "dependencies": [], "issues": [],
+                             "builtin_mcp": self._builtin_rows(
+                                 (KNOWLEDGE_ID,) if knowledge_enabled else ()),
+                             "configuration": self.selection.view(selected, self._drift, self._origin)}
             if self.backend.thread_id and self.config.selected_roots() != self.bound:
                 raise ValueError("此会话的能力目录已固定；更改 capability roots 后请新建会话")
             if any(r["kind"] == "capability_roots" and r["status"] == "unavailable"
                    for r in self.config.rows):
                 raise ValueError("选定的能力目录不可用，请恢复目录或新建会话")
-        except ValueError as exc:
+            if any(row["blocked"] for row in self._drift):
+                raise ValueError("已选资源身份或插件内容发生变化，请恢复原资源或新建会话")
+            if capture:
+                self.selection.freeze(selected, baseline if baseline is not None else observed, self._origin)
+                self.snapshot["configuration"] = self.selection.view(selected, self._drift, self._origin)
+        except (ValueError, OSError, KeyError, TypeError) as exc:
             self.snapshot.update(status="unavailable", issues=[str(exc)])
             self.publish()
             raise RpcError(str(exc)) from None
         self.publish()
 
     def register(self, rpc):
+        from .feature_groups import runtime_options
+
+        plugins = self.config.ready("plugins")
+        if plugins and not runtime_options(self.backend.features.groups)["features.plugins"]:
+            message = ("本地插件未加载：plugins 特性已关闭，以禁用 GitHub 插件目录同步。"
+                       "请取消选择插件，或在新会话中明确启用 plugins"
+                       "（Codex 0.162.1 会同时恢复 GitHub 同步）。未启动模型任务。")
+            for row in plugins:
+                row.update(status="unavailable", message=message)
+            self.snapshot.update(status="unavailable", issues=[message])
+            self.publish()
+            raise RpcError(message)
         try:
             self._register(rpc)
+            from .external_mcp import check_identities
+            from .resource_skills import apply
+
+            self.skill_definitions = check_identities(rpc, self.config)
+            external = getattr(self.backend.runtime, "external_mcp", None)
+            if external is not None and self.config.configured:
+                external.register(rpc)
+                external.verify(rpc, self.selection.project, builtin=BUILTIN_IDS)
+            apply(rpc, self.config, self.selection.project, self.skill_definitions)
         except (ValueError, OSError, RuntimeError, KeyError, TypeError):
             message = "外部资源注册未完成；未启动模型任务，请核对清单和本地依赖"
             self.snapshot.update(status="unavailable", issues=[message])
@@ -66,64 +113,17 @@ class ExternalResources:
             raise RpcError(message) from None
 
     def _register(self, rpc):
-        if not self.config.configured and not self.managed:
-            return
-        roots = [row["path"] for row in self.config.ready("skill_roots")]
-        plugins = self.config.ready("plugins")
-        selected = {row["plugin_id"] for row in plugins}
-        for key in sorted(self.managed - selected):
-            # Use the public config writer: CLI dotted-key overrides do not
-            # reliably address a quoted plugin id. This runs before thread load.
-            rpc.request("config/value/write", {
-                "keyPath": 'plugins."' + key + '".enabled',
-                "value": False, "mergeStrategy": "replace",
-            }, timeout=3)
-        rpc.request("skills/extraRoots/set", {"extraRoots": roots}, timeout=5)
-        installed = self.plugin_inventory(rpc) if plugins else []
-        deadline = time.monotonic() + 20
-        for row in plugins:
-            try:
-                # Persist ownership before installation, including an uncertain/partial result.
-                self.managed.add(row["plugin_id"])
-                self.publish()
-                fingerprint = [row[k] for k in ("path", "bundle", "manifest_sha256",
-                                                "marketplace_sha256")]
-                if (self.installed.get(row["plugin_id"]) == fingerprint
-                        and any(p.get("id") == row["plugin_id"] and p.get("installed")
-                                and p.get("enabled")
-                                for p in installed)):
-                    row.update(status="registered", message="已注册，等待运行时检查")
-                    continue
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise ValueError("Plugin registration time budget exceeded")
-                # No account or global installation: native cache/config belong to this journal.
-                result = rpc.request("plugin/install", {
-                    "marketplacePath": row["path"], "pluginName": row["name"],
-                }, timeout=min(10, remaining))
-                self.installed[row["plugin_id"]] = fingerprint
-                row.update(status="registered", message="已注册，等待运行时检查")
-                if result.get("appsNeedingAuth"):
-                    row["auth_required"] = True
-                    row.update(status="dependency_missing", message="插件应用需要账号授权")
-            except (ValueError, OSError, RuntimeError):
-                row.update(status="unavailable", message="本地插件注册失败，请核对资源和依赖")
-                # Installation may have partially succeeded. Do not load an uncertain plugin.
-                raise RpcError("本地插件注册未完成：" + row["id"]) from None
-            finally:
-                self.publish()
+        from .resource_registration import register
 
-    def plugin_inventory(self, rpc):
-        response = rpc.request("plugin/installed", {"cwds": self.marketplace_cwds()}, timeout=5)
-        return [item for market in response["marketplaces"] for item in market["plugins"]]
+        register(rpc, self.config, self.selection.project, self.managed, self.installed, self.publish)
 
     def marketplace_cwds(self):
-        return [self.backend.runtime.cwd, *dict.fromkeys(
-            str(Path(r["path"]).parents[2]) for r in self.config.ready("plugins")
-        )]
+        from .resource_registration import marketplace_cwds
+
+        return marketplace_cwds(self.config, self.selection.project)
 
     def inspect(self, rpc):
-        issues, skills, plugins, dependencies = [], [], [], []
+        issues, skills, plugins, dependencies, servers = [], [], [], [], []
         deadline = time.monotonic() + 10
         def request(method, params, timeout=3):
             remaining = deadline - time.monotonic()
@@ -131,19 +131,22 @@ class ExternalResources:
                 raise ValueError("Resource inspection time budget exceeded")
             return rpc.request(method, params, timeout=min(timeout, remaining))
         try:
+            selected, baseline, _ = self.selection.resolve()
+            if baseline is not None:
+                observed = fingerprints.capture(ResourceConfig(selected).rows, manifest=selected["manifest"])
+                self._drift = fingerprints.compare(baseline, observed)
             response = request("skills/list", {
-                "cwds": [self.backend.runtime.cwd], "forceReload": True,
+                "cwds": [self.selection.project], "forceReload": True,
             }, timeout=5)
             for group in response["data"]:
                 available = 512 - len(skills)
                 if len(group["skills"]) > available:
                     issues.append("技能清单超过显示上限，仅显示前 512 项")
                 for item in group["skills"][:available]:
-                    skills.append({key: item.get(key) for key in
-                                   ("name", "path", "enabled", "scope", "pluginId")})
-                    for dep in (item.get("dependencies") or {}).get("tools", []):
-                        dependencies.append({"skill": item["name"], "type": dep.get("type"),
-                                             "name": dep.get("value"), "status": "unverified"})
+                    skills.append({**{key: item.get(key) for key in
+                                   ("name", "path", "enabled", "scope", "pluginId")},
+                                   "description": str(item.get("description") or "")[:2048],
+                                   "dependencies": (item.get("dependencies") or {}).get("tools", [])[:64]})
                 if group.get("errors"):
                     issues.append("部分技能无法解析，请核对 SKILL.md 格式和目录权限")
             response = request("plugin/installed", {
@@ -170,16 +173,12 @@ class ExternalResources:
                 seen.add(cursor)
             else:
                 raise ValueError("MCP inventory exceeds page budget")
-            for dep in dependencies:
-                matches = [s for s in servers if dep["type"] == "mcp" and s["name"] == dep["name"]]
-                if matches:
-                    server = matches[0]
-                    dep["status"] = ("available" if server.get("runtimeStatus") == "connected"
-                                     and not server.get("toolsError") else "unavailable")
-                elif dep["type"] == "mcp":
-                    dep["status"] = "missing"
+            from .resource_skills import dependencies as dependency_statuses
+
+            dependencies = dependency_statuses(skills, servers, getattr(
+                self.backend.runtime, "resource_environment_names", ()))
             for row in self.config.rows:
-                if row.get("load_error"):
+                if not row["enabled"] or row.get("load_error"):
                     continue
                 path = Path(row["path"])
                 if not (path.is_file() if row["kind"] == "plugins" else path.is_dir()):
@@ -228,17 +227,36 @@ class ExternalResources:
         except (ValueError, OSError, RuntimeError, KeyError, TypeError):
             issues.append("外部资源检查未完成；保留注册信息，请稍后重新检查")
             for row in self.config.rows:
-                if not row.get("load_error"):
+                if row["enabled"] and not row.get("load_error"):
                     row.update(status="unverified", message="本次检查未完成，可用性尚未确认")
                     row.pop("servers", None)
-        self.snapshot.update(status="checked" if not issues else "partial", skills=skills,
+        from .resource_skills import decorate
+        from .resource_metrics import summaries
+
+        self.metrics = summaries(servers, self.metrics)
+        self.snapshot["mcp_metrics"] = self.metrics
+
+        external = getattr(self.backend.runtime, "external_mcp", None)
+        if external is not None:
+            self.snapshot["mcp_servers"] = external.statuses(servers if not issues else [])
+        present = {s.get("name") for s in servers if s.get("name") and not s.get("pluginId")}
+        self.snapshot["builtin_mcp"] = self._builtin_rows(present)
+        self.snapshot["knowledge_sources"] = [
+            {"id": row["id"], "status": "unchecked" if row["enabled"] else "disabled",
+             "message": "索引与引用请在知识源预览中检查" if row["enabled"] else "未启用"}
+            for row in self.config.document["manifest"]["knowledge_sources"]]
+        self.snapshot.update(status="checked" if not issues else "partial",
+                             skills=decorate(skills, self.skill_definitions), inventory_stale=False,
                              plugins=plugins, dependencies=dependencies, issues=issues)
+        self.snapshot["configuration"] = self.selection.view(
+            self.config.document, self._drift, self._origin)
         self.publish()
         return deepcopy(self.published)
 
     def status(self):
         if self.backend.runtime is None:
-            self.prepare()
+            self.prepare(capture=False)
         if self.backend.runtime:
-            return self.inspect(self.backend.runtime.rpc)
+            with self.backend._runtime_rpc() as rpc:
+                return self.inspect(rpc)
         return deepcopy(self.published)

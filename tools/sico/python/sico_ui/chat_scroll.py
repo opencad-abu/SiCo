@@ -7,6 +7,7 @@ from PyQt5.QtCore import QEvent, QObject, Qt, QTimer
 from PyQt5.QtWidgets import QLabel
 
 from .receipts import DataReceipt
+from .theme import active_palette
 from .transcript import Transcript
 
 
@@ -27,7 +28,7 @@ class ChatScroll(QObject):
         self.applying = False
         self.hint = QLabel(window.display.viewport())
         self.hint.setTextFormat(Qt.RichText)
-        self.hint.setStyleSheet('background: #fff; padding: 4px; color: #666;')
+        self.restyle_hint()
         self.direction = 'before'
         self.hint.linkActivated.connect(lambda _url: self.load(self.direction))
         self.hint.hide()
@@ -37,6 +38,12 @@ class ChatScroll(QObject):
         view.installEventFilter(self)
         view.verticalScrollBar().valueChanged.connect(self.scrolled)
         window.page.invalidated.connect(self.reset)
+
+    def restyle_hint(self):
+        palette = active_palette()
+        self.hint.setStyleSheet(
+            "background: %s; padding: 4px; color: %s;" % (
+                palette.background, palette.muted))
 
     def reset(self):
         self.receipt.clear()
@@ -57,6 +64,15 @@ class ChatScroll(QObject):
 
     def shown(self):
         return self.history if self.history is not None else self.current()
+
+    def locate(self, message_id):
+        transcript = self.shown()
+        if transcript is None:
+            return False
+        if not transcript.scroll_to_message(self.window.display, message_id):
+            return False
+        self.window.display.setFocus()
+        return True
 
     def eventFilter(self, _obj, event):
         if event.type() == QEvent.Wheel and event.angleDelta().y() > 0:
@@ -97,7 +113,7 @@ class ChatScroll(QObject):
                          for m in source.messages)
         # Pin a consistent snapshot while the independent live tail keeps advancing.
         self.end = max(delivery.cursor.sequence, source._source_sequence)
-        self.window.update_latest()
+        self.window.details.update_latest()
 
     def scrolled(self, *_args):
         if (self.applying or self.window.page.opening
@@ -165,7 +181,7 @@ class ChatScroll(QObject):
         finally:
             self.applying = False
         self.show_hint()
-        self.window.update_latest()
+        self.window.details.update_latest()
         # Short pages may leave the viewport near the same edge. Fetch another
         # only while more rows exist, with at most one outstanding receipt.
         if tuple(row['message_id'] for row in self.history.messages) != previous:
@@ -192,7 +208,26 @@ class ChatScroll(QObject):
             self.shown().render(self.window.display, force=force)
         finally:
             self.applying = False
-        self.window.update_latest()
+        self.window.details.update_latest()
+
+    def restyle(self):
+        """Rebuild every retained transcript with the active palette and font."""
+        bar = self.window.display.verticalScrollBar()
+        position = bar.value()
+        self.restyle_hint()
+        sources = (self.history, self.current())
+        for source in sources:
+            if source is None:
+                continue
+            source._document = None
+            source._positions = []
+            source._rendered = []
+            source.dirty = True
+        shown = self.shown()
+        if shown is None:
+            return
+        self.render(force=True)
+        bar.setValue(min(position, bar.maximum()))
 
     def has_updates(self):
         source = self.current()
@@ -200,17 +235,16 @@ class ChatScroll(QObject):
                 and source._source_sequence > self.end)
 
     def latest(self):
-        if self.history is None:
-            return False
-        self.reset()
-        self.applying = True
-        try:
-            source = self.current()
-            source._document = None
-            source.render(self.window.display, force=True)
-            bar = self.window.display.verticalScrollBar()
-            bar.setValue(bar.maximum())
-        finally:
-            self.applying = False
-        self.window.update_latest()
+        if self.history is not None:
+            self.reset()
+            self.applying = True
+            try:
+                source = self.current()
+                source._document = None
+                source.render(self.window.display, force=True)
+            finally:
+                self.applying = False
+        bar = self.window.display.verticalScrollBar()
+        bar.setValue(bar.maximum())
+        self.window.details.update_latest()
         return True

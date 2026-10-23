@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "recipe_id": "saradc.comparator_new",
+  "revision": 3,
+  "purpose": "First general-workflow qualification recipe for a clocked differential comparator; it is a regression input, not a platform special case.",
+  "target": {
+    "library": "saradc",
+    "cell": "comparator_new",
+    "module": "comparator_new",
+    "source_views": {
+      "schematic": "schematic",
+      "symbol": "symbol",
+      "config": null,
+      "maestro": "maestro"
+    },
+    "output_view": {
+      "name": "rnm",
+      "view_type": "systemVerilogText",
+      "language": "systemverilog",
+      "primary_file": "verilog.sv"
+    }
+  },
+  "structure": {
+    "provider": "cadence_si",
+    "authoritative": true,
+    "required_artifacts": ["netlist", "map", "globalmap", "netlister_log"]
+  },
+  "inputs": {
+    "interface_contract": "product:contracts/comparator_new.json",
+    "behavior_spec": "product:contracts/comparator_new_rnm.json",
+    "correlation_policy": "product:contracts/comparator_new_correlation.json"
+  },
+  "model": {
+    "class": "latched_dynamic_comparator",
+    "generation": "ai_iterative",
+    "template_policy": "reference_only",
+    "provenance_required": [
+      "model",
+      "model_version",
+      "prompt_hash",
+      "template_hashes",
+      "context_hashes",
+      "revision_parent",
+      "feedback_hashes"
+    ]
+  },
+  "workflow": {
+    "gates": [
+      {"id": "snapshot", "executor": "virtuoso.snapshot", "needs": []},
+      {"id": "structure", "executor": "cadence.si", "needs": ["snapshot"]},
+      {"id": "generate", "executor": "ai.generate_model", "needs": ["structure"]},
+      {"id": "connectivity", "executor": "connectivity.check", "needs": ["structure", "generate"]},
+      {"id": "model_check", "executor": "xcelium.rnm_check", "needs": ["generate", "connectivity"]},
+      {"id": "golden", "executor": "spectre.golden_evidence", "needs": ["snapshot"]},
+      {"id": "correlation", "executor": "evidence.correlate", "needs": ["model_check", "golden"]},
+      {"id": "publish", "executor": "virtuoso.publish_text_view", "needs": ["correlation"]}
+    ]
+  },
+  "verification": {
+    "corner": {"process": "tt", "vdd": 1.2, "temperature_c": 27.0},
+    "clock": {"edge": "rising", "sample_delay_seconds": 1e-9},
+    "cases": [
+      {"id": "nominal-positive", "type": "positive_differential", "inputs": {"Din+": 0.7, "Din-": 0.5}, "expected": {"decision": "positive", "out": 1.2, "outb": 0.0}, "assertions": ["decision", "out", "outb", "complementary"]},
+      {"id": "nominal-negative", "type": "negative_differential", "inputs": {"Din+": 0.5, "Din-": 0.7}, "expected": {"decision": "negative", "out": 0.0, "outb": 1.2}, "assertions": ["decision", "out", "outb", "complementary"]},
+      {"id": "nominal-zero", "type": "zero_differential", "region": "indeterminate", "inputs": {"Din+": 0.6, "Din-": 0.6}, "expected": {"decision": "tie", "out": 0.6, "outb": 0.6}, "assertions": ["decision", "out", "outb", "complementary"]}
+    ],
+    "metrics": [
+      {"name": "decision", "kind": "categorical", "unit": "enum"},
+      {"name": "out", "kind": "numeric", "unit": "V", "absolute_tolerance": 0.01},
+      {"name": "outb", "kind": "numeric", "unit": "V", "absolute_tolerance": 0.01},
+      {"name": "resolution_time", "kind": "timing", "unit": "s", "calibration_required": true},
+      {"name": "resolution_distribution", "kind": "statistical", "unit": "probability", "calibration_required": true}
+    ],
+    "l1": {
+      "protocol": "AIVW_L1_EVENT v1 JSONL",
+      "require_exact_case_set": true,
+      "require_exact_metric_set": true,
+      "require_assertion_pass": true,
+      "minimum_case_coverage": 1.0,
+      "required_metrics": ["decision", "out", "outb"],
+      "required_checks": ["initial-state", "clock-hold"],
+      "hold_case": "nominal-positive"
+    },
+    "decision_regions": [
+      {"name": "positive", "condition": "delta > epsilon", "comparison": "deterministic"},
+      {"name": "negative", "condition": "delta < -epsilon", "comparison": "deterministic"},
+      {
+        "name": "indeterminate",
+        "condition": "abs(delta) <= epsilon",
+        "comparison": "indeterminate_or_statistical",
+        "calibration_required": ["near_zero_sweep", "pvt", "mismatch_monte_carlo", "resolution_time"]
+      }
+    ]
+  },
+  "live_update": {
+    "triggers": ["manual", "successful_save"],
+    "formal_requires_saved": true,
+    "debounce_ms": 750,
+    "invalidation": {
+      "schematic": ["snapshot", "structure", "generate", "model_check", "golden", "correlation", "publish"],
+      "symbol": ["snapshot", "structure", "generate", "model_check", "correlation", "publish"],
+      "config": ["snapshot", "structure", "model_check", "correlation", "publish"],
+      "spec": ["generate", "model_check", "golden", "correlation", "publish"],
+      "output_view": ["model_check", "correlation"]
+    }
+  },
+  "publication": {
+    "mode": "ipc_text_view",
+    "allowed_languages": ["systemverilog", "veriloga"],
+    "optimistic_concurrency": true,
+    "promotion": "human_approved",
+    "symbol_update": "forbidden",
+    "config_update": "forbidden",
+    "restore_on_failure": true
+  }
+}

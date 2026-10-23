@@ -1,0 +1,13 @@
+{
+  "kind": "full-refined-public-matrix-correlation",
+  "targets": {
+    "MASTER": {
+      "reference": "20260908T080129.259791Z-recipe-run-4178cd65898d",
+      "crosscheck": "20260908T080212.970816Z-recipe-run-fd54d4ee35e5",
+      "candidate": "20261013T082620.192753Z-transition-response-dae75d750606",
+      "old_public": "20260908T001838.659739Z-recipe-run-d98265d71c14"
+    }
+  },
+  "qualification": "NOT_ESTABLISHED",
+  "holdout_evaluated": false
+}

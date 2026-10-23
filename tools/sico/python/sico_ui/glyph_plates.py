@@ -6,7 +6,7 @@ from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QPainterPath, QTransform
 
 from .glyph_paint import ACTION_GLYPH_SIZE, filled_icon, joined, stroked
-from .theme import ACCENT, STOP
+from .theme import ACCENT, active_palette
 
 # 方片占画布的比例和圆角；挖空符号同样按画布比例给。
 PLATE_RATIO = 0.90
@@ -81,6 +81,7 @@ def plate_text_icon(size=ACTION_GLYPH_SIZE, color=ACCENT):
     return filled_icon(_plate(size).subtracted(_text_mark(size)), size, color)
 
 
-def stop_icon(size=ACTION_GLYPH_SIZE, color=STOP):
+def stop_icon(size=ACTION_GLYPH_SIZE, color=None):
     """停止图标：整块红色方片，红色只留给这个最需要看见的动作。"""
-    return filled_icon(_plate(size), size, color)
+    return filled_icon(
+        _plate(size), size, active_palette().stop if color is None else color)

@@ -17,13 +17,11 @@ from .cli_manifest import verify_run
 from .cli_text_probe import probe_text_view
 from .cli_ldo import qualify_ldo, qualify_ldo_live, plan_ldo_exploration
 from .cli_gates import run, qualify
-from .cli_qualification import qualify_provider, qualify_revision
-from .cli_external import qualify_external_provider
 
 
 def main(argv: list[str] | None = None) -> int:
     if compiled_module(__file__):
-        from .agent.runtime_info import validate_production_runtime
+        from .runtime_info import validate_production_runtime
         try:
             validate_production_runtime()
         except RuntimeError as exc:
@@ -62,12 +60,6 @@ def main(argv: list[str] | None = None) -> int:
             return qualify_ldo_live(args)
         if args.command == "plan-ldo-exploration":
             return plan_ldo_exploration(args)
-        if args.command == "qualify-provider":
-            return qualify_provider(args)
-        if args.command == "qualify-revision":
-            return qualify_revision(args)
-        if args.command == "qualify-external-provider":
-            return qualify_external_provider(args)
         if args.command == "run":
             return run(args)
         raise AssertionError(args.command)

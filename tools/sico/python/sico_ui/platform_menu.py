@@ -5,20 +5,22 @@ from types import SimpleNamespace
 from PyQt5.QtCore import QObject, Qt, QTimer
 from PyQt5.QtWidgets import QLabel, QMenu
 
+from sico.service.platform_launch import LaunchUnavailable
 from sico.service.platform_startup import PlatformStartup
 from .credentials import CredentialCancelled, credential_environment
 from .platform_picker import PlatformPicker
+from .platform_launcher import PlatformLauncher
 from .receipts import DataReceipt
 from .si_prompt import SiConfirm
 
-UNCONNECTED = "尚未连接 IC 平台，请通过“通信”菜单选择并连接平台。"
+UNCONNECTED = "尚未连接 IC 平台，请通过“通信”菜单连接或启动 CDNS-IC。"
 
 
 class PlatformMenu(QObject):
     def __init__(self, window, opened, *, args=None):
         super().__init__(window)
         self.window, self.opened, self.args = window, opened, args
-        self.picker = self.startup = self.confirmation = None
+        self.picker = self.startup = self.launcher = self.confirmation = None
         self.execution = ""
         self.ready = DataReceipt(self)
         self.credentials = DataReceipt(self)
@@ -26,6 +28,7 @@ class PlatformMenu(QObject):
         self.menu = QMenu("通信", window)
         window.menuBar().insertMenu(window.view_menu.menuAction(), self.menu)
         self.connect_action = self.menu.addAction("连接 CDNS-IC…", lambda _checked=False: self.connect())
+        self.launch_action = self.menu.addAction("启动 CDNS-IC…", lambda _checked=False: self.launch())
         for platform in ("EMPY-AE", "SNPS-CC"):
             action = self.menu.addAction("连接 " + platform + "…（暂未支持）")
             action.setEnabled(False)
@@ -66,11 +69,16 @@ class PlatformMenu(QObject):
             return
         api = window.api
         token = self.token() if api else None
-        self.connect_action.setEnabled(api is not None and self.startup is None)
-        self.cancel_action.setVisible(self.startup is not None)
-        self.disconnect_action.setEnabled(token is not None and self.startup is None)
+        idle = api is not None and self.startup is None and self.launcher is None
+        self.connect_action.setEnabled(idle)
+        self.launch_action.setEnabled(idle)
+        self.cancel_action.setVisible(self.startup is not None or self.launcher is not None)
+        self.cancel_action.setText("取消启动" if self.launcher is not None else "取消连接")
+        self.disconnect_action.setEnabled(token is not None and idle)
         if self.startup is not None:
             self.label.setText("正在关联 CDNS-IC…")
+        elif self.launcher is not None:
+            self.label.setText("正在启动 CDNS-IC…")
         elif token is None:
             self.label.setText(UNCONNECTED)
         elif self.health.pending is None:
@@ -111,6 +119,42 @@ class PlatformMenu(QObject):
         picker.finished.connect(finished)
         picker.open()
 
+    def launch(self):
+        api = self.window.api
+        if api is None or self.launcher is not None or self.startup is not None:
+            return
+        launcher = PlatformLauncher(api, api.launch_directory, parent=self)
+        try:
+            launcher.start()
+        except (LaunchUnavailable, ValueError) as exc:
+            launcher.deleteLater()
+            self.window.info_app.warning("无法启动 CDNS-IC", str(exc))
+            return
+        self.launcher = launcher
+        launcher.registered.connect(self._launched)
+        launcher.failed.connect(self._launch_failed)
+        self.refresh()
+
+    def _launched(self, candidate):
+        self._finish_launch()
+        if self.token() is not None:
+            self.window.info_app.notice("CDNS-IC 已启动",
+                "新实例已注册为候选。关闭 SiCo 不会关闭该 CDNS-IC/Virtuoso；"
+                "当前会话不会切换目标，可在“通信 → 连接 CDNS-IC…”中选择它。")
+            self.refresh()
+            return
+        self._start(candidate)
+
+    def _launch_failed(self, message):
+        self._finish_launch()
+        self.window.info_app.warning("CDNS-IC 启动未完成", message)
+        self.refresh()
+
+    def _finish_launch(self):
+        if self.launcher is not None:
+            self.launcher.cancel()
+            self.launcher = None
+
     def _start(self, candidate):
         args = self.args or SimpleNamespace(provider_config=None,
                                             launch_dir=str(self.window.api.launch_directory))
@@ -129,6 +173,12 @@ class PlatformMenu(QObject):
                 self._failed("未提供模型凭据；可再次选择平台连接")
 
     def cancel(self):
+        if self.launcher is not None:
+            self._finish_launch()
+            self.window.info_app.notice("已停止等待启动",
+                "CDNS-IC 进程继续运行；实例注册后可在“通信 → 连接 CDNS-IC…”中选择。")
+            self.refresh()
+            return
         self._finish_startup()
         self.window.info_app.notice("连接等待已取消",
             "主页面和项目服务保留。若会话已被服务接收，可在会话历史中查看；不会自动提交任务。")
@@ -187,6 +237,7 @@ class PlatformMenu(QObject):
         self.timer.stop()
         self.health.clear()
         self._finish_startup()
+        self._finish_launch()
         if self.picker is not None:
             self.picker.reject()
         if self.confirmation is not None:

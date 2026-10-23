@@ -42,12 +42,12 @@ def register_results(registry, client_for):
         Tool(
             "bind_result_context",
             "Bind an EXACT existing History before read_maestro_results/read_maestro_waveform/"
-            "read_maestro_ac_waveform. Omit setup_ref to borrow the captured ADE session; otherwise "
-            "use a simulation setup owned by this task source. Returns a read-only context_ref "
-            "pinned to source/session/History handle/library path. Never opens, saves, runs or follows "
-            "GUI focus. A captured History cannot be overridden. For test-scoped entry, scalar "
-            "anchors cover the whole History and waveform reads remain restricted to that test. "
-            "Immutable queries, measurements and reports need no live binding or preflight.",
+            "read_maestro_ac_waveform. Omit setup_ref to borrow the captured (not overridable) ADE "
+            "session; otherwise use a setup owned by this task source. Returns a read-only "
+            "context_ref pinned to source/session/History handle/library path. No open/save/run or "
+            "GUI focus change. Test-scoped: scalar anchors cover the whole History; waveform reads "
+            "stay restricted to that test. Immutable queries, measurements and reports need no "
+            "binding.",
             BIND_SCHEMA,
             lambda args: validate(args, BIND_SCHEMA),
             bind,

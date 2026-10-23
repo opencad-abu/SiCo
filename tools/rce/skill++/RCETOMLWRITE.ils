@@ -113,6 +113,8 @@ procedure(rceWriteExtractToml(outFile form techDir processCorner processCorners 
     SICO_tomlWriteString(outFile "temperature" car(cornerTemperatures))
     SICO_tomlWriteStringList(outFile "corner_temperatures" cornerTemperatures)
     SICO_tomlWriteString(outFile "rc_type" form~>rcType~>value)
+    SICO_tomlWriteBool(outFile "remove_floating_nets"
+                       form~>rmFloatNetsBtn~>value)
     SICO_tomlWriteString(outFile "top_cell_source"
                          lowerCase(form~>topCellSource~>value))
     SICO_tomlWriteString(outFile "name_source"
@@ -120,7 +122,7 @@ procedure(rceWriteExtractToml(outFile form techDir processCorner processCorners 
     SICO_tomlWriteString(outFile "output_type" form~>outType~>value)
     SICO_tomlWriteBool(outFile "start_rve"
                        and(form~>startRve
-                            form~>extTool~>value=="CalXRC"
+                            RCE_calibrePexToolP(form~>extTool~>value)
                             form~>startRve~>value))
   )
 )
@@ -139,7 +141,8 @@ procedure(rceWriteViewToml(outFile form nativeView viewTarget viewDeviceMap view
     SICO_tomlWriteString(outFile "layout_view"
                          or(rceNativeViewLayoutView(form) ""))
     SICO_tomlWriteString(outFile "cellmap_file"
-                         if(and(nativeView form~>extTool~>value=="CalXRC")
+                         if(and(nativeView
+                                RCE_calibrePexToolP(form~>extTool~>value))
                            then viewDeviceMap else ""))
     SICO_tomlWriteString(outFile "device_mapping_file"
                          if(and(nativeView form~>extTool~>value=="StarRC")

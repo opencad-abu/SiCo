@@ -20,6 +20,8 @@ def dispatch_library(
     workspace: Any,
 ) -> tuple[bool, dict[str, Any]]:
     """Dispatch library preparation while preserving its result envelope."""
+    if name == "prepare_circuit_library":
+        name = "prepare_library"
     if name not in LIBRARY_NAMES:
         raise ValueError(f"unknown library tool: {name}")
     if name == "create_circuit_library":

@@ -22,7 +22,7 @@ from ..artifact_paths import (
     path_has_any_symlink_component,
     validate_relative_path,
 )
-from ..agent.protocol import ErrorCode, ProtocolError
+from ..contract import ErrorCode, ProtocolError
 
 
 _HEX40 = re.compile(r"[0-9a-f]{40}\Z")

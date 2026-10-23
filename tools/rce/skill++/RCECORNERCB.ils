@@ -204,7 +204,8 @@ procedure(rceExtToolCB(form)
     techNames=RCE_extTechNames(form~>extTool~>value)
     form~>rcTechDirName~>items=techNames
     form~>rcTechDirName~>value=car(techNames)
-    form~>rcTechDirPath~>value=RCE_extTechValue(form~>extTool~>value form~>rcTechDirName~>value)
+    form~>rcTechDirPath~>value=RCE_extTechValue(form~>extTool~>value
+                                                form~>rcTechDirName~>value)
     form~>viewDeviceMap~>value=""
     form~>viewLayerMap~>value=""
     rceRefreshProcessCorners(form)
@@ -218,7 +219,8 @@ procedure(rceExtToolCB(form)
 
 procedure(rceRcTechDirCB(form)
   let(()
-    form~>rcTechDirPath~>value=RCE_extTechValue(form~>extTool~>value form~>rcTechDirName~>value)
+    form~>rcTechDirPath~>value=RCE_extTechValue(form~>extTool~>value
+                                                form~>rcTechDirName~>value)
     form~>viewDeviceMap~>value=""
     form~>viewLayerMap~>value=""
     rceRefreshProcessCorners(form)

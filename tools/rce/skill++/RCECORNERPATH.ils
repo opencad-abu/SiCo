@@ -66,7 +66,7 @@ procedure(rceProcessCornerDirP(tool cornerDir processRoot)
       ("StarRC"
         rceStarCornerDirP(cornerDir processRoot)
       )
-      ("CalXRC" || "XRC"
+      ("CalXRC" || "CalXACT" || "XRC"
         isFile(strcat(cornerDir "/xrc.cal"))
       )
       (t t)

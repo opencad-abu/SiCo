@@ -16,8 +16,11 @@ from ..core.contracts import identifier
 class HostNotices:
     FIELDS = {
         "ready": ("bridge_id", "router_id", "instance_id", "generation", "session_id", "target_id"),
-        "shown": (), "hidden": (), "accepted": ("id",), "rejected": ("id",),
+        "shown": ("session_id",), "hidden": (), "accepted": ("id",), "rejected": ("id",),
         "released": ("target_id",), "new_session": ("id",), "reconnect": ("id",),
+        # The desktop already presented a startup failure; the launch parent
+        # stops waiting instead of treating the closed channel as a protocol error.
+        "startup_failed": ("phase",),
     }
 
     def __init__(self, fd, *, capacity=64, write_timeout=5.0):

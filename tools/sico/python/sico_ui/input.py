@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import uuid
 from copy import deepcopy
 
 from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtGui import QTextCharFormat, QTextCursor, QTextFormat
 from PyQt5.QtWidgets import QApplication, QLineEdit, QPlainTextEdit, QRadioButton
 
 MAX_INPUT_CHARS = 16000
+OBJECT_REF_PROPERTY = int(QTextFormat.UserProperty) + 1
 
 
 def submit_on_return(widget, event):
@@ -36,20 +39,115 @@ class SendOnReturnEdit(QPlainTextEdit):
 
     submitted = pyqtSignal()
     attachmentPasted = pyqtSignal()
+    objectRefsChanged = pyqtSignal()
 
     def __init__(self, parent=None, *, attachments_enabled=False):
         super().__init__(parent)
         self.attachments_enabled = attachments_enabled
         self._text_attachment = None
         self._changing_attachment = False
+        self._restoring_object_refs = False
+        self.object_refs = {}
+        self._active_object_keys = set()
         self.turn_inputs = []
         self.turn_options = None
         self.draft_revision = 0
         self.textChanged.connect(self._revise_draft)
+        self.textChanged.connect(self._sync_object_refs)
 
     def _revise_draft(self, *_args):
         """QTextEdit.textChanged(str) forwards the text; the shipped Cython build passes it."""
         self.draft_revision += 1
+
+    def _object_fragments(self):
+        result = []
+        block = self.document().begin()
+        while block.isValid():
+            iterator = block.begin()
+            while not iterator.atEnd():
+                fragment = iterator.fragment()
+                if fragment.isValid():
+                    key = fragment.charFormat().property(OBJECT_REF_PROPERTY)
+                    if isinstance(key, str) and key in self.object_refs:
+                        result.append((fragment.position(), fragment.length(), key))
+                iterator += 1
+            block = block.next()
+        return result
+
+    def _object_spans(self):
+        """Return formatted spans whose visible text still matches their label."""
+        text = self.toPlainText()
+        result = []
+        for position, length, key in self._object_fragments():
+            row = self.object_refs.get(key)
+            if row is not None and text[position:position + length] == "@" + row["label"]:
+                result.append((position, length, key))
+        return result
+
+    def _sync_object_refs(self, *_args):
+        if self._restoring_object_refs:
+            return
+        present = {key for _position, _length, key in self._object_spans()}
+        if present != self._active_object_keys:
+            self._active_object_keys = present
+            self.objectRefsChanged.emit()
+
+    def _apply_object_spans(self, spans):
+        for position, length, key in spans:
+            if key not in self.object_refs:
+                continue
+            cursor = QTextCursor(self.document())
+            cursor.setPosition(position)
+            cursor.setPosition(position + length, QTextCursor.KeepAnchor)
+            fmt = QTextCharFormat()
+            fmt.setProperty(OBJECT_REF_PROPERTY, key)
+            fmt.setFontUnderline(True)
+            cursor.mergeCharFormat(fmt)
+
+    def insert_object_ref(self, ref, label, window_ref=None, window_label=None):
+        """Insert a visible token and retain its structured CAD reference."""
+        label = " ".join(str(label or "").split())[:128]
+        if not label or not isinstance(ref, dict):
+            return
+        key = "obj" + uuid.uuid4().hex
+        row = {"ref": deepcopy(ref), "label": label}
+        if window_ref is not None:
+            row["window_ref"] = str(window_ref)
+        if window_label is not None:
+            row["window_label"] = str(window_label)
+        self.object_refs[key] = row
+        fmt = QTextCharFormat()
+        fmt.setProperty(OBJECT_REF_PROPERTY, key)
+        fmt.setFontUnderline(True)
+        cursor = self.textCursor()
+        cursor.insertText("@" + label, fmt)
+        self.setTextCursor(cursor)
+        self.setCurrentCharFormat(QTextCharFormat())
+        self.objectRefsChanged.emit()
+
+    def object_inputs(self):
+        ordered = sorted(self._object_spans(), key=lambda row: row[0])
+        seen = set()
+        result = []
+        for _position, _length, key in ordered:
+            if key in seen or key not in self.object_refs:
+                continue
+            seen.add(key)
+            row = self.object_refs[key]
+            item = {
+                "type": "object_ref",
+                "name": row["label"],
+                "ref": deepcopy(row["ref"]),
+            }
+            if row.get("window_ref") is not None:
+                item["window_ref"] = row["window_ref"]
+            if row.get("window_label") is not None:
+                item["window_label"] = row["window_label"]
+            result.append(item)
+        return result
+
+    def object_ref_count(self):
+        return len(self._object_spans())
 
     def insertFromMimeData(self, source):
         if not self.attachments_enabled or not source.hasText():
@@ -77,8 +175,12 @@ class SendOnReturnEdit(QPlainTextEdit):
         selection_end = cursor.selectionEnd()
         position = cursor.position()
         self._changing_attachment = True
+        spans = self._object_spans()
+        self._restoring_object_refs = True
         try:
+            self.setCurrentCharFormat(QTextCharFormat())
             self.setPlainText(current)
+            self._apply_object_spans(spans)
             restored = self.textCursor()
             if selection_start != selection_end:
                 restored.setPosition(selection_start)
@@ -88,6 +190,8 @@ class SendOnReturnEdit(QPlainTextEdit):
             self.setTextCursor(restored)
         finally:
             self._changing_attachment = False
+            self._restoring_object_refs = False
+        self._sync_object_refs()
         self.attachmentPasted.emit()
 
     def keyPressEvent(self, event):
@@ -104,15 +208,25 @@ class SendOnReturnEdit(QPlainTextEdit):
     def draft(self):
         cursor = self.textCursor()
         return (self.toPlainText(), self._text_attachment, cursor.anchor(), cursor.position(),
-                deepcopy(self.turn_inputs), deepcopy(self.turn_options))
+                deepcopy(self.turn_inputs), deepcopy(self.turn_options),
+                deepcopy(self.object_refs), self._object_spans())
 
     def restore_draft(self, draft):
         text, attachment, anchor, position = draft[:4]
         self.turn_inputs = deepcopy(draft[4]) if len(draft) > 4 else []
         self.turn_options = deepcopy(draft[5]) if len(draft) > 5 else None
-        self.setPlainText(text)
+        self.object_refs = deepcopy(draft[6]) if len(draft) > 6 else {}
+        spans = deepcopy(draft[7]) if len(draft) > 7 else []
+        self._restoring_object_refs = True
+        try:
+            self.setCurrentCharFormat(QTextCharFormat())
+            self.setPlainText(text)
+            self._apply_object_spans(spans)
+        finally:
+            self._restoring_object_refs = False
         self._text_attachment = attachment
         self._revise_draft()
+        self._sync_object_refs()
         cursor = self.textCursor()
         cursor.setPosition(anchor)
         cursor.setPosition(position, cursor.KeepAnchor)
@@ -120,11 +234,16 @@ class SendOnReturnEdit(QPlainTextEdit):
 
     def draft_content(self):
         draft = self.draft()
-        return draft[:2] + draft[4:]
+        content = draft[:2] + draft[4:6]
+        if self.object_refs:
+            content += (deepcopy(self.object_refs),)
+        return content
 
     def clear_submission(self):
         self.clear()
         self.clear_text_attachment()
+        self.object_refs = {}
+        self._active_object_keys = set()
         self.turn_inputs = []
         self.turn_options = None
 

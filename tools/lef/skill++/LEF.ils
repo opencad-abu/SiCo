@@ -1,217 +1,67 @@
-; Development source bootstrap; protected runtimes use SICO_toolsInitialize.
-let((commonSkill)
-  commonSkill=strcat("/" buildString(reverse(cdr(reverse(
-    parseString(simplifyFilename(get_filename(piport) t) "/")))) "/")
-    "/../../common/skill/")
-  load(strcat(commonSkill "SICO_environment.il"))
-  load(strcat(commonSkill "SICO_installation.il")))
-
-;------------------------------------------------------------------------------
-; LEF Generator frontend loader.
-;------------------------------------------------------------------------------
-
-unless(and(isCallable('cadCommonGuiModulesRevision)
-             cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
-             isCallable('SICO_lsfModulesRevision)
-             SICO_lsfModulesRevision()=="20260924.flow.environment.v3"
-             isCallable('lefLoaderRevision)
-             lefLoaderRevision()=="20260924.flow.environment.v3"
-             isCallable('SICO_tomlRevision)
-             SICO_tomlRevision()=="20260922.sico.temp.v6"
-             isCallable('lefRunUsesCadTempPath)
-             lefRunUsesCadTempPath()
-             isCallable('lefLoadUsesCadTempPath)
-             lefLoadUsesCadTempPath()
-             isCallable('SICO_profileRevision)
-             SICO_profileRevision()=="20260924.profile.environment.v4"
-             isCallable('SICO_profileGuiRevision)
-             SICO_profileGuiRevision()=="20260818.profile.gui.v2"
-             isCallable('lefProfileRevision)
-             lefProfileRevision()=="20260820.rce.live.log.v4"
-             isCallable('SICO_profileAdapter)
-             SICO_profileAdapter("LEF")
-             isCallable('SICO_guiProtocolRevision)
-             SICO_guiProtocolRevision()=="20260814.cadgui.v1"
-             isCallable('SICO_lsfModulesRevision)
-           SICO_lsfModulesRevision()=="20260924.flow.environment.v3"
-           isCallable('SICO_lsfRevision)
-             SICO_lsfRevision()=="20260901.form.lifecycle.v1"
-             isCallable('SICO_lsfMonitorRevision)
-             SICO_lsfMonitorRevision()=="20260924.sico.monitor.environment.v3"
-             isCallable('cadCommonGuiModulesRevision)
-           cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
-           isCallable('cadBaseHardwareRevision)
-             cadBaseHardwareRevision()=="20260820.lsf.monitor.v7"
-             isCallable('lefHardwareGuiRevision)
-             lefHardwareGuiRevision()=="20260820.lsf.monitor.v1"
-             isCallable('lefSummaryUiRevision)
-             lefSummaryUiRevision()=="20260901.summary.lifecycle.v2")
-
-procedure(lefLoaderRevision()
-  "20260924.flow.environment.v3"
-)
-
-procedure(lefResolveToolsRoot()
-  SICO_installationPath(SICO_installationRoot() "tools"))
-
-procedure(lefLoadFile(path)
-  if(and(path isFile(path)) then
-    load(path)
-  else
-    warn("LEF Generator loader cannot find: %L\n" path)
-    nil
-  )
-)
-
-procedure(lefLoadProfileSupport()
-  if(and(isCallable('SICO_profileRevision)
-           SICO_profileRevision()=="20260924.profile.environment.v4"
-           isCallable('SICO_profileGuiRevision)
-           SICO_profileGuiRevision()=="20260818.profile.gui.v2"
-           isCallable('cadCommonGuiModulesRevision)
-           cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
-           isCallable('cadBaseHardwareRevision)
-           cadBaseHardwareRevision()=="20260820.lsf.monitor.v7"
-           isCallable('makeProfileControls)
-           isCallable('makeServers)
-           isCallable('makeRunCpus)) then
-    t
-  else
-    let((ok)
-      ok=t
-      unless(and(isCallable('cadCommonGuiModulesRevision)
-           cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
-           isCallable('cadBaseHardwareRevision)
-                   cadBaseHardwareRevision()=="20260820.lsf.monitor.v7"
-                   isCallable('makeServers)
-                   isCallable('makeRunCpus))
-        ok=and(lefLoadFile(strcat(lefCommonRoot "/skill++/BASEGUI.ils"))
-          lefLoadFile(strcat(lefCommonRoot "/skill++/INPUTGUI.ils"))
-          lefLoadFile(strcat(lefCommonRoot "/skill++/OUTPUTGUI.ils"))
-          lefLoadFile(strcat(lefCommonRoot "/skill++/CUSTOMSVRFGUI.ils"))
-          lefLoadFile(strcat(lefCommonRoot "/skill++/LVSOPTGUI.ils"))
-          lefLoadFile(strcat(lefCommonRoot "/skill++/HARDWAREGUI.ils"))
-          lefLoadFile(strcat(lefCommonRoot "/skill++/TOOLSETGUI.ils"))))
-      when(ok
-        ok=lefLoadFile(strcat(lefCommonRoot "/skill/SICO_profile.il")))
-      when(ok
-        ok=lefLoadFile(strcat(lefCommonRoot "/skill++/PROFILEGUI.ils")))
-      ok
-    )
-  )
-)
-
-procedure(lefLoadFrontend()
-  if(and(isCallable('lefFrontendRevision)
-           lefFrontendRevision()==lefLoaderRevision()
-           isCallable('SICO_tomlRevision)
-           SICO_tomlRevision()=="20260922.sico.temp.v6"
-           isCallable('cadDisplayLefForm)
-           isCallable('lefStart)
-           isCallable('lefRunUsesCadTempPath)
-           lefRunUsesCadTempPath()
-           isCallable('lefLoadConfigCB)
-           isCallable('lefLoadUsesCadTempPath)
-           lefLoadUsesCadTempPath()
-           isCallable('SICO_profileRevision)
-           SICO_profileRevision()=="20260924.profile.environment.v4"
-           isCallable('SICO_profileGuiRevision)
-           SICO_profileGuiRevision()=="20260818.profile.gui.v2"
-           isCallable('lefProfileRevision)
-           lefProfileRevision()=="20260820.rce.live.log.v4"
-           isCallable('SICO_profileAdapter)
-           SICO_profileAdapter("LEF")
-           isCallable('SICO_guiProtocolRevision)
-           SICO_guiProtocolRevision()=="20260814.cadgui.v1"
-           isCallable('lefFormBinOptions)
-           isCallable('SICO_tomlWriteString)
-           isCallable('SICO_shellQuote)
-           isCallable('SICO_tempDir)
-           isCallable('SICO_tempPath)
-           isCallable('SICO_tempEnvironment)
-           isCallable('SICO_lsfModulesRevision)
-           SICO_lsfModulesRevision()=="20260924.flow.environment.v3"
-           isCallable('SICO_lsfRevision)
-           SICO_lsfRevision()=="20260901.form.lifecycle.v1"
-           isCallable('SICO_lsfMonitorRevision)
-           SICO_lsfMonitorRevision()=="20260924.sico.monitor.environment.v3"
-           isCallable('cadCommonGuiModulesRevision)
-           cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
-           isCallable('cadBaseHardwareRevision)
-           cadBaseHardwareRevision()=="20260820.lsf.monitor.v7"
-           isCallable('lefHardwareGuiRevision)
-           lefHardwareGuiRevision()=="20260820.lsf.monitor.v1"
-           isCallable('SICO_lsfStartQueueDiscovery)
-           isCallable('SICO_lsfValidateSelection)
-           isCallable('SICO_lsfWrapCommand)
-           isCallable('GUI_messageApp)
-           isCallable('GUI_askApp)
-           isCallable('GUI_flowLogOpen)
-           isCallable('GUI_flowLogShow)
-           isCallable('GUI_flowLogClose)
-           isCallable('lefSummaryUiRevision)
-           lefSummaryUiRevision()=="20260901.summary.lifecycle.v2"
-           isCallable('lefSummaryCaptureRun)
-           isCallable('lefSummaryDisplay)) then
-    lefFrontendLoaded=t
-    t
-  else
-    let((ok)
-      ok=and(lefLoadFile(strcat(lefCommonRoot "/skill/SICO_environment.il"))
-        lefLoadFile(strcat(lefCommonRoot "/skill/SICO_installation.il"))
-        lefLoadFile(strcat(lefCommonRoot "/skill/SICO_toml.il")))
-      when(ok
-        ok=lefLoadFile(strcat(lefCommonRoot "/skill/SICO_guiProtocol.il")))
-      when(ok
-        ok=and(lefLoadFile(strcat(lefCommonRoot "/skill/SICO_lsf.il"))
-          lefLoadFile(strcat(lefCommonRoot "/skill/SICO_lsfSelection.il"))
-          lefLoadFile(strcat(lefCommonRoot "/skill/SICO_lsfProtocol.il"))
-          lefLoadFile(strcat(lefCommonRoot "/skill/SICO_lsfProcess.il"))
-          lefLoadFile(strcat(lefCommonRoot "/skill/SICO_lsfCommands.il"))
-          lefLoadFile(strcat(lefCommonRoot "/skill/SICO_lsfHosts.il"))
-          lefLoadFile(strcat(lefCommonRoot "/skill/SICO_lsfQueues.il"))
-          lefLoadFile(strcat(lefCommonRoot "/skill/SICO_lsfChoices.il"))))
-      when(ok
-        ok=lefLoadFile(strcat(lefCommonRoot "/skill/SICO_lsfMonitor.il")))
-      when(ok
-        ok=lefLoadProfileSupport())
-      when(ok
-        foreach(path
-          list(
-            strcat(lefUtilityRoot "/skill/UI_messageApp.il")
-            strcat(lefUtilityRoot "/skill/UI_askApp.il")
-            strcat(lefUtilityRoot "/skill/UI_windowIcon.il")
-            strcat(lefUtilityRoot "/skill/UI_flowLog.il")
-            strcat(lefSkillRoot "/skill/UI_lefSummary.il")
-            strcat(lefSkillRoot "/skill++/LEFCFG.ils")
-            strcat(lefSkillRoot "/skill++/LEFOPT.ils")
-            strcat(lefSkillRoot "/skill++/LEFCB.ils")
-            strcat(lefSkillRoot "/skill++/LEFRUN.ils")
-            strcat(lefSkillRoot "/skill++/LEFLOAD.ils")
-            strcat(lefSkillRoot "/skill++/LEFPROFILE.ils")
-            strcat(lefSkillRoot "/skill++/LEFGUI.ils"))
-          when(ok
-            unless(lefLoadFile(path)
-              ok=nil))))
-      when(ok
-        lefFrontendLoaded=t)
-      ok
-    )
-  )
-)
-
-)
-
-lefToolsRoot=lefResolveToolsRoot()
-lefSkillRoot=when(lefToolsRoot
-  simplifyFilename(strcat(lefToolsRoot "/lef") t))
-lefCommonRoot=when(lefToolsRoot
-  simplifyFilename(strcat(lefToolsRoot "/common") t))
-lefUtilityRoot=when(lefToolsRoot
-  simplifyFilename(strcat(lefToolsRoot "/utility") t))
-
-if(and(lefSkillRoot lefCommonRoot lefUtilityRoot) then
-  lefLoadFrontend()
-else
-  warn("LEF Generator root is not configured. Set SICO_HOME; tools are expected under SICO_HOME/tools.\n")
+; Generated by tools/utility/skill_loader.py --write; edit the manifest/sources.
+; Source-only. Per-file contracts retain successful members across retries.
+let((entryDirectory)
+  entryDirectory=strcat("/" buildString(reverse(cdr(reverse(
+    parseString(simplifyFilename(get_filename(piport) t) "/")))) "/"))
+  load(strcat(entryDirectory "/../../../scripts/sicoSkillLoader.ils"))
+  load(strcat(entryDirectory "/../../../scripts/skill/flow.ils"))
+  lefToolsRoot=strcat(SICO_sourceRoot() "/tools")
+  lefSkillRoot=strcat(SICO_sourceRoot() "/tools/lef")
+  lefCommonRoot=strcat(SICO_sourceRoot() "/tools/common")
+  lefUtilityRoot=strcat(SICO_sourceRoot() "/tools/utility")
+  SICO_sourceRequire("lef" "a89836c6886079f8b833bd6992510f464c063b15f8d1c8933917cdd956152e2b" '(
+    ("tools/lef/skill" "UI_lefSummary.il" "a89de1c5bfb3198bfd04fa68426681605c0c660348913d7a1e6f424097477388"
+      (lefSummaryDisposeForm lefSummaryString lefSummaryHtmlEscape lefSummaryFileReady
+       lefSummaryFirstLine lefSummaryCellText lefSummaryCaptureRun lefSummaryFailureReason lefSummaryRow
+       lefSummaryDetailsHtml lefSummaryEnsureForm lefSummaryOpenCB lefSummaryOpenLogCB lefSummaryCopyFile
+       lefSummaryCopyCB lefSummaryDisplay lefSummaryUiRevision)
+      ((lefSummaryUiRevision "20260901.summary.lifecycle.v2"))
+      (lefSummaryUiVersion)
+      ())
+    ("tools/lef/skill++" "LEFCFG.ils" "20dd5f4ac2435bd1a409a05c055ebe612e6875c746d73bed5e6fe73de3641073"
+      (lefWorkingDir lefProjectRunRoot lefDefaultBin lefConfig lefInitializeConfig lefMessages)
+      ()
+      ()
+      ())
+    ("tools/lef/skill++" "LEFOPT.ils" "740b0c1d07a8d486d334864d0cca824ecfef67f132014b4b0d06c6f579f0da17"
+      (lefResetLoadedBinOptions lefOptionGroup lefOptionFieldName lefOptionName lefOptionPrompt
+       lefOptionKind lefOptionSpecByName lefOptionSpecCount lefCreateOptionField lefCreateOptionGroup
+       lefResetOptionFields lefApplyBinOptions lefFormBinOptions lefWriteBinOptions)
+      ()
+      ()
+      ())
+    ("tools/lef/skill++" "LEFCB.ils" "47bc48a109c5fbef71f24dec0df033af697d57284ff8aed8422cb5b02b11dc27"
+      (lefFrontendRevision lefFormValidP lefFormDoneCB lefRunCB lefRunCloseCB lefOutDirCB
+       lefCellListValue lefInlineCellsValue lefBatchInput lefRunTagFromForm lefDefaultRunDir
+       lefDefaultOutputPath lefInputCB lefCellInputCB lefRunDirFromForm lefValidateCells lefValidateForm
+       lefTomlWriteStringArray lefWriteToml)
+      ((lefFrontendRevision "20260924.flow.environment.v3"))
+      ()
+      ())
+    ("tools/lef/skill++" "LEFRUN.ils" "c6138037c4f8299c10a1babb274d4ae710ccc3e359d5df058a98d907693e4fcc"
+      (LEF_pythonEntry lefRunUsesCadTempPath LEF_pythonExe LEF_launchEnvCommand lefBackupRunData
+       lefIpcDataHandler lefIpcErrHandler lefIpcPostFunc lefStart)
+      ()
+      ()
+      ())
+    ("tools/lef/skill++" "LEFLOAD.ils" "c3004ce133bb6ff441b949370eadebf82c71be183fe3f7a89271d45799e7c6bf"
+      (lefLoadUsesCadTempPath lefSetFormLoadData lefGetFormLoadData lefSetLoadedInlineCells
+       lefLoadedInlineCellNames lefSetLoadedExecutable lefLoadedAbstractExecutable
+       lefResetLoadedFormState lefFormDataValue lefApplyFormData lefLoadConfigCB)
+      ()
+      ()
+      ())
+    ("tools/lef/skill++" "LEFPROFILE.ils" "b76759767b8e6a19e82f7d50bd0dc6dd8ece8c1e897af30c7b5bf0d25f83418e"
+      (lefProfileValue lefProfilePathValue lefProfileFieldNames lefProfileChoiceFieldNames
+       lefProfileSnapshot lefProfileRestore lefProfileSetChoice lefProfileGetField lefProfileCollectForm
+       lefProfileBinOptions lefProfileApplyHardware lefProfileApplyForm lefProfileRevision)
+      ((lefProfileRevision "20260820.rce.live.log.v4"))
+      ()
+      ())
+    ("tools/lef/skill++" "LEFGUI.ils" "e956cb0dd7fbe02b629e62fd8e93718652792928ef1e7748de6f40a465302a7b"
+      (cadDisplayLefForm lefHardwareGuiRevision)
+      ((lefHardwareGuiRevision "20260820.lsf.monitor.v1"))
+      ()
+      (LEFPROFILEGUI))
+  ))
 )

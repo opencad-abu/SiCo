@@ -51,8 +51,8 @@ SKILL_REFERENCE_TOOLS = [
                 "limit": {
                     "type": "integer",
                     "minimum": 1,
-                    "maximum": MAX_SEARCH_RESULTS,
                     "default": 5,
+                    "description": f"Values above {MAX_SEARCH_RESULTS} are clamped.",
                 },
             },
             "required": ["query"],
@@ -74,8 +74,8 @@ SKILL_REFERENCE_TOOLS = [
                 "max_chars": {
                     "type": "integer",
                     "minimum": 1_024,
-                    "maximum": MAX_DOCUMENT_CHARS,
                     "default": MAX_DOCUMENT_CHARS,
+                    "description": f"Values above {MAX_DOCUMENT_CHARS} are clamped.",
                 },
             },
             "required": ["name"],

@@ -5,7 +5,16 @@ from __future__ import annotations
 import math
 
 from PyQt5.QtCore import QPointF, Qt
-from PyQt5.QtGui import QColor, QIcon, QPainter, QPainterPath, QPainterPathStroker, QPixmap, QTransform
+from PyQt5.QtGui import (
+    QColor,
+    QIcon,
+    QImage,
+    QPainter,
+    QPainterPath,
+    QPainterPathStroker,
+    QPixmap,
+    QTransform,
+)
 
 # 字形画布：输入区 20px，会话底部与面板按钮 18px，标题栏按钮 14px。
 INPUT_GLYPH_SIZE = 20
@@ -13,17 +22,22 @@ ACTION_GLYPH_SIZE = 18
 TITLE_GLYPH_SIZE = 14
 
 
-def filled_icon(path, size, color):
-    """透明画布上只填色的矢量图标：颜色由调用方给，底图不来自任何资源文件。"""
-    pixmap = QPixmap(size, size)
-    pixmap.fill(Qt.transparent)
-    painter = QPainter(pixmap)
+def filled_image(path, size, color):
+    """透明画布上只填色的位图：文本内的图标把它注册成文档图片资源。"""
+    image = QImage(size, size, QImage.Format_ARGB32_Premultiplied)
+    image.fill(Qt.transparent)
+    painter = QPainter(image)
     painter.setRenderHint(QPainter.Antialiasing, True)
     painter.setPen(Qt.NoPen)
     painter.setBrush(QColor(color))
     painter.drawPath(path)
     painter.end()
-    return QIcon(pixmap)
+    return image
+
+
+def filled_icon(path, size, color):
+    """透明画布上只填色的矢量图标：颜色由调用方给，底图不来自任何资源文件。"""
+    return QIcon(QPixmap.fromImage(filled_image(path, size, color)))
 
 
 def stroked(path, width, *, cap=Qt.RoundCap, join=Qt.RoundJoin):

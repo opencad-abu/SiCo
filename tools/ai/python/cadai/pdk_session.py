@@ -49,11 +49,16 @@ class PdkSession:
         if name in STANDARD_NAMES:
             return self.standard.call(name, args)
         return {"get_pdk_preparation": self.preparation.inspect,
+                "init_pdk": self.init_pdk,
                 "prepare_pdk_data": self.preparation.prepare,
                 "advance_pdk_collection": self.preparation.advance,
                 "cancel_pdk_collection": self.preparation.cancel,
                 "search_pdk_devices": self.search, "get_pdk_device": self.get_device,
                 "revalidate_pdk_bindings": self.revalidate}[name](args)
+
+    def init_pdk(self, args):
+        from .pdk_init import ensure_selected
+        return ensure_selected(self.preparation, args)
 
     def close(self):
         self.preparation.close()
@@ -241,16 +246,16 @@ class PdkSession:
         return value
 
     def _device_value(self, snap, ref, target):
-        """Offline-first device read: the published device file, live capture as fallback."""
+        """Published device file when recorded, live capture otherwise.
+
+        Bundled base libraries index their cells offline (the standard package
+        drives search and prepare); the legacy detail read follows the live
+        session, since the retired capture snapshot no longer carries raw data.
+        """
         index = snap.get("device_index")
         row = ((index or {}).get("devices") or {}).get(target["cell"]) if (index and target) else None
-        if isinstance(row, dict) and index.get("source") == "builtin":
-            value = self.preparation.data.builtin.device(snap["context"], target, row["digest"])
-            snap["details"][ref] = value
-            snap.setdefault("detail_sources", {})[ref] = "builtin_database"
-            self.store.trim(snap["context"]["snapshot_ref"])
-            return value, "builtin_database"
-        if isinstance(row, dict) and index.get("root") and isinstance(row.get("digest"), str):
+        if (isinstance(row, dict) and index.get("root")
+                and index.get("source") != "builtin" and isinstance(row.get("digest"), str)):
             path = Path(index["root"]) / "devices" / (row["digest"] + ".json")
             try:
                 stored = read_json(path)
@@ -271,6 +276,52 @@ class PdkSession:
         value = self._freeze_device(snap, ref)
         snap.setdefault("detail_sources", {})[ref] = "live_session_capture"
         return value, "live_session_capture"
+
+    def device_target(self, snapshot_ref, device_ref):
+        """Light identity lookup for fail-fast checks; never reads device detail."""
+        try:
+            snap = self.store.get(snapshot_ref)
+        except PdkUnavailable:
+            return None
+        if not isinstance(snap, dict):
+            return None
+        for row in snap.get("items") or []:
+            if isinstance(row, dict) and row.get("device_ref") == device_ref:
+                target = row.get("target")
+                return dict(target) if isinstance(target, dict) else None
+        return None
+
+    def complete_device(self, snapshot_ref, device_ref):
+        """Read one complete frozen detail for server-side consumers.
+
+        MCP callers use get_pdk_device's bounded pages. Adapters need the same
+        frozen detail without refreshing the live directory or serializing a
+        response page for every batch of items.
+        """
+        snap = self.store.get(snapshot_ref)
+        selection = self._snapshot_selection(snap)
+        if selection is not None:
+            raise PdkUnavailable(
+                "selection_required",
+                (selection.get("selection_question") or {}).get("question")
+                or "Confirm the current PDK selection before binding",
+                data=selection,
+            )
+        target = next((x["target"] for x in snap["items"] if x["device_ref"] == device_ref), None)
+        if target is None:
+            raise PdkUnavailable("device_unavailable", "Device is not part of this search snapshot")
+        index = snap.get("device_index")
+        excluded = ((index or {}).get("excluded") or {}).get(target["cell"])
+        if excluded is not None:
+            raise PdkUnavailable(
+                "device_unavailable",
+                "Device is not published for design: "
+                + ((excluded or {}).get("reason") or "not_published"),
+            )
+        value = snap["details"].get(device_ref)
+        if value is None:
+            value, _ = self._device_value(snap, device_ref, target)
+        return deepcopy(value), deepcopy(snap["context"])
 
     def get_device(self, args):
         snap = self.store.get(args["snapshot_ref"])
@@ -358,13 +409,25 @@ class PdkSession:
                                args["page_size"], assign=assign)
 
     def _snapshot_selection(self, snap):
-        capture, selection = self.preparation.directory(snap["query"])
-        if capture is None:
-            return selection
-        library = snap["query"].get("library") or self.preparation.selected
-        if library != snap["directory_library"]:
+        if snap.get("directory_source") == "published_standard":
+            # A frozen standard snapshot is the authoritative published
+            # directory. Its live detail read and the binding gate still
+            # validate the selected revision; do not gate it on the legacy
+            # session-selection cache again.
+            library = snap.get("directory_library") or snap["query"].get("library")
+            if library and library != snap["directory_library"]:
+                raise PdkUnavailable(
+                    "snapshot_changed", "Selected PDK changed; start a new search"
+                )
+            return None
+        # A frozen snapshot already carries the selection evidence it was
+        # captured for. Re-checking the host choice is local; a live directory
+        # refresh here would make every detail page pay a full library capture
+        # (minutes for a production PDK).
+        library = snap.get("directory_library") or snap["query"].get("library")
+        if self.preparation.selected and library and self.preparation.selected != library:
             raise PdkUnavailable("snapshot_changed", "Selected PDK changed; start a new search")
-        return None
+        return self.preparation.current_selection(library)
 
     @staticmethod
     def _context_changes(old, new, library):

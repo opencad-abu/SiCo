@@ -12,14 +12,21 @@ from .session_tokens import SessionTokens
 
 
 class WorkerApi:
-    RESOURCE_COMMANDS = {"resource_status", "turn_input_status", "thread_status"}
-    TURN_COMMANDS = {"steer", "elicitation"}
-    COMMANDS = {"submit", "accept", "rename", "delete", "initialize_context", "attach_targets",
-                "query_interrupted", "resolve_interrupted",
-                "cancel", "cancel_router_request", "resume", "acknowledge_interrupted",
-                "answer_audit", "router_receipt", "propose_binding", "resolve_binding",
-                "select_binding_target", "release_binding", "configure_bindings",
-                "release_binding_resource", "reconcile_binding_operation", "thread_operation"}
+    # Protocol spellings select an existing owner only after runtime validation.
+    # Do not install bound-method aliases on the controller or cache its owners.
+    COMMANDS = {
+        **dict.fromkeys(("submit", "accept", "rename", "delete", "initialize_context",
+                         "cancel", "resume", "acknowledge_interrupted"), ""),
+        **dict.fromkeys(("attach_targets", "propose_binding", "resolve_binding",
+                         "select_binding_target", "release_binding", "configure_bindings",
+                         "release_binding_resource", "reconcile_binding_operation"), "bindings"),
+        **dict.fromkeys(("resource_status", "turn_input_status", "steer", "elicitation",
+                         "answer_audit"), "backend_commands"),
+        **dict.fromkeys(("thread_status", "thread_operation"), "thread_commands"),
+        **dict.fromkeys(("query_interrupted", "resolve_interrupted"), "reconciliation"),
+        **dict.fromkeys(("cancel_router_request", "router_receipt"), "router"),
+        **dict.fromkeys(("recap_status", "recap_start"), "recap"),
+    }
 
     def __init__(self, sessions):
         self.sessions = sessions
@@ -55,17 +62,16 @@ class WorkerApi:
     def create_session(self, context):
         return self._request(self.sessions.create, context)
 
-    def accept_quick(self, controller, message):
-        handle = self._tokens.internal_token(controller)
-        return self._request(self._accept_quick, handle, message)
+    def accept_quick(self, token, message):
+        self._tokens.resolve(token)
+        return self._request(self._accept_quick, token, message)
 
     def _accept_quick(self, handle, message):
         return self.sessions.quick_input.accept(self._tokens.resolve(handle), message)
 
-    def prepare_replay(self, controller, activation, messages):
+    def prepare_replay(self, token, activation, messages):
         from .event_service import preparation_receipt
 
-        token = self._tokens.internal_token(controller)
         controller = self._tokens.resolve(token)
         return preparation_receipt(
             self.sessions.events, self._prepare_replay, token, connection(controller),
@@ -130,18 +136,22 @@ class WorkerApi:
         return getattr(self.sessions, name)(session_id, *args)
 
     def _session_command(self, handle, name, args, kwargs):
-        return getattr(self._tokens.resolve(handle), name)(*args, **kwargs)
+        controller = self._tokens.resolve(handle)
+        component = self.COMMANDS[name]
+        owner = getattr(controller, component) if component else controller
+        if name in {"recap_status", "recap_start"}:
+            name = {"recap_status": "status", "recap_start": "start"}[name]
+        return getattr(owner, name)(*args, **kwargs)
 
-    def command(self, controller, name, *args, **kwargs):
-        token = self._tokens.internal_token(controller)
+    def command(self, token, name, *args, **kwargs):
         controller = self._tokens.resolve(token)
-        if name not in self.COMMANDS | self.RESOURCE_COMMANDS | self.TURN_COMMANDS:
+        if name not in self.COMMANDS:
             raise ValueError("Unknown worker command")
         if name == "cancel":
             controller.interrupt()
         reservation = None
         if name == "submit" and kwargs.get("context") is not None:
-            reservation = controller.reserve_submission(kwargs["context"])
+            reservation = controller.bindings.reserve_submission(kwargs["context"])
             kwargs["reservation"] = reservation
         try:
             future = self._request(
@@ -149,12 +159,12 @@ class WorkerApi:
             )
         except Exception:
             if reservation:
-                controller.release_submission(reservation)
+                controller.bindings.release_submission(reservation)
             if name == "attach_targets":
                 controller.request_close()
             raise
         if reservation:
-            future.add_done_callback(lambda _future: controller.release_submission(reservation))
+            future.add_done_callback(lambda _future: controller.bindings.release_submission(reservation))
         return future
 
     def _run(self):

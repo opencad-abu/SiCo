@@ -126,19 +126,30 @@ def own(pid, channel):
         reap_descendants(.5)
 
 
-def run(function, project, *, bootstrap_fd, idle_seconds):
+def run(function, project, *, bootstrap_fd, idle_seconds, bootstrap_failure=None):
     try:
         require_pidfds()
     except ValueError:
         pass
     else:
         return function(project, bootstrap_fd=bootstrap_fd, idle_seconds=idle_seconds)
-    if threading.active_count() != 1:
-        raise RuntimeError("Old-kernel service custody must start before service threads")
-    enable_subreaper()
-    parent, child = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
-    owner = os.getpid()
-    pid = os.fork()
+    parent = child = None
+    try:
+        if threading.active_count() != 1:
+            raise RuntimeError("Old-kernel service custody must start before service threads")
+        enable_subreaper()
+        parent, child = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        owner = os.getpid()
+        pid = os.fork()
+    except Exception as exc:
+        if parent is not None:
+            parent.close()
+        if child is not None:
+            child.close()
+        if bootstrap_failure is None:
+            raise
+        bootstrap_failure(exc)
+        return 1
     if pid == 0:
         parent.close()
         try:

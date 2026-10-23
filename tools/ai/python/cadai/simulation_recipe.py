@@ -8,21 +8,19 @@ from .circuit_schema import tool
 from .circuit_spec_schema import CircuitSpecError, canonical, digest, unique, validate
 from .skill_result import call_skill
 from .simulation_dimensions import dimension_plan, native_dimensions
-from .simulation_schema import OPTIONS, RECIPE
+from .simulation_schema import OPTIONS, RECIPE, VIEW_DEFAULTS, native_options, option_problems
 
 SIMULATION_TOOLS = [
     tool(
         "preview_simulation_recipe",
-        "Validate explicit Spectre multi-test/corner/global-list-sweep recipe locally. "
-        "No OA writes or expression evaluation. Returns exact recipe_digest, expected test points "
-        "and unverified project dependencies. Models, variables, temperature, analyses and outputs "
-        "are required task data. Expression outputs require plot=true for evaluated RDB results; "
-        "save alone is insufficient. Optional corners define complete shared model "
-        "lists/temperature "
-        "with empty test.models; sweeps give numeric SI values for declared globals without local "
-        "or corner override. Max 64 sweep points/256 test-corner-points. "
-        "Saved schematic or retained config_ref with matching Config design/lists; "
-        "no Monte Carlo.",
+        "Validate Spectre multi-test/corner/sweep recipe locally. No OA writes or expression eval. "
+        "Returns recipe_digest, expected points, unverified dependencies. Variables, temperature, "
+        "analyses and outputs are required; empty test.models inherit ADE session model files "
+        "(init_pdk/libInit), listed models are explicit content identities. Expression outputs need "
+        "plot=true for RDB evaluation; save alone is insufficient. Corners define shared model "
+        "lists/temperature with empty test.models; sweeps give SI values for declared globals without "
+        "local or corner override. Max 64 sweep/256 test-corner points. Saved schematic or "
+        "retained config_ref matching Config lists; no Monte Carlo.",
         {"recipe": RECIPE},
         ("recipe",),
     ),
@@ -79,7 +77,18 @@ SIMULATION_TOOLS = [
 SIMULATION_NAMES = frozenset(t["name"] for t in SIMULATION_TOOLS)
 
 
+def with_view_defaults(recipe):
+    """One authoritative fill: each test without view lists uses the project list."""
+    if not isinstance(recipe, dict) or not isinstance(recipe.get("tests"), list):
+        return recipe
+    return dict(recipe, tests=[
+        {**VIEW_DEFAULTS, **test} if isinstance(test, dict) else test
+        for test in recipe["tests"]
+    ])
+
+
 def preview_recipe(recipe):
+    recipe = with_view_defaults(recipe)
     validate(recipe, RECIPE)
     if len(canonical(recipe).encode()) > 48000:
         raise CircuitSpecError("simulation recipe exceeds 48 KiB")
@@ -92,6 +101,9 @@ def preview_recipe(recipe):
             raise CircuitSpecError("setup cannot replace its source design")
         unique(test["analyses"], "name", "analyses")
         unique(test["outputs"], "name", "outputs")
+        problems = option_problems(test.get("simulator_options", {}))
+        if problems:
+            raise CircuitSpecError("; ".join(problems[:3]))
         if len({(m["path"], m.get("section")) for m in test["models"]}) != len(test["models"]):
             raise CircuitSpecError("duplicate model inclusion")
         for analysis in test["analyses"]:
@@ -134,6 +146,11 @@ def preview_recipe(recipe):
                 raise CircuitSpecError(
                     "v1 variables must be scalar expressions without whitespace or sweep delimiters"
                 )
+        # Config-owned tests inherit their hierarchy lists from the Config;
+        # direct-schematic tests must be able to descend into their own design.
+        if "config_ref" not in test and test["design"]["view"] not in test["switch_views"]:
+            raise CircuitSpecError(
+                "switch_views must include the test design view: " + test["design"]["view"])
     return {
         "ok": True,
         "recipe_digest": digest(recipe),
@@ -205,6 +222,7 @@ def native_recipe(recipe):
                 t["stop_views"],
             ]
             + ([t["config_ref"]] if "config_ref" in t else [])
+            + ([native_options(t["simulator_options"])] if t.get("simulator_options") else [])
             for t in recipe["tests"]
         ],
     ]
@@ -219,7 +237,8 @@ def call_simulation(name, args, client):
     if name == "preview_simulation_recipe":
         return True, preview_recipe(args["recipe"])
     if name == "create_simulation_setup":
-        preview = preview_recipe(args["recipe"])
+        recipe = with_view_defaults(args["recipe"])
+        preview = preview_recipe(recipe)
         if preview["recipe_digest"] != args["recipe_digest"]:
             raise CircuitSpecError("recipe_digest differs; preview exact recipe")
         fn = "aiSimCreate"
@@ -227,8 +246,8 @@ def call_simulation(name, args, client):
             args["task_ref"],
             args["request_id"],
             args["recipe_digest"],
-            native_recipe(args["recipe"]),
-            model_identities(args["recipe"]),
+            native_recipe(recipe),
+            model_identities(recipe),
         ]
     else:
         fn = {

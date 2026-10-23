@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from cadgui import theme
 from cadgui.chrome import SiMainWindow
+from cadgui.palette import active
 from cadgui.prompts import notice
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QIcon
@@ -31,7 +31,7 @@ class TerminalWindow(SiMainWindow):
     MAXIMUM_SESSIONS = 8
 
     def __init__(self, options, session_type):
-        super().__init__(f"{_logo_text()}::AI Assistant@{options.workspace}", mark=logo_mark())
+        super().__init__(f"{_logo_text()}::AI 助手@{options.workspace}", mark=logo_mark())
         # 终端窗口没有菜单栏：标题栏下面直接是工具条。
         self.menu_bar.hide()
         self._session_type = session_type
@@ -132,8 +132,8 @@ class TerminalWindow(SiMainWindow):
             return
         if len(self._sessions) >= self.MAXIMUM_SESSIONS:
             if not initial:
-                notice(self, "AI Assistant Sessions",
-                       f"At most {self.MAXIMUM_SESSIONS} sessions can run in one window.")
+                notice(self, "AI 助手会话",
+                       f"一个窗口最多运行 {self.MAXIMUM_SESSIONS} 个会话。")
             return
         number = self._next_session_number
         self._next_session_number += 1
@@ -148,8 +148,8 @@ class TerminalWindow(SiMainWindow):
         except Exception as exc:
             if initial:
                 raise
-            notice(self, "AI Assistant Session",
-                   f"The new AI Assistant session could not be started:\n{exc}")
+            notice(self, "AI 助手会话",
+                   f"无法启动新的 AI 助手会话：\n{exc}")
             return
         self._sessions.append(session)
         index = self._tabs.addTab(session, session.title)
@@ -221,7 +221,7 @@ class TerminalWindow(SiMainWindow):
             enabled, bool(session and session.is_running())
         )
         if session is None:
-            self._toolbar.set_status("Exited", theme.STATE_ERROR)
+            self._toolbar.set_status("已退出", active().state_error)
         else:
             self._toolbar.set_status(*session.status)
         self._update_paste_action()

@@ -3,7 +3,7 @@
 ;------------------------------------------------------------------------------
 
 unless(and(boundp('sicoProfileVersion)
-             sicoProfileVersion=="20260924.profile.environment.v4")
+             sicoProfileVersion=="20261022.profile.environment.v6")
 
 unless(boundp('cadProfileAdapters)
   cadProfileAdapters=makeTable("cadProfileAdapters" nil))
@@ -95,12 +95,14 @@ procedure(SICO_profileDefaultPath(flow)
 procedure(SICO_profilePythonExe(flow)
   let((key pythonRoot)
     key=SICO_profileFlowKey(flow)
-    pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
     or(SICO_envValue(strcat(key "_PYTHON"))
-       SICO_envValue("SICO_PYTHON")
-       when(pythonRoot
-         simplifyFilename(strcat(pythonRoot "/bin/python3") t))
-       "python3")
+       SICO_installedPython()
+       progn(
+         pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
+         or(SICO_envValue("SICO_PYTHON")
+            when(pythonRoot
+              simplifyFilename(strcat(pythonRoot "/bin/python3") t))
+            "python3")))
   )
 )
 
@@ -377,7 +379,7 @@ procedure(SICO_profileApply(form flow data)
 )
 
 procedure(SICO_profileSaveTo(form flow path)
-  let((entries entry parent sourcePath)
+  prog((entries entry parent sourcePath)
     cond(
       ((!path || path=="")
         SICO_profileMessage('e flow "Select a configuration filename first.") nil)
@@ -479,8 +481,8 @@ procedure(SICO_profileLoadCB(form flow)
 )
 
 procedure(SICO_profileRevision()
-  "20260924.profile.environment.v4"
+  "20261022.profile.environment.v6"
 )
 
-sicoProfileVersion="20260924.profile.environment.v4"
+sicoProfileVersion="20261022.profile.environment.v6"
 )

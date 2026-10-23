@@ -1,0 +1,567 @@
+{
+  "actual_model_service_qualification": "NOT_PERFORMED",
+  "audit": {
+    "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T010145.563629Z-dynamic-todo-audit-a11584a66176/manifest.json",
+    "integrity": "PASS",
+    "run_id": "20260908T010145.563629Z-dynamic-todo-audit-a11584a66176",
+    "run_status": "PASS_EVIDENCE_AUDIT",
+    "sha256": "21d7e1a15f18afe1d99261c81cc6d8720016120e78fb0e1a625201db69a5729b",
+    "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/aivw.dynamic_checkpoint.evidence/runs/20260908T010145.563629Z-dynamic-todo-audit-a11584a66176/summary.json",
+    "summary_sha256": "b9a3c72f94906315b92bbe9f07952cd45dccfe1a213327b687580bb1c7b564ec"
+  },
+  "baseline_alignment": {
+    "full_m3_complete": false,
+    "path": "/zone.disk/ssd1/path/to/sico-src/ai-verification-workbench/docs/LDO_BASELINE_EXECUTION_AUDIT.md",
+    "sha256": "1ab23ffbddc3bcced9dcd81a3fbb975f993f8ccb03d40cc48387566bb649c244",
+    "status": "CURRENT_IMPLEMENTATION_SCOPE_ALIGNED"
+  },
+  "full_ams_system_simulation": "NOT_PERFORMED",
+  "holdout_evaluated": false,
+  "implementation_parity": [
+    {
+      "case_count": 17,
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T005947.153497Z-trajectory-parity-e77d83c6a60b/manifest.json",
+      "integrity": "PASS",
+      "max_absolute_error": {
+        "VOUT": 2.6920687901110796e-12,
+        "VPROBE:p": 1.4505540865683564e-15
+      },
+      "run_id": "20260908T005947.153497Z-trajectory-parity-e77d83c6a60b",
+      "run_status": "PASS_IMPLEMENTATION_PARITY",
+      "sha256": "d4c142a2dabcbcc7ad96765f8112255a7a23834594a8f96162409cf309a45a5a"
+    },
+    {
+      "case_count": 24,
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T011018.300215Z-trajectory-parity-96a1c8136398/manifest.json",
+      "integrity": "PASS",
+      "max_absolute_error": {
+        "VOUT": 4.495515071312184e-12,
+        "VPROBE:p": 2.321656322051835e-15
+      },
+      "run_id": "20260908T011018.300215Z-trajectory-parity-96a1c8136398",
+      "run_status": "PASS_IMPLEMENTATION_PARITY",
+      "sha256": "2eaf7ed4a5be9b368e707587886f4b75d427edc66ab2952e1edcbc1c73b2c51d"
+    }
+  ],
+  "kind": "dynamic-development-checkpoint",
+  "policy": "dynamic_acceptance_proposal_v1.json",
+  "previous_checkpoint": {
+    "path": "/zone.disk/ssd1/path/to/sico-src/ai-verification-workbench/recipes/ldo/dynamic_checkpoint_evidence_v4.json",
+    "sha256": "7c9507614a91fd1bb4a402ca791f5f803589917a6bb77f40207725d0af8003d3"
+  },
+  "public_admission_audits": [
+    {
+      "blockers": [
+        {
+          "code": "ACCEPTANCE_POLICY_NOT_APPROVED",
+          "detail": "Absolute voltage/current/time floors remain a proposal."
+        },
+        {
+          "code": "PUBLIC_CORRELATION_FAILED",
+          "detail": [
+            "startup_rate_0",
+            "startup_rate_1",
+            "startup_rate_2",
+            "supply_rise_rate_0",
+            "supply_rise_rate_1",
+            "supply_rise_rate_2",
+            "supply_rise_then_supply_fall"
+          ]
+        },
+        {
+          "code": "PUBLIC_CORRELATION_NOT_ACCEPTED",
+          "detail": "BLOCKED_CONTRACT"
+        }
+      ],
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T014001.946033Z-dynamic-admission-audit-3a1a92ff7cf8/manifest.json",
+      "disposition": "ANALOG_ISLAND",
+      "integrity": "PASS",
+      "private_access_authorized": false,
+      "run_id": "20260908T014001.946033Z-dynamic-admission-audit-3a1a92ff7cf8",
+      "run_status": "BLOCKED_HOLDOUT_ADMISSION",
+      "sha256": "877d7ed10c61acd406262f1b7cfe3e5b04c3ae2ad099e701f0da73fa1932cddc",
+      "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.dynamic_admission/runs/20260908T014001.946033Z-dynamic-admission-audit-3a1a92ff7cf8/summary.json",
+      "summary_sha256": "9b6c39cfb1fd80c7273e74081075477bbb1f5a6ed92191b2f5e4a3d6d66dadab"
+    },
+    {
+      "blockers": [
+        {
+          "code": "ACCEPTANCE_POLICY_NOT_APPROVED",
+          "detail": "Absolute voltage/current/time floors remain a proposal."
+        },
+        {
+          "code": "PUBLIC_CORRELATION_FAILED",
+          "detail": [
+            "startup_rate_0",
+            "startup_rate_1",
+            "startup_rate_2",
+            "enable_rise_rate_0",
+            "enable_rise_rate_1",
+            "enable_rise_rate_2",
+            "enable_fall_rate_0",
+            "enable_fall_rate_1",
+            "enable_fall_rate_2",
+            "enable_rise_then_enable_fall"
+          ]
+        },
+        {
+          "code": "PUBLIC_CORRELATION_NOT_ACCEPTED",
+          "detail": "BLOCKED_CONTRACT"
+        }
+      ],
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T014027.528185Z-dynamic-admission-audit-78903b03d685/manifest.json",
+      "disposition": "ANALOG_ISLAND",
+      "integrity": "PASS",
+      "private_access_authorized": false,
+      "run_id": "20260908T014027.528185Z-dynamic-admission-audit-78903b03d685",
+      "run_status": "BLOCKED_HOLDOUT_ADMISSION",
+      "sha256": "da135d0ff8488201febfc6dfb04d53ed844f5d54d3e899fd887484f6d090d3e1",
+      "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.dynamic_admission/runs/20260908T014027.528185Z-dynamic-admission-audit-78903b03d685/summary.json",
+      "summary_sha256": "69e2ec2e7bd88c209f98f6003da145ba2e2a9b7f80ef500222b7d9fb33656d57"
+    }
+  ],
+  "qualification": "NOT_ESTABLISHED",
+  "retained_failed_runs": [
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T004206.246266Z-recipe-run-73b6205911d0/manifest.json",
+      "failure": {
+        "code": "identification_failed",
+        "reason": "normal system failed to converge within iteration budget"
+      },
+      "integrity": "PASS",
+      "run_id": "20260908T004206.246266Z-recipe-run-73b6205911d0",
+      "run_status": "BLOCKED_WORKFLOW",
+      "sha256": "d15f7602b004f3f6172bbc24c16bf96a84f6dc020bfd756b897f0edf3fa39f79"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T004207.420809Z-recipe-run-e8274027599c/manifest.json",
+      "failure": {
+        "code": "identification_failed",
+        "reason": "normal system failed to converge within iteration budget"
+      },
+      "integrity": "PASS",
+      "run_id": "20260908T004207.420809Z-recipe-run-e8274027599c",
+      "run_status": "BLOCKED_WORKFLOW",
+      "sha256": "d0576b99772dc3b86e86477899b35d6629c20022f94eed1fb7d116c0f16a530b"
+    }
+  ],
+  "runs": [
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T234715.623528Z-recipe-run-22c11634b854/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260907T234715.623528Z-recipe-run-22c11634b854",
+      "run_status": "PASS",
+      "sha256": "a89587ab04fedd8e9290d04fb4f10feb5b2466ec3cabf016861d95fdbcbeea15"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T002322.335868Z-recipe-run-22c11634b854/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260908T002322.335868Z-recipe-run-22c11634b854",
+      "run_status": "PASS",
+      "sha256": "20034abd1043e449ae13c1fc59aa29d21c3fc5c0957a74ffa016ed8808fe28cd"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T002206.919677Z-trajectory-revision-audit-09019b846ac5/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260908T002206.919677Z-trajectory-revision-audit-09019b846ac5",
+      "run_status": "BLOCKED_DYNAMIC_QUALIFICATION",
+      "sha256": "e4374fb9a6bcefd31ce8d0d9e63e73a6f73ac053409036f930f8e0c430fa63b3"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T002238.344535Z-eenet-adapter-e1db36a9ae76/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260908T002238.344535Z-eenet-adapter-e1db36a9ae76",
+      "run_status": "PASS_ADAPTER_MECHANICS",
+      "sha256": "96aac285c44967f16c9007b686b420016f8feea5d559702fafc23dd9541808a5"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T001050.535894Z-recipe-run-68023720372b/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260908T001050.535894Z-recipe-run-68023720372b",
+      "run_status": "BLOCKED_WORKFLOW",
+      "sha256": "48803b06c5ac9f0f8d93400b77ad929c2b1e51c6d0eb5ea44a251975878ccaa1"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T001838.659739Z-recipe-run-d98265d71c14/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260908T001838.659739Z-recipe-run-d98265d71c14",
+      "run_status": "BLOCKED_WORKFLOW",
+      "sha256": "f33c96ad21cb6a6b83e225862f144fa2c0964e25b86e5612dd20b47551503528"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T004841.240166Z-recipe-run-73b6205911d0/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260908T004841.240166Z-recipe-run-73b6205911d0",
+      "run_status": "BLOCKED_WORKFLOW",
+      "sha256": "861ae82e1b988142e31e2624d1d677b6f61d0ff0dad91df3070019d67ed11350"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T002653.134041Z-dynamic-holdout-reservation-18adc08f1ac6/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260908T002653.134041Z-dynamic-holdout-reservation-18adc08f1ac6",
+      "run_status": "RESERVED_NOT_EVALUATED",
+      "sha256": "240d411bf6f8098aba883955cdd6128c6cf4fbf0ca8eb7ffb49f2029ddf1bb3e"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T235333.535070Z-recipe-run-279edfe375e7/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260907T235333.535070Z-recipe-run-279edfe375e7",
+      "run_status": "PASS",
+      "sha256": "2e5374d74d4f36014176af732d381f7ff9ed70e157f878375759c6a5c6e9e008"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T002322.335844Z-recipe-run-279edfe375e7/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260908T002322.335844Z-recipe-run-279edfe375e7",
+      "run_status": "PASS",
+      "sha256": "9bcc685924ad7e3ffd7922d14682b3f6f2dbcf62d301edc09ac047b53430bfdd"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T002655.502800Z-trajectory-revision-audit-5ffafe0c4266/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260908T002655.502800Z-trajectory-revision-audit-5ffafe0c4266",
+      "run_status": "BLOCKED_DYNAMIC_QUALIFICATION",
+      "sha256": "0a80302288652674f3e376940807814a22909885c0dfe62641be47f85db26674"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T002238.707861Z-eenet-adapter-c5d97ed9d07b/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260908T002238.707861Z-eenet-adapter-c5d97ed9d07b",
+      "run_status": "PASS_ADAPTER_MECHANICS",
+      "sha256": "40de5dd66546ce18e36a60ca0465fd3f649d2db9e8d975593beea863999f998b"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T001050.535838Z-recipe-run-3c4e956b0861/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260908T001050.535838Z-recipe-run-3c4e956b0861",
+      "run_status": "BLOCKED_WORKFLOW",
+      "sha256": "bfb240264018f2920a6c81a4a0a25d6ca66e9b741dce7de0894c2747c1aecde4"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T002018.129961Z-recipe-run-658ff7e7d809/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260908T002018.129961Z-recipe-run-658ff7e7d809",
+      "run_status": "BLOCKED_WORKFLOW",
+      "sha256": "1fa1fca0cedddf6f1d31e5edba1ed6f6868a63b63694eb5c2061c667ae804e00"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T005123.530164Z-recipe-run-e8274027599c/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260908T005123.530164Z-recipe-run-e8274027599c",
+      "run_status": "BLOCKED_WORKFLOW",
+      "sha256": "a7ed8e1564c050e8e24a9b73f8aebb59f3d627ab364a14f6c8fda4a47d5bee6e"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T002653.287716Z-dynamic-holdout-reservation-ac771871fe91/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260908T002653.287716Z-dynamic-holdout-reservation-ac771871fe91",
+      "run_status": "RESERVED_NOT_EVALUATED",
+      "sha256": "7c5d3d9b415ff8210432b9cd1901549b7dcf7f03f466b992e98f15d93e04d1c6"
+    }
+  ],
+  "schema_version": 1,
+  "scope": "public_dynamic_models_engineering_evidence_and_holdout_prerequisite_audit",
+  "superseded_admission_diagnostics": [
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T013745.152329Z-dynamic-admission-audit-885c5d905b0c/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260908T013745.152329Z-dynamic-admission-audit-885c5d905b0c",
+      "run_status": "BLOCKED_HOLDOUT_ADMISSION",
+      "sha256": "5a52361035b618799e892f42169c3d0410f82056cb4f2157bbf10256af4951f4",
+      "superseded_reason": "Checker compared normalized plan bytes to original reservation bytes; not reservation failure evidence."
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T013842.823823Z-dynamic-admission-audit-90b12e2281b9/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260908T013842.823823Z-dynamic-admission-audit-90b12e2281b9",
+      "run_status": "BLOCKED_HOLDOUT_ADMISSION",
+      "sha256": "03b1b4ce59ebca44b646bd00478078704d9402a0b867277de62e5b06bd85aba7",
+      "superseded_reason": "Checker compared normalized plan bytes to original reservation bytes; not reservation failure evidence."
+    }
+  ],
+  "targets": {
+    "AON": {
+      "full_csv_repeat_identical": true,
+      "isolated_revision_protocol": "PASS",
+      "models": {
+        "v5": {
+          "candidate_sha256": "4714f81881d9efaad5858f0c238d2510402022676a0f48593c62acaeca531605",
+          "case_count": 24,
+          "diagnostic_status": "FAIL_CORRELATION",
+          "failed_cases": [
+            "startup_rate_0",
+            "startup_rate_1",
+            "startup_rate_2",
+            "enable_rise_rate_0",
+            "enable_rise_rate_1",
+            "enable_rise_rate_2",
+            "enable_fall_rate_0",
+            "enable_fall_rate_1",
+            "enable_rise_then_enable_fall"
+          ],
+          "passed_cases": 15,
+          "status": "BLOCKED_CONTRACT"
+        },
+        "v6": {
+          "candidate_sha256": "0b18433612fc8709ccc65fb8c86914a6c6400300d225660ae28cfee13be1a7e8",
+          "case_count": 24,
+          "diagnostic_status": "FAIL_CORRELATION",
+          "failed_cases": [
+            "startup_rate_0",
+            "startup_rate_1",
+            "startup_rate_2",
+            "enable_rise_rate_0",
+            "enable_rise_rate_1",
+            "enable_rise_rate_2",
+            "enable_fall_rate_0",
+            "enable_fall_rate_1",
+            "enable_rise_then_enable_fall"
+          ],
+          "passed_cases": 15,
+          "status": "BLOCKED_CONTRACT"
+        },
+        "v7": {
+          "candidate_sha256": "3c4c97de314c3a474028aa4ebaa34e048fd2b67ec5d255bac7d880e5101cced9",
+          "case_count": 24,
+          "diagnostic_status": "FAIL_CORRELATION",
+          "failed_cases": [
+            "startup_rate_0",
+            "startup_rate_1",
+            "startup_rate_2",
+            "enable_rise_rate_0",
+            "enable_rise_rate_1",
+            "enable_rise_rate_2",
+            "enable_fall_rate_0",
+            "enable_fall_rate_1",
+            "enable_fall_rate_2",
+            "enable_rise_then_enable_fall"
+          ],
+          "passed_cases": 14,
+          "status": "BLOCKED_CONTRACT"
+        }
+      },
+      "sequence_holdout": {
+        "case_count": 12,
+        "commitment_sha256": "c831b426f24e3a48f6b90bb6c59ad4d9b85b818722a62ee6ed92944dc14aef2d",
+        "domain_digest": "53eae43b1eac5aa943945b3132bb65593e36638e52d226ef12703fa07aadbf88",
+        "locked": true,
+        "policy_digest": "fe3204ba369bbd966379a253e30676a43d648300d43bc6f71aa8c343c96d3543",
+        "public_values_included": false,
+        "schema_version": 1,
+        "state": "reserved_before_fit"
+      },
+      "sequence_reservation_applies_to": "future_candidate_only",
+      "source_before_after_recheck": "PASS",
+      "source_generation": "351942e09e4444b4ae89b098e9e5bc0d3fde90ff3d57ca9c7afee0296e20a0ee",
+      "source_repeat": {
+        "comparison": "identical_normalized_measurements",
+        "input_digests": [
+          "5208fa218aca81fd74e44af74efee998872e68b43b6aae3ee8afe6ce279ab197",
+          "5208fa218aca81fd74e44af74efee998872e68b43b6aae3ee8afe6ce279ab197"
+        ],
+        "measurement_digests": [
+          "15bf428bc06ebe9dc85ea1e646fbe64e48a927b24c57923ae599821175c7f466",
+          "15bf428bc06ebe9dc85ea1e646fbe64e48a927b24c57923ae599821175c7f466"
+        ],
+        "run_count": 2,
+        "run_ids": [
+          "20260907T235333.535070Z-recipe-run-279edfe375e7",
+          "20260908T002322.335844Z-recipe-run-279edfe375e7"
+        ],
+        "status": "PASS"
+      },
+      "system_readiness": {
+        "adapter_certificate": {
+          "adapter_sha256": "fd5e1931d6a979dc6416b11a6feb4400e4b10033e233d5e33358296db73586a3",
+          "candidate_sha256": "4714f81881d9efaad5858f0c238d2510402022676a0f48593c62acaeca531605",
+          "control_manifest_sha256": "40de5dd66546ce18e36a60ca0465fd3f649d2db9e8d975593beea863999f998b",
+          "run_id": "20260908T002238.707861Z-eenet-adapter-c5d97ed9d07b",
+          "scope": "grounded_resistor_load_finite_supply_resistance_only",
+          "status": "PASS_ADAPTER_MECHANICS"
+        },
+        "blockers": [
+          {
+            "code": "DYNAMIC_HOLDOUT_REPEAT_NOT_QUALIFIED",
+            "detail": "Public calibration is not independent whole-case holdout plus two frozen repeats."
+          },
+          {
+            "code": "SYSTEM_BINDING_AND_EXECUTION_MISSING",
+            "detail": "No candidate-bound AMS config, connect-rule, system stimulus or system simulation evidence."
+          },
+          {
+            "code": "LIVE_SOURCE_RECHECK_REQUIRED",
+            "detail": "Historical source generation must be rechecked before live system substitution."
+          },
+          {
+            "code": "NETWORK_SCOPE_LIMITED",
+            "detail": "grounded_resistor_load_finite_supply_resistance_only"
+          },
+          {
+            "code": "DYNAMIC_CORRELATION_NOT_ACCEPTED",
+            "detail": "BLOCKED_CONTRACT"
+          },
+          {
+            "code": "PUBLIC_DYNAMIC_MODEL_ERRORS",
+            "detail": "FAIL_CORRELATION"
+          }
+        ],
+        "candidate_sha256": "4714f81881d9efaad5858f0c238d2510402022676a0f48593c62acaeca531605",
+        "correlation_digest": "0f71daafd0a1f50af280541fa1c74c11dbcb203236987b3f93699e8c55247636",
+        "kind": "sampled-candidate-system-assessment",
+        "publication": "NOT_REQUESTED",
+        "qualification": "NOT_ESTABLISHED",
+        "recommended_binding": "retain_original_analog_instance",
+        "revision_report_digest": "f33f10c00abd6bbc32576a4169b8e35608ddafa917e515e4ac6068d6beeaeb74",
+        "schema_version": 1,
+        "source_generation": "351942e09e4444b4ae89b098e9e5bc0d3fde90ff3d57ca9c7afee0296e20a0ee",
+        "status": "BLOCKED_SYSTEM_INTEGRATION",
+        "system_simulation": "NOT_RUN",
+        "unsupported": [
+          "unvalidated_combinations",
+          "outside_input_domain",
+          "different_pvt",
+          "long_term_drift",
+          "bidirectional_electrical_network",
+          "unvalidated_slew_rates"
+        ]
+      }
+    },
+    "MASTER": {
+      "full_csv_repeat_identical": true,
+      "isolated_revision_protocol": "PASS",
+      "models": {
+        "v5": {
+          "candidate_sha256": "c21e91f379800bc62152ccf7dde7f24dcaa3876a9f1f4b485c50b71ceed78bfe",
+          "case_count": 17,
+          "diagnostic_status": "FAIL_CORRELATION",
+          "failed_cases": [
+            "startup_rate_0",
+            "startup_rate_1",
+            "startup_rate_2"
+          ],
+          "passed_cases": 14,
+          "status": "BLOCKED_CONTRACT"
+        },
+        "v6": {
+          "candidate_sha256": "a37b99ce23ea245442b3abc6206964f437865ee558f89d19f026a9ae6ac10a1f",
+          "case_count": 17,
+          "diagnostic_status": "FAIL_CORRELATION",
+          "failed_cases": [
+            "startup_rate_0",
+            "startup_rate_1",
+            "startup_rate_2"
+          ],
+          "passed_cases": 14,
+          "status": "BLOCKED_CONTRACT"
+        },
+        "v7": {
+          "candidate_sha256": "3850e158759473acf66b3a4e90c71ccfd711fca3fad80e9071b67da63e529db4",
+          "case_count": 17,
+          "diagnostic_status": "FAIL_CORRELATION",
+          "failed_cases": [
+            "startup_rate_0",
+            "startup_rate_1",
+            "startup_rate_2",
+            "supply_rise_rate_0",
+            "supply_rise_rate_1",
+            "supply_rise_rate_2",
+            "supply_rise_then_supply_fall"
+          ],
+          "passed_cases": 10,
+          "status": "BLOCKED_CONTRACT"
+        }
+      },
+      "sequence_holdout": {
+        "case_count": 8,
+        "commitment_sha256": "7fcd995ea582b70b8494d1b62d92d61bb28b7270c2623b07b60bb7087273d7e0",
+        "domain_digest": "4257d9dd18aa9f3aae0649652452c91c90784c3e76605c2770e2cbebbbfcd736",
+        "locked": true,
+        "policy_digest": "fe3204ba369bbd966379a253e30676a43d648300d43bc6f71aa8c343c96d3543",
+        "public_values_included": false,
+        "schema_version": 1,
+        "state": "reserved_before_fit"
+      },
+      "sequence_reservation_applies_to": "future_candidate_only",
+      "source_before_after_recheck": "PASS",
+      "source_generation": "7b67ef6da4a3172ca4339f2368982bf7e0f33c0b290e14889fc1573d47fec8a8",
+      "source_repeat": {
+        "comparison": "identical_normalized_measurements",
+        "input_digests": [
+          "330df538b436ba13cf237b61101713a6a8f6e44d879ed6bc434b0df411e514cf",
+          "330df538b436ba13cf237b61101713a6a8f6e44d879ed6bc434b0df411e514cf"
+        ],
+        "measurement_digests": [
+          "f5bc33876cf1eb6b257f1a88e37ee3f0eccaf8acaace5e994ff6633fa9103fc6",
+          "f5bc33876cf1eb6b257f1a88e37ee3f0eccaf8acaace5e994ff6633fa9103fc6"
+        ],
+        "run_count": 2,
+        "run_ids": [
+          "20260907T234715.623528Z-recipe-run-22c11634b854",
+          "20260908T002322.335868Z-recipe-run-22c11634b854"
+        ],
+        "status": "PASS"
+      },
+      "system_readiness": {
+        "adapter_certificate": {
+          "adapter_sha256": "96f8dbd9f83c90d4dec0b068d9d80cfbb0bf2fafb93381abbe760e66917b5a25",
+          "candidate_sha256": "c21e91f379800bc62152ccf7dde7f24dcaa3876a9f1f4b485c50b71ceed78bfe",
+          "control_manifest_sha256": "96aac285c44967f16c9007b686b420016f8feea5d559702fafc23dd9541808a5",
+          "run_id": "20260908T002238.344535Z-eenet-adapter-e1db36a9ae76",
+          "scope": "grounded_resistor_load_finite_supply_resistance_only",
+          "status": "PASS_ADAPTER_MECHANICS"
+        },
+        "blockers": [
+          {
+            "code": "DYNAMIC_HOLDOUT_REPEAT_NOT_QUALIFIED",
+            "detail": "Public calibration is not independent whole-case holdout plus two frozen repeats."
+          },
+          {
+            "code": "SYSTEM_BINDING_AND_EXECUTION_MISSING",
+            "detail": "No candidate-bound AMS config, connect-rule, system stimulus or system simulation evidence."
+          },
+          {
+            "code": "LIVE_SOURCE_RECHECK_REQUIRED",
+            "detail": "Historical source generation must be rechecked before live system substitution."
+          },
+          {
+            "code": "NETWORK_SCOPE_LIMITED",
+            "detail": "grounded_resistor_load_finite_supply_resistance_only"
+          },
+          {
+            "code": "DYNAMIC_CORRELATION_NOT_ACCEPTED",
+            "detail": "BLOCKED_CONTRACT"
+          },
+          {
+            "code": "PUBLIC_DYNAMIC_MODEL_ERRORS",
+            "detail": "FAIL_CORRELATION"
+          }
+        ],
+        "candidate_sha256": "c21e91f379800bc62152ccf7dde7f24dcaa3876a9f1f4b485c50b71ceed78bfe",
+        "correlation_digest": "43f380fa3464df4f9fa4c1bbdf65da80645fc2c5708bcdc87e44f4830f646ce2",
+        "kind": "sampled-candidate-system-assessment",
+        "publication": "NOT_REQUESTED",
+        "qualification": "NOT_ESTABLISHED",
+        "recommended_binding": "retain_original_analog_instance",
+        "revision_report_digest": "dda4095533e0c5757c1c4d7022bbcf281cf9a63d891fa35292b011cab7ed6f7a",
+        "schema_version": 1,
+        "source_generation": "7b67ef6da4a3172ca4339f2368982bf7e0f33c0b290e14889fc1573d47fec8a8",
+        "status": "BLOCKED_SYSTEM_INTEGRATION",
+        "system_simulation": "NOT_RUN",
+        "unsupported": [
+          "unvalidated_combinations",
+          "outside_input_domain",
+          "different_pvt",
+          "long_term_drift",
+          "bidirectional_electrical_network",
+          "unvalidated_slew_rates"
+        ]
+      }
+    }
+  },
+  "tests": {
+    "aivw_passed": 648,
+    "cad_ai_passed": 504,
+    "cad_ai_skipped": 2
+  },
+  "v7_promotion": "REJECTED_PUBLIC_DIAGNOSTICS"
+}

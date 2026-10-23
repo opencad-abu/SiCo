@@ -19,7 +19,14 @@ def empty(connection, tables):
 
 
 def validate_state(connection, version):
-    empty(connection, ("thread_attachments" if version == "0.156.1" else "thread_artifacts",))
+    empty(connection, ("thread_artifacts" if version == "0.154.0" else "thread_attachments",))
+    if version == "0.162.1":
+        sections = connection.execute("SELECT id, name, appearance FROM thread_sections").fetchall()
+        if sections != [("01984de2-8f74-7c91-a3b2-5c5e937cf318", "Pinned", None)]:
+            raise ValueError("Native custom thread sections require review")
+        if connection.execute("SELECT 1 FROM threads WHERE is_pinned != 0 OR thread_section_id "
+                              "IS NOT NULL OR project_id IS NOT NULL LIMIT 1").fetchone():
+            raise ValueError("Native thread organization requires review")
     empty(connection, (
         "thread_dynamic_tools", "thread_spawn_edges", "remote_control_enrollments",
         "external_agent_config_imports", "rollout_migration_state",
@@ -55,7 +62,7 @@ def validate_quiescence(connection, name, thread_ids, version):
     elif name == "memories_1.sqlite":
         # Job kinds, leases and retry policy cannot be inferred from an empty sample.
         empty(connection, ("jobs", "stage1_outputs"))
-        if version == "0.156.1":
+        if version != "0.154.0":
             progress = connection.execute(
                 "SELECT singleton, max_thread_count FROM consolidation_progress").fetchall()
             if progress != [(1, 0)]:

@@ -8,7 +8,7 @@ from pathlib import Path
 from sicomigration import admission
 
 from ..core.contracts import identifier
-from ..transport.framing import strict_json
+from cadai.json_values import strict_json
 
 NAME = "history-migration.json"
 FORMAT = "sico.history.migration.v1"

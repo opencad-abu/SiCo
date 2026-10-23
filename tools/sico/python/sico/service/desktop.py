@@ -14,22 +14,25 @@ from ..transport.framing import strict_json
 from ..transport.relay import StdioLines
 from .frontend_startup import FrontendStartup
 from .notices import HostNotices
+from .termination import TerminationSignal
 
 
 class DesktopShutdown:
     """Bound the whole desktop's explicit shutdown, including Qt and cleanup."""
 
     GRACE_SECONDS = 5.0
+    PARENT_EXIT_GRACE_SECONDS = 0.75
 
     def __init__(self):
         self.deadline = None
         self._lock = threading.Lock()
 
-    def arm(self):
+    def arm(self, seconds=None):
         with self._lock:
             if self.deadline is not None:
                 return
-            self.deadline = time.monotonic() + self.GRACE_SECONDS
+            grace = self.GRACE_SECONDS if seconds is None else seconds
+            self.deadline = time.monotonic() + grace
             threading.Thread(target=self._expire, name="desktop-exit", daemon=True).start()
 
     def remaining(self):
@@ -78,15 +81,23 @@ def run_desktop(args):
 
 
 def _run_desktop(args):
+    from PyQt5.QtCore import QTimer
     from PyQt5.QtWidgets import QApplication
 
     from sico_ui.branding import install_logo
+    from sico_ui.appearance_runtime import apply_project_appearance
+    from sico_ui.qt_translation import install_chinese_qt_translations
     from sico_ui.startup import StartupView
     from sico_ui.wheel import prepare_wheel_environment
 
+    from .launch import prepare_project_state
+
+    prepare_project_state(args.launch_dir)
     prepare_wheel_environment()
     app = QApplication.instance() or QApplication([])
     install_logo(app)
+    install_chinese_qt_translations(app)
+    apply_project_appearance(args.launch_dir, application=app)
     app.setQuitOnLastWindowClosed(False)
     controls = StdioLines(sys.stdin.buffer, decode=strict_json)
     notice = HostNotices(sys.stdout.fileno())
@@ -96,10 +107,24 @@ def _run_desktop(args):
                        shutdown_guard=shutdown)
     app.aboutToQuit.connect(shutdown.arm)
     app.aboutToQuit.connect(view.close)
+    termination = TerminationSignal().install()
+    termination_timer = QTimer()
+    termination_timer.setInterval(50)
+
+    def parent_exit():
+        if termination.received.is_set():
+            termination_timer.stop()
+            shutdown.arm(DesktopShutdown.PARENT_EXIT_GRACE_SECONDS)
+            view.control.shutdown()
+
+    termination_timer.timeout.connect(parent_exit)
+    termination_timer.start(50)
     try:
         result = app.exec_()
         return 2 if notice.failed.is_set() else (view.exit_code or result)
     finally:
+        termination_timer.stop()
+        termination.restore()
         shutdown.arm()
         view.close()
         # Drain notices and services concurrently within the original deadline.

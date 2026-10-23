@@ -88,7 +88,8 @@ def content_rows(package, devices, args):
         from .policy_modes import rows
         return rows(value)
     fields = {'cdf': ('parameters', 'rules'), 'symbol': ('terminals',), 'simulation': ('interfaces',),
-              'category': ('items',), 'file': ('items',), 'model': ('configs', 'corners'),
+              'category': ('items',), 'file': ('items',),
+              'model': ('configs', 'corners', 'cards'),
               'sources': ('items',), 'properties': ('items',), 'iv': ('runs',)}[section]
     meta = {k: v for k, v in value.items() if k not in {*fields, 'source', 'depends_on', 'evidence'}}
     rows = [{'file': name, 'metadata': meta}] if meta else []
@@ -122,6 +123,32 @@ def content_rows(package, devices, args):
     return rows, 'incomplete' if incomplete else 'ok'
 
 
+def package_summary(manifest):
+    """Bounded package identity; acceptance receipts stay out of the row."""
+    summary = {key: value for key, value in manifest.items()
+               if key not in {'files', 'dependencies', 'libraries', 'publication'}}
+    publication = manifest.get('publication')
+    if not publication:
+        return summary
+    row = {key: publication[key] for key in
+           ('profile', 'at', 'content_digest', 'based_on') if key in publication}
+    if 'scope' in publication:
+        row['scope'] = publication['scope']
+    acceptance = publication.get('acceptance')
+    if acceptance:
+        row['acceptance'] = {
+            key: acceptance[key] for key in
+            ('verifier', 'operations', 'evidence_ref', 'evidence_digest')
+            if key in acceptance}
+        receipts = acceptance.get('receipts') or {}
+        row['acceptance']['receipts'] = len(receipts)
+        row['acceptance']['devices'] = len({
+            device for receipt in receipts.values()
+            for device in receipt.get('devices', [])})
+    summary['publication'] = row
+    return summary
+
+
 class Queries:
     def __init__(self):
         self.cursors = {}
@@ -141,15 +168,26 @@ class Queries:
         try:
             require(package)
         except PdkUnavailable as exc:
-            if exc.code != 'pdk_generation_incomplete':
+            if exc.code not in {'pdk_generation_incomplete', 'pdk_acceptance_required'}:
                 raise
             publication_error = exc.code
+            if exc.code == 'pdk_generation_incomplete':
+                from .acceptance_state import collection_complete
+                if collection_complete(package):
+                    publication_error = 'pdk_acceptance_required'
         devices = package.document('device.json')['items']
         key, section = args.get('device'), args['section']
         rows, status = [], 'ok'
         if key and key not in devices:
             fail('Unknown standard device ID', 'device_unavailable')
-        if section == 'collection':
+        blocker_report = None
+        if section == 'blockers':
+            from .blockers import report
+
+            blocker_report = report(package)
+            rows = [blocker_report]
+            status = blocker_report['status']
+        elif section == 'collection':
             from .coverage import gaps
             rows = list(gaps(package, key, args.get('category')))
             status = 'incomplete' if rows else 'ok'
@@ -165,25 +203,47 @@ class Queries:
                         rows.extend(device_issues(package, ident, row, args['use']))
                     else:
                         rows.extend(missing(package, ident, row, args['use']))
-                elif args.get('include_unconfirmed') or (not publication_error and row['use'][args['use']] == 'allow'):
+                elif (args.get('include_unconfirmed')
+                      or (not publication_error and row['use'][args['use']] == 'allow')):
                     rows.append({'id': ident, **row})
             if section == 'missing' and rows:
                 status = 'incomplete'
         elif section == 'package':
-            rows = [{k: v for k, v in package.manifest.items() if k not in {'files', 'dependencies', 'libraries'}}]
+            rows = [package_summary(package.manifest)]
             rows.extend({'library_id': k, **v} for k, v in package.manifest['libraries'].items())
         else:
             rows, status = content_rows(package, devices, args)
         response = {'schema_version': VERSION, 'revision': revision, 'status': status,
                     'items': [], 'returned': 0, 'complete': False}
-        if section == 'devices' and not rows and any(row['use'][args['use']] == 'unknown' for row in devices.values()):
+        if section in {'collection', 'missing'} and rows:
+            counts = {}
+            for row in rows:
+                reason = row.get('reason') or 'unspecified'
+                counts[reason] = counts.get(reason, 0) + 1
+            response['summary'] = [{'reason': reason, 'count': count}
+                                   for reason, count in sorted(
+                                       counts.items(), key=lambda item: (-item[1], item[0]))[:20]]
+        if (section == 'devices' and not rows
+                and any(row['use'][args['use']] == 'unknown'
+                        for row in devices.values())):
             response['status'] = 'incomplete'
             response['missing'] = [{'file': 'device.json', 'reason': 'confirmation_required',
                                     'operation': args['use'], 'action': 'pdk_generation_required',
                                     'details_ref': 'get_pdk_data:section=missing'}]
-        response['design_ready'] = publication_error is None
-        if publication_error:
-            response.update(code=publication_error, next_action='complete_pdk_generation')
+        if blocker_report is not None:
+            response['design_ready'] = blocker_report['design_ready']
+            response['next_action'] = blocker_report['next_action']
+            if not blocker_report['design_ready']:
+                response['code'] = 'pdk_generation_incomplete'
+                response['root_causes'] = [row['code'] for row in blocker_report['roots']]
+        else:
+            response['design_ready'] = publication_error is None
+        if publication_error and blocker_report is None:
+            response.update(code=publication_error,
+                            acceptance_required=publication_error == 'pdk_acceptance_required',
+                            next_action=('accept_pdk_data'
+                                         if publication_error == 'pdk_acceptance_required'
+                                         else 'get_pdk_data_section_blockers'))
             if section == 'devices' and not args.get('include_unconfirmed'):
                 response['status'] = 'incomplete'
         for row in rows[offset:offset + args['page_size']]:
@@ -191,9 +251,23 @@ class Queries:
                 break
             response['items'].append(row)
         if offset < len(rows) and not response['items']:
-            fail('One detail exceeds response budget; narrow the query', 'pdk_data_limit')
+            fail(
+                'One detail exceeds response budget; use get_pdk_device with explicit '
+                'sections or select the device cdf section instead of the package manifest',
+                'pdk_data_limit',
+            )
         end = offset + len(response['items'])
         response.update(returned=len(response['items']), complete=end == len(rows), total=len(rows))
+        if (
+            not response.get('next_action')
+            and response['complete']
+            and response['items']
+            and args.get('device')
+        ):
+            hint = ('bind_pdk_device' if section == 'cdf' else
+                    'get_pdk_data_section_cdf' if section == 'devices' else None)
+            if hint:
+                response['next_action'] = hint
         if end < len(rows):
             cursor = 'pdk-page:' + secrets.token_urlsafe(18)
             if len(self.cursors) >= 256:

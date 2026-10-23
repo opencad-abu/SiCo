@@ -9,6 +9,8 @@ from sico.service.event_display import encoded
 from .turn_dialog import TurnDialog
 from .turn_draft_options import draft_options, model_row, store_options
 
+MODE_LABELS = {"default": "默认", "plan": "计划"}
+
 
 class TurnSettingsDialog(TurnDialog):
     def __init__(self, window):
@@ -41,12 +43,13 @@ class TurnSettingsDialog(TurnDialog):
         self.network.setChecked(access["network"])
         self.network.setEnabled(access["sandbox"] != "danger-full-access")
         row = model_row(self.catalog, options)
-        self.mode.addItems(list(dict.fromkeys(["default", *self.catalog["modes"]])))
-        self.mode.setCurrentText(options.get("mode", "default"))
+        for mode in dict.fromkeys(["default", *self.catalog["modes"]]):
+            self.mode.addItem(MODE_LABELS.get(mode, mode), mode)
+        self.mode.setCurrentIndex(max(0, self.mode.findData(options.get("mode", "default"))))
         for combo, first, key in ((self.tier, "线程默认", "serviceTier"),
                                   (self.turn_tier, "沿用服务等级", "serviceTierForTurn")):
             combo.addItem(first, None)
-            combo.addItem("default", "default")
+            combo.addItem("默认", "default")
             for tier in row.get("serviceTiers") or []:
                 if tier["id"] != "default":
                     combo.addItem(tier["name"], tier["id"])
@@ -67,7 +70,7 @@ class TurnSettingsDialog(TurnDialog):
         access = options.get("access", default_access())
         access.update(approval=self.approval.currentData(), network=self.network.isChecked())
         options["access"] = validate(access)
-        options["mode"] = self.mode.currentText()
+        options["mode"] = self.mode.currentData()
         for widget, key in ((self.tier, "serviceTier"), (self.turn_tier, "serviceTierForTurn")):
             options.pop(key, None)
             if widget.currentData() is not None:

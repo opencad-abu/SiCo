@@ -5,8 +5,10 @@ from __future__ import annotations
 from datetime import datetime
 from html import escape
 
+from ..core.cad_ref import linkify_cad_refs, target_from_snapshot
 from ..core.links import object_link
 from ..storage.native_media import raster_data, web_url
+from .chat_audit import approval_command, fence_block
 from .display import FIELD_LABELS, data_html, target_label
 from .native_display import native_parts
 from .schematic_preview import preview_images
@@ -100,8 +102,12 @@ class DetailContent:
 
     def report(self, row):
         parts = []
-        if row["kind"] == "execution":
-            parts.append("<p><b>执行记录，尚未发布为工程报告。</b></p>")
+        if row["kind"] in {"execution", "task"}:
+            label = "任务详情" if row["kind"] == "task" else "执行记录"
+            parts.append("<p><b>" + label + "，尚未发布为工程报告。</b></p>")
+            status = row.get("status") or row.get("outcome")
+            if status:
+                parts.append("<p>状态：" + escape(STATUSES.get(status, status)) + "</p>")
         else:
             parts.append(
                 "<p>版本 "
@@ -148,7 +154,14 @@ class DetailContent:
             )
         )
         suffix.append("<h3>任务与阶段</h3>" + self.metadata(row))
-        return {"prefix": "".join(parts), "markdown": row["markdown"],
+        execution = self.index.executions.get(row.get("task_id"), {})
+        target = target_from_snapshot(
+            (execution.get("context") or {}).get("snapshot") or {}
+        )
+        markdown = row["markdown"]
+        if target is not None and row.get("object_refs"):
+            markdown = linkify_cad_refs(markdown, target, self.index.session_id)
+        return {"prefix": "".join(parts), "markdown": markdown,
                 "suffix": "".join(suffix)}
 
     def audit(self, row):
@@ -168,6 +181,9 @@ class DetailContent:
                     for key, field in spec["schema"]["properties"].items()) + "</ul>")
         if row.get("recommendation"):
             parts.append("<p><b>建议：</b>" + escape(row["recommendation"]) + "</p>")
+        approval = approval_command(row)
+        # 命令片段插在建议之后、依据之前；代码块走 markdown 通道以获得等宽高亮。
+        snippet_at = len(parts)
         if row.get("rationale"):
             parts.append("<p><b>依据：</b>" + escape(row["rationale"]) + "</p>")
         parts.append(
@@ -206,9 +222,25 @@ class DetailContent:
             )
         )
         if row.get("pdk_update_ref"):
-            from .pdk_update_review import markdown
+            from .pdk_update_review import pages
 
-            return {"prefix": "".join(parts), "markdown": markdown(self.index, row)}
+            review = pages(self.index, row)
+            if review["page_count"] > 1:
+                parts.append(
+                    "<p><b>完整审阅：</b>"
+                    f"{review['files']} 个文件、{review['fields']} 项字段差异，"
+                    f"共 {review['page_count']} 页；右侧详情已分页显示，"
+                    "可在顶部选择页面或搜索。</p>"
+                )
+            markdown = (review["pages"][0]["markdown"]
+                        if review["page_count"] else "")
+            return {"prefix": "".join(parts), "markdown": markdown, "review": review}
+        if approval is not None:
+            meta, command = approval
+            heading = "<p><b>命令" + ("（" + escape(meta) + "）" if meta else "") + "：</b></p>"
+            return {"prefix": "".join(parts[:snippet_at]) + heading,
+                    "markdown": fence_block(command),
+                    "suffix": "".join(parts[snippet_at:])}
         return {"html": "".join(parts)}
 
     def evidence(self, row):

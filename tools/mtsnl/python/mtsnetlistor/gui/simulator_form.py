@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import (
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
+    QLabel,
     QPushButton,
     QTableWidget,
     QVBoxLayout,
@@ -81,9 +82,17 @@ class SimulatorForm(QGroupBox):
         self.duplicate_option = QPushButton("Duplicate")
         self.move_option_up = QPushButton("Move Up")
         self.move_option_down = QPushButton("Move Down")
-        for button in (self.add_option, self.remove_option, self.duplicate_option, self.move_option_up, self.move_option_down):
+        for button in (
+            self.add_option,
+            self.remove_option,
+            self.move_option_up,
+            self.move_option_down,
+            self.duplicate_option,
+        ):
             option_buttons.addWidget(button)
         option_buttons.addStretch(1)
         advanced_layout.addLayout(option_buttons)
-        form.addRow("Advanced Options", advanced)
-
+        # The advanced table owns the full group width so its action row
+        # aligns with the Model Library Setup actions below.
+        form.addRow(QLabel("Advanced Options", box))
+        form.addRow(advanced)

@@ -3,7 +3,7 @@
 TOML-driven menu registration for Virtuoso CIW, Layout Editor, and Schematic Editor.
 
 Repository-wide setup and variable semantics are documented in
-[ENVIRONMENT.md](../../docs/html/environment.html).
+[ENVIRONMENT.md](../../docs/ENVIRONMENT.md).
 
 Set the installation root before starting Virtuoso:
 
@@ -50,7 +50,7 @@ import terminates the importer process group. PSpice is intentionally
 unsupported.
 
 The same importer is available as `${CAD_HOME}/tools/bin/nl2view`; see
-[Flow configuration guide](../../docs/html/flows.html) for its CLI contract.
+[Flow configuration guide](../../docs/ENVIRONMENT_FLOWS.md#netlist-to-view) for its CLI contract.
 
 ## Change Tech Library
 

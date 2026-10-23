@@ -57,14 +57,16 @@ class FrontendStartup(StartupLifecycle):
             self.notice("ready", bridge_id=bridge["bridge_id"], router_id=bridge["router_id"],
                         instance_id=bound.instance_id, generation=bound.generation,
                         session_id=self.args.session, target_id=bound.target_id)
-        config = None if mode == "service-gui" else self._configuration()
-        if mode == "service-gui":
+        expected_service = getattr(self.args, "service_id", None)
+        expected_runtime = getattr(self.args, "runtime_id", None)
+        accepted = mode == "service-gui" or (mode == "desktop-worker" and bool(expected_service))
+        config = None if accepted else self._configuration()
+        if accepted:
             self.configuration.set_result(None)
         self.phase = "discovery"
         startup = ServiceStartup(self.args.launch_dir)
         resources.callback(startup.close)
         descriptor = self._await(startup.ready)
-        expected_service = getattr(self.args, "service_id", None)
         if expected_service and descriptor.service_id != expected_service:
             raise ValueError("原服务已结束，旧窗口唤醒已失效；请重新打开项目")
         self.phase = "attachment"
@@ -72,7 +74,7 @@ class FrontendStartup(StartupLifecycle):
         if mode in {"demo", "connect"}:
             api._attach.timeout = max(api._attach.timeout, self.args.timeout + 30)
         resources.callback(api.close_desktop)
-        if mode == "service-gui":
+        if accepted:
             operation, params = "attach", dict(session_id=self.args.session)
         elif mode in {"demo", "connect"}:
             operation, params = mode, dict(session_id=self.args.session, provider_config=config,
@@ -94,7 +96,6 @@ class FrontendStartup(StartupLifecycle):
             if mode != "service-gui" or expected_service:
                 raise
             frontend = self._await(api.recovery.open_history(self.args.session))
-        expected_runtime = getattr(self.args, "runtime_id", None)
         if expected_runtime and frontend.session.runtime_id != expected_runtime:
             raise ValueError("原会话运行实例已结束，旧窗口唤醒已失效")
         if created == [True]:
@@ -106,7 +107,7 @@ class FrontendStartup(StartupLifecycle):
                 pass  # Reopening an occupied design remains an observer.
         return StartupReady(frontend, api.can_control(frontend.session), persistent=False,
                             initial_text=getattr(self.args, "message", "") or "",
-                            attach_targets=mode not in {"demo", "connect", "service-gui"})
+                            attach_targets=not accepted and mode not in {"demo", "connect"})
 
     def _claim_window(self, resources, mode):
         """Hold the project's window lock; a second live window is refused here."""

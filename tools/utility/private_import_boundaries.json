@@ -3,28 +3,6 @@
   "description": "Declared F06 and T12 source boundaries; private audit input, never runtime payload.",
   "rules": [
     {
-      "id": "aivw-agent-value-codec",
-      "root": "tools/aivw/python/aivworkbench/agent",
-      "exclude_files": [
-        "protocol.py",
-        "value_codec.py"
-      ],
-      "forbid_private_imports_from": [
-        "aivworkbench.agent.protocol",
-        "aivworkbench.agent.providers.replay"
-      ],
-      "owner": "value_codec.py",
-      "public_operations": [
-        "ensure_json",
-        "freeze",
-        "redact",
-        "thaw",
-        "reject_verdict_fields",
-        "request_digest"
-      ],
-      "exit_condition": "All agent consumers use value_codec and request_digest; protocol/replay private aliases can be deleted after fixture migration."
-    },
-    {
       "id": "cadai-waveform-operation",
       "paths": [
         "tools/ai/python/cadai/ac_tools.py"
@@ -92,6 +70,8 @@
     "tools/utility/boundaries/frontend.json",
     "tools/utility/boundaries/frontend_objects.json",
     "tools/utility/boundaries/shared_internal.json",
-    "tools/utility/boundaries/agent_service.json"
+    "tools/utility/boundaries/agent_service.json",
+    "tools/utility/boundaries/interactions.json",
+    "tools/utility/boundaries/eq08_layers.json"
   ]
 }

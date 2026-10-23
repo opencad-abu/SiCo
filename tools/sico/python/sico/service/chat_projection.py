@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 
+from sico.core.cad_ref import linkify_cad_refs
 from sico.core.links import object_link
 
 from . import chat_audit as transcript_audit
@@ -11,6 +12,7 @@ from . import chat_reconcile as transcript_reconcile
 from . import chat_text as transcript_text
 from .chat_retention import TranscriptHistory
 from .chat_tools import TranscriptTools
+from .chat_turns import TranscriptTurns
 from .reconcile_calls import ReconcileCalls
 from .display import event_time, recommended_label
 
@@ -25,7 +27,7 @@ def system_user_name(environment=None):
     return "你"
 
 
-class ChatProjection(TranscriptTools, TranscriptHistory):
+class ChatProjection(TranscriptTurns, TranscriptTools, TranscriptHistory):
     # No emoji: the field terminals only render plain dots.
     ACTIVITY_DOTS = ("", ".", "..", "...")
     # 工具计数器执行中的标记：小三角形逐个出现（1、2、3），
@@ -64,6 +66,7 @@ class ChatProjection(TranscriptTools, TranscriptHistory):
         self.pdk_notices = set()
         self.audits = {}
         self.startup = False
+        self._task_target = None
         self.dirty = True
         self.dot_phase = 0
         self.mark_phase = 0
@@ -73,6 +76,8 @@ class ChatProjection(TranscriptTools, TranscriptHistory):
         self._next_message_id = 0
         self._source_sequence = 0
         self._source_slot = 0
+        self._source_time = ""
+        self._init_turns()
 
     _recommended_label = staticmethod(recommended_label)
     _event_time = staticmethod(event_time)
@@ -144,7 +149,8 @@ class ChatProjection(TranscriptTools, TranscriptHistory):
         key = (self._source_sequence * 1024 + self._source_slot
                if self._source_sequence else self._next_message_id)
         message = {"role": role, "text": text, "result": result, "revision": 0,
-                   "message_id": key, "source_sequence": self._source_sequence}
+                   "message_id": key, "source_sequence": self._source_sequence,
+                   "timestamp": self._source_time}
         self.messages.append(message)
         self.changed(message)
         self.trim_history()
@@ -156,13 +162,17 @@ class ChatProjection(TranscriptTools, TranscriptHistory):
             raise ValueError("Too many outstanding transcript references")
         self._source_sequence = event.get("sequence", 0)
         self._source_slot = 0
-        self.reconciliation.receive(event)
-        self._receive_event(event)
-        if event.get("detail"):
-            self.append("native", "查看完整记录", result={
-                "url": "event-detail:" + event["detail"],
-                "status": "聊天中仅展示部分内容",
-            })
+        self._source_time = event.get("timestamp", "")
+        try:
+            self.reconciliation.receive(event)
+            self._receive_event(event)
+            if event.get("detail"):
+                self.append("native", "完整内容", result={
+                    "url": "event-detail:" + event["detail"],
+                })
+        finally:
+            # 时间只属于产生消息的那条事件，离场后不留用。
+            self._source_time = ""
 
     def _receive_event(self, event):
         kind, payload = event["kind"], event["payload"]
@@ -174,12 +184,15 @@ class ChatProjection(TranscriptTools, TranscriptHistory):
             self.activity = None
             self.calls.clear()
             if not self.startup:
-                self.append("user", payload.get("text", ""))
+                message = self.append("user", payload.get("text", ""))
+                self._start_task_message(event, message)
                 if payload.get("inputs") or payload.get("turn_options"):
                     self.append("notice", "输入资料与回合设置", result={
                         "url": "turn-input:" + str(event["sequence"]),
                         "status": f"{len(payload.get('inputs', []))} 项资料",
                     })
+            else:
+                self._start_task_message(event, None)
         elif kind.startswith("codex.steer.") and "id" in payload:
             key = payload["id"]
             text = "补充当前任务 · " + payload["message"] + "\n\n" + payload["text"]
@@ -221,9 +234,14 @@ class ChatProjection(TranscriptTools, TranscriptHistory):
         elif kind == "model.completed":
             self._clear_activity()
             self._close_tools(event)
+            completed = payload.get("text")
+            if completed and self._task_target:
+                completed = linkify_cad_refs(
+                    completed, self._task_target, event.get("session_id", "")
+                )
             if payload.get("text"):
                 if self.streaming is None:
-                    self.append("assistant", payload["text"])
+                    self.append("assistant", completed)
                 else:
                     if self._source_sequence:
                         self.removed(self.streaming)
@@ -234,8 +252,13 @@ class ChatProjection(TranscriptTools, TranscriptHistory):
                         # completed answer is ordered at its authoritative event.
                         self.messages = [m for m in self.messages if m is not self.streaming]
                         self.messages.append(self.streaming)
-                    self.streaming["text"] = payload["text"]
+                    self.streaming["text"] = completed
                     self._changed(self.streaming)
+            elif self.streaming is not None and self._task_target:
+                self.streaming["text"] = linkify_cad_refs(
+                    self.streaming["text"], self._task_target, event.get("session_id", "")
+                )
+                self._changed(self.streaming)
             self.streaming = None
         elif kind == "workbench.report.published":
             self._clear_activity()
@@ -248,14 +271,24 @@ class ChatProjection(TranscriptTools, TranscriptHistory):
             self.append("notice", payload["text"])
         elif kind == "session.reconcile_decided":
             self._refresh_reconcile()
+            self.append("notice", "核对决定已记录 · " + payload["decision"]
+                        + "\n操作者：" + payload.get("actor", "历史记录未保存")
+                        + "\n依据：" + payload.get("evidence", "历史记录未保存"))
+        elif kind == "session.reconcile_acknowledged":
+            self.append("notice", "中断任务核对已确认（不重放）\n操作者："
+                        + payload["actor"] + "\n依据：" + payload["evidence"])
         elif kind == "session.tool_receipt":
             self._refresh_reconcile()
             self.append("notice", "已收到停止前工具的补充回执，可在核对卡片查询原请求结果。")
         elif kind == "tool.finished":
             self._receive_tool_finished(event, payload)
+        elif kind == "codex.turn.bound":
+            self._bind_turn(event)
         elif kind in {"codex.plan.updated", "codex.diff.updated", "codex.native.updated",
                       "codex.history.item"}:
             self._receive_native(event, kind, payload)
+        elif kind == "codex.history.reverted":
+            self._apply_revert(event)
         elif kind == "codex.history.unavailable":
             self.append("notice", payload["message"])
         elif kind == "codex.elicitation.unsupported":
@@ -333,6 +366,8 @@ class ChatProjection(TranscriptTools, TranscriptHistory):
         row = self.audits.get(payload["id"])
         if row is None:
             return
+        if payload.get("review_class"):
+            row["review_class"] = payload["review_class"]
         row["status"] = {
             "workbench.audit.opened": "pending",
             "workbench.audit.reply_received": "answer_received",
@@ -347,7 +382,10 @@ class ChatProjection(TranscriptTools, TranscriptHistory):
                 "url": object_link("audit", event["session_id"], row["id"]),
             })
         elif kind == "workbench.audit.reply_received":
-            if "elicitation" in row:
+            row["reply"] = payload
+            if payload.get("automatic"):
+                text = "补充事项由模型按公开建议自行决定，未等待用户答复"
+            elif "elicitation" in row:
                 from sico.codex.elicitation_schema import reply_text
 
                 text = reply_text(row, payload)
@@ -377,15 +415,25 @@ class ChatProjection(TranscriptTools, TranscriptHistory):
         # Unfinished calls are already reported as "未确认" in their counter.
         self.calls.clear()
         self.dirty = True
+        if kind in {"task.completed", "task.failed", "task.cancelled"}:
+            self._mark_rewindable(event.get("task_id"))
         if kind == "task.completed":
+            # 任务已经完成，旧核对卡片不得再保持可点击：避免“点击后提示任务已变化”的死路。
+            self._refresh_reconcile(active=False)
             return
         message = payload.get("message", payload.get("reason", ""))
         if kind == "task.needs_reconcile":
-            self.append("reconcile", self._reconcile_notice(message), result={
-                "session_id": event.get("session_id", ""),
-                "task_id": event.get("task_id", ""), "active": True,
-                "message": message, "operations": self.reconciliation.rows(),
-            })
+            operations = self.reconciliation.rows()
+            if operations:
+                self.append("reconcile", self._reconcile_notice(message), result={
+                    "session_id": event.get("session_id", ""),
+                    "task_id": event.get("task_id", ""), "active": True,
+                    "message": message, "operations": operations,
+                })
+            else:
+                self._refresh_reconcile(active=False)
+                self.append("notice", "任务已停止\n" + str(message or "") +
+                            "\n本轮没有已派发操作，已自动结束；可以继续发送新任务。")
         else:
             self._refresh_reconcile(active=False)
             labels = {"task.failed": "任务失败", "task.cancelled": "任务已取消"}
@@ -420,6 +468,9 @@ class ChatProjection(TranscriptTools, TranscriptHistory):
             row["title"], row["status"], row["questions"],
             recommendation=row.get("recommendation"), reason=row.get("reason"),
             elicitation="elicitation" in row, recommended_label=self._recommended_label,
+            review_class=row.get("review_class", "blocking"),
+            automatic=(row.get("reply") or {}).get("automatic") is True,
+            has_reply=row.get("reply") is not None,
         )
         message["result"]["pending"] = row["status"] == "pending"
         self._changed(message)

@@ -1,0 +1,19 @@
+{
+  "kind": "public-startup-tail-refit",
+  "parent_run": "20260908T053045.674467Z-transition-response-1bd9b6cc1850",
+  "public_parent": "20260908T001838.659739Z-recipe-run-d98265d71c14",
+  "fidelity_run": "20260908T072213.856175Z-startup-fidelity-44efac112d9c",
+  "training_csv": "cases/tight_1ns/waveforms.csv",
+  "validation_csvs": [
+    "cases/tight_075ns/waveforms.csv",
+    "cases/trap_1ns/waveforms.csv"
+  ],
+  "reference_stop_s": 0.000125,
+  "case": "startup_rate_0",
+  "window_s": [
+    0.000102,
+    0.000107
+  ],
+  "qualification": "NOT_ESTABLISHED",
+  "scope": "fast_startup_tail_refit_on_numerically_checked_public_snapshot; original_matrix_retained; no_reference_promotion"
+}

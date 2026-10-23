@@ -9,13 +9,16 @@ from pathlib import Path
 
 from ..core.links import object_link as object_link
 from ..core.links import parse_link as parse_link
-from ..transport.framing import strict_json
-from .journal import MAX_RECORD, SessionJournal
+from cadai.json_values import strict_json
+from .journal import BULK_KINDS, MAX_RECORD, SessionJournal
 from .migration_locations import target_for
-from .native_origin import NativeOrigins, native_title
+from ..core.native_origin import NativeOrigins, native_title
+from .workbench_stage import apply_plan, apply_update, record_token_usage, select_stage
+from .workbench_child import record_child
 
 LOCAL_TOOLS = frozenset({
-    "set_copilot_stage", "list_copilot_data", "publish_copilot_report", "prepare_copilot_audit",
+    "set_copilot_stage", "plan_copilot_stages", "update_copilot_stage", "list_copilot_data",
+    "publish_copilot_report", "prepare_copilot_audit",
 })
 # 历史会话记录的是旧产品名（Copilot Studio）时期的工具名，投影时一并当作本地工具。
 RECORDED_LOCAL_TOOLS = LOCAL_TOOLS | {
@@ -95,7 +98,7 @@ class WorkbenchIndex:
     def __init__(self, reader):
         self.reader, self.session_id = reader, reader.session_id
         self.sequence = 0
-        self.works, self.stages, self.executions = {}, {}, {}
+        self.works, self.stages, self.executions, self.plans = {}, {}, {}, {}
         self.data, self.reports, self.calls, self.producers = {}, {}, {}, {}
         self.native_outputs = {}
         self.native_origins = NativeOrigins()
@@ -103,7 +106,8 @@ class WorkbenchIndex:
 
     def sync(self):
         events = (
-            self.reader.events(self.sequence)
+            # 展示噪声行不参与索引推导；sequence 跳跃由 receive 容忍。
+            self.reader.events(self.sequence, exclude=BULK_KINDS - {"model.completed", "token.usage"})
             if isinstance(self.reader, SessionJournal)
             else self.reader.events()
         )
@@ -150,8 +154,8 @@ class WorkbenchIndex:
         sequence = event["sequence"]
         if sequence <= self.sequence:
             return
-        if sequence != self.sequence + 1:
-            raise ValueError("Workbench event sequence is incomplete")
+        # 中间跳过的都是展示噪声行（索引只关心信封与保留事件）。
+
         kind, payload, task = event["kind"], event["payload"], event.get("task_id", "")
         if kind in {"codex.history.item", "codex.history.output"}:
             self.native_origins.validate(payload, require_origin=kind == "codex.history.output")
@@ -163,6 +167,9 @@ class WorkbenchIndex:
         self.sequence = sequence
         if kind == "task.started":
             self.executions[task] = {
+                "task_id": task,
+                "input_id": payload.get("input_id", ""),
+                "origin": payload.get("origin", "chat"),
                 "title": payload["text"],
                 "status": "executing",
                 "work_id": "",
@@ -171,6 +178,9 @@ class WorkbenchIndex:
                 "text": "",
                 "context": payload["context"],
                 "selections": [],
+                "started_at": event.get("timestamp", ""),
+                "finished_at": "",
+                "diagnostic": "",
             }
             parents = []
             if not self.executions[task]["startup"]:
@@ -195,7 +205,8 @@ class WorkbenchIndex:
             )
             self.executions[task]["source"] = source
         elif kind == "workbench.stage.selected":
-            work, stage = deepcopy(payload["work"]), deepcopy(payload["stage"])
+            work = deepcopy(payload["work"])
+            stage = select_stage(payload["stage"], event.get("timestamp", ""))
             self.works[work["id"]], self.stages[stage["id"]] = work, stage
             self.executions[task].update(work_id=work["id"], stage_id=stage["id"])
             self.executions[task]["selections"].append(
@@ -208,6 +219,15 @@ class WorkbenchIndex:
             for row in self.data.values():
                 if row["task_id"] == task and not row["stage_id"]:
                     row.update(work_id=work["id"], stage_id=stage["id"])
+        elif kind == "workbench.stages.planned":
+            apply_plan(self.plans, self.works, self.stages, payload,
+                       event.get("timestamp", ""))
+        elif kind == "workbench.stage.updated":
+            apply_update(self.stages, payload, event.get("timestamp", ""))
+        elif kind == "token.usage":
+            record_token_usage(self.executions, task, payload)
+        elif kind == "codex.child":
+            record_child(self.executions, task, payload, event.get("timestamp", ""))
         elif kind == "tool.started":
             if payload["name"] not in RECORDED_LOCAL_TOOLS:
                 self.calls[(task, payload["id"])] = {**deepcopy(payload), "sequence": sequence}
@@ -304,6 +324,7 @@ class WorkbenchIndex:
             report["audit_ids"] = self.decisions(task, report["stage_id"], sequence)
             self.reports[key] = report
             self.stages[report["stage_id"]]["last_report"] = key
+            self.stages[report["stage_id"]]["reported_at"] = event.get("timestamp", "")
             self._data(
                 event,
                 "report",
@@ -327,28 +348,22 @@ class WorkbenchIndex:
             row["updated_at"] = event.get("timestamp", "")
             if action == "opened":
                 row.update(status="pending", binding=deepcopy(payload))
+                if payload.get("review_class"):
+                    row["review_class"] = payload["review_class"]
             elif action == "bound":
                 row["binding"] = deepcopy(payload)
+                if payload.get("review_class"):
+                    row["review_class"] = payload["review_class"]
             elif action == "reply_received":
                 row.update(status="answer_received", reply=deepcopy(payload))
                 row["reply"]["timestamp"] = event.get("timestamp", "")
                 row["reply"]["sequence"] = sequence
             elif action == "resumed":
                 row.update(status="answered", resumed_sequence=sequence)
-                row["reply_data"] = self._data(
-                    event, "decision", row["title"] + " · 用户决定", "process",
-                    ({"audit_id": row["id"], "回答者": row["reply"]["actor"],
-                      "答复": row["reply"]["response"], "交付": "已发送；服务结果另行核对"}
-                     if "elicitation" in row else
-                     {"audit_id": row["id"], "回答者": row["reply"]["actor"],
-                     "答复": [{"问题": q["question"],
-                               "选择": row["reply"]["answers"][q["id"]]["choice"],
-                               "补充": row["reply"]["answers"][q["id"]]["text"]}
-                              for q in row["questions"]]}),
-                    data_type="decision", audit_ids=[row["id"]],
-                    parents=[r["id"] for r in row["evidence"]],
-                    work_id=row["work_id"], stage_id=row["stage_id"],
-                )
+                if not row.get("reply_data"):
+                    from .workbench_decisions import record_decision
+
+                    record_decision(self, event, row)
             elif action == "invalidated":
                 row.update(status="invalid", reason=payload["reason"])
             elif action == "dispatching":
@@ -361,6 +376,8 @@ class WorkbenchIndex:
                 return
             execution = self.executions[task]
             execution["status"] = status
+            execution["finished_at"] = event.get("timestamp", "")
+            execution["diagnostic"] = payload.get("message", payload.get("reason", ""))
             for audit in self.audits.values():
                 if audit["task_id"] != task:
                     continue
@@ -434,7 +451,7 @@ class WorkbenchIndex:
         data = value.get("data") if isinstance(value, dict) else None
         if not isinstance(data, dict) or not isinstance(data.get("artifact"), dict):
             return None
-        from cadai.result_tools import ARTIFACT_SCHEMAS, ResultStore
+        from cadai.result_store import ARTIFACT_SCHEMAS, read_archived_result
 
         artifact = data["artifact"]
         refs = references(data)
@@ -459,18 +476,7 @@ class WorkbenchIndex:
                 raise ValueError("Unregistered result artifact mapping")
             target_state = mapped.parents[2]
 
-        class ReadOnlyStore(ResultStore):
-            def directory(self, *, create=False):
-                if create:
-                    raise ValueError("Result archive is read-only")
-                path = target_state
-                for name in ("ai", "measurement-results"):
-                    path = path / name
-                    if path.is_symlink() or not path.is_dir():
-                        raise ValueError("Result archive directory is unavailable")
-                return path
-
-        result = ReadOnlyStore(target_state).get(selected)
+        result = read_archived_result(target_state, selected)
         if artifact.get("sha256") != selected.rsplit("_", 1)[1]:
             raise ValueError("Result artifact reference has changed")
         return result

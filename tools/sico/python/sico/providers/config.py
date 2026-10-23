@@ -1,4 +1,4 @@
-"""Explicit provider selection; credentials are read from an environment reference."""
+"""Provider construction and selection, with a compatibility validation export."""
 
 from __future__ import annotations
 
@@ -13,7 +13,8 @@ from ..transport.framing import strict_json
 from .anthropic import AnthropicProvider
 from .mock import ContextDemoProvider
 from .openai import OpenAIProvider
-from cadai.provider_settings import provider_endpoint, validate_settings
+# Compat: retire after supported imports use configuration.provider.
+from ..configuration.provider import validate_config
 from ..storage.roots import state_root
 
 ENV_OPTIONS = ("API_URL", "MODEL")
@@ -79,51 +80,6 @@ def read_provider_config(path):
     if len(raw) > 16_384:
         raise ValueError("Provider configuration exceeds size limit")
     return validate_config(strict_json(raw))
-
-
-def validate_config(config):
-    if not isinstance(config, dict):
-        raise ValueError("Provider configuration must be a JSON object")
-    if config.get("backend") == "codex" or (
-        "backend" not in config and config.get("provider") == "responses"
-    ):
-        from ..codex.settings import validate_codex
-
-        validate_codex(config)
-        return {**config, "backend": "codex"}
-    allowed = {"provider", "base_url", "model", "api_key_env", "max_tokens", "timeout"}
-    protocol = config.get("provider")
-    if protocol == "openai":
-        allowed |= {"token_limit_field", "include_usage"}
-    if (
-        set(config) - allowed
-        or not isinstance(protocol, str)
-        or protocol not in {"anthropic", "openai"}
-    ):
-        raise ValueError(
-            "Configure provider=anthropic or openai; inline keys and unknown options are rejected"
-        )
-    key_name = config.get("api_key_env", env_name("API_KEY"))
-    if not isinstance(key_name, str) or not key_name.isidentifier():
-        raise ValueError("Invalid API credential environment reference")
-    if any(
-        not isinstance(config.get(name), str) or not config[name].strip()
-        for name in ("base_url", "model")
-    ):
-        raise ValueError("Provider base_url and model must be nonempty strings")
-    provider_endpoint(
-        config["base_url"], "messages" if protocol == "anthropic" else "chat/completions"
-    )
-    validate_settings(config["model"], config.get("max_tokens", 4096), config.get("timeout", 30))
-    token_field = config.get("token_limit_field", "max_tokens")
-    if not isinstance(token_field, str) or token_field not in {
-        "max_tokens",
-        "max_completion_tokens",
-    }:
-        raise ValueError("Invalid OpenAI token limit field")
-    if type(config.get("include_usage", False)) is not bool:
-        raise ValueError("OpenAI include_usage must be a boolean")
-    return config
 
 
 def resolve_provider_config(path=None, *, environment=None, launch_dir=None):

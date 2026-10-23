@@ -6,12 +6,25 @@ from pathlib import Path
 
 from .config import DesignContext, RceConfig
 
+# Quantus transistor-level flows default to one multi-value netlist; these
+# formats must switch to ``-output_multi_value_rc false`` for the per-corner
+# publication below to have single-value files to map.
+QRC_PER_CORNER_OUTPUT_TYPES = frozenset({"dspf", "spef"})
+
+
+def qrc_per_corner_output(cfg: RceConfig, output_type: str) -> bool:
+    """Return whether Quantus writes one single-value file per selected corner."""
+    return (
+        cfg.is_multi_corner
+        and output_type.strip().casefold() in QRC_PER_CORNER_OUTPUT_TYPES
+    )
+
 
 def qrc_output_target(
     cfg: RceConfig, ctx: DesignContext, output_type: str
 ) -> str:
     output = Path(cfg.output_path(ctx))
-    if cfg.is_multi_corner and output_type in {"dspf", "spef"}:
+    if qrc_per_corner_output(cfg, output_type):
         return str(output.with_suffix(""))
     return str(output)
 
@@ -25,7 +38,7 @@ def qrc_output_publications(
     if not cfg.is_multi_corner or len(published) <= 1:
         return tuple((path, path) for path in published)
     output_type = cfg.output_type.strip().casefold()
-    if output_type not in {"dspf", "spef"}:
+    if not qrc_per_corner_output(cfg, output_type):
         return tuple((path, path) for path in published)
     base = Path(cfg.output_path(ctx)).with_suffix("")
     temperatures = cfg.corner_temperatures()

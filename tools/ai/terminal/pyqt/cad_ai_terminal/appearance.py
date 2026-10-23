@@ -22,8 +22,16 @@ def _normalize_session_title(value: str) -> str:
     return " ".join(value.split())[:MAXIMUM_SESSION_TITLE_LENGTH].rstrip()
 
 
-def _fixed_pitch_terminal_font(font_database_type, font_type, font_info_type):
+def _fixed_pitch_terminal_font(
+    font_database_type, font_type, font_info_type, *, allow_bundled=True
+):
     """Return a font that Qt resolves to fixed pitch on the current host."""
+    if allow_bundled:
+        from cadgui.fonts import terminal_font
+
+        bundled = terminal_font()
+        if bundled is not None:
+            return bundled
     system_font = font_database_type.systemFont(font_database_type.FixedFont)
     if font_info_type(system_font).fixedPitch():
         return system_font

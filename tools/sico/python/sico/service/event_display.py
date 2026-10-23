@@ -55,25 +55,26 @@ def bounded(value, *, chars=TEXT_CHARS, nodes=384):
 
 def coalesce(events):
     """Called after source/order validation; the envelope preserves the raw range."""
-    statuses, skipped = {}, set()
-    for index in range(len(events) - 1, -1, -1):
-        event = events[index]
+    statuses = {}
+    for index, event in enumerate(events):
         key, kind = event.get("task_id"), event["kind"]
         if kind in {"model.status", "router.status"}:
-            statuses.setdefault((key, kind), index)
-    for index, event in enumerate(events):
-        if event["kind"] != "model.delta":
-            continue
+            statuses[(key, kind)] = index
+    # Reverse scanning gives each task O(1) state for the next boundary and
+    # completed-text marker. The previous forward lookahead was O(n^2) for a
+    # long delta segment and dominated first-screen projection time.
+    covered, skipped = {}, set()
+    for index in range(len(events) - 1, -1, -1):
+        event = events[index]
         task_id = event.get("task_id")
-        for following in events[index + 1:]:
-            if following.get("task_id") != task_id:
-                continue
-            if following["kind"] in {"task.started", "tool.started"}:
-                break
-            if (following["kind"] == "model.completed"
-                    and following["payload"].get("text")):
-                skipped.add(index)
-                break
+        kind = event["kind"]
+        if kind in {"task.started", "tool.started"}:
+            covered[task_id] = False
+        elif kind == "model.completed":
+            if event["payload"].get("text"):
+                covered[task_id] = True
+        elif kind == "model.delta" and covered.get(task_id, False):
+            skipped.add(index)
     return [event for index, event in enumerate(events)
             if index not in skipped
             and statuses.get((event.get("task_id"), event["kind"]), index) == index]
@@ -97,6 +98,10 @@ class EventDisplay:
             for key in ("id", "name", "native", "status", "version"):
                 if key in raw["payload"]:
                     payload[key] = raw["payload"][key]
+            if kind == "codex.history.reverted":
+                for key in ("thread_id", "before_turn_id"):
+                    if key in raw["payload"]:
+                        payload[key] = raw["payload"][key]
             if kind == "tool.finished":
                 original = raw["payload"]["result"]
                 result = payload.setdefault("result", {})
@@ -145,17 +150,19 @@ class EventDisplay:
         # Keep reducing presentation content until even one very wide result
         # fits a tick. Raw payloads are validated before this projection.
         chars, nodes = TEXT_CHARS, 384
-        while len(encoded(event)) > EVENT_BYTES - 512:
+        size = len(encoded(event))
+        while size > EVENT_BYTES - 512:
             chars, nodes = max(64, chars // 2), max(16, nodes // 2)
             event, _ = bounded(raw, chars=chars, nodes=nodes)
             event = preserve_identity(event)
+            size = len(encoded(event))
             clipped = True
             if chars == 64 and nodes == 16:
                 break
         if clipped:
             digest = hashlib.sha256(encoded(raw)).hexdigest()
             event["detail"] = "e" + str(raw["sequence"]) + "_" + digest
-        size = len(encoded(event))
+            size = len(encoded(event))
         if size > EVENT_BYTES:
             raise ValueError("Event presentation exceeds the bounded display contract")
         return freeze(event), size

@@ -29,9 +29,11 @@ def classify_v1(instance, pin_names, evidence=None):
         if evidence:
             raise TemplateError("classification cannot promote a builtin graphic")
         return _BASIC[cell], _BASIC[cell], {}
-    if instance.get("schematic_available"):
-        if evidence:
-            raise TemplateError("classification cannot promote hierarchy source roles")
+    if instance.get("schematic_available") and not evidence:
+        # Without evidence a schematic master is a subcircuit reference.  With
+        # explicit device-class evidence it stays a device: fabs build constructed
+        # devices (for example a PMOS implemented as a pmos plus a diode) whose
+        # master still ships a schematic view.
         return "hierarchy", "subcircuit", {"master": "/".join(
             instance[key] for key in ("libName", "cellName", "viewName")
         )}

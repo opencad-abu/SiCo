@@ -3,6 +3,7 @@
 import json
 
 from ..core.contracts import NeedsReconcile
+from ..core.target_validation import validate_target_receipt
 from . import MODEL_PROVIDER
 
 
@@ -18,27 +19,20 @@ def attachment_instruction(attachments):
     return "\n".join(lines)
 
 
-def context_method(context, schemas):
-    names = {tool["name"] for tool in schemas}
-    capabilities = context.snapshot.get("capabilities", [])
-    if "get_project_context" in capabilities and "get_project_context" in names:
-        return "get_project_context"
-    if "get_entry_context" in capabilities and "get_entry_context" in names:
-        return "get_entry_context"
-    return "get_context"
-
-
 def validate_target_result(result, artifact_text):
-    if result["isError"]:
-        raise NeedsReconcile("Captured target is no longer available")
-    value = json.loads(result["content"][0]["text"])
+    try:
+        value = json.loads(result["content"][0]["text"])
+    except (ValueError, TypeError, KeyError, IndexError) as exc:
+        raise NeedsReconcile("Captured target returned no structured receipt") from exc
+    if not isinstance(value, dict):
+        raise NeedsReconcile("Captured target returned no structured receipt")
     if value.get("truncated"):
-        from ..transport.framing import strict_json
+        from cadai.json_values import strict_json
         artifact = value["artifact"]
         value = strict_json(artifact_text(artifact["path"], artifact["sha256"]))
-    data = value.get("data")
-    if not isinstance(data, dict) or data.get("valid") is False:
-        raise NeedsReconcile("Captured target is invalid")
+    validate_target_receipt(value)
+    if result["isError"]:
+        raise NeedsReconcile("Captured target is no longer available")
 
 
 def thread_params(model, cwd, has_audit, has_workbench, goals_running, instructions, workbench_instructions, audit_instructions, *, access=None):

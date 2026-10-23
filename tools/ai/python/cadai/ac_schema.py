@@ -45,12 +45,12 @@ AC_TOOLS = [
     tool(
         "measure_ac_waveform",
         "Measure one frozen AC phasor at explicit frequencies, offline. Interpolate real/imag "
-        "linearly in physical frequency, THEN take magnitude or principal phase; no log-axis "
-        "or polar interpolation/extrapolation. magnitude uses compatible native units. "
-        "magnitude_db requires an explicit positive reference quantity and dB result, "
-        "20*log10(abs(z)/reference). phase needs phase_mode=principal, deg/rad and explicit "
-        "nonnegative magnitude_floor; abs(z)<=floor is an error. Principal interval (-180,180] "
-        "degrees or (-pi,pi] radians; no unwrap. This is absolute signal phase, not transfer gain.",
+        "linearly in physical frequency, THEN take magnitude or principal phase; no log-axis or "
+        "polar interpolation. magnitude uses compatible native units; magnitude_db needs an "
+        "explicit positive reference quantity, 20*log10(abs(z)/reference). phase needs "
+        "phase_mode=principal, deg/rad and a nonnegative magnitude_floor; abs(z)<=floor is an "
+        "error. Principal interval (-180,180] degrees or (-pi,pi] radians, no unwrap: this is "
+        "absolute signal phase, not transfer gain.",
         {"waveform_ref": AC_REF, "recipes": array(AC_RECIPE, 32, 1)},
         ("waveform_ref", "recipes"),
     ),

@@ -12,7 +12,7 @@
 importSkillVar(rceForm)
 
 when(and(boundp('rceForm) rceForm hiIsForm(rceForm)
-         getq(rceForm rceReductionFormVersion)!="20260909.pin.order.v1")
+         getq(rceForm rceReductionFormVersion)!="20261019.floating.net.include.all.v1")
   when(hiIsFormDisplayed(rceForm)
     hiFormClose(rceForm))
   unless(hiIsFormDisplayed(rceForm)
@@ -417,7 +417,7 @@ procedure(cadDisplayRceForm()
 
       hiInstantiateForm(gui->mainForm)
       rceAlignReductionPrompts(gui->mainForm)
-      putpropq(gui->mainForm "20260909.pin.order.v1" rceReductionFormVersion)
+      putpropq(gui->mainForm "20261019.floating.net.include.all.v1" rceReductionFormVersion)
       putpropq(gui->mainForm nil cadProfilePathStates)
       putpropq(gui->mainForm nil cadProfileSourcePath)
       cadCustomSvrfBind(gui->mainForm)
@@ -439,7 +439,7 @@ procedure(cadDisplayRceForm()
 );defun rceDispalyForm
 
 procedure(rceGuiRevision()
-  "20260909.pin.order.v1"
+  "20261019.floating.net.include.all.v1"
 )
 
 procedure(rceCustomSvrfGuiRevision()

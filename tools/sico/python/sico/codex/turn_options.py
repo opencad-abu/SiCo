@@ -11,7 +11,7 @@ FIELDS = {"model", "effort", "mode", "serviceTier", "serviceTierForTurn", "outpu
 
 
 def parse_output_schema(text):
-    from ..transport.framing import strict_json
+    from cadai.json_values import strict_json
 
     if not text.strip():
         return None
@@ -54,41 +54,45 @@ class TurnOptions:
 
     def status(self, busy=False):
         if not busy:
-            self.backend._ensure_runtime()
-            rpc, deadline = self.backend.runtime.rpc, time.monotonic() + 10
-
-            def request(method, params):
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise ValueError("Input inventory time budget exceeded")
-                return rpc.request(method, params, timeout=min(3, remaining))
-
-            models, cursor, seen = [], None, set()
-            for _ in range(10):
-                page = request("model/list", {"cursor": cursor, "limit": 100})
-                models.extend(bounded_rows(page["data"], 100))
-                cursor = page.get("nextCursor")
-                if cursor is None:
-                    break
-                text_value(cursor, 4096)
-                if cursor in seen:
-                    raise ValueError("Repeated model inventory cursor")
-                seen.add(cursor)
-            else:
-                raise ValueError("Model inventory exceeds page budget")
-            modes = bounded_rows(request("collaborationMode/list", {})["data"], 32)
-            skills = bounded_rows(request("skills/list", {
-                "cwds": [self.backend.runtime.cwd]})["data"], 32)
-            self.catalog = {
-                "models": [model_row(m) for m in models if not m.get("hidden")],
-                "modes": [m["mode"] for m in modes if m.get("mode") in {"default", "plan"}],
-                "skills": [skill_row(s) for group in skills
-                           for s in bounded_rows(group["skills"], 512)],
-            }
-            if len(self.catalog["skills"]) > 512:
-                self.catalog = {"models": [], "modes": [], "skills": []}
-                raise ValueError("Skill inventory exceeds item budget")
+            with self.backend._runtime_rpc() as rpc:
+                return self._read_status(rpc)
         return deepcopy({**self.catalog, "selected": self.selected, "busy": busy})
+
+    def _read_status(self, rpc):
+        deadline = time.monotonic() + 10
+
+        def request(method, params):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise ValueError("Input inventory time budget exceeded")
+            return rpc.request(method, params, timeout=min(3, remaining))
+
+        models, cursor, seen = [], None, set()
+        for _ in range(10):
+            page = request("model/list", {"cursor": cursor, "limit": 100})
+            models.extend(bounded_rows(page["data"], 100))
+            cursor = page.get("nextCursor")
+            if cursor is None:
+                break
+            text_value(cursor, 4096)
+            if cursor in seen:
+                raise ValueError("Repeated model inventory cursor")
+            seen.add(cursor)
+        else:
+            raise ValueError("Model inventory exceeds page budget")
+        modes = bounded_rows(request("collaborationMode/list", {})["data"], 32)
+        skills = bounded_rows(request("skills/list", {
+            "cwds": [self.backend.runtime.cwd]})["data"], 32)
+        self.catalog = {
+            "models": [model_row(m) for m in models if not m.get("hidden")],
+            "modes": [m["mode"] for m in modes if m.get("mode") in {"default", "plan"}],
+            "skills": [skill_row(s) for group in skills
+                       for s in bounded_rows(group["skills"], 512)],
+        }
+        if len(self.catalog["skills"]) > 512:
+            self.catalog = {"models": [], "modes": [], "skills": []}
+            raise ValueError("Skill inventory exceeds item budget")
+        return deepcopy({**self.catalog, "selected": self.selected, "busy": False})
 
     def freeze(self, options=None):
         if options is None:

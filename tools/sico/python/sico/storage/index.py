@@ -1,7 +1,7 @@
 """Sidecar offset index for one journal: sequence, offset, length, kind flags.
 
-The index is a cache, never an authority: any fingerprint or count mismatch
-marks it stale, and callers fall back to scanning the journal. Authoritative
+The index is a cache, never an authority: integrity or fingerprint mismatches
+discard it, and callers fall back to scanning the journal. Authoritative
 reads still parse records (strictly) themselves; the index only says where a
 record starts and what class of content it carries, which is enough to jump
 straight to the tail window, the native origins or the catalog metadata
@@ -14,12 +14,11 @@ import json
 import os
 from pathlib import Path
 
-from ..transport.framing import strict_json
-from .journal import open_private
-from .native_origin import ORIGIN_EVENTS
-
-INDEX_CONTRACT = "cadai.journal.index.v1"
-INDEX_NAME = "events.idx"
+from cadai.json_values import strict_json
+from .journal import STATUS_KINDS, TRANSIENT_KINDS, open_private, replay_window_rows
+from .index_cache import INDEX_CONTRACT, INDEX_NAME, load_index, save_index
+from .journal_records import fingerprint, iter_raw_records, validate_state
+from ..core.native_origin import ORIGIN_EVENTS
 
 # Content classes carried by one record, used to select without parsing.
 FLAG_ORIGIN = 1        # native_origin.ORIGIN_EVENTS (origin state for a tail)
@@ -29,13 +28,13 @@ FLAG_TASK = 8          # task.started (a window may only start here)
 FLAG_TRANSIENT = 16    # terminal replay drops these after coalescing
 FLAG_CONTEXT = 32      # carries the bound context for the session
 FLAG_DELETED = 64      # codex.thread.deleted (terminal marker)
+FLAG_STATUS = 128      # model.status / router.status（归档投影直接丢弃）
 
 METADATA_KINDS = frozenset({
     "codex.thread", "codex.thread.name", "codex.thread.title",
     "codex.thread.deleted", "codex.child",
 })
 CHAT_KINDS = frozenset({"task.started", "model.completed"})
-TRANSIENT_KINDS = frozenset({"model.delta", "model.status", "router.status"})
 CONTEXT_KINDS = frozenset({"session.created", "task.started"})
 
 
@@ -51,6 +50,8 @@ def flags_for(kind):
         flags |= FLAG_TASK
     if kind in TRANSIENT_KINDS:
         flags |= FLAG_TRANSIENT
+    if kind in STATUS_KINDS:
+        flags |= FLAG_STATUS
     if kind in CONTEXT_KINDS:
         flags |= FLAG_CONTEXT
     if kind == "codex.thread.deleted":
@@ -84,14 +85,25 @@ class JournalIndex:
         self.lengths.append(length)
         self.flags.append(flags)
 
-    def scan(self, reader, stream):
-        """Index every complete record after the covered prefix (light parse)."""
+    def scan(self, stream, session_id, *, end):
+        """Index a fixed snapshot, validating complete records before publishing."""
 
         stream.seek(self.covered)
-        for row, offset, length in reader.iter_raw_records(
-                stream, sequence=self.committed, validate=False):
+        for row, offset, length in iter_raw_records(
+                stream, session_id, sequence=self.committed, checker=validate_state, end=end):
             self.add(row["sequence"], offset, length, flags_for(row["kind"]))
         return self
+
+    @classmethod
+    def read(cls, directory, stream, session_id):
+        """Share one validated cache/rebuild policy between writers and readers."""
+        stamp = fingerprint(stream.fileno())
+        index, _exact = cls.load(directory, stamp)
+        if index is not None:
+            return index
+        index = cls(stamp).scan(stream, session_id, end=stamp[2])
+        index.save_current(stream.fileno(), directory)
+        return index
 
     def select(self, flag, *, before=None):
         """Offsets and lengths of entries carrying ``flag``, oldest first."""
@@ -109,21 +121,33 @@ class JournalIndex:
         return any(flags & flag for flags in self.flags)
 
     def find_start(self, messages):
-        """First sequence/offset of the newest ``messages`` chat window.
+        """First sequence/offset of the newest bounded chat window.
 
-        Mirrors ``SessionJournal.replay_start``: walk back over the chat
-        boundaries and stop at the task that owns the oldest message.
+        Mirrors ``SessionJournal.replay_start`` beat for beat: walk back over
+        the chat boundaries inside ``REPLAY_WINDOW_ROWS``, stop at the task
+        that owns the oldest message, and when the bound cuts the walk fall
+        back to the newest task start inside it or to the bound itself.
         """
 
-        boundaries = 0
-        for index in range(len(self.sequences) - 1, -1, -1):
-            flags = self.flags[index]
-            if not flags & FLAG_CHAT:
-                continue
-            boundaries += 1
-            if boundaries >= messages and flags & FLAG_TASK:
-                return self.sequences[index], self.offsets[index]
-        return (self.sequences[0] if self.sequences else 1), 0
+        total = len(self.sequences)
+        if not total:
+            return 1, 0
+        floor = max(0, total - replay_window_rows())
+        index, boundaries = total, 0
+        while index > floor and boundaries < messages:
+            index -= 1
+            if self.flags[index] & FLAG_CHAT:
+                boundaries += 1
+        if index == 0 and boundaries < messages:
+            return self.sequences[0], self.offsets[0]
+        while index > floor and not self.flags[index] & FLAG_TASK:
+            index -= 1
+        if floor > 0 and not self.flags[index] & FLAG_TASK:
+            for probe in range(total - 1, index - 1, -1):
+                if self.flags[probe] & FLAG_TASK:
+                    index = probe
+                    break
+        return self.sequences[index], self.offsets[index]
 
     def find_task_start(self):
         """Sequence/offset of the newest task; the first screen of a session."""
@@ -136,65 +160,21 @@ class JournalIndex:
     # --- persistence ------------------------------------------------------
     def save(self, directory):
         """Atomically refresh the cache; a failure only costs a rescan."""
+        return save_index(self, directory)
 
-        if not self.fingerprint:
-            return False
-        stamp = " ".join(str(part) for part in self.fingerprint)
-        lines = [f"{INDEX_CONTRACT} {stamp} {len(self.sequences)}\n"]
-        lines.extend(
-            f"{sequence} {offset} {length} {flags}\n"
-            for sequence, offset, length, flags in zip(
-                self.sequences, self.offsets, self.lengths, self.flags)
-        )
+    def save_current(self, fd, directory):
+        """Publish only while the journal still matches the indexed snapshot."""
         try:
-            temporary = Path(directory) / (INDEX_NAME + ".tmp")
-            fd = open_private(temporary, os.O_CREAT | os.O_TRUNC | os.O_WRONLY)
-            with os.fdopen(fd, "w") as stream:
-                stream.writelines(lines)
-            os.replace(temporary, Path(directory) / INDEX_NAME)
-        except (OSError, ValueError):
-            return False
-        return True
+            if fingerprint(fd) == self.fingerprint:
+                return self.save(directory)
+        except OSError:
+            pass
+        return False
 
     @classmethod
     def load(cls, directory, fingerprint):
-        """Return ``(index, exact)``; ``(None, False)`` when unusable.
-
-        ``exact`` means the header matches the journal fingerprint and every
-        record is indexed. Otherwise the returned index (when the device,
-        inode and a growing size still match) covers only a prefix that the
-        caller may extend; a different file yields ``None``.
-        """
-
-        try:
-            fd = open_private(Path(directory) / INDEX_NAME, os.O_RDONLY)
-        except (OSError, ValueError):
-            return None, False
-        index, header_fingerprint, count = cls(), None, None
-        try:
-            with os.fdopen(fd, "r") as stream:
-                header = stream.readline()
-                parts = header.split()
-                if len(parts) != 7 or parts[0] != INDEX_CONTRACT:
-                    return None, False
-                header_fingerprint = tuple(int(part) for part in parts[1:6])
-                count = int(parts[6])
-                for line in stream:
-                    fields = line.split()
-                    if len(fields) != 4:
-                        break
-                    index.add(int(fields[0]), int(fields[1]), int(fields[2]), int(fields[3]))
-        except (OSError, ValueError):
-            return None, False
-        if len(index.sequences) != count:
-            return None, False
-        index.fingerprint = header_fingerprint
-        if header_fingerprint == fingerprint:
-            return index, True
-        if (header_fingerprint[:2] == fingerprint[:2]
-                and header_fingerprint[2] < fingerprint[2]):
-            return index, False
-        return None, False
+        """Return ``(index, True)`` for an intact exact cache, else ``(None, False)``."""
+        return load_index(cls, directory, fingerprint)
 
 
 def read_records(path, entries, *, strict=True):

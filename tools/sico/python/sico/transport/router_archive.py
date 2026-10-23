@@ -16,6 +16,7 @@ from contextlib import ExitStack
 from pathlib import Path
 
 from ..core.contracts import identifier
+from ..process_identity import boot_id, process_identity
 from ..storage.journal import open_private, private_dir, sync_directory
 from ..storage.roots import agent_root
 from .router_archive_records import DIAGNOSTICS as DIAGNOSTICS
@@ -47,8 +48,6 @@ DEFAULT_RETENTION_DAYS = 30
 
 def capture_archive_owner(instance_id, *, allow_self=False):
     """Attest the native host against Linux ancestry, never from a caller's PID alone."""
-    from ..service.background_watchdog import boot_id, process_identity
-
     if not re.fullmatch(r"v[1-9][0-9]*", instance_id):
         return None
     expected = int(instance_id[1:])
@@ -68,8 +67,6 @@ def capture_archive_owner(instance_id, *, allow_self=False):
 
 
 def _host_gone(owner):
-    from ..service.background_watchdog import boot_id, process_identity
-
     if not isinstance(owner, dict) or owner.get("hostname") != socket.gethostname():
         return False
     process = owner.get("process", {})

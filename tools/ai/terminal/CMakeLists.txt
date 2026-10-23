@@ -193,6 +193,22 @@ if(SICO_AI_SKILL_CONTEXT)
     install(FILES "${_cad_ai_skill_context}"
         DESTINATION context RENAME "${_cad_ai_skill_context_name}")
 endif()
+
+# User-authorized 2026-10-21: ship only the reviewed Cadence SKILL reference
+# payloads and their notice. The archive gate pins their exact bytes.
+set(_skill_reference_root "${_ai_source_root}/reference/cadence-skill")
+set(_skill_reference_runtime_files
+    "${_skill_reference_root}/skill_api.sqlite3"
+    "${_skill_reference_root}/skill_api.json.gz"
+    "${_skill_reference_root}/NOTICE.md"
+)
+foreach(_reference_file IN LISTS _skill_reference_runtime_files)
+    if(NOT EXISTS "${_reference_file}" OR IS_SYMLINK "${_reference_file}")
+        message(FATAL_ERROR "Required Cadence SKILL reference file is missing: ${_reference_file}")
+    endif()
+endforeach()
+install(FILES ${_skill_reference_runtime_files} DESTINATION reference/cadence-skill)
+
 if(SICO_AI_DEVELOPMENT_STAGE)
 install(PROGRAMS "${_ai_source_root}/python/sico-ai" DESTINATION python)
 install(DIRECTORY "${_ai_source_root}/python/cadai" DESTINATION python
@@ -212,20 +228,16 @@ install(DIRECTORY "${_ai_source_root}/skills/" DESTINATION skills
     PATTERN ".ruff_cache" EXCLUDE
     PATTERN "*.pyc" EXCLUDE
 )
-set(_skill_reference_root "${_ai_source_root}/reference/cadence-skill")
-set(_skill_reference_files
-    "${_skill_reference_root}/skill_api.sqlite3"
-    "${_skill_reference_root}/skill_api.json.gz"
+set(_skill_reference_dev_files
     "${_skill_reference_root}/README.md"
-    "${_skill_reference_root}/NOTICE.md"
     "${_skill_reference_root}/build_reference.py"
 )
-foreach(_reference_file IN LISTS _skill_reference_files)
-    if(NOT EXISTS "${_reference_file}")
-        message(FATAL_ERROR "Required Cadence SKILL reference file is missing: ${_reference_file}")
+foreach(_reference_file IN LISTS _skill_reference_dev_files)
+    if(NOT EXISTS "${_reference_file}" OR IS_SYMLINK "${_reference_file}")
+        message(FATAL_ERROR "Required development reference file is missing: ${_reference_file}")
     endif()
 endforeach()
-install(FILES ${_skill_reference_files} DESTINATION reference/cadence-skill)
+install(FILES ${_skill_reference_dev_files} DESTINATION reference/cadence-skill)
 install(FILES
     "${_ai_source_root}/reference/circuit_templates/catalogs/builtin-passive-v1.sqlite3"
     "${_ai_source_root}/reference/circuit_templates/catalogs/cadence-custom-gates45-r6.sqlite3"
@@ -238,12 +250,6 @@ install(FILES
     "${_ai_source_root}/reference/circuit_templates/catalogs/cadence-training-custom_ic-r6-004.sqlite3"
     "${_ai_source_root}/reference/circuit_templates/catalogs/cadence-training-dot-r6.sqlite3"
     "${_ai_source_root}/reference/circuit_templates/catalogs/ldo-ip-r6-20260916.sqlite3"
-    "${_ai_source_root}/reference/circuit_templates/catalogs/tpl_39d442b40e29afcc248cd0f47119befd4dea665a972904956f634e97ee46a9e9.sqlite3"
-    "${_ai_source_root}/reference/circuit_templates/catalogs/tpl_44ac321516617f7766c9d3fbfde4139f1c27891ea090260f753ea5d61bbc50d3.sqlite3"
-    "${_ai_source_root}/reference/circuit_templates/catalogs/tpl_486fbb535a7e7cb45d3604c2f8a7f433543b4c7516050550086f1073987bf844.sqlite3"
-    "${_ai_source_root}/reference/circuit_templates/catalogs/tpl_bfd1ef3915dd785a7c25cb144c821651404e2dd0f6e612f5b47444ed2ed23e3d.sqlite3"
-    "${_ai_source_root}/reference/circuit_templates/catalogs/tpl_de9e1598ad03b69d5214b5eb61c89df96f7a3c8e21fae6b35ae6d587f31130ab.sqlite3"
-    "${_ai_source_root}/reference/circuit_templates/catalogs/tpl_edd1e9ade4319f9b651ae3a60a216ac49ef023c6849e8f09b484f8f1c689d587.sqlite3"
     DESTINATION reference/circuit_templates/catalogs
 )
 install(FILES

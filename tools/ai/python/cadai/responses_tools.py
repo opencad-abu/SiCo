@@ -103,14 +103,24 @@ class ToolNames:
         ):
             if incoming:
                 name = item.get("name")
-                if not isinstance(name, str) or name not in self.aliases:
-                    raise CompatibilityError("Model returned an unknown flattened tool name")
-                namespace, original = self.aliases[name]
-                item["name"] = original
-                if namespace:
-                    item["namespace"] = namespace
+                if not isinstance(name, str) or not name:
+                    raise CompatibilityError("Model returned an invalid flattened tool name")
+                known = self.aliases.get(name)
+                if known is None:
+                    # Unknown names pass through unchanged: Codex answers them
+                    # with its own "unsupported call" tool error and the model
+                    # can recover, exactly like the native (non-flat) path.
+                    # Aborting the stream here killed whole tasks whenever a
+                    # profile-scoped session called a help-listed but
+                    # unadvertised name.
+                    pass
                 else:
-                    item.pop("namespace", None)
+                    namespace, original = known
+                    item["name"] = original
+                    if namespace:
+                        item["namespace"] = namespace
+                    else:
+                        item.pop("namespace", None)
             else:
                 if kind == "custom_tool_call_output" and item.get("call_id") in self.call_aliases:
                     item["name"] = self.call_aliases[item["call_id"]]

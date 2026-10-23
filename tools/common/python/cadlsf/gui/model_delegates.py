@@ -2,20 +2,18 @@
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
-from sicoresources import icon as resource_icon
-from PyQt5.QtCore import QEvent, QModelIndex, QSize, Qt, pyqtSignal
-from PyQt5.QtGui import QColor, QIcon, QPalette
+from PyQt5.QtCore import QEvent, QModelIndex, Qt, pyqtSignal
+from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import (
     QApplication, QStyle, QStyleOptionButton, QStyleOptionProgressBar,
     QStyledItemDelegate,
 )
+from cadgui.palette import active
 from .model_contracts import JOB_ID_ROLE, PROGRESS_ROLE
 from .model_formatters import PROGRESS_NORMAL, PROGRESS_WARNING, PROGRESS_CRITICAL
+from .glyphs import KILL_GLYPH, kill_glyph_color, kill_glyph_font
 
-def _close_icon_path() -> Path | None:
-    return resource_icon("actions", "close-flow.png")
+_DISABLED_OPACITY = 0.45
 
 
 class ProgressCellDelegate(QStyledItemDelegate):
@@ -46,7 +44,7 @@ class ProgressCellDelegate(QStyledItemDelegate):
             PROGRESS_CRITICAL: QColor("#c9443c"),
         }
         bar.palette.setColor(QPalette.Highlight, colors[level])
-        bar.palette.setColor(QPalette.HighlightedText, QColor("#ffffff"))
+        bar.palette.setColor(QPalette.HighlightedText, QColor(active().on_accent))
         style = option.widget.style() if option.widget is not None else QApplication.style()
         style.drawControl(QStyle.CE_ProgressBar, bar, painter, option.widget)
 
@@ -57,12 +55,7 @@ class JobActionDelegate(QStyledItemDelegate):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._enabled = True
-        self._icon_path = _close_icon_path()
-        self._kill_icon = (
-            QIcon(str(self._icon_path))
-            if self._icon_path is not None
-            else QIcon()
-        )
+        self._kill_font = kill_glyph_font()
 
     def set_enabled(self, enabled: bool) -> None:
         normalized = bool(enabled)
@@ -77,20 +70,20 @@ class JobActionDelegate(QStyledItemDelegate):
 
     def paint(self, painter, option, index: QModelIndex) -> None:
         style = option.widget.style() if option.widget is not None else QApplication.style()
-        icon = self._kill_icon
-        if icon.isNull():
-            icon = style.standardIcon(
-                QStyle.SP_DialogCloseButton, None, option.widget
-            )
         button = QStyleOptionButton()
         button.rect = self._button_rect(option)
-        button.icon = icon
-        button.iconSize = QSize(18, 18)
         button.state = QStyle.State_Raised
         if self._enabled:
             button.state |= QStyle.State_Enabled
         button.palette = option.palette
         style.drawControl(QStyle.CE_PushButton, button, painter, option.widget)
+        painter.save()
+        painter.setFont(self._kill_font)
+        painter.setPen(kill_glyph_color())
+        if not self._enabled:
+            painter.setOpacity(_DISABLED_OPACITY)
+        painter.drawText(button.rect, Qt.AlignCenter, KILL_GLYPH)
+        painter.restore()
 
     def editorEvent(self, event, model, option, index: QModelIndex) -> bool:
         if (

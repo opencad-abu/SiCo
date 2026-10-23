@@ -1,0 +1,11 @@
+{
+  "parent": "20260908T091132.614788Z-transition-response-98b572ab6c5d",
+  "reference": "20260908T090208.849566Z-recipe-run-2726e7c56c41",
+  "sampling": {
+    "timeprecision_s": 1e-15,
+    "endpoint_step_s": 1e-13,
+    "endpoint_window_s": 1e-10,
+    "endpoint_scope": "startup"
+  },
+  "input_roundoff_v": 1e-12
+}

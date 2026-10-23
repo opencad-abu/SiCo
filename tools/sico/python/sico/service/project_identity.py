@@ -17,7 +17,7 @@ def valid_id(value):
 class ProjectIdentity:
     project_id: str
     directory_inode: int
-    directory_device: int
+    directory_device: int  # v1 creation evidence, not a persistent identity key.
     lock_inode: int
     created_host: str
 
@@ -28,18 +28,19 @@ class ProjectIdentity:
                 or type(self.lock_inode) is not int or self.lock_inode <= 0):
             raise RegistryError("invalid_identity", "Invalid project identity")
 
-    def matches(self, directory, host_id):
+    def matches(self, directory):
         info = directory.parent.stat()
-        return self.matches_location(info.st_ino, info.st_dev, host_id)
+        return self.matches_location(info.st_ino)
 
-    def matches_location(self, inode, device, host_id):
+    def matches_location(self, inode):
         """Compare a live or descriptor-relative directory observation."""
-        # NAS mount device numbers may differ between hosts; inode must be stable.
-        return (inode == self.directory_inode
-                and (host_id != self.created_host or device == self.directory_device))
+        # st_dev can change after reboot/remount on the SAME host too (e.g. LVM).
+        # The directory and fixed lock inode bind the stored project ID. Keep the
+        # v1 device/host observations intact, including sealed migration records.
+        return inode == self.directory_inode
 
-    def verify(self, directory, host_id):
-        if not self.matches(directory, host_id):
+    def verify(self, directory):
+        if not self.matches(directory):
             raise RegistryError("project_copied", "Project identity belongs to another directory; "
                                 "explicit copy initialization is required")
         if (directory / "owner.lock").lstat().st_ino != self.lock_inode:

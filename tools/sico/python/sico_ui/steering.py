@@ -5,6 +5,7 @@ from copy import deepcopy
 
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QHBoxLayout, QMenu, QToolButton
+from sico.core.cad_ref import object_reference_text
 
 DEFER_ACTION = "当前任务完成后执行"
 DEFER_HINT = f"从发送按钮的下拉菜单选择“{DEFER_ACTION}”"
@@ -126,6 +127,10 @@ class SteeringInput:
         text = self.ui.input.toPlainText().strip()
         if not text:
             return False
+        text += object_reference_text(self.ui.input.object_inputs())
+        if len(text) > 16000:
+            self.ui.notices.notice("补充暂未发送", "补充内容和对象引用超过长度限制，草稿保留")
+            return False
         controller, activation = self.page.session, self.page.activation
         key, draft = (controller.session_id, controller.runtime_id), self.ui.input.draft()
         revision = self.ui.input.draft_revision
@@ -170,6 +175,8 @@ class SteeringInput:
             self.ui.notices.error("补充未发送", "草稿保留：" + str(exc))
             return False
 
+        # 补充输入同样回到实时尾部，补充内容与其后续输出保持可见。
+        self.ui.parent.chat_scroll.latest()
         self.run_command("steer", text, scope=scope, request_id=uuid.uuid4().hex,
                            controller=controller, success=received, failure=failed, settled=settled)
         return True

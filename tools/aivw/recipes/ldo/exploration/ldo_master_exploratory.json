@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "kind": "ldo-exploratory-policy",
+  "policy_id": "amsLDO.LDO_MASTER.exploratory.v1",
+  "status": "source_derived_exploration_pending",
+  "source": {
+    "interface_contract": "ffbe024af0917ad8e91a922c71e075c9042ffb21bda4e000d2a70375c17d3873",
+    "experiment_contract": "dea1b33d248c344f4831b389a6a7be1b0270eee10653df734e5d985adb413361",
+    "testbench": "amsLDO.TEST_LDO",
+    "reference_run": "20260906T135258.116394Z-recipe-run-59cbbf4b298b"
+  },
+  "model": {"relative_path": "gpdk045.scs", "section": "tt"},
+  "analysis": {"temperature_c": 27.0, "errpreset": "moderate", "max_stop_s": 0.01},
+  "topologies": {
+    "LDO_MASTER": {
+      "ports": ["VDD", "VSS", "VOUT"],
+      "vdd_window_v": {"min": 4.5, "max": 5.5, "probe_margin": 0.25},
+      "load_resistance_ohm": {"nominal": 10000.0, "values": [5000.0, 10000.0, 20000.0]},
+      "en_voltage_v": {"nominal": null, "values": null}
+    }
+  },
+  "matrix": {
+    "supply_sweep": true,
+    "load_sweep": true,
+    "enable_voltage_sweep": false,
+    "transient": {"startup": true, "enable_rise": false, "enable_fall": false, "supply_step": true}
+  },
+  "measurements": {
+    "signals": {"VOUT": "V", "VDD": "V", "VSS": "V", "IDD": "A"},
+    "sample_times_s": [0.0005, 0.001, 0.002, 0.004],
+    "time_unit": "s",
+    "extraction": "linear_interpolation_between_bracketing_samples_no_extrapolation"
+  },
+  "tolerance_contract": {
+    "status": "BLOCKED_CONTRACT",
+    "metrics": {},
+    "reason": "No project-approved LDO behavior tolerance, settling definition, or supply acceptance window exists yet."
+  },
+  "holdout": {"locked": true, "public_values_included": false, "partition_policy": "hidden_holdout_excluded_from_exploration_plan"}
+}

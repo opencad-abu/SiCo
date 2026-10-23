@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "name": "aivw-ldo-behavior-fixture-v1",
+  "status": "assumption_pending_spectre_correlation",
+  "target": {"cell": "LDO_MASTER", "module": "LDO_MASTER"},
+  "behavior": {
+    "dc_transfer": "piecewise_linear",
+    "supply_window": "required",
+    "enable_gating": "required_for_LDO_AON",
+    "transient": "first_order_optional",
+    "reference_equation": "VOUT = VSS + 0.5 * (VDD - VSS) inside the declared window; outside window or inactive enable drives VSS",
+    "reference_only": true
+  },
+  "parameters": {
+    "supply_window": {"min": 4.5, "max": 5.5},
+    "gain": {"default": 0.5, "value": 0.5, "min": 0.0, "max": 1.0},
+    "tau_seconds": {"default": 0.000001, "value": 0.000001, "min": 0.0, "max": 1.0}
+  }
+}

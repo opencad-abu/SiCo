@@ -59,7 +59,7 @@ class PagePresentation:
                         self.ui.resume_action):
             control.setEnabled(False)
         self.ui.return_action.setEnabled(True)
-        self.router.refresh_task_panel()
+        self.ui.task_panel.update_requests([])
         self.ui.status.setText("正在打开会话…")
         self.ui.status.setToolTip("")
 
@@ -89,12 +89,13 @@ class PagePresentation:
         self.centers.reset(self.api.source(self.page.session, scope=prepared.stream),
                            activation=self.page.activation)
         self.ui.parent.chat_scroll.render(force=True)
+        self.ui.parent.chat_scroll.latest()
         self.ui.input.restore_draft(self.drafts.load(self.page.session))
         self.ui.input.setEnabled(self.page.session.runtime_id is not None)
         if self.page.session.runtime_id is None:
             self.ui.status.setText("历史会话（只读）")
         self.ui.return_action.setEnabled(False)
-        self.ui.parent.setWindowTitle(PRODUCT_NAME + " / " + self.page.view.label)
+        self.ui.parent.setWindowTitle(PRODUCT_NAME)
         self.model_badge()
         poll()
         self.navigation.catalog_state = None
@@ -103,7 +104,7 @@ class PagePresentation:
         self.ui.input.setFocus()
 
     def preview(self, prepared, scope):
-        self.router.refresh_task_panel()
+        self.ui.task_panel.update_requests([])
         self.ui.status.setText("正在读取历史会话…")
         self.ui.tabs.setCurrentWidget(self.ui.conversation)
         replay = self.presentation.preview()

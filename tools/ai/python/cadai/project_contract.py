@@ -8,6 +8,7 @@ RECEIPT_REFS = {
     "apply_cdf_update": ("update_ref", "cdf-update:"),
     "create_circuit_library": ("library_ref", "library:"),
     "create_circuit_from_plan": ("circuit_ref", "created:"),
+    "edit_circuit": ("circuit_ref", "created:"),
     "create_template_symbol": ("symbol_ref", "template-symbol:"),
     "draw_symbol": ("symbol_ref", "template-symbol:"),
     "create_circuit_config": ("config_ref", "config:"),
@@ -145,7 +146,13 @@ def receipt(value, record):
     else:
         require(type(value.get("saved")) is bool, "receipt saved flag missing")
     if record["operation"] == "create_circuit_library":
-        for key in ("library", "library_path", "technology_library", "technology_path"):
+        for key in ("library", "library_path"):
             require(isinstance(value.get(key), str) and value[key], "library receipt " + key)
+        technology = (value.get("technology_library"), value.get("technology_path"))
+        require(
+            technology == (None, None)
+            or all(isinstance(item, str) and item for item in technology),
+            "library receipt technology_library/technology_path",
+        )
         require(type(value.get("created")) is bool, "library creation flag missing")
     return value

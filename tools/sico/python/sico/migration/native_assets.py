@@ -128,5 +128,10 @@ FILES = {
     "skill-installer/scripts/list-skills.py":
         "9d6dfb2abf3afeee7f027a89fb1626b918a973da18f4eb6c25681286301beb41",
 }
+PROFILES = {"0.154.0": FILES, "0.156.1": FILES, "0.162.1": {
+    **{key: value for key, value in FILES.items() if not key.startswith("plugin-creator/")},
+    ".codex-system-skills.marker":
+        "4b857d61192f2fa2df02f1200356167abf381eb1080de74972acd52a365eefca",
+}}
 DIRECTORIES = {str(parent) for path in FILES for parent in PurePosixPath(path).parents
                if str(parent) != "."}

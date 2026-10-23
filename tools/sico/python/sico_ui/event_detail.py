@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QApplication, QHBoxLayout, QLabel, QPushButton
 
 from .chrome import SiDialog
 from .code_highlight import table_safe_markdown
-from .presentation import DocumentView, style_tables
+from .presentation import DocumentView, style_document
 from .receipts import DataReceipt
 
 
@@ -136,7 +136,7 @@ class EventDetailDialog(SiDialog):
                     cursor.movePosition(QTextCursor.End)
                     cursor.insertBlock()
                     cursor.insertHtml(content[body_chars:])
-            style_tables(self.view.document())
+            style_document(self.view.document())
             self.view.verticalScrollBar().setValue(0)
             self.render_parts.clear()
         self.view.set_busy(False)

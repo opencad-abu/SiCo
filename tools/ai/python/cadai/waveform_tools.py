@@ -4,7 +4,8 @@ import uuid
 
 from .circuit_spec_schema import CircuitSpecError, validate
 from .result_contract import ResultError, text
-from .result_tools import ResultStore, _native, capture
+from .result_store import ResultStore
+from .result_tools import _native, capture
 from .waveform_measure import measure, validate_recipe, validate_samples
 from .waveform_pair import pair_report
 from .waveform_schema import MAX_SAMPLES, MEASUREMENT_SCHEMA, WAVE_SCHEMA, WAVEFORM_TOOLS

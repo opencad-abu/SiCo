@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cadence SKILL Reference"
+  short_description: "Look up Cadence SKILL APIs before coding"
+  default_prompt: "Use $cadence-skill to verify the Cadence SKILL APIs needed for this task."

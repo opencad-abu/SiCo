@@ -45,6 +45,13 @@ def run_virtuoso_source(
         output += log_path.read_text(encoding="utf-8", errors="replace")
     assert completed.returncode == 0, output
     assert "*Error*" not in output, output
+    # Virtuoso only warns about a stray ')' and keeps loading; treat it the
+    # same as an error so a broken source cannot pass a probe by accident.
+    assert "PARSER WARNING" not in output, output
+    assert "(WARNING): extra" not in output, output
+    # A field assigned a non t/nil enabled/invisible value (for example the
+    # list member() returns) only warns in Virtuoso and then misbehaves.
+    assert "Bad value" not in output, output
     assert "(reader)" not in output, output
     assert "still unclosed on EOF" not in output, output
     return output

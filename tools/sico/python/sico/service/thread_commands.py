@@ -1,5 +1,7 @@
 """Serialize explicit thread controls with the session's sole model consumer."""
 
+from ..storage.journal import BULK_KINDS
+
 class SessionThreadCommands:
     def __init__(self, loop, *, lock, execution, check_input, binding_state,
                  interrupt, changed, launch):
@@ -21,16 +23,19 @@ class SessionThreadCommands:
                 "task_id": view.task.get("id"), "context": view.current.record()}
 
     def thread_status(self):
+        self.loop.support.require("thread_operations")
         with self._lock:
             view = self.execution()
             self._check_input("Thread status")
             controls = getattr(self.loop, "thread_ops", None)
             if controls is None:
                 raise ValueError("当前后端不支持线程操作")
-            snapshot = controls.snapshot() if view.busy else controls.status()
-            return {**snapshot, "busy": view.busy, "scope": self.thread_scope()}
+            busy = view.busy or view.task.get("status") == "needs_reconcile"
+            snapshot = controls.snapshot() if busy else controls.status()
+            return {**snapshot, "busy": busy, "scope": self.thread_scope()}
 
     def thread_operation(self, action, *, scope, request_id):
+        self.loop.support.require("thread_operations")
         from ..codex.thread_operations import validate_action
 
         action = validate_action(action)
@@ -46,7 +51,7 @@ class SessionThreadCommands:
             if (not isinstance(request_id, str) or not request_id or len(request_id) > 100
                     or any(e["kind"] == "codex.operation.received"
                            and e["payload"].get("request_id") == request_id
-                           for e in self.journal.events())):
+                           for e in self.journal.events(exclude=BULK_KINDS))):
                 raise ValueError("线程操作标识无效或已接收；不会重发")
             if view.busy:
                 if action["kind"] != "goal_pause" or not controls.goals.running:

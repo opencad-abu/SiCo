@@ -256,7 +256,8 @@ _OTHER_TOOLS = (
     (
         "create_maestro_testbench",
         "Create Maestro testbench",
-        "Create or update a Maestro view from an existing schematic testbench and save it.",
+        "Create or update a Maestro view from an existing schematic testbench. Legacy backend; "
+        "if unavailable, use preview_simulation_recipe + execute_circuit_operation.",
         _CREATE_SCHEMA,
     ),
     (

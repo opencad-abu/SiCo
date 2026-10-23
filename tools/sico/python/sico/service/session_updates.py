@@ -3,12 +3,13 @@
 from copy import deepcopy
 
 from ..core.contracts import json_copy
-from .events import SESSION_CONTRACT
+from ..core.session_events import SESSION_CONTRACT
 
 
 class SessionUpdates:
     def __init__(self, journal, *, lock, execution, bindings, history,
-                 steering_scope, steering_supported, router_snapshot):
+                 steering_scope, steering_supported, router_snapshot, task_tree,
+                 refresh_task):
         self.journal = journal
         self._lock = lock
         self.execution = execution
@@ -17,6 +18,8 @@ class SessionUpdates:
         self.steering_scope = steering_scope
         self.steering_supported = steering_supported
         self.router_snapshot = router_snapshot
+        self.task_tree = task_tree
+        self.refresh_task = refresh_task
 
     def read_updates(self, after=0, limit=100, *, since_version=None, blocking=True,
                      max_bytes=None, publisher=None):
@@ -40,9 +43,17 @@ class SessionUpdates:
             else:
                 events, committed = self.journal.committed_batch(after, limit, max_bytes)
                 caught_up = after + len(events) == committed
+            # Audit replies and delivery publish state from their command/RPC
+            # threads. The worker callback that normally freezes task state does
+            # not run for those out-of-band events, so refresh before publishing
+            # a snapshot; otherwise the chat keeps showing the old activity until
+            # the next model event.
+            publisher_changed = publisher is not None and publisher.changed()
+            if caught_up and (events or publisher_changed):
+                self.refresh_task()
             snapshot = None
             if caught_up and (since_version != self.execution().version
-                              or (publisher is not None and publisher.changed())):
+                              or publisher_changed):
                 snapshot = (publisher.read(committed) if publisher is not None
                             else self._state_snapshot(committed))
             batch.update(events=events, snapshot=snapshot, committed_sequence=committed)
@@ -66,5 +77,6 @@ class SessionUpdates:
             "binding_error": self.bindings.sync_error,
             "default_context": displayed.record(), "pending": view.pending,
             "requests": self.history.snapshot(),
+            "task_tree": self.task_tree.snapshot(),
             "router": deepcopy(self.router_snapshot(view.current)),
         }

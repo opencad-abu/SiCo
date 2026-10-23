@@ -6,12 +6,14 @@ from typing import Any
 
 MAX_INSPECT_ITEMS = 200
 DEFAULT_INSPECT_ITEMS = 50
+MAX_MASTER_TARGETS = 8
 
 READ_ONLY_INSPECTION_TOOLS = frozenset(
     {
         "inspect_schematic",
         "inspect_layout",
         "inspect_symbol_ports",
+        "inspect_master_evidence",
         "list_libraries",
         "inspect_library",
         "list_windows",
@@ -42,6 +44,25 @@ def build_read_only_skill(name: str, arguments: dict[str, Any]) -> str:
     if name == "inspect_symbol_ports":
         target = _target(arguments, "symbol", "schematicSymbol")
         return "aiInspectSymbolPorts({} {} {} {} {})".format(*target, _max_items(arguments))
+    if name == "inspect_master_evidence":
+        _require_only(arguments, {"targets", "max_items"})
+        targets = arguments.get("targets")
+        if not isinstance(targets, list) or not 1 <= len(targets) <= MAX_MASTER_TARGETS:
+            raise InspectionArgumentError(
+                f"targets must list between 1 and {MAX_MASTER_TARGETS} targets")
+        entries = []
+        for entry in targets:
+            if not isinstance(entry, dict):
+                raise InspectionArgumentError("each target must be an object")
+            _require_only(entry, {"lib", "cell", "view"})
+            view = _optional_string(entry, "view")
+            entries.append("list({} {} {})".format(
+                _string(entry, "lib"),
+                _string(entry, "cell"),
+                _skill_string(view if view is not None else "symbol"),
+            ))
+        return "aiInspectMasterEvidence(list({}) {})".format(
+            " ".join(entries), _max_items(arguments))
     if name == "list_libraries":
         _require_only(arguments, {"max_items"})
         return f"aiListLibraries({_max_items(arguments)})"
@@ -206,6 +227,7 @@ def _require_only(arguments: dict[str, Any], allowed: set[str]) -> None:
 __all__ = [
     "DEFAULT_INSPECT_ITEMS",
     "MAX_INSPECT_ITEMS",
+    "MAX_MASTER_TARGETS",
     "READ_ONLY_INSPECTION_TOOLS",
     "SCHEMATIC_SNAPSHOT_TOOLS",
     "InspectionArgumentError",

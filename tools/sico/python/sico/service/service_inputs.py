@@ -5,6 +5,7 @@ import json
 from contextlib import nullcontext
 
 from ..core.contracts import BoundContext
+from ..core.ask_queue import QueueFull, queue_head
 from ..storage.inbox_records import inbox_directory, read_input
 from ..transport.framing import ProtocolError
 from .published import thaw
@@ -42,8 +43,12 @@ class ServiceInputs:
                     or (controller.inbox.active or {}).get("id") == input_id)
             live = live and not controller.fault and not controller.closing
         recovery = row["status"] in {"queued", "executing", "waiting_user"} and not live
+        sequence = row["message"].get("ask_sequence")
         return InputResult(address, input_id, "accepted", execution=row["status"],
-                           task_id=row.get("task_id"), recovery_required=recovery)
+                           task_id=row.get("task_id"), recovery_required=recovery,
+                           ask_sequence=sequence,
+                           queue_head=queue_head(controller.inbox)
+                           if controller and sequence is not None else None)
 
     def query(self, address, input_id):
         controller = self._controller(address)
@@ -62,13 +67,16 @@ class ServiceInputs:
             return self.submit(address, input_id, text, context,
                                lambda: self.control.require(entry, connection, proof), **options)
 
-    def accept(self, address, input_id, text, context):
+    def accept(self, address, input_id, text, context, *, attachment_text=None, ask_sequence=None):
         # Authenticated, target-bound host intake does not acquire GUI control.
         controller = self._controller(address)
+        extras = {"attachment_text": attachment_text} if attachment_text is not None else {}
+        if ask_sequence is not None:
+            extras["ask_sequence"] = ask_sequence
         if controller is None or controller.closing or controller._shutdown.is_set():
-            return self._admit(address, input_id, text, context, quick=True)
+            return self._admit(address, input_id, text, context, quick=True, extras=extras)
         with self.control.guard(address):
-            return self._admit(address, input_id, text, context, quick=True)
+            return self._admit(address, input_id, text, context, quick=True, extras=extras)
 
     def _admit(self, address, input_id, text, context, *, quick=False, authorize=None, extras=None):
         controller = self._controller(address)
@@ -81,7 +89,7 @@ class ServiceInputs:
     def _submit(self, address, input_id, text, context, controller, *, quick=False, authorize=None,
                 extras=None):
         extras = thaw(extras or {})
-        if set(extras) - {"inputs", "attachment_text", "turn_options"}:
+        if set(extras) - {"inputs", "attachment_text", "turn_options", "ask_sequence"}:
             raise ProtocolError("Invalid submission fields")
         # Match the user's original selection on retry, independently of later
         # sticky defaults or changed/deleted files. Asset snapshots stay in the
@@ -103,20 +111,26 @@ class ServiceInputs:
             from .session_control import ControlRefused
 
             raise ControlRefused("当前为只读观察，请明确获取控制权")
+        sequence = extras.pop("ask_sequence", None)
+        message = dict(kind="submit", id=input_id, text=text, context=context)
+        if sequence is not None:
+            message["ask_sequence"] = sequence
         try:
             if quick:
-                controller.accept(dict(kind="submit", id=input_id, text=text, context=context),
-                                  service_address=address.record())
+                controller.accept(message,
+                                  service_address=address.record(), submission_digest=digest,
+                                  **extras)
             else:
                 controller.submit(text, context=BoundContext.from_record(context),
                                   input_id=input_id, service_address=address.record(),
                                   submission_digest=digest, **extras)
         except ProtocolError:
             raise
-        except ValueError:
+        except ValueError as exc:
             # A failure after persistence must not turn an accepted input into a refusal.
             row = self._read(address, input_id)
             if row is not None:
                 return self._result(address, input_id, row)
-            return InputResult(address, input_id, "rejected", "input_rejected")
+            return InputResult(address, input_id, "rejected",
+                               "queue_full" if isinstance(exc, QueueFull) else "input_rejected")
         return self.query(address, input_id)

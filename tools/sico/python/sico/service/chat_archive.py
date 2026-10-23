@@ -8,12 +8,14 @@ import tempfile
 from ..core.contracts import BoundContext
 from .chat_projection import ChatProjection
 from .event_display import EventDisplay
-from .events import SESSION_CONTRACT, EventCursor
+from ..core.session_events import SESSION_CONTRACT, EventCursor
 from .published import freeze
 from .workbench_budget import WorkbenchBudget
 
 PAGE_ROWS = 60
 PAGE_BYTES = 196608
+# 归档在投影前就丢弃这两类行（见 sync）；同步时直接从索引跳过，不再解析。
+ARCHIVE_DROPPED = frozenset({"model.status", "router.status"})
 
 
 class IndexedChat(ChatProjection):
@@ -29,6 +31,13 @@ class IndexedChat(ChatProjection):
         key = message['message_id']
         self.changed_rows.pop(key, None)
         self.connection.execute('DELETE FROM messages WHERE id=?', (key,))
+
+    def reverted(self, before_message_id):
+        self.connection.execute('DELETE FROM messages WHERE id >= ?', (before_message_id,))
+        self.changed_rows = {
+            key: row for key, row in self.changed_rows.items()
+            if key < before_message_id
+        }
 
     def flush(self):
         self.connection.executemany('INSERT OR REPLACE INTO messages VALUES (?, ?)',
@@ -68,6 +77,8 @@ class ChatArchive:
         self.directory.cleanup()
 
     def _events(self, end):
+        """消息相关行（展示噪声由索引跳过；关闭日志按顺序读取）。"""
+
         if self.rows is not None:
             while self.cursor.sequence < end:
                 event = next(self.rows, None)
@@ -78,11 +89,9 @@ class ChatArchive:
         journal = self.stream.controller.journal
         after = self.cursor.sequence
         while after < end:
-            batch, _ = journal.committed_batch(after, min(128, end - after), 262144)
-            if not batch:
-                raise ValueError('历史记录不完整，请重新打开会话')
-            yield from batch
-            after = batch[-1]['sequence']
+            limit = min(128, end - after)
+            yield from journal.events(after, limit=limit, exclude=ARCHIVE_DROPPED)
+            after += limit
 
     def sync(self, end):
         self.validate()
@@ -92,6 +101,7 @@ class ChatArchive:
                             self.stream.identity))
         self.cursor.history_sequence = end
         for event in WorkbenchBudget(self.validate).rows(self._events(end)):
+            self.cursor.skip(event["sequence"] - 1)
             accepted = self.cursor.consume(dict(envelope, contract=SESSION_CONTRACT,
                                                 events=[event]))
             for raw in accepted:
@@ -103,6 +113,7 @@ class ChatArchive:
                 if projected is not None:
                     self.projection.receive(projected[0])
             self.projection.flush()
+        self.cursor.skip(end)
         self.db.commit()
         self.validate()
 

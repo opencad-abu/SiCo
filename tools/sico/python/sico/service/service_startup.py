@@ -1,5 +1,6 @@
 """Asynchronous discover/start/readiness waiter; cancellation only detaches."""
 
+import shlex
 import socket
 import time
 from pathlib import Path
@@ -14,9 +15,21 @@ from .service_waiter import ServiceWaiter
 
 
 class ServiceStartupError(RuntimeError):
-    def __init__(self, phase, code):
-        self.phase, self.code = phase, code
-        super().__init__("Project service startup failed: " + phase + "/" + code)
+    def __init__(self, phase, code, detail=""):
+        self.phase, self.code, self.detail = phase, code, detail
+        message = "Project service startup failed: " + phase + "/" + code
+        super().__init__(message + (" (" + detail + ")" if detail else ""))
+
+
+def _other_host_detail(hostname, project):
+    command = "sico service-stop --project-dir " + shlex.quote(str(project))
+    return (
+        "the project service is owned by host " + hostname
+        + "; cross-host attachment is not supported. Stop SiCo on that host"
+        + " (for example, run " + command + " there; add --force if it does not"
+        + " respond), then retry."
+        + " Do not delete owner.lock or discovery.json"
+    )
 
 
 class ServiceStartup(ServiceWaiter):
@@ -26,6 +39,10 @@ class ServiceStartup(ServiceWaiter):
         if not Path(project).is_absolute():
             raise ValueError("Project service requires an explicit absolute project directory")
         super().__init__(lambda deadline: self._prepare(project, deadline), timeout=timeout)
+
+    def take_descriptor(self):
+        """Return the completed descriptor; callers check ``ready.done()`` first."""
+        return self.ready.result(timeout=0)
 
     def _bootstrap(self, project, deadline):
         with spawn_service(project) as channel:
@@ -64,5 +81,7 @@ class ServiceStartup(ServiceWaiter):
                     raise ServiceStartupError("bootstrap", "owner_exited")
                 reported_ready = self._bootstrap(project, deadline) == "ready"
             elif found.state in {"other_host", "unverified"}:
-                raise ServiceStartupError("discovery", found.state)
+                detail = (_other_host_detail(found.service.host.hostname, project)
+                          if found.state == "other_host" and found.service else "")
+                raise ServiceStartupError("discovery", found.state, detail)
             self._wake.wait(0.05)

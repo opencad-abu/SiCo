@@ -75,11 +75,11 @@ def _compute(package, args):
     """Rebuild the exact logical documents and bounded review differences."""
     changes, diffs = {}, []
     devices = package.document("device.json")["items"]
-    allowed = {"device.json"} | {
+    allowed = {"device.json", "category.json"} | {
         r["dir"] + "/" + suffix
         for r in devices.values()
         if "dir" in r
-        for suffix in ("cdf.json", "symbol.json")
+        for suffix in ("cdf.json", "symbol.json", "simulation.json")
     }
     for change in args["changes"]:
         name = change["file"]
@@ -105,6 +105,9 @@ def _compute(package, args):
             or old["presence"] != value["presence"]
         ):
             fail("CDF update cannot invent/remove observed parameters or presence")
+        elif name == "category.json":
+            if set(old["items"]) - set(value["items"]):
+                fail("Category update cannot remove observed categories")
         elif name.endswith("/symbol.json"):
             if any(old[k] != value[k] for k in ("coordinate_system", "unit", "parameterized")):
                 fail("Symbol update cannot change observed geometry identity")

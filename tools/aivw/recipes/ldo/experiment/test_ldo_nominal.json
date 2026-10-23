@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "contract_id": "amsLDO.TEST_LDO.nominal-characterization.v1",
+  "scope": "testbench_transistor_characterization",
+  "behavioral_qualification": false,
+  "source": {
+    "library": "amsLDO",
+    "cell": "TEST_LDO",
+    "view": "schematic",
+    "state_view": "maestro",
+    "state_file": "active.state",
+    "state_sha256": "3b16577364f9de70e37acf8a4eba766709e84bb2e4803f144feb33290a82e846",
+    "reference_run": "20260906T113328.649366Z-ldo-contract-0ed1c1d25132"
+  },
+  "netlisting": {
+    "mode": "r",
+    "switch_views": [
+      "spectre",
+      "schematic"
+    ],
+    "stop_views": [
+      "spectre"
+    ],
+    "config_policy": "explicit_schematic_characterization_not_auto_config_replay"
+  },
+  "model": {
+    "relative_path": "gpdk045.scs",
+    "section": "tt"
+  },
+  "analysis": {
+    "kind": "tran",
+    "stop_s": 0.005,
+    "errpreset": "moderate",
+    "temperature_c": 27.0,
+    "reltol": 0.001,
+    "vabstol_v": 1e-06,
+    "iabstol_a": 1e-12
+  },
+  "stimulus": {
+    "supply": {
+      "instance": "V0",
+      "positive": "VDD_EXT",
+      "negative": "gnd!",
+      "value_v": 5.0
+    },
+    "enable": [
+      {
+        "instance": "V1",
+        "positive": "net8",
+        "negative": "gnd!",
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            0.001,
+            0
+          ],
+          [
+            0.001001,
+            2.5
+          ],
+          [
+            0.002,
+            2.5
+          ],
+          [
+            0.002001,
+            0
+          ],
+          [
+            0.005,
+            0
+          ]
+        ]
+      },
+      {
+        "instance": "V3",
+        "positive": "net9",
+        "negative": "gnd!",
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            0.003,
+            0
+          ],
+          [
+            0.003001,
+            2.5
+          ],
+          [
+            0.004,
+            2.5
+          ],
+          [
+            0.004001,
+            0
+          ],
+          [
+            0.005,
+            0
+          ]
+        ]
+      }
+    ]
+  },
+  "loads": [
+    {
+      "instance": "R1",
+      "positive": "VDD_PD2_OUT",
+      "negative": "gnd!",
+      "resistance_ohm": 10000.0
+    },
+    {
+      "instance": "R2",
+      "positive": "VDD_AON_OUT",
+      "negative": "gnd!",
+      "resistance_ohm": 10000.0
+    }
+  ],
+  "observations": {
+    "LDO_MASTER": {
+      "instance": "I2",
+      "supply": "VDD_EXT",
+      "output": "VDD_INT",
+      "load": "cascaded_LDO_AON_and_LDO_PD2"
+    },
+    "LDO_AON": {
+      "instance": "I0",
+      "supply": "VDD_INT",
+      "output": "VDD_AON_OUT",
+      "enable": "net8",
+      "load": "R2"
+    }
+  },
+  "measurements": {
+    "format": "csv",
+    "time_unit": "s",
+    "signals": {
+      "VDD_EXT": "V",
+      "VDD_INT": "V",
+      "VDD_AON_OUT": "V",
+      "VDD_PD2_OUT": "V",
+      "net8": "V",
+      "net9": "V",
+      "V0:p": "A"
+    },
+    "supply_current_sign": "negative_V0:p_is_current_delivered_to_testbench",
+    "sample_times_s": [
+      0.0005,
+      0.0015,
+      0.0025,
+      0.0035,
+      0.0045
+    ],
+    "extraction": "linear_interpolation_between_bracketing_samples_no_extrapolation",
+    "dataset": "characterization",
+    "acceptance_tolerances": null,
+    "missing_tolerance_status": "BLOCKED_CONTRACT",
+    "settling_threshold": null
+  },
+  "unsupported": [
+    "block_supply_window",
+    "block_load_sweep",
+    "startup_ramp",
+    "settling_time",
+    "EN_logic_thresholds",
+    "RNM_correlation",
+    "hidden_holdout",
+    "PVT_qualification"
+  ]
+}

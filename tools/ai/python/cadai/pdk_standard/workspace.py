@@ -6,8 +6,9 @@ from pathlib import Path
 from copy import deepcopy
 
 from ..env_names import value as env_value
+from ..pdk_errors import PdkUnavailable
 from . import SUPPORTED_VERSIONS
-from .jsonio import fail, mapping, read, relative
+from .jsonio import fail, fingerprint, mapping, read, relative
 from .package import Package
 
 
@@ -82,7 +83,7 @@ class Effective:
         return not change.get("delete_file") and (name in self.base.manifest["files"] or "replacement_ref" in change)
 
 
-def select(workspace, library, environment=None):
+def _candidates(workspace, library, environment):
     environment = os.environ if environment is None else environment
     local = project_directory(workspace, "ai/pdk-data")
     configured = str(env_value(environment, "PDK_DATA", "")).strip()
@@ -114,6 +115,46 @@ def select(workspace, library, environment=None):
         unique[package.manifest_digest] = (package, {**old_roots, **roots}, origin)
     candidates = list(unique.values())
     overlays = list({str(row[0].resolve()): row for row in overlays}.values())
+    return candidates, overlays
+
+
+def _divergence(candidates, library):
+    """One workspace and one environment baseline disagree; a user choice is needed."""
+    workspace = [row for row in candidates if row[2] == "workspace"]
+    environment = [row for row in candidates if row[2] == "environment"]
+    if len(workspace) != 1 or len(environment) != 1:
+        return None
+    local, local_roots, _ = workspace[0]
+    shared, shared_roots, _ = environment[0]
+    if local.manifest_digest == shared.manifest_digest:
+        return None
+    return {
+        "library": library,
+        "baseline_ref": fingerprint([library, local.manifest_digest, shared.manifest_digest]),
+        "workspace": [{
+            "path": str(local.root), "revision": local.revision,
+            "manifest_digest": local.manifest_digest, "roots": dict(local_roots),
+        }],
+        "environment": [{
+            "path": str(shared.root), "revision": shared.revision,
+            "manifest_digest": shared.manifest_digest, "roots": dict(shared_roots),
+        }],
+    }
+
+
+def divergence(workspace, library, environment=None):
+    """Describe a workspace-vs-SICO_PDK_DATA choice without selecting either."""
+    try:
+        candidates, overlays = _candidates(workspace, library, environment)
+    except PdkUnavailable:
+        return None
+    if any(row[2].get("base", {}).get("package_id") == library for row in overlays):
+        return None
+    return _divergence(candidates, library)
+
+
+def select(workspace, library, environment=None):
+    candidates, overlays = _candidates(workspace, library, environment)
     matching_overlays = [r for r in overlays if any(
         r[2].get("base", {}).get("package_id") == p.manifest["package_id"] for p, _, _ in candidates)]
     if len(matching_overlays) > 1:
@@ -127,6 +168,38 @@ def select(workspace, library, environment=None):
         return Effective(base, {**roots, **entry.get("roots", {})}, path)
     identities = {p.manifest_digest for p, _, _ in candidates}
     if len(identities) != 1:
-        fail("Conflicting standard package baselines", "pdk_update_conflict")
+        choice = _divergence(candidates, library)
+        if choice:
+            from . import baseline_choice
+            preference = baseline_choice.load(workspace)
+            if baseline_choice.matches(preference, choice):
+                candidates = [row for row in candidates if row[2] == preference["preference"]]
+            else:
+                rows = [*choice["workspace"], *choice["environment"]]
+                detail = "; ".join(
+                    row["path"] + " (revision " + row["revision"] + ")" for row in rows
+                )
+                fail(
+                    "Workspace and SICO_PDK_DATA standard baselines differ: " + detail
+                    + "; ask the user whether to sync the shared baseline "
+                    "or keep the workspace baseline",
+                    "pdk_baseline_sync_required",
+                )
+        identities = {p.manifest_digest for p, _, _ in candidates}
+    if len(identities) != 1:
+        rows = sorted(
+            {
+                (origin, str(package.root), package.revision)
+                for package, _, origin in candidates
+            }
+        )
+        shown = rows[:4]
+        detail = "; ".join(
+            origin + "=" + root + " (revision " + revision + ")"
+            for origin, root, revision in shown
+        )
+        if len(rows) > len(shown):
+            detail += "; +" + str(len(rows) - len(shown)) + " more"
+        fail("Conflicting standard package baselines: " + detail, "pdk_update_conflict")
     base, roots, _ = candidates[-1]
     return Effective(base, roots)

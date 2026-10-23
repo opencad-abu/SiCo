@@ -7,6 +7,8 @@ from typing import Any, Callable, Generic, TypeVar
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PyQt5.QtGui import QColor
 
+from cadgui.palette import active
+
 SORT_ROLE = Qt.UserRole
 PROGRESS_ROLE = Qt.UserRole + 1
 SEARCH_ROLE = Qt.UserRole + 2
@@ -100,5 +102,5 @@ class ReadOnlyTableModel(QAbstractTableModel, Generic[RowType]):
         if role == JOB_ID_ROLE:
             return str(getattr(row, "job_id", ""))
         if role == Qt.ForegroundRole and not bool(getattr(row, "is_available", True)):
-            return QColor("#777d85")
+            return QColor(active().muted)
         return None

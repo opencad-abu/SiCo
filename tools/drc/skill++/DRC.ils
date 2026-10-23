@@ -1,270 +1,61 @@
-; Development source bootstrap; protected runtimes use SICO_toolsInitialize.
-let((commonSkill)
-  commonSkill=strcat("/" buildString(reverse(cdr(reverse(
-    parseString(simplifyFilename(get_filename(piport) t) "/")))) "/")
-    "/../../common/skill/")
-  load(strcat(commonSkill "SICO_environment.il"))
-  load(strcat(commonSkill "SICO_installation.il")))
-
-;------------------------------------------------------------------------------
-; DRC frontend loader.
-;------------------------------------------------------------------------------
-
-unless(and(isCallable('cadCommonGuiModulesRevision)
-             cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
-             isCallable('SICO_lsfModulesRevision)
-             SICO_lsfModulesRevision()=="20260924.flow.environment.v3"
-             isCallable('drcLoaderRevision)
-             drcLoaderRevision()=="20260924.flow.environment.v3"
-             isCallable('SICO_tomlRevision)
-             SICO_tomlRevision()=="20260922.sico.temp.v6"
-             isCallable('SICO_profileRevision)
-             SICO_profileRevision()=="20260924.profile.environment.v4"
-             isCallable('SICO_profileGuiRevision)
-             SICO_profileGuiRevision()=="20260818.profile.gui.v2"
-             isCallable('drcProfileRevision)
-             drcProfileRevision()=="20260820.rce.live.log.v4"
-             isCallable('SICO_profileAdapter)
-             SICO_profileAdapter("DRC")
-             isCallable('SICO_guiProtocolRevision)
-             SICO_guiProtocolRevision()=="20260814.cadgui.v1"
-             isCallable('drcAbsolutePathRevision)
-             drcAbsolutePathRevision()=="20260812.toml.absolute.paths.v1"
-             isCallable('drcCustomSvrfRevision)
-             drcCustomSvrfRevision()=="20260813.custom.svrf.common.v1"
-             isCallable('drcCustomSvrfGuiRevision)
-             drcCustomSvrfGuiRevision()=="20260813.custom.svrf.common.v1"
-             isCallable('drcRuleSelectRevision)
-             drcRuleSelectRevision()=="20260902.rule.select.pyqt.v6"
-             isCallable('drcRuleSelectUsesCadTempPath)
-             drcRuleSelectUsesCadTempPath()
-             isCallable('drcRuleSelectGuiRevision)
-             drcRuleSelectGuiRevision()=="20260814.rule.select.pyqt.v1"
-             isCallable('drcAdvancedOptionsGuiRevision)
-             drcAdvancedOptionsGuiRevision()=="20260817.advanced.options.v1"
-             isCallable('drcRuleFileGuiRevision)
-             drcRuleFileGuiRevision()=="20260812.rule.file.label.v1"
-             isCallable('drcRunUsesCadTempPath)
-             drcRunUsesCadTempPath()
-             isCallable('cadBatchCoreRevision)
-             cadBatchCoreRevision()=="20260923.batch.commands.v3"
-             isCallable('cadCommonGuiModulesRevision)
-           cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
-           isCallable('cadBaseHardwareRevision)
-             cadBaseHardwareRevision()=="20260820.lsf.monitor.v7"
-             isCallable('SICO_lsfModulesRevision)
-           SICO_lsfModulesRevision()=="20260924.flow.environment.v3"
-           isCallable('SICO_lsfRevision)
-             SICO_lsfRevision()=="20260901.form.lifecycle.v1"
-             isCallable('SICO_lsfMonitorRevision)
-             SICO_lsfMonitorRevision()=="20260924.sico.monitor.environment.v3")
-
-procedure(drcLoaderRevision()
-  "20260924.flow.environment.v3"
-)
-
-procedure(drcResolveToolsRoot()
-  SICO_installationPath(SICO_installationRoot() "tools"))
-
-procedure(drcLoadFile(path)
-  if(and(path isFile(path)) then
-    load(path)
-  else
-    warn("DRC loader cannot find: %L\n" path)
-    nil
-  )
-)
-
-procedure(drcLoadBaseGui()
-  if(and(isCallable('cadCommonGuiModulesRevision)
-           cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
-           isCallable('cadBaseHardwareRevision)
-           cadBaseHardwareRevision()=="20260820.lsf.monitor.v7"
-           isCallable('cadBaseCustomSvrfRevision)
-           cadBaseCustomSvrfRevision()=="20260813.custom.svrf.common.v1"
-           isCallable('makeLayInp) isCallable('makeOutDir)
-           isCallable('makeRunCpus) isCallable('makeCustomSvrf)
-           isCallable('cadCustomSvrfBind) isCallable('makeNlOpt)) then
-    t
-  else
-    and(drcLoadFile(strcat(drcCommonRoot "/skill++/BASEGUI.ils"))
-          drcLoadFile(strcat(drcCommonRoot "/skill++/INPUTGUI.ils"))
-          drcLoadFile(strcat(drcCommonRoot "/skill++/OUTPUTGUI.ils"))
-          drcLoadFile(strcat(drcCommonRoot "/skill++/CUSTOMSVRFGUI.ils"))
-          drcLoadFile(strcat(drcCommonRoot "/skill++/LVSOPTGUI.ils"))
-          drcLoadFile(strcat(drcCommonRoot "/skill++/HARDWAREGUI.ils"))
-          drcLoadFile(strcat(drcCommonRoot "/skill++/TOOLSETGUI.ils")))
-  )
-)
-
-procedure(drcLoadBatchSupport()
-  if(and(isCallable('cadBatchAdapterRevision)
-           cadBatchAdapterRevision()=="20260812.common.v1"
-           isCallable('cadBatchGuiSharedRevision)
-           cadBatchGuiSharedRevision()=="20260812.common.v1"
-           isCallable('cadBatchRowsRevision)
-           cadBatchRowsRevision()=="20260812.common.v1"
-           isCallable('cadBatchCoreRevision)
-           cadBatchCoreRevision()=="20260923.batch.commands.v3"
-           isCallable('cadBatchMonitorRevision)
-           cadBatchMonitorRevision()=="20260902.form.lifecycle.v1"
-           isCallable('cadBatchGuiRevision)
-           cadBatchGuiRevision()=="20260812.common.v1") then
-    t
-  else
-    let((ok)
-      ok=t
-      foreach(path
-        list(
-          strcat(drcCommonRoot "/skill/SICO_batchAdapter.il")
-          strcat(drcCommonRoot "/skill/SICO_batchGui.il")
-          strcat(drcCommonRoot "/skill/SICO_batchRows.il")
-          strcat(drcCommonRoot "/skill/SICO_batchCore.il")
-          strcat(drcCommonRoot "/skill/SICO_batchMonitor.il")
-          strcat(drcCommonRoot "/skill++/BATCHGUI.ils"))
-        when(ok
-          unless(drcLoadFile(path)
-            ok=nil)))
-      ok
-    )
-  )
-)
-
-procedure(drcLoadFrontend()
-  if(and(isCallable('drcFrontendRevision)
-           drcFrontendRevision()==drcLoaderRevision()
-           isCallable('SICO_tomlRevision)
-           SICO_tomlRevision()=="20260922.sico.temp.v6"
-           isCallable('SICO_profileRevision)
-           SICO_profileRevision()=="20260924.profile.environment.v4"
-           isCallable('SICO_profileGuiRevision)
-           SICO_profileGuiRevision()=="20260818.profile.gui.v2"
-           isCallable('drcProfileRevision)
-           drcProfileRevision()=="20260820.rce.live.log.v4"
-           isCallable('SICO_profileAdapter)
-           SICO_profileAdapter("DRC")
-           isCallable('SICO_guiProtocolRevision)
-           SICO_guiProtocolRevision()=="20260814.cadgui.v1"
-           isCallable('drcAbsolutePathRevision)
-           drcAbsolutePathRevision()=="20260812.toml.absolute.paths.v1"
-           isCallable('drcCustomSvrfRevision)
-           drcCustomSvrfRevision()=="20260813.custom.svrf.common.v1"
-           isCallable('drcCustomSvrfGuiRevision)
-           drcCustomSvrfGuiRevision()=="20260813.custom.svrf.common.v1"
-           isCallable('drcRuleSelectRevision)
-           drcRuleSelectRevision()=="20260902.rule.select.pyqt.v6"
-           isCallable('drcRuleSelectUsesCadTempPath)
-           drcRuleSelectUsesCadTempPath()
-           isCallable('drcRuleSelectGuiRevision)
-           drcRuleSelectGuiRevision()=="20260814.rule.select.pyqt.v1"
-           isCallable('drcAdvancedOptionsGuiRevision)
-           drcAdvancedOptionsGuiRevision()=="20260817.advanced.options.v1"
-           isCallable('drcRuleFileGuiRevision)
-           drcRuleFileGuiRevision()=="20260812.rule.file.label.v1"
-           isCallable('SICO_windowIconRevision)
-           SICO_windowIconRevision()=="20260921.sico.flow.icon.v1"
-           isCallable('SICO_setWindowIcon)
-           isCallable('GUI_flowLogOpen)
-           isCallable('SICO_lsfModulesRevision)
-           SICO_lsfModulesRevision()=="20260924.flow.environment.v3"
-           isCallable('SICO_lsfRevision)
-           SICO_lsfRevision()=="20260901.form.lifecycle.v1"
-           isCallable('SICO_lsfMonitorRevision)
-           SICO_lsfMonitorRevision()=="20260924.sico.monitor.environment.v3"
-           isCallable('cadCommonGuiModulesRevision)
-           cadCommonGuiModulesRevision()=="20260924.common.environment.v3"
-           isCallable('cadBaseHardwareRevision)
-           cadBaseHardwareRevision()=="20260820.lsf.monitor.v7"
-           isCallable('SICO_lsfStartQueueDiscovery)
-           isCallable('SICO_lsfValidateSelection)
-           isCallable('SICO_lsfWrapCommand)
-           isCallable('SICO_lsfCancelCommand)
-           isCallable('SICO_absolutePath)
-           isCallable('SICO_tempDir)
-           isCallable('SICO_tempPath)
-           isCallable('SICO_tempEnvironment)
-           isCallable('cadBatchCoreRevision)
-           cadBatchCoreRevision()=="20260923.batch.commands.v3"
-           isCallable('cadBatchFlowAdapter)
-           cadBatchFlowAdapter("DRC")
-           isCallable('drcRunModeCB)
-           isCallable('cadCustomSvrfCB)
-           isCallable('cadCustomSvrfBind)
-           isCallable('drcRuleSelectFormDone)
-           isCallable('drcFormValidP)
-           isCallable('drcFormDoneCB)
-           isCallable('drcRunCB)
-           isCallable('drcRunCloseCB)
-           isCallable('drcRunUsesCadTempPath)
-           drcRunUsesCadTempPath()
-           isCallable('drcBatchStart)
-           isCallable('drcPromptOpenRve)
-           isCallable('cadDisplayDrcForm)) then
-    drcFrontendLoaded=t
-    t
-  else
-    let((ok)
-      ok=and(drcLoadFile(strcat(drcCommonRoot "/skill/SICO_environment.il"))
-        drcLoadFile(strcat(drcCommonRoot "/skill/SICO_installation.il"))
-        drcLoadFile(strcat(drcCommonRoot "/skill/SICO_toml.il")))
-      when(ok
-        ok=drcLoadFile(strcat(drcCommonRoot "/skill/SICO_profile.il")))
-      when(ok
-        ok=drcLoadFile(strcat(drcCommonRoot "/skill++/PROFILEGUI.ils")))
-      when(ok
-        ok=drcLoadFile(strcat(drcCommonRoot "/skill/SICO_guiProtocol.il")))
-      when(ok
-        ok=and(drcLoadFile(strcat(drcCommonRoot "/skill/SICO_lsf.il"))
-          drcLoadFile(strcat(drcCommonRoot "/skill/SICO_lsfSelection.il"))
-          drcLoadFile(strcat(drcCommonRoot "/skill/SICO_lsfProtocol.il"))
-          drcLoadFile(strcat(drcCommonRoot "/skill/SICO_lsfProcess.il"))
-          drcLoadFile(strcat(drcCommonRoot "/skill/SICO_lsfCommands.il"))
-          drcLoadFile(strcat(drcCommonRoot "/skill/SICO_lsfHosts.il"))
-          drcLoadFile(strcat(drcCommonRoot "/skill/SICO_lsfQueues.il"))
-          drcLoadFile(strcat(drcCommonRoot "/skill/SICO_lsfChoices.il"))))
-      when(ok
-        ok=drcLoadFile(strcat(drcCommonRoot "/skill/SICO_lsfMonitor.il")))
-      when(ok
-        ok=drcLoadFile(strcat(drcCommonRoot "/skill/SICO_envOptions.il")))
-      when(ok
-        ok=drcLoadBaseGui())
-      when(ok
-        ok=drcLoadBatchSupport())
-      when(ok
-        foreach(path
-          list(
-            strcat(drcUtilityRoot "/skill/UI_messageApp.il")
-            strcat(drcUtilityRoot "/skill/UI_askApp.il")
-            strcat(drcUtilityRoot "/skill/UI_windowIcon.il")
-            strcat(drcUtilityRoot "/skill/UI_flowLog.il")
-            strcat(drcSkillRoot "/skill++/DRCCFG.ils")
-            strcat(drcSkillRoot "/skill++/DRCRULESEL.ils")
-            strcat(drcSkillRoot "/skill++/DRCCB.ils")
-            strcat(drcSkillRoot "/skill++/DRCRUN.ils")
-            strcat(drcSkillRoot "/skill++/DRCPROFILE.ils")
-            strcat(drcSkillRoot "/skill++/DRCGUI.ils"))
-          when(ok
-            unless(drcLoadFile(path)
-              ok=nil))))
-      when(ok
-        drcFrontendLoaded=t)
-      ok
-    )
-  )
-)
-
-)
-
-drcToolsRoot=drcResolveToolsRoot()
-drcSkillRoot=when(drcToolsRoot
-  simplifyFilename(strcat(drcToolsRoot "/drc") t))
-drcCommonRoot=when(drcToolsRoot
-  simplifyFilename(strcat(drcToolsRoot "/common") t))
-drcUtilityRoot=when(drcToolsRoot
-  simplifyFilename(strcat(drcToolsRoot "/utility") t))
-
-if(and(drcSkillRoot drcCommonRoot drcUtilityRoot) then
-  drcLoadFrontend()
-else
-  warn("DRC root is not configured. Set SICO_HOME; tools are expected under SICO_HOME/tools.\n")
+; Generated by tools/utility/skill_loader.py --write; edit the manifest/sources.
+; Source-only. Per-file contracts retain successful members across retries.
+let((entryDirectory)
+  entryDirectory=strcat("/" buildString(reverse(cdr(reverse(
+    parseString(simplifyFilename(get_filename(piport) t) "/")))) "/"))
+  load(strcat(entryDirectory "/../../../scripts/sicoSkillLoader.ils"))
+  load(strcat(entryDirectory "/../../../scripts/skill/flow.ils"))
+  drcToolsRoot=strcat(SICO_sourceRoot() "/tools")
+  drcSkillRoot=strcat(SICO_sourceRoot() "/tools/drc")
+  drcCommonRoot=strcat(SICO_sourceRoot() "/tools/common")
+  drcUtilityRoot=strcat(SICO_sourceRoot() "/tools/utility")
+  SICO_sourceRequire("drc" "95f36b93228db49117a704bf2f7f4a941e3985227b81703678d604f357bd0745" '(
+    ("tools/drc/skill++" "DRCCFG.ils" "e64d21b33e43e4159312fac90f53756886ce0f6d077aceeea5478ddf810b85ce"
+      (drcInitializeConfig)
+      ()
+      ()
+      ())
+    ("tools/drc/skill++" "DRCRULESEL.ils" "d02d86eab68251bfe7400bbd50a50e34aab1665774f0868fb25620d922448b1a"
+      (drcRuleSelectRegisterState drcRuleSelectLookupState drcRuleSelectRemoveState drcRuleSelectRevision
+       drcRuleSelectUsesCadTempPath drcRuleSelectSetSummary drcRuleSelectSummary drcRuleSelectEnableCB
+       drcRuleSelectBind drcRuleSelectDeleteFile drcRuleSelectCleanupStateFiles
+       drcRuleSelectCancelDiscovery drcRuleSelectInvalidate drcRuleSelectStopAll drcRuleSelectExitCleanup
+       drcRuleSelectRegisterExitCleanup drcRuleSelectFormDone drcRuleSelectWriteInitial
+       drcRuleSelectReadResult drcRuleSelectDataHandler drcRuleSelectErrHandler drcRuleSelectPostFunc
+       drcRuleSelectPythonExe drcRuleSelectLaunchCommand drcRuleSelectOpenCB
+       drcRuleSelectInitializeRuntime)
+      ((drcRuleSelectRevision "20260902.rule.select.pyqt.v6"))
+      ()
+      ())
+    ("tools/drc/skill++" "DRCCB.ils" "c2b1e041c91ea02c73fbdc1bad883e52747d3aca3710dd2965c9bc21caf8d5e2"
+      (drcFrontendRevision drcFormValidP drcFormDoneCB drcRunCB drcRunCloseCB drcAbsolutePathRevision
+       drcCustomSvrfRevision drcRunModeCB drcOutDirCB drcLsfChoicesCB drcRunsetCB drcRunDirFromForm
+       drcValidateForm drcWriteToml)
+      ((drcFrontendRevision "20260924.flow.environment.v3") (drcAbsolutePathRevision
+       "20260812.toml.absolute.paths.v1") (drcCustomSvrfRevision "20260813.custom.svrf.common.v1"))
+      ()
+      ())
+    ("tools/drc/skill++" "DRCRUN.ils" "872bbabe43d861cc3df82e2cb5f33396128518cfb9366bee4fa47ab121ec6f05"
+      (DRC_pythonEntry drcRunUsesCadTempPath DRC_pythonExe DRC_launchEnvCommand drcBackupRunData
+       drcResultsDbFromForm drcIpcDataHandler drcIpcErrHandler drcIpcPostFunc drcStart drcBatchSpec
+       drcBatchStart drcPromptOpenRve drcReport drcBatchEnterMultiple drcBatchLeaveMultiple
+       drcBatchOpenResult)
+      ()
+      ()
+      ())
+    ("tools/drc/skill++" "DRCPROFILE.ils" "05f101f857f997c3069f05907718d0f896a80531802c12d7b88388faaff6ed4d"
+      (drcProfileCollect drcProfileApply drcProfileRevision)
+      ((drcProfileRevision "20260820.rce.live.log.v4"))
+      ()
+      ())
+    ("tools/drc/skill++" "DRCGUI.ils" "1d753f7e2b1411363717cd56e6253497ae068898b6327b55f4478daeb768dab8"
+      (makeInpLay makeOutLay makeDrcOptLay makeDrcRunMode makeDrcTool makeDrcRunset makeDrcRuleSelect
+       makeToolLay makeHardwareLay makeMainLay makeForm cadDisplayDrcForm drcRuleFileGuiRevision
+       drcCustomSvrfGuiRevision drcRuleSelectGuiRevision drcAdvancedOptionsGuiRevision)
+      ((drcRuleFileGuiRevision "20260812.rule.file.label.v1") (drcCustomSvrfGuiRevision
+       "20260813.custom.svrf.common.v1") (drcRuleSelectGuiRevision "20260814.rule.select.pyqt.v1")
+       (drcAdvancedOptionsGuiRevision "20260817.advanced.options.v1"))
+      ()
+      (DRCGUI))
+  ))
 )

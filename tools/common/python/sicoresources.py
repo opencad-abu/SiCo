@@ -15,6 +15,21 @@ def icon(category, name, environment=None):
     return path if path.is_file() else None
 
 
+def font(name, environment=None):
+    """One bundled product font; callers never search the caller's CWD."""
+    path = current(environment).font(name)
+    return path if path.is_file() else None
+
+
+def manual_path(environment=None):
+    """The reviewed offline HTML manual entry, when this installation ships it."""
+    try:
+        path = current(environment).path("docs/html/index.html")
+    except (OSError, ValueError):
+        return None
+    return path if path.is_file() else None
+
+
 def terminal_data(environment=None):
     """The explicit data override never affects product branding."""
     import os

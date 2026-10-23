@@ -274,7 +274,7 @@ class InstanceBridge:
         if context and (context.instance_id, context.generation) != self.broker.expected_identity:
             raise NeedsReconcile("Desktop target belongs to another bridge generation")
         if operation == "platform_environment":
-            from ..service.background_environment import capture_environment
+            from .platform_environment import capture_environment
 
             result = capture_environment()
         elif operation == "stage_host_payload":

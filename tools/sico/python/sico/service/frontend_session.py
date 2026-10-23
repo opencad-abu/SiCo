@@ -40,5 +40,5 @@ def publish_session(controller):
     controller.frontend_view = SessionView(
         controller.session_id, controller.runtime_id, published,
         controller.label, controller.base, controller.model,
-        hasattr(controller.loop, "resources"),
+        controller.loop.support.supports("resources"),
     )

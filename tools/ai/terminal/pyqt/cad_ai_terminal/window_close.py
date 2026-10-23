@@ -60,10 +60,10 @@ class WindowCloseController:
         ):
             return
         if confirm and session.is_running() and not self._close_without_prompt:
-            dialog = SiConfirm("AI Assistant Session",
-                               f"{session.title} is still running.", self._parent)
+            dialog = SiConfirm("AI 助手会话",
+                               f"{session.title} 仍在运行。", self._parent)
             dialog.setObjectName("tabCloseDialog")
-            dialog.add_choice("exit", "Exit Session", danger=True)
+            dialog.add_choice("exit", "结束会话", danger=True)
             dialog.add_choice(CANCEL, CANCEL, default=True, escape=True)
             self._tab_close_dialog = (dialog, session)
             choice = dialog.ask()
@@ -131,12 +131,11 @@ class WindowCloseController:
             event.ignore()
             self._shutdown.begin()
             return
-        noun = "session is" if len(running) == 1 else "sessions are"
-        dialog = SiConfirm("AI Assistant Sessions",
-                           f"{len(running)} AI Assistant {noun} still running.", self._parent)
+        dialog = SiConfirm("AI 助手会话",
+                           f"{len(running)} 个 AI 助手会话仍在运行。", self._parent)
         dialog.setObjectName("sessionCloseDialog")
-        dialog.add_choice("exit", "Exit Sessions", danger=True)
-        dialog.add_choice("minimize", "Minimize")
+        dialog.add_choice("exit", "结束全部会话", danger=True)
+        dialog.add_choice("minimize", "最小化")
         dialog.add_choice(CANCEL, CANCEL, default=True, escape=True)
         self._close_dialog = dialog
         choice = dialog.ask()

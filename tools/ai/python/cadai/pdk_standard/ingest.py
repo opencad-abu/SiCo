@@ -49,15 +49,35 @@ def _authority(before, after):
                 fail('Use the interactive update workflow for CDF policies')
 
 
-def write_documents(stage, manifest, content):
-    writer = Writer(stage)
+def _write_content(writer, manifest, content):
     for name, value in sorted(content.items()):
         fields = MAP_FIELDS.get(name, SUFFIX_FIELDS.get(Path(name).name, ()))
         writer.put(name, value, (*fields, 'evidence'))
-    logical_manifest = dict(manifest)
     for field in ('libraries', 'dependencies'):
         if len(encode(manifest[field])) > TARGET:
             manifest[field] = writer.shard('package.json', field, manifest[field])
+
+
+def content_inventory(manifest, content):
+    """Plan the exact published data files, excluding acceptance receipt shards."""
+    writer = Writer(None)
+    _write_content(writer, deepcopy(manifest), content)
+    return writer.files
+
+
+def write_documents(stage, manifest, content):
+    writer = Writer(stage)
+    logical_manifest = dict(manifest)
+    _write_content(writer, manifest, content)
+    acceptance = manifest.get('publication', {}).get('acceptance') or {}
+    for key, receipt in (acceptance.get('receipts') or {}).items():
+        for device, values in receipt['fingerprints'].items():
+            if len(encode(values)) > TARGET or len(encode({key: receipt})) > TARGET:
+                receipt['fingerprints'][device] = writer.shard(
+                    'package.acceptance.' + key + '.json', 'fingerprints_' + device, values)
+    if len(encode(acceptance.get('receipts') or {})) > TARGET:
+        acceptance['receipts'] = writer.shard('package.json', 'acceptance',
+                                             acceptance['receipts'], target=1024)
     inventory = dict(writer.files)
     if 'publication' in manifest:
         from .publication import content_digest

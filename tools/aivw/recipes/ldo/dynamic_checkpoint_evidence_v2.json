@@ -1,0 +1,82 @@
+{
+  "holdout_evaluated": false,
+  "kind": "dynamic-development-checkpoint",
+  "policy": "dynamic_acceptance_proposal_v1.json",
+  "qualification": "NOT_ESTABLISHED",
+  "real_xcelium_cases": 65,
+  "runs": [
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T234413.784278Z-trajectory-revision-audit-dc89ea8ddb7e/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260907T234413.784278Z-trajectory-revision-audit-dc89ea8ddb7e",
+      "run_status": "BLOCKED_DYNAMIC_QUALIFICATION",
+      "sha256": "261e20d32cc73831d521d9851b86bd370f590007ebc976f195fc119095bb6050"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T234447.381113Z-trajectory-revision-audit-8dbc50f6baf2/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260907T234447.381113Z-trajectory-revision-audit-8dbc50f6baf2",
+      "run_status": "BLOCKED_DYNAMIC_QUALIFICATION",
+      "sha256": "2830dbd6c10c14977f7e4a2b4d217803897bd8b9157497f7c5ee5456efb54fc0"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T234826.883747Z-dynamic-holdout-reservation-fe9c5d995c15/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260907T234826.883747Z-dynamic-holdout-reservation-fe9c5d995c15",
+      "run_status": "RESERVED_NOT_EVALUATED",
+      "sha256": "7a165ce3bc444ee32e912045849d29b9e8b6955049a40cf7b19d3d941d2dee66"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T234827.065413Z-dynamic-holdout-reservation-c6bf5ab61f03/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260907T234827.065413Z-dynamic-holdout-reservation-c6bf5ab61f03",
+      "run_status": "RESERVED_NOT_EVALUATED",
+      "sha256": "f52bc2f26fa34c0bac146aeb9ba51f2cc06e1453b6d5c0f15daf5c555a45fbf8"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T234715.623528Z-recipe-run-22c11634b854/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260907T234715.623528Z-recipe-run-22c11634b854",
+      "run_status": "PASS",
+      "sha256": "a89587ab04fedd8e9290d04fb4f10feb5b2466ec3cabf016861d95fdbcbeea15"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T235333.535070Z-recipe-run-279edfe375e7/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260907T235333.535070Z-recipe-run-279edfe375e7",
+      "run_status": "PASS",
+      "sha256": "2e5374d74d4f36014176af732d381f7ff9ed70e157f878375759c6a5c6e9e008"
+    },
+    {
+      "candidate_sha256": "ffeea08cf0c19c0cbd55582037001475bda3e19e53e9fe4da460207cb05a3ff6",
+      "case_count": 17,
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T235352.696779Z-recipe-run-324808bd67a4/manifest.json",
+      "diagnostic_pass_cases": 14,
+      "diagnostic_status": "FAIL_CORRELATION",
+      "integrity": "PASS",
+      "run_id": "20260907T235352.696779Z-recipe-run-324808bd67a4",
+      "run_status": "BLOCKED_WORKFLOW",
+      "sha256": "325e6cf32f17d6add01de1d8508d7effbc30db16f4496a638f9cd5ac0090f9fc"
+    },
+    {
+      "candidate_sha256": "30f7dca12371bf2d4d9cc7b88a28946541b88ad25e3ae142b6572bb2a2fa1eb1",
+      "case_count": 24,
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T000006.346756Z-recipe-run-f03b8e271c36/manifest.json",
+      "diagnostic_pass_cases": 14,
+      "diagnostic_status": "FAIL_CORRELATION",
+      "integrity": "PASS",
+      "run_id": "20260908T000006.346756Z-recipe-run-f03b8e271c36",
+      "run_status": "BLOCKED_WORKFLOW",
+      "sha256": "288e1e49b28576c553e6a7f198d7ef5418bc287d3ceaffde968be6170b271f00"
+    }
+  ],
+  "schema_version": 1,
+  "scope": "public_multirate_characterization_identification_controlled_revision_and_reservation",
+  "system_simulation": "NOT_RUN",
+  "tests": {
+    "aivw_passed": 614,
+    "cad_ai_passed": 504,
+    "cad_ai_skipped": 2
+  },
+  "valid_new_spectre_cases": 41
+}

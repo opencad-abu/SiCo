@@ -7,7 +7,7 @@ from .validate_package import text
 
 def model(value):
     from .validate import fields, envelope, identifier
-    fields(value, ('source', 'depends_on', 'configs', 'corners'), ('evidence',))
+    fields(value, ('source', 'depends_on', 'configs', 'corners'), ('evidence', 'cards'))
     envelope(value)
     for key, row in value['configs'].items():
         identifier(key)
@@ -30,6 +30,35 @@ def model(value):
         environments = {(value['configs'][ref]['simulator'], value['configs'][ref]['language']) for ref in row['configs']}
         if len(environments) != 1:
             fail('Corner configurations have incompatible simulators/languages')
+    for key, row in value.get('cards', {}).items():
+        identifier(key)
+        fields(row, ('name', 'kind', 'simulator', 'file_ref', 'lines', 'configs', 'sections'),
+               ('element_type', 'ports'))
+        text(row['name'])
+        text(row['simulator'])
+        identifier(row['file_ref'])
+        if row['kind'] not in {'model', 'subckt'}:
+            fail('Model card kind must be model or subckt')
+        if (not isinstance(row['lines'], list)
+                or not row['lines']
+                or any(type(line) is not int or line < 1 for line in row['lines'])
+                or len(row['lines']) != len(set(row['lines']))):
+            fail('Model card lines must be positive unique integers')
+        if (not isinstance(row['configs'], list)
+                or len(row['configs']) != len(set(row['configs']))
+                or set(row['configs']) - set(value['configs'])):
+            fail('Model card configs must reference existing configurations')
+        if (not isinstance(row['sections'], list)
+                or any(not isinstance(section, str) or not section
+                       for section in row['sections'])
+                or len(row['sections']) != len(set(row['sections']))):
+            fail('Model card sections must be unique non-empty strings')
+        if 'element_type' in row:
+            text(row['element_type'])
+        if 'ports' in row and (not isinstance(row['ports'], list)
+                               or any(not isinstance(port, str) or not port
+                                      for port in row['ports'])):
+            fail('Model card ports must be non-empty strings')
 
 
 def simulation(value):
@@ -68,6 +97,9 @@ def simulation(value):
         mapped = list(row['terminal_map'].values()) + list(row.get('implicit_terminals', {}))
         if len(mapped) != len(set(mapped)) or set(mapped) != set(order):
             fail('Terminal map must cover netlist terminals exactly once')
+        for net, value in (row.get('implicit_terminals') or {}).items():
+            text(net)
+            text(value)
         for mapping in row['parameters'].values():
             if unknown(mapping):
                 continue

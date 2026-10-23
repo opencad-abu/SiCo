@@ -1,0 +1,371 @@
+{
+  "contract_items_pending": [
+    "supply_window",
+    "dc_vout_relation",
+    "load_dependence",
+    "aon_en_polarity",
+    "aon_en_threshold",
+    "transition_policy",
+    "settling_definition",
+    "vout_tolerance",
+    "supply_current_tolerance",
+    "latency_tolerance",
+    "repeat_policy",
+    "hidden_holdout",
+    "spectre_rnm_correlation"
+  ],
+  "handoff_digest": "sha256:47beddd2b28c2beb3f57a5936dcdd7587c499ca66af91b526267d0790a7590e6",
+  "handoff_id": "amsLDO.behavior-calibration.handoff.v1",
+  "kind": "ldo-behavior-calibration-handoff",
+  "runs": [
+    {
+      "case_count": 18,
+      "case_ids": [
+        "dc-supply-00",
+        "dc-supply-01",
+        "dc-supply-02",
+        "dc-supply-03",
+        "dc-supply-04",
+        "dc-load-00",
+        "dc-load-01",
+        "dc-load-02",
+        "dc-enable-00",
+        "dc-enable-01",
+        "dc-enable-02",
+        "dc-enable-03",
+        "dc-enable-04",
+        "dc-enable-05",
+        "tran-startup",
+        "tran-enable-rise",
+        "tran-enable-fall",
+        "tran-supply-step"
+      ],
+      "control_manifest": {
+        "path": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T000251.595490Z-recipe-run-49de8a1311e3/manifest.json",
+        "sha256": "302dc87e9613af151d6e051d4791b60fa5b020ac504e5ad0639f0ea541f4b4a0"
+      },
+      "measurement_contract": {
+        "extraction": "linear_interpolation_between_bracketing_samples_no_extrapolation",
+        "sample_times_s": [
+          0.0005,
+          0.001,
+          0.002,
+          0.004
+        ],
+        "signals": {
+          "EN": "V",
+          "IDD": "A",
+          "VDD": "V",
+          "VOUT": "V",
+          "VSS": "V"
+        },
+        "time_unit": "s",
+        "tolerance_status": "BLOCKED_CONTRACT"
+      },
+      "model_files": [
+        {
+          "relative_path": "gpdk045.scs",
+          "sha256": "549a462274a2f1efb833d97b77fd7f6596fa88a4b160e850f2e33464ac8455ff",
+          "size": 6524,
+          "staged_sha256": "549a462274a2f1efb833d97b77fd7f6596fa88a4b160e850f2e33464ac8455ff",
+          "staged_size": 6524
+        },
+        {
+          "relative_path": "gpdk045_bipolar.scs",
+          "sha256": "5abb29610c8f609235a18f59b53d8bc5810e8a053f20687ea40cc69ada6f4435",
+          "size": 26292,
+          "staged_sha256": "5abb29610c8f609235a18f59b53d8bc5810e8a053f20687ea40cc69ada6f4435",
+          "staged_size": 26292
+        },
+        {
+          "relative_path": "gpdk045_diode.scs",
+          "sha256": "336f9aa6d61f14c583878e688d4890d78f20a789e2736163823a0b52573f8c22",
+          "size": 29250,
+          "staged_sha256": "336f9aa6d61f14c583878e688d4890d78f20a789e2736163823a0b52573f8c22",
+          "staged_size": 29250
+        },
+        {
+          "relative_path": "gpdk045_inductor.scs",
+          "sha256": "f34788e96a5ab22787a54a414b00f5e71b974b5304d9e7bf86b793baeffbec89",
+          "size": 2906,
+          "staged_sha256": "f34788e96a5ab22787a54a414b00f5e71b974b5304d9e7bf86b793baeffbec89",
+          "staged_size": 2906
+        },
+        {
+          "relative_path": "gpdk045_mimcap.scs",
+          "sha256": "54346a623fe999534e06e196892a21eb413d3e0cabcafea3a58a6e1eb51d3449",
+          "size": 3060,
+          "staged_sha256": "54346a623fe999534e06e196892a21eb413d3e0cabcafea3a58a6e1eb51d3449",
+          "staged_size": 3060
+        },
+        {
+          "relative_path": "gpdk045_mos.scs",
+          "sha256": "4cece5fcde03aa0addfd42d5e06d9c270c42dc91f88cd0ec7e4256c98408fcae",
+          "size": 4052805,
+          "staged_sha256": "4cece5fcde03aa0addfd42d5e06d9c270c42dc91f88cd0ec7e4256c98408fcae",
+          "staged_size": 4052805
+        },
+        {
+          "relative_path": "gpdk045_moscap.scs",
+          "sha256": "b8b38718f9efa11062dc311934333ed206f2d61ac5416e2d9772cd1b9ef90a9e",
+          "size": 1119051,
+          "staged_sha256": "b8b38718f9efa11062dc311934333ed206f2d61ac5416e2d9772cd1b9ef90a9e",
+          "staged_size": 1119051
+        },
+        {
+          "relative_path": "gpdk045_resistor.scs",
+          "sha256": "96075d65ce8cf865a79d726080f1ec9bddcaad5d8451afd586be62ddc1a5710a",
+          "size": 83647,
+          "staged_sha256": "96075d65ce8cf865a79d726080f1ec9bddcaad5d8451afd586be62ddc1a5710a",
+          "staged_size": 83647
+        },
+        {
+          "relative_path": "gpdk045_soa.scs",
+          "sha256": "84f3c6dd8d414af7d1370d577ea159109b09f843fd1c5a0fda2805234fe29814",
+          "size": 12973,
+          "staged_sha256": "84f3c6dd8d414af7d1370d577ea159109b09f843fd1c5a0fda2805234fe29814",
+          "staged_size": 12973
+        }
+      ],
+      "observations": {
+        "path": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.rnm_candidate/runs/20260907T000251.595490Z-recipe-run-49de8a1311e3/checks/gates/exploratory/exploratory-observations.json",
+        "sha256": "b889538d876c86d242fa69f84a93084cfcb267eeedbe19516c561d756910701e"
+      },
+      "observed_ranges": {
+        "dc": {
+          "IDD": [
+            0.0001693153469409096,
+            0.0009207575162892718
+          ],
+          "VOUT": [
+            0.01403957941065986,
+            1.585447045653331
+          ]
+        },
+        "transient": {
+          "IDD": [
+            -0.00128935975171127,
+            0.02541166146755748
+          ],
+          "VOUT": [
+            0.0,
+            1.478839500951611
+          ]
+        }
+      },
+      "payload_manifest": {
+        "path": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.rnm_candidate/runs/20260907T000251.595490Z-recipe-run-49de8a1311e3/payload-manifest.json",
+        "sha256": "94a886871ee82c753a6f77202a63abe4c259052b859376f18d317beff8ae89c9"
+      },
+      "plan": {
+        "digest": "sha256:0012418407a22bbbbc0f590a631056d14d4775deda13a2546166651800bc127e",
+        "path": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.rnm_candidate/runs/20260907T000251.595490Z-recipe-run-49de8a1311e3/checks/gates/exploratory/exploratory-plan.json",
+        "sha256": "6417743c617190faa9a2703d2840cf6381e031fbfff581263af74194dac3add5"
+      },
+      "psf_artifact_count": 36,
+      "recipe_id": "ldo.aon_exploration",
+      "run_id": "20260907T000251.595490Z-recipe-run-49de8a1311e3",
+      "source_generation": "351942e09e4444b4ae89b098e9e5bc0d3fde90ff3d57ca9c7afee0296e20a0ee",
+      "source_generation_after": "351942e09e4444b4ae89b098e9e5bc0d3fde90ff3d57ca9c7afee0296e20a0ee",
+      "source_generation_before": "351942e09e4444b4ae89b098e9e5bc0d3fde90ff3d57ca9c7afee0296e20a0ee",
+      "stimulus_domains": {
+        "en_v": [
+          0.0,
+          0.5,
+          1.0,
+          1.5,
+          2.0,
+          2.5
+        ],
+        "load_resistance_ohm": [
+          5000.0,
+          10000.0,
+          20000.0
+        ],
+        "vdd_v": [
+          1.65,
+          1.9,
+          2.4,
+          2.9,
+          3.15
+        ]
+      },
+      "topology": "LDO_AON"
+    },
+    {
+      "case_count": 10,
+      "case_ids": [
+        "dc-supply-00",
+        "dc-supply-01",
+        "dc-supply-02",
+        "dc-supply-03",
+        "dc-supply-04",
+        "dc-load-00",
+        "dc-load-01",
+        "dc-load-02",
+        "tran-startup",
+        "tran-supply-step"
+      ],
+      "control_manifest": {
+        "path": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T000003.816042Z-recipe-run-58789411bf49/manifest.json",
+        "sha256": "0d1f801404b8b3726d2181ba6c2c8bac5bb9afd2faecb0c9c26fbbe1d8ee3732"
+      },
+      "measurement_contract": {
+        "extraction": "linear_interpolation_between_bracketing_samples_no_extrapolation",
+        "sample_times_s": [
+          0.0005,
+          0.001,
+          0.002,
+          0.004
+        ],
+        "signals": {
+          "IDD": "A",
+          "VDD": "V",
+          "VOUT": "V",
+          "VSS": "V"
+        },
+        "time_unit": "s",
+        "tolerance_status": "BLOCKED_CONTRACT"
+      },
+      "model_files": [
+        {
+          "relative_path": "gpdk045.scs",
+          "sha256": "549a462274a2f1efb833d97b77fd7f6596fa88a4b160e850f2e33464ac8455ff",
+          "size": 6524,
+          "staged_sha256": "549a462274a2f1efb833d97b77fd7f6596fa88a4b160e850f2e33464ac8455ff",
+          "staged_size": 6524
+        },
+        {
+          "relative_path": "gpdk045_bipolar.scs",
+          "sha256": "5abb29610c8f609235a18f59b53d8bc5810e8a053f20687ea40cc69ada6f4435",
+          "size": 26292,
+          "staged_sha256": "5abb29610c8f609235a18f59b53d8bc5810e8a053f20687ea40cc69ada6f4435",
+          "staged_size": 26292
+        },
+        {
+          "relative_path": "gpdk045_diode.scs",
+          "sha256": "336f9aa6d61f14c583878e688d4890d78f20a789e2736163823a0b52573f8c22",
+          "size": 29250,
+          "staged_sha256": "336f9aa6d61f14c583878e688d4890d78f20a789e2736163823a0b52573f8c22",
+          "staged_size": 29250
+        },
+        {
+          "relative_path": "gpdk045_inductor.scs",
+          "sha256": "f34788e96a5ab22787a54a414b00f5e71b974b5304d9e7bf86b793baeffbec89",
+          "size": 2906,
+          "staged_sha256": "f34788e96a5ab22787a54a414b00f5e71b974b5304d9e7bf86b793baeffbec89",
+          "staged_size": 2906
+        },
+        {
+          "relative_path": "gpdk045_mimcap.scs",
+          "sha256": "54346a623fe999534e06e196892a21eb413d3e0cabcafea3a58a6e1eb51d3449",
+          "size": 3060,
+          "staged_sha256": "54346a623fe999534e06e196892a21eb413d3e0cabcafea3a58a6e1eb51d3449",
+          "staged_size": 3060
+        },
+        {
+          "relative_path": "gpdk045_mos.scs",
+          "sha256": "4cece5fcde03aa0addfd42d5e06d9c270c42dc91f88cd0ec7e4256c98408fcae",
+          "size": 4052805,
+          "staged_sha256": "4cece5fcde03aa0addfd42d5e06d9c270c42dc91f88cd0ec7e4256c98408fcae",
+          "staged_size": 4052805
+        },
+        {
+          "relative_path": "gpdk045_moscap.scs",
+          "sha256": "b8b38718f9efa11062dc311934333ed206f2d61ac5416e2d9772cd1b9ef90a9e",
+          "size": 1119051,
+          "staged_sha256": "b8b38718f9efa11062dc311934333ed206f2d61ac5416e2d9772cd1b9ef90a9e",
+          "staged_size": 1119051
+        },
+        {
+          "relative_path": "gpdk045_resistor.scs",
+          "sha256": "96075d65ce8cf865a79d726080f1ec9bddcaad5d8451afd586be62ddc1a5710a",
+          "size": 83647,
+          "staged_sha256": "96075d65ce8cf865a79d726080f1ec9bddcaad5d8451afd586be62ddc1a5710a",
+          "staged_size": 83647
+        },
+        {
+          "relative_path": "gpdk045_soa.scs",
+          "sha256": "84f3c6dd8d414af7d1370d577ea159109b09f843fd1c5a0fda2805234fe29814",
+          "size": 12973,
+          "staged_sha256": "84f3c6dd8d414af7d1370d577ea159109b09f843fd1c5a0fda2805234fe29814",
+          "staged_size": 12973
+        }
+      ],
+      "observations": {
+        "path": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.rnm_candidate/runs/20260907T000003.816042Z-recipe-run-58789411bf49/checks/gates/exploratory/exploratory-observations.json",
+        "sha256": "b4f8bbaa9d325c98618a60e82c0c97c0785889f942dc51f4e09f49164ddda588"
+      },
+      "observed_ranges": {
+        "dc": {
+          "IDD": [
+            0.0005396410738895476,
+            0.0009185671851785136
+          ],
+          "VOUT": [
+            2.143100511895976,
+            2.901601293977625
+          ]
+        },
+        "transient": {
+          "IDD": [
+            0.0,
+            0.06850786252773909
+          ],
+          "VOUT": [
+            0.0,
+            3.377152069686601
+          ]
+        }
+      },
+      "payload_manifest": {
+        "path": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.rnm_candidate/runs/20260907T000003.816042Z-recipe-run-58789411bf49/payload-manifest.json",
+        "sha256": "f24d76e53e622296a544ff2e4f13bddbdf6742c6ff241169eb09fc1c4d52f162"
+      },
+      "plan": {
+        "digest": "sha256:65baef303b053d14224b910dcfe897cfdb80fded3629e68199bdc5a49acff93e",
+        "path": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.rnm_candidate/runs/20260907T000003.816042Z-recipe-run-58789411bf49/checks/gates/exploratory/exploratory-plan.json",
+        "sha256": "6b2cc6446948f35d4144992a30b49c6d76df40aceb7c1111deda9d3baefa9eff"
+      },
+      "psf_artifact_count": 20,
+      "recipe_id": "ldo.master_exploration",
+      "run_id": "20260907T000003.816042Z-recipe-run-58789411bf49",
+      "source_generation": "7b67ef6da4a3172ca4339f2368982bf7e0f33c0b290e14889fc1573d47fec8a8",
+      "source_generation_after": "7b67ef6da4a3172ca4339f2368982bf7e0f33c0b290e14889fc1573d47fec8a8",
+      "source_generation_before": "7b67ef6da4a3172ca4339f2368982bf7e0f33c0b290e14889fc1573d47fec8a8",
+      "stimulus_domains": {
+        "en_v": [],
+        "load_resistance_ohm": [
+          5000.0,
+          10000.0,
+          20000.0
+        ],
+        "vdd_v": [
+          4.25,
+          4.5,
+          5.0,
+          5.5,
+          5.75
+        ]
+      },
+      "topology": "LDO_MASTER"
+    }
+  ],
+  "schema_version": 1,
+  "source": {
+    "analysis": "tran",
+    "dataset": "exploratory_observation",
+    "experiment_contract_sha256": "dea1b33d248c344f4831b389a6a7be1b0270eee10653df734e5d985adb413361",
+    "interface_contract_sha256": "ffbe024af0917ad8e91a922c71e075c9042ffb21bda4e000d2a70375c17d3873",
+    "model_file": "gpdk045.scs",
+    "model_section": "tt",
+    "temperature_c": 27.0
+  },
+  "status": "observed_pending_contract",
+  "verdict_policy": {
+    "behavior_verdict": "NOT_ESTABLISHED",
+    "correlation_status": "BLOCKED_CONTRACT",
+    "publication": "human_approval_required",
+    "tolerance_evaluation": "not_performed"
+  }
+}

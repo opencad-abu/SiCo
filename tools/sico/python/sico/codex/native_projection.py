@@ -86,7 +86,7 @@ def operation_status(item, observed):
 class NativeProjection:
     def __init__(self, backend, records=()):
         self.backend = backend
-        self.pending, self.completed, self.latest = {}, set(), {}
+        self.pending, self.completed, self.latest = {}, {}, {}
         self.compacted, self.compaction_items = set(), set()
         # Recover unfinished receipts only for the task owning the current state.
         task = backend.state.task.get("id")
@@ -107,7 +107,7 @@ class NativeProjection:
                 and payload.get("item_terminal")
             ):
                 self.pending.pop(key, None)
-                self.completed.add(key)
+                self.completed[key] = (payload.get("result") or {}).get("status", "recorded")
 
     @staticmethod
     def key(native):
@@ -130,6 +130,10 @@ class NativeProjection:
         self.latest.clear()
         self.compacted.clear()
         self.compaction_items.clear()
+
+    def external_pending(self):
+        """Whether a native operation that may change the workspace is still running."""
+        return any(row["native"]["item_type"] in TOOLS for row in self.pending.values())
 
     def start(self, native, item, *, running=True):
         key = self.key(native)
@@ -183,7 +187,7 @@ class NativeProjection:
             if len(row["buffer"]) == OUTPUT_CHARS:
                 self._flush(row)
 
-    def finish_item(self, native, item=None):
+    def finish_item(self, native, item=None, *, unconfirmed=False):
         key = self.key(native)
         if key in self.completed:
             return
@@ -198,8 +202,11 @@ class NativeProjection:
         kind = native["item_type"]
         if kind in TOOLS:
             status = operation_status(value, observed)
+            if unconfirmed and status == "needs_reconcile":
+                status = "unconfirmed"
             summary = {"ok": "操作已完成", "tool_error": "操作未成功",
-                       "needs_reconcile": "操作结果待核对；未自动重发"}[status]
+                       "needs_reconcile": "操作结果待核对；未自动重发",
+                       "unconfirmed": "操作结果未确认；未自动重发"}[status]
             if kind == "commandExecution" and type(value.get("exitCode")) is int:
                 summary += "；退出码 " + str(value["exitCode"])
             result = self.pack({"status": status, "summary": summary,
@@ -213,7 +220,7 @@ class NativeProjection:
             self.snapshot("native" if kind in STATES else "plan", native, data, item_terminal=True,
                           status="recorded" if observed else "needs_reconcile")
         self.pending.pop(key)
-        self.completed.add(key)
+        self.completed[key] = status if kind in TOOLS else "recorded"
         if kind == "contextCompaction" and observed:
             self.compaction_items.add((native["thread_id"], native["turn_id"]))
         if (kind in TOOLS and self.backend.active and not self.pending
@@ -221,10 +228,10 @@ class NativeProjection:
                 and not self.backend.state.task.get("waiting_audits")):
             self.backend._activity("waiting_model", "等待 LLM 响应")
 
-    def finish(self, turn_id=None):
+    def finish(self, turn_id=None, *, unconfirmed=False):
         for row in list(self.pending.values()):
             if turn_id is None or row["native"]["turn_id"] == turn_id:
-                self.finish_item(row["native"])
+                self.finish_item(row["native"], unconfirmed=unconfirmed)
         for thread, turn in sorted(self.compacted - self.compaction_items):
             if turn_id is None or turn == turn_id:
                 native = {"thread_id": thread, "turn_id": turn,

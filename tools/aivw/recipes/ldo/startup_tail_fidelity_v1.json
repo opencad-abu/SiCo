@@ -1,0 +1,17 @@
+{
+  "kind": "public-startup-tail-fidelity",
+  "parent_run": "20260908T001838.659739Z-recipe-run-d98265d71c14",
+  "case": "startup_rate_0",
+  "stop_s": 0.000125,
+  "window_s": [0.000102, 0.000107],
+  "cases": [
+    {"id":"moderate_replay", "ramp_s":2e-6, "errpreset":"moderate", "reltol":0.001, "vabstol":1e-6, "iabstol":1e-12, "maxstep":2e-7},
+    {"id":"conservative_5ns", "ramp_s":2e-6, "errpreset":"conservative", "reltol":1e-5, "vabstol":1e-8, "iabstol":1e-14, "maxstep":5e-9},
+    {"id":"conservative_2ns", "ramp_s":2e-6, "errpreset":"conservative", "reltol":1e-6, "vabstol":1e-9, "iabstol":1e-15, "maxstep":2e-9},
+    {"id":"conservative_2ns_repeat", "ramp_s":2e-6, "errpreset":"conservative", "reltol":1e-6, "vabstol":1e-9, "iabstol":1e-15, "maxstep":2e-9},
+    {"id":"startup_1us", "ramp_s":1e-6, "errpreset":"conservative", "reltol":1e-6, "vabstol":1e-9, "iabstol":1e-15, "maxstep":2e-9},
+    {"id":"startup_4us", "ramp_s":4e-6, "errpreset":"conservative", "reltol":1e-6, "vabstol":1e-9, "iabstol":1e-15, "maxstep":2e-9}
+  ],
+  "scope":"immutable_public_circuit_snapshot_numerical_fidelity_not_live_source_qualification",
+  "qualification":"NOT_ESTABLISHED"
+}

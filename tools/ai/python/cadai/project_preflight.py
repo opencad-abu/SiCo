@@ -65,6 +65,25 @@ def check_path(path, kind, minimum_bytes=0, minimum_inodes=0):
     return row
 
 
+def check_run_path(path, minimum_bytes=0, minimum_inodes=0):
+    """ADE owns run-directory creation; verify the nearest existing ancestor."""
+    requested = Path(path)
+    if requested.exists() or requested.is_symlink():
+        return check_path(path, "directory", minimum_bytes, minimum_inodes)
+    ancestor = requested
+    while ancestor.parent != ancestor and not ancestor.exists():
+        ancestor = ancestor.parent
+    row = check_path(str(ancestor), "directory", minimum_bytes, minimum_inodes)
+    row.update(
+        path=path,
+        resolved_path=str(requested.resolve()),
+        missing=True,
+        created_by="ade",
+        checked_ancestor=str(ancestor),
+    )
+    return row
+
+
 def preflight(args, identity, observe):
     observation(observe)
     checks = []
@@ -118,13 +137,13 @@ def preflight(args, identity, observe):
                 "modified_in_session": modified,
             },
         )
-    paths = [
-        {
-            **check_path(d["path"], "directory", d["min_free_bytes"], d["min_free_inodes"]),
-            "purpose": d["purpose"],
-        }
-        for d in args["directories"]
-    ]
+    paths = []
+    for d in args["directories"]:
+        if d["purpose"] == "run":
+            row = check_run_path(d["path"], d["min_free_bytes"], d["min_free_inodes"])
+        else:
+            row = check_path(d["path"], "directory", d["min_free_bytes"], d["min_free_inodes"])
+        paths.append({**row, "purpose": d["purpose"]})
     paths.extend(check_path(p, "model") for p in args["model_files"])
     if "simulator_executable" in args:
         paths.append(check_path(args["simulator_executable"], "executable"))

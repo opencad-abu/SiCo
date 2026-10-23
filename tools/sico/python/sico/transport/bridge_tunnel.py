@@ -10,7 +10,7 @@ import socket
 import tempfile
 import time
 
-from ..codex.local_process import LocalProcess
+from ..local_process import LocalProcess
 
 
 def node_name(value):

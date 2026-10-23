@@ -8,7 +8,15 @@ import sqlite3
 
 from .circuit_schema import tool
 from .circuit_spec_plan import preview_circuit
-from .circuit_spec_schema import MAX_INPUT_BYTES, CircuitSpecError, canonical, digest, validate
+from .circuit_spec_schema import (
+    BINDINGS,
+    MAX_INPUT_BYTES,
+    CircuitSpecError,
+    canonical,
+    digest,
+    validate,
+)
+from .schema_refs import factor
 from .template_adapt_schema import REQUEST as ADAPT_REQUEST
 from .template_adapt_schema import REQUEST_VERSION, device_rows, is_v2
 from .template_catalog import TemplateCatalog
@@ -29,20 +37,26 @@ TOOLS = [
         "preserve endpoints and global identities by default. To connect a source global through "
         "its existing boundary port, explicitly set net_scope_map[source_net]='local' and a local "
         "net_map/port_map name; this changes external global semantics and is recorded. "
-        "Returns spec, template_use, and the shared "
-        "preview_circuit_spec plan with source relative placement and PG role hints "
-        "(supply/ground candidates for caller confirmation; target nets stay local and PG "
-        "nets become explicit pins). No Virtuoso calls/OA writes; "
+        "Returns spec, template_use and the shared preview_circuit_spec plan with source relative "
+        "placement and PG role hints (candidates for caller confirmation; target nets stay local, "
+        "PG nets become explicit pins). No Virtuoso calls or OA writes; "
         "target geometry, device equivalence, live binding and creation remain unqualified.",
         PREPARE["properties"],
         PREPARE["required"],
     )
 ]
-TOOLS[0]["inputSchema"] = {
-    "type": "object", "additionalProperties": True, "oneOf": [PREPARE, ADAPT_REQUEST],
-}
-TOOLS[0]["description"] += (
-    " P2 opt-in: request_schema=cad.template.adapt-request.v2 takes the complete target spec, "
+# Both branches embed the same complete binding structure; the mutually
+# exclusive contract stays authored once (PREPARE/ADAPT_REQUEST/BINDINGS) and
+# the advertised schema is its factored projection.
+_SCHEMA, _SCHEMA_DEFS = factor(
+    {"type": "object", "additionalProperties": True, "oneOf": [PREPARE, ADAPT_REQUEST]},
+    {"bindings": BINDINGS},
+)
+if _SCHEMA_DEFS:
+    _SCHEMA["$defs"] = _SCHEMA_DEFS
+TOOLS[0]["inputSchema"] = _SCHEMA
+TOOLS[0]["help"] = (
+    "P2 opt-in: request_schema=cad.template.adapt-request.v2 takes the complete target spec, "
     "explicit mapping and fixed allowed_rule_refs against a v3 reuse contract. "
     "Up to eight whole optional-group omissions or one boundary peripheral group are supported; "
     "all residual instances remain in the target and all evidence is recomputed."
@@ -153,6 +167,9 @@ def attach_template(result, use, workspace=None, record=None):
         raise CircuitSpecError("template circuit preview input exceeds 192 KiB")
     validate(use, TEMPLATE_USE, "template_use")
     record = record or _record(use["template_ref"], workspace)
+    from .template_standard.replay import require_execution
+
+    require_execution(record)
     if record["template_ref"] != use["template_ref"]:
         raise CircuitSpecError("template reference changed")
     if is_v2(use):
@@ -230,6 +247,9 @@ def prepare_template(args, workspace=None):
     validate(args, TOOLS[0]["inputSchema"])
     args = copy.deepcopy(args)
     record = _record(args["template_ref"], workspace)
+    from .template_standard.replay import require_execution
+
+    require_execution(record)
     if args.get("request_schema") == REQUEST_VERSION:
         from .circuit_generic import _bounded
         from .template_adaptation import adapt

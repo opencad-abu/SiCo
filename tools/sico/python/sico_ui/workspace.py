@@ -10,7 +10,6 @@ from PyQt5.QtWidgets import (
     QApplication,
     QDockWidget,
     QHBoxLayout,
-    QLabel,
     QLayout,
     QSizePolicy,
     QTabWidget,
@@ -20,7 +19,17 @@ from PyQt5.QtWidgets import (
 )
 
 from .chrome import SiMainWindow, half_screen_rect
+from .appearance import load_appearance, system_point_size
+from .appearance_runtime import apply_appearance
 from .glyphs import triangle_icon
+from .help_menu import install_help_button
+from .status_footer import (
+    fit_service_status,
+    fit_status_rows,
+    install_status_bar,
+    status_font,
+    status_point_size as compact_status_point_size,
+)
 from .tools import install_tools_menu
 from .workspace_settings import open_settings
 
@@ -125,10 +134,14 @@ class CopilotWorkspace(WorkspaceMenus, SiMainWindow):
     launch_half = "left"
 
     def __init__(self, settings_path):
+        settings = open_settings(settings_path)
+        self.appearance = load_appearance(
+            settings, default_point_size=system_point_size())
+        apply_appearance(self.appearance)
         super().__init__()
         self.setObjectName("siliconCopilot")
         self.resize(1280, 820)
-        self.settings = open_settings(settings_path)
+        self.settings = settings
         self.pages, self.panels, self.panel_defaults = {}, {}, {}
         self.collapsible = {}
         self._rail_sync = False
@@ -147,63 +160,55 @@ class CopilotWorkspace(WorkspaceMenus, SiMainWindow):
         self.session_menu = self.menuBar().addMenu("会话")
         self.view_menu = self.menuBar().addMenu("视图")
         self.workspace_menu = self.menuBar().addMenu("工作区")
+        # 设置独立成顶层菜单：工作区只保留会话操作，工程级设置集中在这里。
+        self.settings_menu = self.menuBar().addMenu("设置")
+        from .appearance_settings import show_appearance_settings
+
+        self.appearance_action = self.settings_menu.addAction(
+            "外观设置…", lambda _checked=False: show_appearance_settings(self))
+        self.help_button, self.help_menu = install_help_button(self.menuBar(), self)
         self.tools_menu = self.menuBar().addMenu("工具")
         install_tools_menu(self.tools_menu, self)
         self._session_tail = None
         self.view_menu.addAction("恢复默认布局", lambda _checked=False: self.reset_layout())
-        status_height = self.fontMetrics().height() + 4
-        self.status = QLabel()
-        self.status.setObjectName("sessionStatus")
-        self.status.setTextFormat(Qt.PlainText)
-        self.status.setWordWrap(False)
-        self.status.setMinimumWidth(0)
-        self.status.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
-        self.status.setFixedHeight(status_height)
-        status_box = QWidget()
-        status_box.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
-        self._status_layout = QVBoxLayout(status_box)
-        self._status_layout.setContentsMargins(0, 0, 0, 0)
-        self._status_layout.setSpacing(0)
-        self._status_layout.addWidget(self.status)
-        self.statusBar().addWidget(status_box, 1)
-        # 项目服务状态固定显示在底部中间：左侧状态文本与右侧伸缩位等宽，
-        # 右侧永久区只保留基座/模型标签（服务标签由各 presenter 自行挂入）。
-        self.service_status = QWidget()
-        self.service_status.setObjectName("serviceStatus")
-        self.service_status.setFixedHeight(status_height)
-        self.service_status.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
-        self.service_status.hide()
-        self.service_status_layout = QHBoxLayout(self.service_status)
-        self.service_status_layout.setContentsMargins(0, 0, 0, 0)
-        self.service_status_layout.setSpacing(8)
-        self.statusBar().addWidget(self.service_status)
-        self.statusBar().addWidget(QWidget(), 1)
-        self.model_status = QLabel()
-        self.model_status.setObjectName("modelStatus")
-        self.model_status.setTextFormat(Qt.PlainText)
-        self.model_status.setMaximumWidth(240)
-        self.model_status.setWordWrap(False)
-        self.model_status.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        self.model_status.setFixedHeight(status_height)
-        self.statusBar().addPermanentWidget(self.model_status)
+        install_status_bar(self)
         self._default_state = None
+
+    def refresh_appearance(self, _preferences=None):
+        """Re-fit constant-height chrome after the interface label size changes."""
+        super().refresh_appearance(_preferences)
+        self.refresh_status_rows()
+        self.refresh_service_status()
+        self._apply_window_minimum()
+
+    def refresh_status_rows(self):
+        """Lay out the platform/session stack from the current readout font."""
+        fit_status_rows(self._status_layout, self.status_box,
+                        status_font(self.font()),
+                        self.statusBar())
+
+    def refresh_service_status(self):
+        """Keep the middle service labels on the same compact footer font."""
+        fit_service_status(
+            self.service_status,
+            status_font(self.font()),
+        )
+
+    def status_point_size(self):
+        """Bottom status rows use the fixed compact size."""
+        return compact_status_point_size()
 
     def add_platform_status(self, label):
         """Stack platform and session status using the right-hand model badge font."""
-        font = self.model_status.font()
-        for widget in (label, self.status):
-            widget.setFont(font)
-            widget.setWordWrap(False)
-            widget.setMinimumWidth(0)
-            widget.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
-            widget.setFixedHeight(widget.fontMetrics().height() + 4)
         self._status_layout.insertWidget(0, label)
+        self.refresh_status_rows()
 
     def add_service_status(self, widget):
         """Project-service status labels live in the middle of the status bar."""
 
         self.service_status_layout.addWidget(widget)
         self.service_status.show()
+        self.refresh_service_status()
 
     def add_workspace(self, key, title, widget):
         if key in self.pages:
@@ -211,9 +216,6 @@ class CopilotWorkspace(WorkspaceMenus, SiMainWindow):
         self.pages[key] = widget
         self.tabs.addTab(widget, title)
         self._equalize_tabs(self.tabs)
-        self.workspace_menu.addAction(
-            title, lambda _checked=False: self.tabs.setCurrentWidget(widget)
-        )
         return widget
 
     @staticmethod

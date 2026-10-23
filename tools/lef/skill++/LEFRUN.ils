@@ -20,12 +20,14 @@ procedure(lefRunUsesCadTempPath()
 
 procedure(LEF_pythonExe()
   let((pythonRoot)
-    pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
     or(SICO_envValue("LEF_PYTHON")
-       SICO_envValue("SICO_PYTHON")
-       when(pythonRoot
-         simplifyFilename(strcat(pythonRoot "/bin/python3") t))
-       "python3"))
+       SICO_installedPython()
+       progn(
+         pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
+         or(SICO_envValue("SICO_PYTHON")
+            when(pythonRoot
+              simplifyFilename(strcat(pythonRoot "/bin/python3") t))
+            "python3"))))
 )
 
 procedure(LEF_launchEnvCommand(args)

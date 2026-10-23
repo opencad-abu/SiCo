@@ -143,3 +143,24 @@ def parse(source: str) -> tuple[list[Token], list[Frame]]:
             stack[-1].children.append(token)
         previous = token
     return tokens, frames
+
+
+def unbalanced_tokens(source: str) -> list[Token]:
+    """Return the tokens that break parenthesis balance.
+
+    ``parse`` deliberately tolerates a stray ``)`` the way Virtuoso does
+    ("extra ')' ignored"), so audits that must not accept the warning read
+    the balance from here: stray closers first, then unclosed openers.
+    """
+
+    stack: list[Token] = []
+    strays: list[Token] = []
+    for token in tokenize(source):
+        if token.kind == "open":
+            stack.append(token)
+        elif token.kind == "close":
+            if stack:
+                stack.pop()
+            else:
+                strays.append(token)
+    return strays + stack

@@ -10,18 +10,27 @@ from __future__ import annotations
 import math
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
-from PyQt5.QtGui import QPainterPath, QPolygonF
+from PyQt5.QtGui import (
+    QColor,
+    QFont,
+    QFontMetrics,
+    QImage,
+    QPainter,
+    QPainterPath,
+    QPolygonF,
+)
 
 from .glyph_paint import (
     ACTION_GLYPH_SIZE,
     INPUT_GLYPH_SIZE,
     filled_icon,
+    filled_image,
     joined,
     polar,
     stroked,
     turned,
 )
-from .theme import ACCENT
+from .theme import ACCENT, active_palette
 
 # 标题栏/关闭这类家族字形由 cadgui 提供，这里按历史路径再导出。
 from cadgui.glyphs import close_icon as close_icon
@@ -111,6 +120,62 @@ def gear_icon(size=INPUT_GLYPH_SIZE, color=ACCENT):
     return filled_icon(_gear_outline(size), size, color)
 
 
+def _goal_outline(size):
+    """持续目标：左侧靶环，右上短箭带尾羽指向靶心。"""
+    center = QPointF(0.26 * size, 0.58 * size)
+    path = QPainterPath()
+    path.setFillRule(Qt.OddEvenFill)
+    path.addEllipse(center, 0.24 * size, 0.24 * size)
+    path.addEllipse(center, 0.14 * size, 0.14 * size)
+    tail, tip = QPointF(0.76 * size, 0.22 * size), QPointF(0.48 * size, 0.42 * size)
+    line = QPainterPath(tail)
+    line.lineTo(tip)
+    shaft = stroked(line, 0.08 * size)
+    dx, dy = tail.x() - tip.x(), tail.y() - tip.y()
+    length = math.hypot(dx, dy) or 1.0
+    ux, uy = dx / length, dy / length
+    px, py = -uy, ux
+    head = 0.18 * size
+    arrowhead = QPainterPath(tip)
+    arrowhead.lineTo(tip.x() + ux * head + px * 0.115 * size,
+                     tip.y() + uy * head + py * 0.115 * size)
+    arrowhead.lineTo(tip.x() + ux * head - px * 0.115 * size,
+                     tip.y() + uy * head - py * 0.115 * size)
+    arrowhead.closeSubpath()
+    path.addPath(shaft)
+    path.addPath(arrowhead)
+    for sign in (-1, 1):
+        feather = QPainterPath(tail)
+        feather.lineTo(tail.x() - ux * 0.04 * size + px * sign * 0.13 * size,
+                       tail.y() - uy * 0.04 * size + py * sign * 0.13 * size)
+        path.addPath(stroked(feather, 0.07 * size))
+    return path
+
+
+def goal_icon(size=INPUT_GLYPH_SIZE, color=ACCENT):
+    """持续目标图标：Qt 自绘的红棕靶环与带尾羽短箭。"""
+    return filled_icon(_goal_outline(size), size, color)
+
+
+def pen_icon(size=INPUT_GLYPH_SIZE, color=ACCENT):
+    """纪要图标：斜置的钢笔，笔尖保留气孔与中缝。"""
+    barrel = QPainterPath()
+    barrel.addRoundedRect(QRectF(0.39 * size, 0.07 * size, 0.22 * size, 0.49 * size),
+                          0.07 * size, 0.07 * size)
+    band = QPainterPath()
+    band.addRect(QRectF(0.36 * size, 0.58 * size, 0.28 * size, 0.06 * size))
+    nib = QPainterPath(QPointF(0.40 * size, 0.66 * size))
+    for x, y in ((0.60, 0.66), (0.66, 0.77), (0.50, 0.96), (0.34, 0.77)):
+        nib.lineTo(x * size, y * size)
+    nib.closeSubpath()
+    hole = QPainterPath()
+    hole.addEllipse(QPointF(0.50 * size, 0.76 * size), 0.045 * size, 0.045 * size)
+    slit = QPainterPath(QPointF(0.50 * size, 0.76 * size))
+    slit.lineTo(0.50 * size, 0.96 * size)
+    nib = nib.subtracted(joined(hole, stroked(slit, 0.035 * size)))
+    return filled_icon(turned(joined(barrel, band, nib), size, 45), size, color)
+
+
 def _send_outline(size):
     """纸飞机：机头朝右，机尾收一个缺口。"""
     path = QPainterPath(QPointF(0.94 * size, 0.50 * size))
@@ -165,6 +230,29 @@ def _refresh_outline(size):
 def refresh_icon(size=ACTION_GLYPH_SIZE, color=ACCENT):
     """刷新图标：Qt 自绘的红棕循环箭头，取代 share 里的 refresh 位图。"""
     return filled_icon(_refresh_outline(size), size, color)
+
+
+def rewind_image(size=16, color=ACCENT, background=None):
+    """会话气泡里的回退图标：直接绘制 ⤴︎ 字形，并加浅色圆底。"""
+    background = active_palette().selection if background is None else background
+    canvas = size * 4
+    image = QImage(canvas, canvas, QImage.Format_ARGB32_Premultiplied)
+    image.fill(Qt.transparent)
+    painter = QPainter(image)
+    painter.setRenderHint(QPainter.Antialiasing, True)
+    painter.setRenderHint(QPainter.TextAntialiasing, True)
+    painter.setPen(Qt.NoPen)
+    painter.setBrush(QColor(background))
+    painter.drawEllipse(QPointF(canvas / 2.0, canvas / 2.0), canvas * 0.47, canvas * 0.47)
+    font = QFont("DejaVu Sans")
+    if not QFontMetrics(font).inFontUcs4(0x2934):
+        font = QFont()
+    font.setPixelSize(int(canvas * 0.74))
+    painter.setFont(font)
+    painter.setPen(QColor(color))
+    painter.drawText(image.rect(), Qt.AlignCenter, "\u2934\ufe0e")
+    painter.end()
+    return image
 
 
 def _info_outline(size):
@@ -226,3 +314,37 @@ def _terminal_outline(size):
 def terminal_icon(size=ACTION_GLYPH_SIZE, color=ACCENT):
     """终端图标：Qt 自绘的红棕命令行窗口，取代 share 里的 terminal 位图。"""
     return filled_icon(_terminal_outline(size), size, color)
+
+
+# 工具计数图标：锤子和开口扳手先在横放坐标系里各画一条，再整体斜置成 X。
+# 每件工具的 x 轴都从柄尾指到头，所以锤头和扳手钳口的坐标是负的。
+HAMMER_HEAD = (-0.52, -0.33, 0.35, 0.06)     # x0, x1, 头高, 圆角
+HAMMER_HANDLE = (-0.46, 0.58, 0.155, 0.075)  # x0, x1, 柄粗, 圆角
+WRENCH_JAW = (-0.50, -0.22, 0.39, 0.11)      # x0, x1, 钳口块高, 圆角
+WRENCH_MOUTH = (-0.56, -0.34, 0.15, 0.045)   # 从钳口外缘切进去的开口
+WRENCH_HANDLE = (-0.36, 0.58, 0.145, 0.07)
+HAMMER_TURN = 45   # 锤子：头在左上，柄伸向右下
+WRENCH_TURN = 135  # 扳手：开口在右上，柄伸向左下
+
+
+def _tool_piece(size, spec):
+    """横放坐标系里的一块圆角矩形：以画布中心为原点，两件工具都由这样的块拼成。"""
+    x0, x1, height, radius = spec
+    path = QPainterPath()
+    path.addRoundedRect(QRectF(size / 2 + x0 * size, size / 2 - height * size / 2,
+                               (x1 - x0) * size, height * size),
+                        radius * size, radius * size)
+    return path
+
+
+def _hammer_wrench_outline(size):
+    """交叉的锤子与扳手：锤头（左上）是实心块，扳手开口从钳口外缘（右上）切进去。"""
+    hammer = joined(_tool_piece(size, HAMMER_HEAD), _tool_piece(size, HAMMER_HANDLE))
+    wrench = joined(_tool_piece(size, WRENCH_JAW), _tool_piece(size, WRENCH_HANDLE))
+    wrench = wrench.subtracted(_tool_piece(size, WRENCH_MOUTH))
+    return joined(turned(hammer, size, HAMMER_TURN), turned(wrench, size, WRENCH_TURN))
+
+
+def hammer_wrench_image(size, color=ACCENT):
+    """工具计数图标：文内位图的 Qt 自绘锤子扳手，在聊天里替代“工具”二字。"""
+    return filled_image(_hammer_wrench_outline(size), size, color)

@@ -75,8 +75,7 @@ def _canonical_digest(value: Mapping[str, Any]) -> str:
 def _artifact(path: object, digest: object, label: str) -> dict[str, str]:
     if not isinstance(path, str) or not Path(path).is_absolute():
         raise LDOCalibrationError("%s.path must be absolute" % label)
-    parts = Path(path).parts
-    if len(parts) >= 4 and parts[1] == "home" and parts[3] == "simulation":
+    if "~/simulation" in str(Path(path)):
         raise LDOCalibrationError("%s.path may not use the default Cadence output root" % label)
     return {"path": path, "sha256": _sha(digest, label + ".sha256")}
 

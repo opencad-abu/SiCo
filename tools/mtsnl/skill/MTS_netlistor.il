@@ -8,7 +8,7 @@
 ;------------------------------------------------------------------------------
 
 unless(and(boundp('mtsNetlistorVersion)
-             mtsNetlistorVersion=="20260924.sico.mts.launcher.v7"
+             mtsNetlistorVersion=="20261022.sico.mts.launcher.v9"
              isCallable('mtsNetlistorStart))
 
 unless(and(boundp('cadContextBuilding) cadContextBuilding)
@@ -24,7 +24,7 @@ unless(boundp('mtsNetlistorProcesses)
 )
 
 procedure(mtsNetlistorRevision()
-  "20260924.sico.mts.launcher.v7"
+  "20261022.sico.mts.launcher.v9"
 )
 
 procedure(mtsNetlistorBrand()
@@ -164,7 +164,7 @@ procedure(mtsNetlistorJsonEscape(value)
 )
 
 procedure(mtsNetlistorProcStartTime(pid)
-  let((path input line fields start)
+  prog((path input line fields start)
     path=strcat("/proc/" sprintf(nil "%d" pid) "/stat")
     unless(isFile(path) return(nil))
     input=infile(path)
@@ -183,7 +183,7 @@ procedure(mtsNetlistorProcStartTime(pid)
 )
 
 procedure(mtsNetlistorReadToken(path)
-  let((input line token)
+  prog((input line token)
     input=infile(path)
     unless(input return(nil))
     line=gets(line input)
@@ -220,7 +220,7 @@ procedure(mtsNetlistorTargetLibraries()
 )
 
 procedure(mtsNetlistorWriteSession(path cdsLibrary ownerPid ownerStart libraries)
-  let((output first row)
+  prog((output first row)
     output=outfile(path "w")
     unless(output return(nil))
     fprintf(output "{\n")
@@ -250,16 +250,6 @@ procedure(mtsNetlistorWriteSession(path cdsLibrary ownerPid ownerStart libraries
   )
 )
 
-procedure(mtsNetlistorPythonExe()
-  let((root)
-    root=SICO_envValue("SICO_PYTHON_ROOT")
-    or(SICO_envValue("SICO_PYTHON")
-       when(and(root strlen(root)>0)
-         simplifyFilename(strcat(root "/bin/python3") t))
-       "python3")
-  )
-)
-
 procedure(mtsNetlistorToolsRoot()
   SICO_toolsRoot()
 )
@@ -274,14 +264,14 @@ procedure(mtsNetlistorModuleRoot()
 )
 
 procedure(mtsNetlistorLaunchCommand(sessionPath parentPid)
-  let((python moduleRoot entry command)
-    python=mtsNetlistorPythonExe()
+  prog((moduleRoot entry command)
     moduleRoot=mtsNetlistorModuleRoot()
     entry=or(SICO_commandNative("mts-netlistor")
       when(moduleRoot simplifyFilename(strcat(moduleRoot "/bin/mts-netlistor") t)))
-    unless(and(python entry isFile(entry)) return(nil))
-    command=strcat("env SICO_PYTHON=" mtsNetlistorShellQuote(python) " "
-                   mtsNetlistorShellQuote(entry)
+    unless(and(entry isFile(entry)) return(nil))
+    ; The entry resolves the bundled runtime or the source dev-runtime itself.
+    ; Passing SICO_PYTHON here would conflict with a bundled runtime.
+    command=strcat(mtsNetlistorShellQuote(entry)
                    " gui --session " mtsNetlistorShellQuote(sessionPath)
                    " --parent-pid " sprintf(nil "%d" parentPid))
     SICO_guiPythonLaunchCommand(command "MTS_NETLISTOR_ORIG_LD_LIBRARY_PATH"
@@ -425,5 +415,5 @@ procedure(mtsNetlistorInitializeRuntime()
 unless(getShellEnvVar("VIRTUOSO_CONTEXT_BUILD")=="1"
   mtsNetlistorInitializeRuntime()
 )
-mtsNetlistorVersion="20260924.sico.mts.launcher.v7"
+mtsNetlistorVersion="20261022.sico.mts.launcher.v9"
 )

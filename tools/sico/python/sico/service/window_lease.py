@@ -4,6 +4,11 @@ from ..storage.project_files import window_directory
 from ..storage.project_lock import ProjectLock
 
 MESSAGE = "此工程已有一个 SiCo 窗口在运行；请使用那个窗口，或先关掉它。"
+# The CIW line is plain ASCII: some site CIWs do not render Chinese text.
+CIW_MESSAGE = (
+    "A SiCo window is already running for this project; "
+    "use that window or close it first."
+)
 
 
 class WindowAlreadyOpen(RuntimeError):

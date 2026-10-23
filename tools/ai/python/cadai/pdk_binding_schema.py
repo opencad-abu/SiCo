@@ -50,33 +50,31 @@ PROPERTIES = {
 BINDING_TOOLS = [
     tool(
         "bind_pdk_device",
-        "Adapt an explicitly selected search/get PDK snapshot/device/revision to generic master "
-        "and geometry component rows. Reads every detail page and revalidates the live binding. "
-        "With a workspace, confirmed standard usage, CDF rules and symbol geometry are mandatory; "
-        "caller policies cannot grant permission. use defaults to circuit. Requires saved static flat symbols, scalar terminals and rectangular pin figures. "
-        "Supply project policy/evidence for writable parameters and an explicit escape for EVERY "
-        "pin figure. Use policy=cdf_callback for built-in parameter handling; GUI editable/display "
-        "conditions are not evaluated or used as write gates. Returns conservative "
-        "creator-checked body bounds and pin centers, excluding labels/pin markers. "
-        "The netlist terminal order follows the model deck: when the collected deck terminals do "
-        "not match the CDF port names by name, pass the CAD-confirmed netlist_terminal_map "
-        "(CDF port -> deck terminal) instead of relying on port order. "
-        "The backend uses the built-in CDF callback executor when no project override exists; "
-        "omit extension_ref. For callbacks provide callback_order listing the writable parameters "
-        "once each, in the intended edit order. Parameter values stay literal data. "
-        "Use response_mode=compact and pass returned binding_ref in binding_refs to subsequent "
-        "preview/prepare calls. Complete master and geometry remain on the server; never rebuild "
-        "parameter metadata from a summary. Bound validation survives discovery snapshot eviction; "
-        "equivalent selections in the same session keep their binding_ref. "
-        "prepare and execute revalidate live dependencies. Geometry.instance "
-        "and parameters_digest are placeholders for the caller's chosen instance/parameters. "
-        "Optional classification supplies explicit project kind/attributes and source/revision "
-        "evidence for template matching; a known collected classification must agree. "
-        "Does not execute callbacks, select models, infer device classes or qualify simulation.",
+        "Adapt an explicitly selected search/get PDK device/revision to generic master and geometry "
+        "rows; reads every detail page and revalidates the live binding. With a workspace, confirmed "
+        "standard usage, CDF rules and symbol geometry are mandatory; caller policies cannot grant "
+        "permission. Supply project policy/evidence for writable parameters and an explicit escape "
+        "for every pin figure; policy=cdf_callback uses built-in parameter handling; GUI "
+        "conditions are not applied. Returns creator-checked body bounds and pin centers. "
+        "Pass the returned binding_ref in binding_refs to later "
+        "preview/prepare calls; complete master and geometry stay on the server, so never rebuild "
+        "parameter metadata from a summary. prepare/execute revalidate live dependencies.",
         PROPERTIES,
         tuple(k for k in PROPERTIES
               if k not in {"extension_ref", "response_mode", "netlist_terminal_map",
                            "callback_order", "classification", "use"}),
+        help_text=(
+            "Requires saved static flat symbols, scalar terminals and rectangular pin figures; "
+            "labels and pin markers are excluded from the bounds. Netlist terminal order follows "
+            "the model deck: when deck terminals do not match CDF port names, pass the CAD-confirmed "
+            "netlist_terminal_map instead of relying on port order. The backend uses the built-in "
+            "CDF executor when no project override exists; omit extension_ref. For callbacks provide "
+            "callback_order listing writable parameters once each in edit order; values stay literal. "
+            "Use response_mode=compact. Bound validation survives snapshot eviction; equivalent "
+            "selections in the same session keep their binding_ref. Geometry.instance and "
+            "parameters_digest are placeholders for the chosen instance/parameters. Optional "
+            "classification supplies project kind/attributes and source/revision evidence. Does not "
+            "execute callbacks, select models or qualify simulation."),
     )
 ]
 BINDING_TOOLS.append(EXTENSION_TOOL)

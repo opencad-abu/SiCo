@@ -33,11 +33,12 @@ def selected_state(environment=None, *, cwd=None, temporary=None, create=False):
             raise ValueError("temporary root conflicts with the inherited launch identity")
         selected = selected or candidate
     if selected is None:
-        return project_root(launch_directory(source, cwd), create=create)
+        return project_root(launch_directory(source, cwd), create=create,
+                            isolate_legacy=create)
     actual = project_root(selected.parent)
     if not same_root(actual, selected):
         raise ValueError("state root requires explicit migration; refusing a parallel root")
-    return project_root(selected.parent, create=create)
+    return project_root(selected.parent, create=create, isolate_legacy=create)
 
 
 def ai_directory(environment=None, *, cwd=None, temporary=None, create=False):

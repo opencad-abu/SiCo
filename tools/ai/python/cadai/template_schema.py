@@ -25,7 +25,7 @@ PIN_POLICY = {"inputOutput": "upper_left", "input": "lower_left", "output": "rig
 MAX_CAPTURE_BYTES = 64 * 1024 * 1024
 MAX_RESPONSE_BYTES = 90000
 ASSETS = ("schematic", "symbol", "layout")
-REF_PATTERN = r"^tpl_[0-9a-f]{64}$"
+REF_PATTERN = r"^(?:tpl_|ctpl_)[0-9a-f]{64}$"
 
 
 class TemplateError(ValueError):
@@ -109,17 +109,17 @@ def validate(value, schema, path="arguments"):
 
 
 NAME = string_schema(256, pattern=r"^[^\s/\\]+$")
-REF = string_schema(68, pattern=REF_PATTERN)
+REF = string_schema(69, pattern=REF_PATTERN)
 COUNT = {"type": "integer", "minimum": 0, "maximum": 100000}
 TARGET = {
     "template_ref": REF,
     "library": NAME,
     "cell": NAME,
     "reuse": reuse_input(NAME),
-    "classifications": {"type": "object", "maxProperties": 64,
+    "classifications": {"type": "object", "maxProperties": 1024,
                         "additionalProperties": MASTER["properties"]["classification"]},
     "capture_schema": {"type": "string", "enum": [CAPTURE_SCHEMA, CAPTURE_SCHEMA_V2],
-                       "default": CAPTURE_SCHEMA},
+                       "default": CAPTURE_SCHEMA_V2},
     "schematic_view": {**NAME, "default": "schematic"},
     "symbol_view": {**NAME, "default": "symbol"},
     "layout_view": {**NAME, "default": "layout"},
@@ -134,50 +134,86 @@ TARGET = {
 }
 TOOLS = [
     tool(
-        "extract_circuit_templates",
-        "Capture ONE explicit cell's requested schematic/symbol/layout "
-        "views read-only and publish a persistent private template under the launch workspace. "
-        "Optional classifications map source instance names to explicit kind/attributes/source_ref/"
-        "revision evidence. Unclassified project devices stay unknown; "
-        "PDK names do not infer type. "
-        "Optional reuse={mode:whole,allow_rename:boolean} requests a qualified v3 whole-circuit "
-        "template with all devices/pins protected, no optional groups or additions. It selects "
-        "capture v2 and requires schematic plus explicit classifications for every device. "
-        "reuse.mode=core instead requires core_instances, optional_groups [{id,instances}], "
-        "boundary_terminals [{endpoint:{instance,terminal},allowed_device_kinds,"
-        "min_additional_connections,max_additional_connections}], and explicit booleans "
-        "allow_omit_optional_groups/allow_add_boundary_group. Use source names; core and groups "
-        "must partition all devices. Group boundary pins and omitted nets/ports are derived "
-        "and authoritatively revalidated. Counts cover all non-core endpoints, including kept "
-        "optional devices. No geometry or names grant deletion rights. "
-        "On reuse failure the reference capture is retained, ok=false and reuse.template_ref=null; "
-        "inspect reuse.issues. A qualified template still needs target binding/geometry checks. "
-        "Missing views/bindings are reported; "
-        "flattened layout devices are not reconstructed. "
-        "No source save, binding update or simulation. "
-        "Use sequential cell calls for capture batches and the CLI for offline indexing. "
-        "Alternatively supply template_ref + reuse and only missing classifications to complete a "
-        "retained v2/v3 reference offline. Contract changes create a new immutable reference. "
-        "Source, assets and classifications are pinned; do not "
-        "combine template_ref with live source options. Live capture requires Virtuoso; saved "
-        "completion requires the workspace retained capture.",
-        TARGET,
-        (),
+        "project_circuit_template",
+        "Publish a sanitized standard L1/L2/L3 projection of ONE saved raw ctpl_ reference. "
+        "Offline: no Virtuoso call. Recomputes identity and capabilities, preserves use decisions. "
+        "L1 omits masters/geometry/parameters; L2 adds explicitly approved masters and geometry; "
+        "L3 retains observed physical literals. Master publication requires an exact "
+        "target+fingerprint allowlist in master_policy; unknown fingerprints are rejected. "
+        "Output omitted stores the projection privately. An explicit output directory publishes "
+        "only sanitized packages, separately from source/evidence catalogs. Retained evidence "
+        "stays private. Public projections support inspection/matching; creation requires raw.",
+        {
+            "template_ref": string_schema(69, pattern=r"^ctpl_[0-9a-f]{64}$"),
+            "level": {"type": "string", "enum": ["L1", "L2", "L3"]},
+            "output": string_schema(4096),
+            "master_policy": {
+                "type": "object", "additionalProperties": False, "required": ["masters"],
+                "properties": {"masters": {
+                    "type": "array", "maxItems": 256, "items": {
+                        "type": "object", "additionalProperties": False,
+                        "required": ["target", "fingerprint"], "properties": {
+                            "target": {"type": "object", "additionalProperties": False,
+                                       "required": ["library", "cell", "view"],
+                                       "properties": {k: NAME for k in
+                                                      ("library", "cell", "view")}},
+                            "fingerprint": string_schema(71, pattern=r"^sha256:[0-9a-f]{64}$"),
+                        },
+                    },
+                }},
+            },
+        },
+        ("template_ref", "level"),
         True,
     ),
     tool(
+        "extract_circuit_templates",
+        "Capture one explicit cell's requested schematic/symbol/layout views read-only and publish "
+        "a persistent private template under the launch workspace. Optional classifications map "
+        "source instance names to explicit kind/attributes/source_ref/revision evidence; "
+        "unclassified devices stay unknown (PDK names do not infer type). New captures publish "
+        "standard 0.1.0 packages. reuse={mode:whole,allow_rename:boolean} requests a qualified "
+        "whole-circuit template with all devices and pins protected; reuse.mode=core takes an "
+        "explicit declared partition of core instances, optional groups and boundary terminals. "
+        "On reuse failure the reference capture is retained (ok=false, reuse.template_ref=null; "
+        "see reuse.issues). No source save, binding update or simulation.",
+        TARGET,
+        (),
+        True,
+        help_text=(
+            "The whole mode selects capture v2 and requires a schematic plus explicit "
+            "classifications for every device. In core mode provide core_instances, "
+            "optional_groups and boundary_terminals (endpoint, allowed_device_kinds, "
+            "min/max_additional_connections) plus the allow_omit_optional_groups/"
+            "allow_add_boundary_group booleans; use source names, keep core and groups a partition "
+            "of all devices, and note counts cover all non-core endpoints including kept optional "
+            "devices. No geometry or names grant deletion rights; group boundary pins and omitted "
+            "nets/ports are derived and authoritatively revalidated. A qualified template still "
+            "needs target binding and geometry checks; missing views or bindings are reported. "
+            "Flattened layout devices are not reconstructed. Use sequential cell calls "
+            "for capture batches and the CLI for offline indexing. Contract changes create a new "
+            "immutable reference. Source, assets and classifications are pinned; do not combine "
+            "template_ref with live source options. Live capture requires Virtuoso; saved "
+            "completion requires the workspace retained capture."),
+    ),
+    tool(
         "query_circuit_templates",
-        "Search private, project (SICO_CIRCUIT_TEMPLATES_DIR), and bundled circuit templates. "
-        "Merge fixed references and prefer private/project/builtin candidates in that order. "
-        "For creation/style selection, omit tier and source-library filters initially so user "
-        "and enterprise preferences are considered before bundled examples. Choose the first "
-        "suitable tier after checking topology, interface and asset gaps; a name match alone "
-        "does not establish suitability. "
-        "Tier filters candidate origin; all configured copies remain visible and are checked "
-        "for reference conflicts. "
-        "Returns bounded summaries, coverage and fixed version references; "
-        "does not contact Virtuoso.",
+        "Search private, project (SICO_CIRCUIT_TEMPLATES_DIR) and bundled templates, "
+        "merging fixed references, preferring private/project/builtin. For "
+        "creation/style selection omit tier and source-library filters so preferences are "
+        "considered; choose the first suitable tier after checking topology, interface and asset "
+        "gaps — a name match alone is not suitability. Tier filters origin; all configured copies "
+        "stay visible and are conflict-checked. With a standard index, responses use "
+        "items/revision/complete/"
+        "next_cursor (pass it as cursor). Returns bounded summaries, coverage and fixed version "
+        "references; does not contact Virtuoso.",
         {
+            "data_format": {"type": "string", "enum": ["standard", "legacy"]},
+            "cursor": string_schema(2048),
+            "purpose": {"type": "string", "enum": ["reference", "reuse", "investigate"]},
+            "capability": {"type": "string", "enum": [
+                "topology-v1", "whole-reuse-v1", "core-reuse-v1", "placement-reference-v1",
+                "routing-reference-v1", "symbol-reference-v1", "layout-reference-v1"]},
             "query": string_schema(512),
             "tier": {"type": "string", "enum": ["builtin", "project", "private"]},
             "library": NAME,
@@ -192,9 +228,12 @@ TOOLS = [
                 32, pattern=r"^[0-9]+\.(?:[0-9]+|[a-z][a-z0-9-]*\.v?[0-9]+)$"
             ),
             "detail_level": {"type": "string", "enum": ["L1", "L2", "L3"]},
-            "limit": {"type": "integer", "minimum": 1, "maximum": 30, "default": 10},
+            "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 20},
             "offset": {"type": "integer", "minimum": 0, "maximum": 100000, "default": 0},
         },
+        help_text=(
+            "purpose=investigate includes unknown/failed entries; data_format=legacy searches old "
+            "SQLite catalogs explicitly."),
     ),
     tool(
         "get_circuit_template",
@@ -202,9 +241,12 @@ TOOLS = [
         "details are paged and preview returns local SVG/HTML artifacts. Gaps are explicit.",
         {
             "template_ref": REF,
+            "cursor": string_schema(2048),
             "section": {
                 "type": "string",
                 "enum": [
+                    "collection", "placement", "routing", "relation", "parameter", "reuse",
+                    "qualification", "sources", "file",
                     "summary",
                     "topology",
                     "schematic",
@@ -221,6 +263,8 @@ TOOLS = [
             "entity": {
                 "type": "string",
                 "enum": [
+                    "connections", "anchors", "annotations", "nodes", "segments", "crossings",
+                    "checks", "items", "assets", "boundaries", "optional_groups", "constraints",
                     "all",
                     "devices",
                     "nets",
@@ -249,7 +293,7 @@ TOOLS = [
                 ],
                 "default": "all",
             },
-            "limit": {"type": "integer", "minimum": 1, "maximum": 200, "default": 100},
+            "limit": {"type": "integer", "minimum": 1, "maximum": 200, "default": 20},
             "offset": {"type": "integer", "minimum": 0, "maximum": 100000, "default": 0},
         },
         ("template_ref",),
@@ -257,14 +301,11 @@ TOOLS = [
     tool(
         "match_circuit_template",
         "Match two stored direct-level topologies by typed device/terminal/net "
-        "graph isomorphism. Returns explicit mapping. Numeric sizing is ignored; "
-        "device class, terminal "
-        "identity, port directions and global semantics are preserved. "
-        "Port renaming must be explicit. "
-        "Exact matching requires optional NetworkX 3.2.1. match_mode=core consumes a v3 "
-        "reuse contract and enumerates typed boundary embeddings, returning needs_mapping "
-        "for symmetry. Explicit omitted_groups may select up to eight whole declared groups. "
-        "Bounded search can return inconclusive; no result authorizes creation.",
+        "graph isomorphism; returns an explicit mapping. Numeric sizing is ignored; device class, "
+        "terminal identity, port directions and global semantics are preserved, and port renaming "
+        "must be explicit. match_mode=core consumes a v3 reuse contract and enumerates typed "
+        "boundary embeddings. Explicit omitted_groups may select up to eight whole declared "
+        "groups. Bounded search can be inconclusive; no result authorizes creation.",
         {
             "template_ref": REF,
             "target_ref": REF,
@@ -279,6 +320,9 @@ TOOLS = [
             },
         },
         ("template_ref", "target_ref"),
+        help_text=(
+            "Exact matching requires optional NetworkX 3.2.1; core matching returns "
+            "needs_mapping for symmetry."),
     ),
 ]
 TOOL_NAMES = frozenset(t["name"] for t in TOOLS)

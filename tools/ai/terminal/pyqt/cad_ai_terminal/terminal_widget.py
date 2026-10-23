@@ -10,6 +10,28 @@ from sicoenv import read as environment_setting
 
 COLOR_SCHEME_ENV = "SICO_AI_TERMINAL_COLOR_SCHEME"
 DEFAULT_COLOR_SCHEME = "BreezeModified"
+SEARCH_BAR_LABEL = "查找："
+SEARCH_BAR_ACTIONS = {
+    "Match case": "区分大小写",
+    "Regular expression": "正则表达式",
+    "Highlight all matches": "高亮所有匹配",
+}
+
+
+def localize_terminal_search_bar(terminal) -> None:
+    """Translate the QTermWidget search controls created with the terminal."""
+
+    from PyQt5.QtWidgets import QLabel, QToolButton
+
+    label = terminal.findChild(QLabel, "findLabel")
+    if label is not None:
+        label.setText(SEARCH_BAR_LABEL)
+    options = terminal.findChild(QToolButton, "optionsButton")
+    menu = options.menu() if options is not None else None
+    for action in menu.actions() if menu is not None else ():
+        text = SEARCH_BAR_ACTIONS.get(action.text())
+        if text is not None:
+            action.setText(text)
 
 
 def create_terminal_widget(
@@ -60,5 +82,6 @@ def create_terminal_widget(
         terminal.setColorScheme(str(scheme))
     elif scheme_name in qtermwidget_type.availableColorSchemes():
         terminal.setColorScheme(scheme_name)
+    localize_terminal_search_bar(terminal)
     layout.addWidget(terminal, 1)
     return terminal

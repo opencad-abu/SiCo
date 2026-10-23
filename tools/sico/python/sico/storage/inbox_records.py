@@ -3,10 +3,9 @@
 import errno
 import math
 import os
-from pathlib import Path
 
 from ..core.contracts import BoundContext, identifier
-from ..transport.framing import ProtocolError, strict_json
+from cadai.json_values import ProtocolError, strict_json
 from .history import owned_directory
 from .journal import open_private, sync_directory
 from .roots import agent_root
@@ -60,7 +59,7 @@ def validate_input(row, input_id):
     try:
         required = {"id", "status", "message", "origin", "accepted_at"}
         if (not isinstance(row, dict) or not required <= set(row)
-                or set(row) - required - {"turn_options", "task_id", "service_address"}
+                or set(row) - required - {"turn_options", "task_id", "service_address", "started_at"}
                 or row["id"] != input_id or row["status"] not in INPUT_STATES
                 or row["origin"] not in {"chat", "quick", "startup"}
                 or type(row["accepted_at"]) not in (int, float)
@@ -71,8 +70,15 @@ def validate_input(row, input_id):
                 or message.get("id") != input_id or not isinstance(message.get("text"), str)):
             raise ValueError("Invalid input identity")
         BoundContext.from_record(message["context"])
+        if "ask_sequence" in message:
+            from ..core.ask_queue import ask_sequence
+
+            ask_sequence(message["ask_sequence"])
         if row.get("task_id") is not None:
             identifier(row["task_id"])
+        if "started_at" in row and (type(row["started_at"]) not in (int, float)
+                                    or not math.isfinite(row["started_at"])):
+            raise ValueError("Invalid input start time")
         address = row.get("service_address")
         if address is not None:
             if not isinstance(address, dict) or set(address) != {

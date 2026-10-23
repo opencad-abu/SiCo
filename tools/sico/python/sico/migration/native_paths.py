@@ -44,6 +44,9 @@ def disposition(relative, directory):
         return "archive", "native_session_index"
     if path in {"config.toml", "installation_id", ".sandbox_migration"}:
         return "archive", "native_configuration"
+    if path == "model_catalog.json":
+        # Regenerated from the provider URL on every session runtime start.
+        return "rebuild", "native_model_catalog"
     if (path in {"thread-writer-locks/.coordination.lock", ".tmp/plugins.sync.lock"}
             or re.fullmatch("thread-writer-locks/" + UUID + r"\.lock", path)):
         return "lock", "native_lock"

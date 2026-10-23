@@ -104,6 +104,7 @@ def classify(relative, directory):
         (r"ai/agent/sessions/" + ID + r"/end-release\.json", "retain", "session_release"),
         (r"ai/agent/sessions/" + ID + r"/events\.jsonl", "retain", "journal"),
         (r"ai/agent/sessions/" + ID + r"/events\.idx", "rebuild", "journal_index"),
+        (r"ai/agent/sessions/" + ID + r"/events\.fold\.json", "rebuild", "journal_fold"),
         (r"ai/agent/sessions/" + ID + r"/writer\.lock", "lock", "journal_lock"),
         (r"ai/agent/sessions/" + ID + r"/inbox/" + ID + r"\.json", "retain", "inbox"),
         (r"ai/agent/attachments/" + ID + "/" + HEX +

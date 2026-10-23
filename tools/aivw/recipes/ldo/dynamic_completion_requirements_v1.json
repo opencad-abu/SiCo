@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "kind": "dynamic-completion-requirements",
+  "scope": "source_bound_block_and_resistive_network",
+  "required_evidence": [
+    "approved_physical_time_acceptance_policy",
+    "all_public_case_correlation_pass",
+    "candidate_frozen_before_holdout_evaluation",
+    "single_event_and_sequence_holdout_qualified",
+    "two_identical_frozen_source_candidate_repeats",
+    "isolated_provider_candidate_revision_evidence",
+    "qualified_actual_model_provider_identity",
+    "candidate_bound_eenet_adapter_certificate",
+    "candidate_bound_ams_config_and_connect_rule_evidence",
+    "current_authenticated_source_snapshot",
+    "system_simulation_and_measurement_evidence"
+  ],
+  "product_limits_required_for_product_qualification": [
+    "current_limit_a",
+    "startup_limit_s",
+    "settling_limit_s"
+  ],
+  "publication": "separate_explicit_human_approval",
+  "incomplete_evidence_status": "NOT_ESTABLISHED"
+}

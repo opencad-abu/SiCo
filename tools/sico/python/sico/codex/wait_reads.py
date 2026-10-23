@@ -40,6 +40,10 @@ class WaitingReads:
                 return self.blocked("unproven_dependencies")
             audit.index.sync()
             for key, pending in audit.pending.items():
+                if not pending.get("blocking", True):
+                    # A supplementary question never gates model work: the
+                    # host releases the native request with an empty answer.
+                    continue
                 row = audit.index.audits[key]
                 if (row["task_id"] != self.loop.state.task["id"]
                         or row["context"] != context.record()
@@ -48,7 +52,7 @@ class WaitingReads:
                 if pending["rpc_id"] is None:
                     if (pending.get("source") != "host"
                             or not self.loop.runtime
-                            or pending.get("host_rpc") is not self.loop.runtime.rpc
+                            or not audit.requests.is_current()
                             or pending.get("host_connection_id") != self.loop.connection_id
                             or pending.get("host_thread_id") != self.loop.thread_id):
                         return self.blocked("stale_question_source")

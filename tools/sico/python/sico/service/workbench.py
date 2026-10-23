@@ -6,21 +6,13 @@ import uuid
 from contextlib import nullcontext
 from datetime import datetime, timezone
 
+from ..core.cad_ref import extract_cad_refs, target_from_snapshot
 from ..core.contracts import ToolResult
 from ..core.tools import Tool
 from ..storage.workbench import WorkbenchIndex, object_link
 
-INSTRUCTIONS = (
-    "用 set_copilot_stage 把实质性工程工作归属到具名工作和阶段。"
-    "后续工作复用返回的 work_id/stage_id；一个模型回合结束并不代表工程阶段完成。"
-    "记录阶段目标及其明确的验收标准。"
-    "用 list_copilot_data 查找已记录的输入和工具证据。当任务或阶段达到可报告的结论时，"
-    "调用 publish_copilot_report，提交 Markdown 并附上所用的确切证据 ID。"
-    "写明单位、缺失证据和下一步。outcome 为 completed 表示所报告范围已完成，"
-    "并不代表仿真规格通过。报告发布为带来源链接的固定版本；"
-    "不得编造证据 ID、数字或 URL。"
-    "这些应用工具既不执行 EDA 操作，也不申请新的执行许可。"
-)
+# Compatibility export; both task engines use core.workbench_instructions.
+from ..core.workbench_instructions import INSTRUCTIONS as INSTRUCTIONS
 
 TEXT = {"type": "string", "minLength": 1, "maxLength": 200}
 REF = {"type": "string", "minLength": 1, "maxLength": 96}
@@ -55,18 +47,29 @@ class WorkbenchService:
             raise WorkbenchError("Keep this execution in its selected work; reuse its work_id")
         if work_id:
             work = self.index.works.get(work_id)
-            if work is None or work["title"] != args["work_title"]:
-                raise WorkbenchError("Existing work identity/title does not match")
+            if work is None:
+                # Readable model-authored IDs are valid identities for a new
+                # work. Reject only a real collision with different contents.
+                work = {"id": work_id, "title": args["work_title"]}
+            elif work["title"] != args["work_title"]:
+                raise WorkbenchError(
+                    f"Work {work_id!r} already has title {work['title']!r}; "
+                    "use that title or choose a new work_id"
+                )
         else:
             work = {"id": "w_" + uuid.uuid4().hex, "title": args["work_title"]}
         if stage_id:
             stage = self.index.stages.get(stage_id)
-            if (
-                stage is None
-                or stage["work_id"] != work["id"]
-                or any(
-                    stage[key] != args[key] for key in ("stage_title", "objective", "acceptance")
-                )
+            if stage is None:
+                stage = {
+                    "id": stage_id,
+                    "work_id": work["id"],
+                    "status": "in_progress",
+                    **{key: args[key] for key in ("stage_title", "objective", "acceptance")},
+                }
+            elif stage["work_id"] != work["id"] or any(
+                stage[key] != args[key]
+                for key in ("stage_title", "objective", "acceptance")
             ):
                 raise WorkbenchError("Existing stage identity or criteria do not match")
         else:
@@ -80,6 +83,74 @@ class WorkbenchService:
             return ToolResult(data={"work": work, "stage": stage})
         self.emit("workbench.stage.selected", {"work": work, "stage": stage})
         return ToolResult(data={"work": work, "stage": stage})
+
+    def plan_stages(self, args, context):
+        from .workbench_plan import plan_stages
+
+        return plan_stages(self, args)
+
+    def update_stage(self, args, context):
+        current = self.active()
+        work_id, stage_id = args["work_id"], args["stage_id"]
+        status = args["status"]
+        if status not in {"active", "blocked", "reported", "closed"}:
+            raise WorkbenchError("Unsupported stage status")
+        if current["work_id"] != work_id or current["stage_id"] != stage_id:
+            if not current["work_id"]:
+                raise WorkbenchError(
+                    "No work/stage is selected for the current execution; "
+                    "call set_copilot_stage with the existing work_id/stage_id first"
+                )
+            raise WorkbenchError(
+                "Only the current execution's work/stage can be updated; "
+                "call set_copilot_stage with the existing work_id/stage_id first"
+            )
+        stage = self.index.stages.get(stage_id)
+        work = self.index.works.get(work_id)
+        if stage is None or work is None or stage.get("work_id") != work_id:
+            raise WorkbenchError("Unknown engineering work/stage")
+        reason = str(args.get("reason", "")).strip()
+        if status in {"blocked", "closed"} and not reason:
+            raise WorkbenchError("Blocked or closed stages require a reason")
+        report_id = str(args.get("report_id", "")).strip()
+        report_key = ""
+        if status == "reported":
+            candidates = [
+                row for row in self.index.reports.values()
+                if row.get("kind") == "published"
+                and row.get("work_id") == work_id
+                and row.get("stage_id") == stage_id
+                and report_id in {row.get("id"), row.get("key")}
+            ]
+            if not candidates and not report_id and stage.get("last_report"):
+                candidate = self.index.reports.get(stage["last_report"])
+                if candidate is not None:
+                    candidates = [candidate]
+            if not candidates:
+                raise WorkbenchError("A reported stage requires its published report_id")
+            report_key = max(
+                candidates, key=lambda row: row.get("version", 0)
+            ).get("key", "")
+        evidence_ids = []
+        for key in dict.fromkeys(args.get("evidence_ids", [])):
+            row = self.index.data.get(key)
+            if row is None or row.get("work_id") != work_id or row.get("data_type") == "report":
+                raise WorkbenchError("Evidence must be recorded data from this engineering work")
+            evidence_ids.append(key)
+        if len(evidence_ids) > 32:
+            raise WorkbenchError("At most 32 evidence IDs can be recorded")
+        updated = {
+            **stage,
+            "status": status,
+            "status_source": "model",
+            "reason": reason,
+            "blocker": str(args.get("blocker", "")).strip(),
+            "next_step": str(args.get("next_step", "")).strip(),
+            "evidence_ids": evidence_ids,
+            "report_id": report_key or report_id,
+        }
+        self.emit("workbench.stage.updated", {"work": work, "stage": updated})
+        return ToolResult(data={"work": work, "stage": updated})
 
     def listing(self, args, context):
         current = self.active()
@@ -173,9 +244,14 @@ class WorkbenchService:
             "evidence": evidence,
             **{key: args[key] for key in ("title", "markdown", "outcome", "next_steps")},
         }
+        target = target_from_snapshot(self.loop.state.context.snapshot)
+        report["object_refs"] = (
+            extract_cad_refs(report["markdown"], target, self.index.session_id)
+            if target is not None else []
+        )
         if previous and all(
             previous[k] == report[k]
-            for k in ("title", "markdown", "outcome", "next_steps", "evidence")
+            for k in ("title", "markdown", "outcome", "next_steps", "evidence", "object_refs")
         ):
             report = previous
         else:
@@ -226,6 +302,60 @@ def attach_workbench(loop):
             ["work_title", "stage_title", "objective", "acceptance"],
         ),
         (
+            "plan_copilot_stages",
+            "Record an ordered stage plan for an engineering work before execution. "
+            "Planned stages are visible in the task tree but are not executions. "
+            "Select a planned stage with set_copilot_stage to start it. A revision may "
+            "add stages or update the current work's plan; it does not invent execution facts. No CAD execution.",
+            service.plan_stages,
+            {
+                "work_title": TEXT,
+                "work_id": REF,
+                "note": {"type": "string", "maxLength": 2000},
+                "stages": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 32,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "stage_id": REF,
+                            "stage_title": TEXT,
+                            "objective": {**TEXT, "maxLength": 2000},
+                            "acceptance": {**TEXT, "maxLength": 4000},
+                            "depends_on": {
+                                "type": "array", "items": TEXT, "maxItems": 32,
+                            },
+                        },
+                        "required": ["stage_title", "objective", "acceptance"],
+                        "additionalProperties": False,
+                    },
+                },
+            },
+            ["work_title", "stages"],
+        ),
+        (
+            "update_copilot_stage",
+            "Record the model's current judgment for the current engineering work/stage. "
+            "Use active, blocked, reported or closed. Blocked and closed require a reason; "
+            "reported requires a published report. accepted is not model-writable. No CAD execution.",
+            service.update_stage,
+            {
+                "work_id": REF,
+                "stage_id": REF,
+                "status": {
+                    "type": "string",
+                    "enum": ["active", "blocked", "reported", "closed"],
+                },
+                "reason": {"type": "string", "maxLength": 2000},
+                "blocker": {"type": "string", "maxLength": 2000},
+                "next_step": {"type": "string", "maxLength": 2000},
+                "evidence_ids": {"type": "array", "items": REF, "maxItems": 32},
+                "report_id": REF,
+            },
+            ["work_id", "stage_id", "status"],
+        ),
+        (
             "list_copilot_data",
             "List registered evidence IDs and existing work/stage identities. "
             "Use returned IDs when publishing; never infer file references.",
@@ -258,14 +388,23 @@ def attach_workbench(loop):
             ["title", "markdown", "outcome", "next_steps", "evidence_ids"],
         ),
     ]
-    from .audit import QUESTION, AuditService
+    from ..core.audit_questions import QUESTION
+    from .audit import AuditService
 
-    loop.audit = AuditService(service)
+    from .audit_runtime import assemble
+    from ..codex.input_assembly import request_owner
+
+    loop.audit = AuditService(index=service.index, active_work=service.active,
+                              evidence=service.evidence, publish=service.emit, runtime=assemble(loop),
+                              requests=getattr(loop, "inputs", None) or request_owner(loop))
     definitions.append((
             "prepare_copilot_audit",
             "Register an evidence-bound decision before calling request_user_input. "
             "Use a stable request_id for idempotency. Returns the exact questions to ask; "
-            "this preparation does not wait for the user or authorize CAD operations.",
+            "this preparation does not wait for the user or authorize CAD operations. "
+            "Set review_class=blocking only when a missing decision must be answered before "
+            "dependent work; set supplementary for optional preferences or extra context the "
+            "model can resolve from its recommendation.",
             loop.audit.prepare,
             {
                 "request_id": REF, "title": TEXT,
@@ -273,6 +412,9 @@ def attach_workbench(loop):
                 "rationale": {**TEXT, "maxLength": 4000},
                 "questions": {"type": "array", "items": QUESTION, "minItems": 1, "maxItems": 3},
                 "evidence_ids": {"type": "array", "items": REF, "minItems": 1, "maxItems": 100},
+                "review_class": {"type": "string",
+                                 "enum": ["blocking", "supplementary"],
+                                 "default": "blocking"},
             },
             ["request_id", "title", "recommendation", "rationale", "questions", "evidence_ids"],
         ))

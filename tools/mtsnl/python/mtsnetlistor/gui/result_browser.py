@@ -22,6 +22,7 @@ from PyQt5.QtWidgets import (
 
 from cadgui.branding import logo_text
 from cadgui.chrome import SiDialog
+from cadgui.palette import active
 
 
 @dataclass(frozen=True)
@@ -157,7 +158,7 @@ class ResultBrowserDialog(SiDialog):
     def _item(text: str, payload: object | None = None) -> QTableWidgetItem:
         item = QTableWidgetItem(text)
         if payload is None:
-            item.setForeground(QColor("#7a8288"))
+            item.setForeground(QColor(active().muted))
         else:
             item.setData(ResultBrowserDialog._PAYLOAD_ROLE, payload)
             item.setToolTip("Double-click to open")

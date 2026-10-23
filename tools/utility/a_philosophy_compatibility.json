@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Reviewed compatibility entries. Each replacement is one concrete authoritative reference. Candidate scanning reports unregistered facades for further T12 review; canonical orchestration APIs are not scheduled for deletion.",
-  "includes": ["tools/utility/compatibility/sico-skill.json", "tools/utility/compatibility/sico-loaders.json", "tools/utility/compatibility/sico-environment.json", "tools/utility/compatibility/ai.json", "tools/utility/compatibility/aivw-agent.json", "tools/utility/compatibility/aivw-domain.json", "tools/utility/compatibility/aivw-executors.json", "tools/utility/compatibility/aivw-ldo.json", "tools/utility/compatibility/aivw-plugins.json", "tools/utility/compatibility/common-cadgui.json", "tools/utility/compatibility/common-cadlsf.json", "tools/utility/compatibility/common-cadprofile.json", "tools/utility/compatibility/common-cadview.json", "tools/utility/compatibility/drc.json", "tools/utility/compatibility/mts-core.json", "tools/utility/compatibility/mts-flow.json"],
+  "includes": ["tools/utility/compatibility/sico-skill.json", "tools/utility/compatibility/sico-loaders.json", "tools/utility/compatibility/sico-environment.json", "tools/utility/compatibility/ai.json", "tools/utility/compatibility/aivw-domain.json", "tools/utility/compatibility/aivw-executors.json", "tools/utility/compatibility/aivw-ldo.json", "tools/utility/compatibility/aivw-plugins.json", "tools/utility/compatibility/common-cadgui.json", "tools/utility/compatibility/common-cadlsf.json", "tools/utility/compatibility/common-cadprofile.json", "tools/utility/compatibility/common-cadview.json", "tools/utility/compatibility/drc.json", "tools/utility/compatibility/mts-core.json", "tools/utility/compatibility/mts-flow.json"],
   "search_paths": ["tools/sico/python", "tools/aivw/python", "tools/ai/python", "tools/common/python", "tools/drc/python", "tools/rce/python", "tools/lvs/python", "tools/lef/python", "tools/mtsnl/python", "tools/ai/terminal/pyqt", "tools/ai/skills/schematic-to-rnm/scripts"],
   "compatibility": [
     {
@@ -58,83 +58,6 @@
       "status": "retained",
       "allow_exposure": true,
       "evidence": ["tools/mtsnl/tests/test_gui_composition.py"]
-    },
-    {
-      "legacy": "aivworkbench.agent.runtime.RuntimeConfig",
-      "source": "tools/aivw/python/aivworkbench/agent/runtime.py",
-      "replacement": "tools/aivw/python/aivworkbench/agent/runtime_contract.py:RuntimeConfig",
-      "consumers": ["tools/aivw/python/aivworkbench/agent/__init__.py", "tools/aivw/tests/agent_runtime_cases.py"],
-      "owner": "tools/aivw/python/aivworkbench/agent/runtime_contract.py",
-      "exit_condition": "Migrate the listed consumers and supported external callers to the replacement owner; confirm no imports of these compatibility exports remain, then remove them in the next incompatible API version. The canonical operations still defined by this module remain supported.",
-      "status": "retained",
-      "allow_exposure": true,
-      "evidence": ["tools/aivw/tests/test_agent_m0.py"]
-    },
-    {
-      "legacy": "aivworkbench.agent.runtime.RuntimeResult",
-      "source": "tools/aivw/python/aivworkbench/agent/runtime.py",
-      "replacement": "tools/aivw/python/aivworkbench/agent/runtime_contract.py:RuntimeResult",
-      "consumers": ["tools/aivw/python/aivworkbench/agent/__init__.py"],
-      "owner": "tools/aivw/python/aivworkbench/agent/runtime_contract.py",
-      "exit_condition": "Migrate the listed consumers and supported external callers to the replacement owner; confirm no imports of these compatibility exports remain, then remove them in the next incompatible API version. The canonical operations still defined by this module remain supported.",
-      "status": "retained",
-      "allow_exposure": true,
-      "evidence": ["tools/aivw/tests/test_agent_m0.py"]
-    },
-    {
-      "legacy": "aivworkbench.agent.runtime.AgentState",
-      "source": "tools/aivw/python/aivworkbench/agent/runtime.py",
-      "replacement": "tools/aivw/python/aivworkbench/agent/runtime_contract.py:AgentState",
-      "consumers": ["tools/aivw/python/aivworkbench/agent/__init__.py", "tools/aivw/tests/agent_runtime_cases.py"],
-      "owner": "tools/aivw/python/aivworkbench/agent/runtime_contract.py",
-      "exit_condition": "Migrate the listed consumers and supported external callers to the replacement owner; confirm no imports of these compatibility exports remain, then remove them in the next incompatible API version. The canonical operations still defined by this module remain supported.",
-      "status": "retained",
-      "allow_exposure": true,
-      "evidence": ["tools/aivw/tests/test_agent_m0.py"]
-    },
-    {
-      "legacy": "aivworkbench.agent.tool_broker.ToolSpec",
-      "source": "tools/aivw/python/aivworkbench/agent/tool_broker.py",
-      "replacement": "tools/aivw/python/aivworkbench/agent/broker_contract.py:ToolSpec",
-      "consumers": ["tools/aivw/python/aivworkbench/agent/tool_broker.py"],
-      "owner": "tools/aivw/python/aivworkbench/agent/broker_contract.py",
-      "exit_condition": "Migrate the listed consumers and supported external callers to the replacement owner; confirm no imports of these compatibility exports remain, then remove them in the next incompatible API version. The canonical operations still defined by this module remain supported.",
-      "status": "retained",
-      "allow_exposure": true,
-      "evidence": ["tools/aivw/tests/test_agent_m0.py"]
-    },
-    {
-      "legacy": "aivworkbench.agent.tool_broker.ToolResult",
-      "source": "tools/aivw/python/aivworkbench/agent/tool_broker.py",
-      "replacement": "tools/aivw/python/aivworkbench/agent/broker_contract.py:ToolResult",
-      "consumers": ["tools/aivw/python/aivworkbench/agent/fake_tools.py", "tools/aivw/tests/agent_broker_cases.py"],
-      "owner": "tools/aivw/python/aivworkbench/agent/broker_contract.py",
-      "exit_condition": "Migrate the listed consumers and supported external callers to the replacement owner; confirm no imports of these compatibility exports remain, then remove them in the next incompatible API version. The canonical operations still defined by this module remain supported.",
-      "status": "retained",
-      "allow_exposure": true,
-      "evidence": ["tools/aivw/tests/test_agent_m0.py"]
-    },
-    {
-      "legacy": "aivworkbench.agent.tool_broker.BrokerResult",
-      "source": "tools/aivw/python/aivworkbench/agent/tool_broker.py",
-      "replacement": "tools/aivw/python/aivworkbench/agent/broker_contract.py:BrokerResult",
-      "consumers": ["tools/aivw/python/aivworkbench/agent/runtime_policy.py"],
-      "owner": "tools/aivw/python/aivworkbench/agent/broker_contract.py",
-      "exit_condition": "Migrate the listed consumers and supported external callers to the replacement owner; confirm no imports of these compatibility exports remain, then remove them in the next incompatible API version. The canonical operations still defined by this module remain supported.",
-      "status": "retained",
-      "allow_exposure": true,
-      "evidence": ["tools/aivw/tests/test_agent_m0.py"]
-    },
-    {
-      "legacy": "aivworkbench.agent.providers.bundle.build_relocatable_bundle",
-      "source": "tools/aivw/python/aivworkbench/agent/providers/bundle.py:build_relocatable_bundle",
-      "replacement": "deploy/package_runtime_release.py:package",
-      "consumers": ["tools/aivw/tests/test_bundle_release_boundary.py"],
-      "owner": "deploy/package_runtime_release.py",
-      "exit_condition": "Supported release callers use the runtime packager with qualified native artifacts; remove the fail-closed tombstone in the next incompatible provider API version. Never restore source bundle construction.",
-      "status": "tombstone",
-      "allow_exposure": false,
-      "evidence": ["tools/aivw/tests/test_bundle_release_boundary.py"]
     },
     {
       "legacy": "aivworkbench.executors.virtuoso.run_snapshot",
@@ -250,6 +173,23 @@
       "status": "retained",
       "allow_exposure": true,
       "evidence": ["deploy/tests/test_flow_config_inventory.py"]
+    },
+    {
+      "legacy": "cadai.template_project.project_record legacy SQLite projection",
+      "source": "tools/ai/python/cadai/template_project.py",
+      "replacement": "tools/ai/python/cadai/template_standard/projection.py:project",
+      "consumers": [
+        "tools/ai/python/cadai/template_catalog.py",
+        "tools/ai/python/tests/test_template_project.py"
+      ],
+      "owner": "tools/ai/python/cadai/template_standard/projection.py",
+      "exit_condition": "Retire the explicit --legacy-sqlite projection branch after supported tpl_ SQLite catalogs have migrated to standard raw ctpl_ packages; do not use project_record for new standard output.",
+      "status": "retained",
+      "allow_exposure": true,
+      "evidence": [
+        "tools/ai/python/tests/test_template_project.py",
+        "tools/ai/python/tests/test_template_standard_projection.py"
+      ]
     }
   ]
 }

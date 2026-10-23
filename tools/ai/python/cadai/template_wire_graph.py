@@ -2,7 +2,6 @@
 
 from collections import defaultdict
 
-from .template_schema import TemplateError
 from .template_terminal_contacts import shared_contacts
 
 
@@ -34,7 +33,16 @@ def _collinear_overlap(a, b, c, d):
 def connect_net(segments, anchors, *, shared_terminals=False):
     """Split T junctions and terminal contacts; reject ambiguous interior X crossings."""
     if len(segments) > 512 or len(anchors) > 256:
-        raise TemplateError("wire attachment net exceeds 512 segments / 256 terminals")
+        # Over-budget nets stay a recorded fact: keep the conservative empty
+        # attachment with an explicit gap so routing stays unknown instead of
+        # failing the whole template.
+        return {
+            "edges": [],
+            "gaps": ["wire_attachment_over_budget"],
+            "junctions": [],
+            "components": [],
+            **({"terminal_contacts": []} if shared_terminals else {}),
+        }
     gaps = set()
     points = {tuple(p) for s in segments for p in s["points"]}
     points.update(tuple(a["xy"]) for a in anchors)

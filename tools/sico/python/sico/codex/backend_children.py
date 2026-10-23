@@ -4,9 +4,10 @@ from ..orchestration import ChildTaskPolicy
 
 
 def project_collaboration(item, thread_id, collaboration, orchestration, child_inputs, seen, child_scope, emit):
+    replies = []
     sender = item.get("senderThreadId")
     if not thread_id or sender != thread_id:
-        return
+        return replies
     # Let the generic adapter consume policies explicitly queued by the
     # flow.  The fallback below keeps discovery of unplanned Codex child
     # work visible in the session tree.
@@ -14,7 +15,7 @@ def project_collaboration(item, thread_id, collaboration, orchestration, child_i
     if observed:
         for child in observed:
             child_inputs.own(child)
-            child_inputs.settle(child)
+            replies.extend(child_inputs.settle(child))
             marker = (child.thread_id, child.status, item.get("id"))
             if marker in seen:
                 continue
@@ -27,7 +28,7 @@ def project_collaboration(item, thread_id, collaboration, orchestration, child_i
                 "tool": item.get("tool", ""),
                 **child_scope(child),
             })
-        return
+        return replies
     tool = item.get("tool", "")
     prompt = item.get("prompt") or ""
     status_map = {"inProgress": "started", "completed": "completed",
@@ -57,7 +58,7 @@ def project_collaboration(item, thread_id, collaboration, orchestration, child_i
         effective = child_state.get(
             "status", "closed" if tool == "closeAgent" else child.status)
         orchestration.update(child_id, status_map.get(effective, effective))
-        child_inputs.settle(child)
+        replies.extend(child_inputs.settle(child))
         marker = (child_id, effective, item.get("id"))
         if marker in seen:
             continue
@@ -71,13 +72,16 @@ def project_collaboration(item, thread_id, collaboration, orchestration, child_i
             **child_scope(child),
         })
 
+    return replies
+
 
 def project_subagent(item, *, live, thread_id, statuses, orchestration, child_inputs, child_scope, emit):
+    replies = []
     child_id, status = item.get("agentThreadId"), item.get("kind")
     if (not thread_id or not isinstance(child_id, str) or not child_id
             or child_id == thread_id
             or status not in {"started", "interacted", "interrupted", "completed"}):
-        return
+        return replies
     name = item.get("agentPath") or "Codex 子任务"
     previous = statuses.get(child_id, {})
     effective = status if status != "interacted" else previous.get("status", "started")
@@ -88,14 +92,15 @@ def project_subagent(item, *, live, thread_id, statuses, orchestration, child_in
                                     parent_thread_id=thread_id)
     child = orchestration.children[child_id]
     if child.parent_thread_id != thread_id:
-        return
+        return replies
     if live:
         child_inputs.own(child)
     # A historical completion may update the tree, but cannot grant input ownership.
     orchestration.update(child_id, effective)
-    child_inputs.settle(child)
+    replies.extend(child_inputs.settle(child))
     row.update(child_scope(child))
     if previous == row:
-        return
+        return replies
     emit("codex.child", row)
     statuses[child_id] = row
+    return replies

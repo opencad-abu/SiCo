@@ -1,4 +1,4 @@
-"""Resolve Calibre XRC executables, corner paths and required files."""
+"""Resolve Calibre PEX executables, corner paths and required files."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ def xrc_corner_dir(cfg: RceConfig, corner: str) -> Path:
             return matches[0]
         if len(matches) > 1:
             raise ValueError(
-                f"Ambiguous Calibre XRC corner {corner!r} under {tech_dir}: "
+                f"Ambiguous Calibre PEX corner {corner!r} under {tech_dir}: "
                 + ", ".join(path.name for path in matches)
             )
     return exact

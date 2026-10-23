@@ -4,7 +4,7 @@ from dataclasses import fields
 
 from ..transport.framing import ProtocolError
 from .event_display import BATCH_BYTES, BATCH_EVENTS
-from .event_stream import DISPLAY_CONTRACT, DisplayBatch
+from ..core.display_batch import DISPLAY_CONTRACT, DisplayBatch
 from .remote_validation import display_batch
 from .replay_view import CursorPosition, ReplayView
 from .service_protocol import exact_fields

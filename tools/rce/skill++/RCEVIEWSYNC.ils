@@ -84,7 +84,7 @@ procedure(rceSyncNativeView(form)
 
             form~>viewDeviceMap~>invisible=or(!visible tool=="QRC")
             form~>viewLayerMap~>invisible=or(!visible tool!="StarRC")
-            when(tool=="CalXRC"
+            when(RCE_calibrePexToolP(tool)
               form~>viewDeviceMap~>prompt="Calibre Cellmap File:"
             )
             when(tool=="StarRC"

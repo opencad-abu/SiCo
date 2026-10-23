@@ -2,6 +2,7 @@
 
 from .circuit_schema import string_schema, tool
 from .circuit_spec_schema import array, enum, obj
+from .schema_refs import factor
 from .waveform_schema import QUANTITY, RECIPE
 from .waveform_spec_kinds import RECIPE_SCHEMAS
 
@@ -52,6 +53,16 @@ CONTRACT = obj(
         "specifications": array(SPEC, 64, 1),
     }
 )
+# The explicit contract above stays the one authored source; the wire schema is
+# its factored projection (every repeated quantity becomes one local $ref).
+SPEC_ARGUMENTS, SPEC_ARGUMENT_DEFS = factor(
+    {
+        "result_ref": RESULT_REF,
+        "measurement_refs": array(MEASUREMENT_REF, 128),
+        "contract": CONTRACT,
+    },
+    {"quantity": QUANTITY},
+)
 SPEC_TOOLS = [
     tool(
         "evaluate_waveform_specs",
@@ -68,12 +79,9 @@ SPEC_TOOLS = [
         "Return pass/fail/incomplete, separate missing/error counts and worst margin per metric. "
         "No coverage/spec inference or simulation. qualification_scope=explicit_contract_only. "
         "A passing AC contract is not stability certification.",
-        {
-            "result_ref": RESULT_REF,
-            "measurement_refs": array(MEASUREMENT_REF, 128),
-            "contract": CONTRACT,
-        },
+        SPEC_ARGUMENTS,
         ("result_ref", "measurement_refs", "contract"),
+        defs=SPEC_ARGUMENT_DEFS,
     ),
     tool(
         "query_waveform_spec_report",

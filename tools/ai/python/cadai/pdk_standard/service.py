@@ -3,6 +3,7 @@
 import os
 
 from .drafts import Drafts
+from .baseline import Baseline
 from .jsonio import fail
 from .provenance import verify
 from .query import Queries
@@ -13,12 +14,8 @@ from .workspace import select
 class StandardData:
     def __init__(self, workspace, environment, bridge=None):
         self.workspace, self.environment = workspace, environment
+        self.bridge = bridge
         environment = os.environ if environment is None else environment
-        from ..env_names import value
-
-        self.workflow = value(environment, "PDK_WORKFLOW", "design")
-        if self.workflow not in {"design", "generation"}:
-            fail("SICO_PDK_WORKFLOW must be design or generation")
         self.source_validator = None
         from .completion import Completion
 
@@ -33,6 +30,7 @@ class StandardData:
         self.cdf_validation = Validation(workspace, environment, bridge) if workspace else None
         self.queries = Queries()
         self.updates = Updates(workspace, environment) if workspace else None
+        self.baseline = Baseline(workspace, environment, bridge) if workspace else None
         self.drafts = Drafts(workspace, environment, bridge) if workspace else None
 
     def call(self, name, args):
@@ -42,12 +40,10 @@ class StandardData:
             return self.queries.read(
                 verify(select(self.workspace, args["library"], self.environment)), args
             )
-        if self.workflow != "generation":
-            fail(
-                "Normal design reads PDK data only. Complete missing facts in a separate PDK "
-                "generation workspace/session with SICO_PDK_WORKFLOW=generation.",
-                "pdk_generation_required",
-            )
+        if name == "resolve_pdk_baseline":
+            from .baseline_choice import resolve
+
+            return resolve(self.workspace, args["library"], self.environment, args)
         validation_methods = {
             "prepare_pdk_cdf_validation": self.cdf_validation.prepare,
             "advance_pdk_cdf_validation": self.cdf_validation.advance,
@@ -63,6 +59,16 @@ class StandardData:
             return self.fact_collection.run(args)
         if name == "get_pdk_fact_report":
             return self.fact_collection.reports.get(args)
+        if name == "get_pas_dpt":
+            from .pas_dpt import read
+
+            if self.bridge is None:
+                fail("PAS DPT reads require the live session bridge", "bridge_unavailable")
+            return read(self.bridge, args["library"], args["cell"])
+        if name == "get_pdk_source_impact":
+            from .impact import review
+
+            return review(self.workspace, self.environment, self.bridge, args)
         if name == "import_pdk_facts":
             return self.facts.run(args)
         if name == "publish_pdk_data":
@@ -74,11 +80,17 @@ class StandardData:
                 args["revision"],
                 self.environment,
                 source_validator=self.source_validator,
+                acceptance=args["acceptance_evidence"],
+                unfinished=args["unfinished_options"],
             )
         if name == "prepare_pdk_data_update":
             return self.updates.prepare(args)
         if name == "apply_pdk_data_update":
             return self.updates.apply(args)
+        if name == "prepare_pdk_baseline_update":
+            return self.baseline.prepare(args)
+        if name == "apply_pdk_baseline_update":
+            return self.baseline.apply(args)
         if name == "prepare_pdk_parameter_draft":
             return self.drafts.prepare(args)
         if name == "get_pdk_parameter_draft":

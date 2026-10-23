@@ -9,6 +9,10 @@ from .template_source_qualification import HEX64
 
 
 def complete_capture(catalog, args):
+    if args["template_ref"].startswith("ctpl_"):
+        from .template_standard.collect import retained
+
+        return retained(catalog, args)
     record = catalog.get(args["template_ref"])
     if record["schema_version"] not in {SCHEMA, SCHEMA_V3}:
         raise TemplateError("saved completion requires an explicit-evidence v2/v3 template")
@@ -40,6 +44,8 @@ def complete_capture(catalog, args):
     supplied = args.get("classifications", {})
     if any(name in previous and previous[name] != value for name, value in supplied.items()):
         raise TemplateError("completion cannot replace pinned classification evidence")
-    options = dict(reuse=args["reuse"], classifications=previous | supplied)
+    options = dict(reuse=args["reuse"], classifications=previous | supplied,
+                   library=record["source"]["lib"], cell=record["source"]["cell"],
+                   legacy_ref=record["template_ref"])
     result = store_capture(catalog, capture, capture_bytes, options, **metadata)
     return result | dict(completed_from=record["template_ref"], live=False)

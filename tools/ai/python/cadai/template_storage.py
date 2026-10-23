@@ -59,7 +59,10 @@ class TemplateStorage:
         self.locations = (
             [TemplateLocation("private", self.root)]
             if root is not None
-            else template_locations(workspace)
+            else [
+                TemplateLocation(location.tier, location.path.resolve(), location.legacy)
+                for location in template_locations(workspace)
+            ]
         )
 
     def _catalog_entries(self):
@@ -152,6 +155,14 @@ class TemplateStorage:
 
     def _verify_snapshot(self):
         """Reject membership or content changes before returning a read result."""
+        standard_revision = getattr(self, "_standard_snapshot_revision", None)
+        if standard_revision is not None:
+            # Manifest digests are the same fixed revision a derived query reports,
+            # so the check stays strong without re-reading whole package documents.
+            from .template_standard.reader import catalog_revision
+
+            if catalog_revision(self) != standard_revision:
+                raise TemplateUnavailable("standard template snapshot changed during read")
         snapshot = getattr(self, "_last_snapshot", None)
         if snapshot is None:
             return

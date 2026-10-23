@@ -5,9 +5,14 @@ from __future__ import annotations
 import json
 import time
 
-from ..storage.native_origin import NativeOrigins
-from ..transport.framing import strict_json
+from ..core.native_origin import NativeOrigins
+from cadai.json_values import strict_json
 from .native_projection import ITEMS, OUTPUT_CHARS, TOOLS, digest, operation_status, public_item
+from .rpc import RpcError
+
+
+class HistoryUnavailable(RuntimeError):
+    """Optional history repair cannot continue on the task connection."""
 
 
 class NativeHistory:
@@ -19,6 +24,7 @@ class NativeHistory:
         self.confirmed = set()
         self.identities = {}
         self.children = {}
+        self.disabled = False
         for event in records:
             self.observe(event)
 
@@ -173,6 +179,8 @@ class NativeHistory:
 
     def sync(self, thread):
         """Resume responses normally include full history; page partial responses."""
+        if self.disabled:
+            return
         try:
             self.children.clear()
             if not isinstance(thread, dict) or thread.get("id") != self.backend.thread_id:
@@ -190,11 +198,18 @@ class NativeHistory:
             for child_id, item in self.children.items():
                 if child_id not in self.backend._child_status:
                     self.backend._record_subagent(item)
-        except (ValueError, RuntimeError, OSError, KeyError, TypeError):
-            self.backend._event("codex.history.unavailable", {
-                "thread_id": self.backend.thread_id,
-                "message": "原生历史补采未完成；已保存证据保留，操作未重发。",
-            })
+        except (RpcError, RuntimeError, OSError) as exc:
+            self.disabled = True
+            self._unavailable()
+            raise HistoryUnavailable(str(exc)) from exc
+        except (ValueError, KeyError, TypeError):
+            self._unavailable()
+
+    def _unavailable(self):
+        self.backend._event("codex.history.unavailable", {
+            "thread_id": self.backend.thread_id,
+            "message": "原生历史补采未完成；已保存证据保留，操作未重发。",
+        })
 
     def notification(self, event, current_turn=None):
         if "id" in event:

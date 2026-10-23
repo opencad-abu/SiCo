@@ -136,23 +136,13 @@ select_platform() {
 }
 
 select_python() {
-    local configured=${SICO_PYTHON:-}
     local resolved
-    if [[ -z $configured && -n ${SICO_PYTHON_ROOT:-} ]]; then
-        configured=${SICO_PYTHON_ROOT%/}/bin/python3
-    fi
-    [[ -n $configured ]] \
-        || fatal 'SICO_PYTHON or SICO_PYTHON_ROOT is required'
-    if [[ $configured == */* ]]; then
-        resolved=$configured
-    else
-        resolved=$(command -v -- "$configured") \
-            || fatal "SICO_PYTHON is not available in PATH: $configured"
-    fi
+    sico_runtime_python || return 1
+    resolved=$sico_runtime_python_value
     [[ $resolved == /* ]] \
-        || fatal "SICO_PYTHON must resolve to an absolute path: $configured"
+        || fatal "SiCo Python must resolve to an absolute path: $resolved"
     [[ -f $resolved && -x $resolved ]] \
-        || fatal "SICO_PYTHON is not an executable file: $resolved"
+        || fatal "SiCo Python is not an executable file: $resolved"
     printf '%s\n' "$resolved"
 }
 

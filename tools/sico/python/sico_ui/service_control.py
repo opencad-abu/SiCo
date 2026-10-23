@@ -5,12 +5,11 @@
 仍持有（occupied）时保持只读。控制权变更由服务写进会话记录，事后可核对。
 """
 
-import time
-
 from PyQt5.QtCore import QObject, Qt, QTimer
 from PyQt5.QtWidgets import QLabel
 
 from .receipts import DataReceipt
+from .service_retry import ServiceRetry
 
 
 class ServiceControl(QObject):
@@ -31,7 +30,8 @@ class ServiceControl(QObject):
         window.add_service_status(self.label)
         self.receipt = DataReceipt(self)
         self._displayed = None
-        self._due = 0
+        self._scope = None
+        self._retry = ServiceRetry(limit=5, delay=1)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.refresh)
         self.timer.start(250)
@@ -44,6 +44,10 @@ class ServiceControl(QObject):
             self.timer.stop()
             return
         token = window.page.session
+        if token != self._scope:
+            self.receipt.clear()
+            self._scope = token
+            self._retry.reset()
         control = window.api.control
         try:
             control.refresh(token)
@@ -52,18 +56,34 @@ class ServiceControl(QObject):
         view = control.view(token)
         state = view.state if view else "unknown"
         writable = window.api.can_control(token)
+        if writable:
+            self._retry.healthy()
+        else:
+            self._retry.unhealthy()
         if writable or window.page.reviewing is not None or window.api.is_closing(token):
             window.session_notices.clear("control")
         if (token, writable) != self._displayed:
             self._displayed = token, writable
             if window.presentation.state is not None:
-                window.update_session(window.presentation.state)
+                window.renderer.update_session(window.presentation.state)
         ready = (not window.page.opening and window.page.reviewing is None and view is not None
                  and not window.api.is_closing(token))
         if not writable and ready and self.receipt.pending is None:
-            if self.ACTIONS.get(state) is not None and time.monotonic() >= self._due:
+            if self.ACTIONS.get(state) is not None and self._retry.start():
                 self.request(self.ACTIONS[state])
-        self.label.setText("" if writable else self.LABELS.get(state, self.LABELS["unknown"]))
+        text = self.LABELS.get(state, self.LABELS["unknown"])
+        if self.exhausted and state in self.ACTIONS:
+            text = "会话连接恢复已暂停，请从会话菜单重试连接"
+        self.label.setText("" if writable else text)
+
+    @property
+    def exhausted(self):
+        return self._retry.exhausted and not self.window.api.can_control(self.window.page.session)
+
+    def retry(self):
+        """The existing connection menu explicitly starts a fresh recovery budget."""
+        self._retry.reset()
+        self.refresh()
 
     def request(self, action):
         """Ask the service for one authority change; the page stays the original page."""
@@ -80,16 +100,18 @@ class ServiceControl(QObject):
             if current():
                 window.session_notices.clear("control")
                 self.refresh()
-                window.refresh_status()
+                window.renderer.refresh_status()
 
         def failed(exc):
-            self._due = time.monotonic() + 1
             if current():
                 from sico.service.service_errors import is_definite_refusal
 
                 title = ("会话暂不可操作" if is_definite_refusal(exc)
                          else "会话连接尚未确认")
-                window.session_notices.set("control", title, str(exc))
+                message = str(exc)
+                if self.exhausted:
+                    message += "\n自动恢复已暂停；请从会话菜单重试连接。会话记录已保留。"
+                window.session_notices.set("control", title, message)
 
         try:
             self.receipt.watch(window.api.control.ensure(token), complete, failed)

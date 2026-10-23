@@ -57,7 +57,15 @@ class ProcessPanel(QWidget):
         self.timer = QTimer(self)
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.poll)
+
+    def showEvent(self, event):
+        super().showEvent(event)
         self.timer.start()
+        self.poll()
+
+    def hideEvent(self, event):
+        self.timer.stop()
+        super().hideEvent(event)
 
     def invalidate(self):
         # This is also called during QObject destruction; do not touch Qt here.

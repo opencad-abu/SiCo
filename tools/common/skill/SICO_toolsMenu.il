@@ -1,7 +1,22 @@
 ; Menus for the compiled independent CAD frontends; no source loaders.
 
+procedure(SICO_toolsAssistantMenuItems(prefix)
+  let((items)
+    ; The AI context is loaded before this tools context in the full runtime.
+    ; Non-AI-only installations simply omit these entries.
+    when(isCallable('sicoShow)
+      items=append1(items hiCreateMenuItem(
+        ?name stringToSymbol(strcat(prefix "_siliconCopilot"))
+        ?itemText "Silicon Copilot" ?callback "sicoShow()")))
+    when(isCallable('cadDisplayAiAssistant)
+      items=append1(items hiCreateMenuItem(
+        ?name stringToSymbol(strcat(prefix "_aiAssistant"))
+        ?itemText "AI Assistant" ?callback "cadDisplayAiAssistant()")))
+    items))
+
 procedure(SICO_toolsMenuItems(prefix)
   let((items spec)
+    items=SICO_toolsAssistantMenuItems(prefix)
     foreach(spec list(
       list("lsf" "LSF Load Monitor" "SICO_lsfMonitorStart()")
       list("drc" "DRC" "cadDisplayDrcForm()")

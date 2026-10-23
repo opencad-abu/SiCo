@@ -11,13 +11,13 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from sicoenv import read as environment_setting
-from .installation import current, runtime_root
 
 from .codex_selection import (
     CodexConfigurationError,
     require_supported_runtime,
     verify_codex_version,
 )
+from .installation import current, runtime_root
 
 _AGENT_CLI_ENV = {
     "codex": "SICO_CODEX_CLI",
@@ -43,11 +43,11 @@ def production_python(
 ) -> str:
     """Resolve the production interpreter for controller child processes.
 
-    An explicit ``SICO_PYTHON`` takes precedence. ``SICO_PYTHON_ROOT/bin/python3``
-    is only a fallback when ``SICO_PYTHON`` is unset, so a stale site-wide root
-    cannot override a project-selected interpreter. For embedded callers and
-    source-tree tests, an entirely unset environment uses the qualified default.
-    No PATH lookup or ``sys.executable`` fallback is permitted.
+    A bundled runtime is authoritative. Without one, an explicit
+    ``SICO_PYTHON`` takes precedence over ``SICO_PYTHON_ROOT/bin/python3``. For
+    embedded callers and source-tree tests, an entirely unset environment uses
+    the qualified default. No PATH lookup or ``sys.executable`` fallback is
+    permitted.
     """
 
     source = os.environ if environment is None else environment
@@ -56,10 +56,25 @@ def production_python(
     for name, configured in (("SICO_PYTHON", python_value), ("SICO_PYTHON_ROOT", root_value)):
         if name in source and not configured:
             raise RuntimeError(name + " must not be empty")
-    if not python_value and not root_value and require_environment:
-        raise RuntimeError("SICO_PYTHON or SICO_PYTHON_ROOT must be set")
-    root = Path(root_value).expanduser() if root_value else _DEFAULT_PYTHON_ROOT
-    executable = Path(python_value).expanduser() if python_value else root / "bin" / "python3"
+    selected = current(source)
+    bundled = selected.runtime_python
+    if bundled is not None:
+        # The bundled interpreter is the installation identity. Ignore stale
+        # site selectors so source and native launchers resolve identically.
+        executable = bundled
+    elif python_value:
+        executable = Path(python_value).expanduser()
+    elif root_value:
+        executable = Path(root_value).expanduser() / "bin" / "python3"
+    elif (dev := selected.dev_python) is not None:
+        executable = dev
+    elif require_environment:
+        raise RuntimeError(
+            "SICO_PYTHON or SICO_PYTHON_ROOT must be set, or "
+            "$SICO_HOME/runtime/python must contain Python"
+        )
+    else:
+        executable = _DEFAULT_PYTHON_ROOT / "bin" / "python3"
     if not executable.is_absolute():
         raise RuntimeError("selected production Python must be an absolute path")
     try:
@@ -80,7 +95,7 @@ def production_python(
     # nested subprocess probe here; this also keeps controller unit tests that
     # replace ``Popen`` focused on the terminal child they are exercising.
     if os.path.realpath(sys.executable) == str(executable_real):
-        return python_value or str(executable)
+        return str(executable)
     try:
         probe = subprocess.run(
             [
@@ -102,7 +117,7 @@ def production_python(
     expected = ".".join(str(item) for item in _EXPECTED_PYTHON_VERSION)
     if probe.returncode != 0 or probe.stdout.strip() != expected:
         raise RuntimeError("production Python must be exactly 3.9.13")
-    return python_value or str(executable)
+    return str(executable)
 
 
 def resolve_executable(explicit: str | None, names: Sequence[Path | str]) -> str:

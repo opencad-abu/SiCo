@@ -13,11 +13,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
 
+from cadai.optional_resources import apply_data_sources
+
 from ..adapters.virtuoso import context_tools
+from ..agent_resources import model as agent_model
 from ..core.contracts import BoundContext, identifier, json_copy
 from ..providers.config import provider_from_config, resolve_provider_config
-from ..storage.journal import SessionJournal
+from ..storage.empty_session import discard_empty_sessions
 from ..storage.history_policy import assert_writable
+from ..storage.journal import SessionJournal
 from ..storage.roots import agent_root
 from ..storage.session_snapshot import NAME, capture, save
 from ..transport.bridge_client import BridgeClient
@@ -30,6 +34,7 @@ from .session_dependencies import SessionDependencies
 from .session_creation import SessionCreation
 from .session_disposal import close_bundle, close_partial
 from .session_health import SessionHealth
+from .session_labels import SessionLabels
 
 _CAPTURE_BACKGROUND = object()
 
@@ -48,14 +53,19 @@ class _SessionBundle:
 class ProjectSessionOwner:
     """Own all sessions for one project and publish them atomically."""
 
-    def __init__(self, project, *, provider_config=None, environment=None, bridge_factory=None):
+    def __init__(self, project, *, provider_config=None, environment=None, bridge_factory=None,
+                 terminal_factory=None):
         project = Path(project).absolute()
         if not project.is_dir():
             raise ValueError("Project directory is unavailable")
         self.project = project
+        self.labels = SessionLabels(project)
         self._default_config = None if provider_config is None else thaw(freeze(provider_config))
         self._default_environment = None if environment is None else dict(environment)
         self._bridge_factory = bridge_factory or BridgeClient
+        if terminal_factory is not None and not callable(terminal_factory):
+            raise TypeError("Terminal factory must be callable or None")
+        self._terminal_factory = terminal_factory
         self._bundles = {}
         self.creation = SessionCreation(self)
         self._lock = threading.RLock()
@@ -90,6 +100,20 @@ class ProjectSessionOwner:
                 return self._bundles[session_id].provider
             except KeyError:
                 raise ValueError("Session is not open") from None
+
+    def resource_defaults(self):
+        """Read the service's default resource selection without constructing a provider."""
+        from ..agent_resources.manifest import read_selection
+
+        return read_selection(self.resource_settings(), self.project)
+
+    def resource_settings(self):
+        """Service-internal captured inputs; never exported through the frontend."""
+        from types import SimpleNamespace
+
+        environment = self._capture_environment(None)
+        config = self._resolve_config(None, environment)
+        return SimpleNamespace(options=config or {}, environment=environment)
 
     def open(self, session_id, descriptor, context, *, provider_config=None, environment=None,
              bridge=None, new_only=False, recovery=None, background=_CAPTURE_BACKGROUND,
@@ -129,7 +153,7 @@ class ProjectSessionOwner:
 
             provider = None
             supplied_bridge = bridge
-            journal = loop = controller = None
+            journal = loop = controller = terminal = None
             try:
                 if background is _CAPTURE_BACKGROUND:
                     background = (capture_settings(captured_environment)
@@ -148,14 +172,26 @@ class ProjectSessionOwner:
                 register_target = getattr(bridge, "register_target", None)
                 if callable(register_target):
                     register_target(bound)
-                tools = context_tools(bridge, journal)
-                loop = create_backend(provider, tools, journal, original)
+                if self._terminal_factory is not None:
+                    from .session_terminal import SessionTerminal
+
+                    terminal = self._terminal_factory(journal, original)
+                    if not isinstance(terminal, SessionTerminal):
+                        raise TypeError("Terminal factory must return SessionTerminal")
+                else:
+                    from .terminal_runtime import make_session_terminal
+
+                    terminal = make_session_terminal(
+                        provider, journal, original, captured_environment, self.project)
+                tools = context_tools(bridge, journal, terminal)
+                loop = create_backend(provider, tools, journal, original, terminal=terminal,
+                                      labels=self.labels)
                 if previous_context is not None:
                     from .session_host_transition import transition_host
 
                     transition_host(loop, bound, descriptor)
-                controller = SessionController(loop)
-                controller.attach_targets(bridge)
+                controller = SessionController(loop, terminal=terminal)
+                controller.bindings.attach_targets(bridge)
                 if recovery is not None:
                     from .recovered_session import RecoveredSession
 
@@ -183,6 +219,11 @@ class ProjectSessionOwner:
                     self._bundles[session_id] = bundle
                 return controller
             except BaseException:
+                if controller is None and terminal is not None:
+                    try:
+                        terminal.close()
+                    except BaseException:
+                        pass
                 close_partial(controller, loop, journal,
                                     bridge if supplied_bridge is None else None)
                 raise
@@ -207,6 +248,7 @@ class ProjectSessionOwner:
             with self._lock:
                 self._bundles.clear()
             self.creation.clear()
+        discard_empty_sessions(agent_root(self.project))
 
     def pending_work(self):
         """Bounded in-memory observations; no ownership or controller I/O lock waits."""
@@ -299,7 +341,16 @@ class ProjectSessionOwner:
             source = environment
         if not isinstance(source, dict) and not hasattr(source, "items"):
             raise TypeError("Session environment requires a mapping")
-        return freeze(json_copy(dict(source)))
+        captured = dict(source)
+        try:
+            document = agent_model.read(self.project)
+        except (ValueError, OSError, RuntimeError):
+            document = None
+        if document is not None and document.get("revision") is not None:
+            captured["SICO_BACKEND"] = document["backend"]
+            captured["SICO_PROVIDER"] = document["provider"]
+        apply_data_sources(captured, self.project)
+        return freeze(json_copy(captured))
 
     def _resolve_config(self, provider_config, environment):
         if provider_config is not None:

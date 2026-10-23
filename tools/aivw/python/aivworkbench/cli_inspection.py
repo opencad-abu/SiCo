@@ -12,7 +12,7 @@ from .cli_output import print_json
 
 
 def runtime_info(args: argparse.Namespace) -> int:
-    from .agent.runtime_info import collect_runtime_info, validate_production_runtime
+    from .runtime_info import collect_runtime_info, validate_production_runtime
 
     try:
         payload = validate_production_runtime()

@@ -32,6 +32,10 @@ def current_receipt(call, result, context, task, message, *, journal, tool_start
         },
     )
     data = result.data
+    if (audit is not None and isinstance(data, dict) and data.get("review_required")
+            and data.get("review_kind") and data.get("review_digest")
+            and data.get("selection_question")):
+        audit.require_destructive_review(data, f"d_{finished['sequence']}_tool", context)
     if (audit is not None and isinstance(data, dict) and data.get("update_ref")
             and data.get("confirmation_required") and data.get("selection_question")):
         audit.require_pdk_update(data, f"d_{finished['sequence']}_tool", context)

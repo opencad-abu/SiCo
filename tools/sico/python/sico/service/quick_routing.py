@@ -85,7 +85,7 @@ class QuickInputRouting:
                 destination = sessions.create(context)
                 self.destinations[message["id"]] = destination
                 if destination.bindings.broker is None:
-                    destination.attach_targets(broker)
+                    destination.bindings.attach_targets(broker)
                 created = True
             self.destinations[message["id"]] = destination
         if sessions.controllers.get(destination.session_id) is not destination:

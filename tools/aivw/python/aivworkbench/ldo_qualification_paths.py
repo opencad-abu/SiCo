@@ -43,15 +43,15 @@ def qualification_has_symlink_below(root: Path, path: Path) -> bool:
 
 def qualification_safe_root(value: str | Path) -> Path:
     path = Path(value).expanduser()
-    # A stable system alias may itself be a symlink.  The
+    # A stable system alias such as /workarea may itself be a symlink.  The
     # source root must not be a symlink, but canonical ancestors are allowed;
     # this keeps the real amsVerify deployment usable while still rejecting a
     # substituted LDO_IP directory.
     if not path.is_absolute() or path.is_symlink() or not path.is_dir():
         raise ValueError("source root must be an existing absolute non-symlink directory")
     resolved = path.resolve(strict=True)
-    if "xxxx28" in str(resolved).casefold():
-        raise ValueError("source root is in the excluded workspace")
+    if "smic28" in str(resolved).casefold():
+        raise ValueError("source root is in the excluded smic28 workspace")
     return resolved
 
 
@@ -60,7 +60,7 @@ def qualification_safe_child(root: Path, relative: str, *, kind: str) -> Path:
     if candidate.is_symlink():
         raise ValueError("%s contains a symlink: %s" % (kind, relative))
     # root is already canonical.  Reject symlinks in the source-relative
-    # portion, while not treating an external mount alias as an escape.
+    # portion, while not treating an external /workarea alias as an escape.
     current = root
     for part in Path(relative).parts:
         current = current / part

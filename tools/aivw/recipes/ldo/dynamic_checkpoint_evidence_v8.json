@@ -1,0 +1,331 @@
+{
+  "absolute_floors": {
+    "approval": "PROPOSED_NOT_APPROVED",
+    "current_a": 1e-06,
+    "timing_s": 1e-07,
+    "voltage_v": 0.001
+  },
+  "baseline": {
+    "full_m3_complete": false,
+    "path": "/zone.disk/ssd1/path/to/sico-src/ai-verification-workbench/docs/IMPLEMENTATION_PLAN_LDO_MVP.md",
+    "sha256": "07a811aefeee349ecefa00b5b0c0026925697be8d70f3f395002049cac2748a2",
+    "stage": "M3"
+  },
+  "candidate_finally_frozen": false,
+  "checkpoint_version": 8,
+  "commit_or_push": "NOT_PERFORMED",
+  "completed_within_public_diagnostic_scope": [
+    "AON_enable_transition_voltage_current_and_tail",
+    "AON_low_supply_startup_voltage",
+    "AON_startup_current_tail",
+    "MASTER_low_supply_startup_voltage",
+    "MASTER_10us_and_40us_startup_current_tail"
+  ],
+  "current_public_candidates": {
+    "AON": {
+      "artifact_counts": {
+        "control": 1,
+        "payload": 1017
+      },
+      "artifacts_verified": true,
+      "candidate_sha256": "c519a85910751534a6d9a1149f0b1bf2de22241b57f5cbd7e7fc49d6c8be8e20",
+      "case_count": 24,
+      "control_core_sha256": "2f079a8241272f2b0bbaaaf974f5b0c828d28bfe85f5ab128a4436a157635980",
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T052604.979276Z-transition-response-b112f98886ac/manifest.json",
+      "control_manifest_sha256": "d500038d6f1f9ef2a8a79ab0bac8370d786e6e888e770a187723540f7ea18d4e",
+      "label": "AON_v2",
+      "locator_counts": {
+        "control": 0,
+        "payload": 0
+      },
+      "parity": "PASS",
+      "passed_cases": 24,
+      "payload_core_sha256": "0861e887d7bac01d909a086621792575588ea2dc8e5d146fd3dbdeba82df6d43",
+      "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.transition_response/runs/20260908T052604.979276Z-transition-response-b112f98886ac/payload-manifest.json",
+      "payload_manifest_sha256": "47630fffe6c86598408b3a817689bb63aba8fc7a7419ff8d6d0f65d886259eae",
+      "regressions_from_v6": [],
+      "remaining_failures": [],
+      "request_digest": "b112f98886ac2e57e44f14e66421922b04d975d3859fff38934f8d90479e7e15",
+      "run_id": "20260908T052604.979276Z-transition-response-b112f98886ac",
+      "run_status": "BLOCKED_CONTRACT",
+      "status": "PASS",
+      "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.transition_response/runs/20260908T052604.979276Z-transition-response-b112f98886ac/summary.json",
+      "summary_sha256": "b31f11387f698278200f43fe940136db460ce472f2696d4faef458d13827d279"
+    },
+    "MASTER": {
+      "artifact_counts": {
+        "control": 1,
+        "payload": 723
+      },
+      "artifacts_verified": true,
+      "candidate_sha256": "dbf7fb3ce777688239714bc5a2140794c78e3114df9932cbca6553d8a5a72b06",
+      "case_count": 17,
+      "control_core_sha256": "c4fcd51d9e52672c7d24616f88cc04f597029dec5c79df43f04264bf7a684740",
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T053045.674467Z-transition-response-1bd9b6cc1850/manifest.json",
+      "control_manifest_sha256": "2d9711bec0e78681732be0d65ed9c3971287a9f8e6b6b434259a107f1b31f793",
+      "label": "MASTER_v3",
+      "locator_counts": {
+        "control": 0,
+        "payload": 0
+      },
+      "parity": "PASS",
+      "passed_cases": 16,
+      "payload_core_sha256": "f170341a24329418f381dc99a870dea590e900c0ed5d3eb63d7b541e26779475",
+      "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.transition_response/runs/20260908T053045.674467Z-transition-response-1bd9b6cc1850/payload-manifest.json",
+      "payload_manifest_sha256": "024aeaf5f1e48b72ca8f1e0426e8987a9ca1cf57b19a801bbcd0835688179ece",
+      "regressions_from_v6": [],
+      "remaining_failures": [
+        "startup_rate_0"
+      ],
+      "request_digest": "1bd9b6cc18504e6f76e0e70717fcb7da461ab9b34c2962c6a612d3d48ce22fc9",
+      "run_id": "20260908T053045.674467Z-transition-response-1bd9b6cc1850",
+      "run_status": "BLOCKED_CONTRACT",
+      "status": "PASS",
+      "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.transition_response/runs/20260908T053045.674467Z-transition-response-1bd9b6cc1850/summary.json",
+      "summary_sha256": "f23c48e715a7b956007bcaac4acb95055d2f62c5dcac327d0349bf121d53c35c"
+    }
+  },
+  "formal_status": "BLOCKED_CONTRACT",
+  "holdout_evaluated": false,
+  "kind": "ldo-dynamic-checkpoint",
+  "previous_checkpoint": {
+    "path": "/zone.disk/ssd1/path/to/sico-src/ai-verification-workbench/recipes/ldo/dynamic_checkpoint_evidence_v7.json",
+    "sha256": "3026f3d32f72ac9de69df0ddcaad4da12048a39890faca1f5f7d9e7021333a5c"
+  },
+  "progress_document": {
+    "path": "/zone.disk/ssd1/path/to/sico-src/ai-verification-workbench/docs/LDO_TRANSITION_RESPONSE_PROGRESS.md",
+    "sha256": "ebf6fd83c7608f4ce211acb73b726556a1cee27c47393c14a3870861858959a7"
+  },
+  "publication": "NOT_PERFORMED",
+  "qualification": "NOT_ESTABLISHED",
+  "remaining": [
+    "MASTER_2us_startup_current_tail",
+    "absolute_floor_contract_approval",
+    "actual_model_provider_qualification",
+    "private_evaluator_capability_isolation",
+    "final_candidate_freeze_and_two_hidden_repeats_after_admission",
+    "candidate_bound_AMS_config_and_system_verification"
+  ],
+  "sampling_audit": {
+    "artifact_counts": {
+      "control": 1,
+      "payload": 1
+    },
+    "artifacts_verified": true,
+    "control_core_sha256": "4c47a161cbeb33b098d6878bcb665598dfa605bf3edb41035f723873fb356cdb",
+    "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T050638.258508Z-sampling-audit-368534957d07/manifest.json",
+    "control_manifest_sha256": "fc46b47ae1b51dcdd2b694b5e7bfb50ee2c1c61378f10ec0152a249c77397759",
+    "locator_counts": {
+      "control": 0,
+      "payload": 0
+    },
+    "payload_core_sha256": "4616ee5a52e10e0f91e2eb3b901d913de30de2b4e401babad189e695825b1bce",
+    "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/aivw.dynamic_sampling.public_diagnostic/runs/20260908T050638.258508Z-sampling-audit-368534957d07/payload-manifest.json",
+    "payload_manifest_sha256": "582521a251b7d04e1f79f5c9b4aa38be65038a821ade4cadbb9fb6f393efbe25",
+    "request_digest": "368534957d0726516c3eee63a08df1c588de86a07f01abdbdb58977d3ea84693",
+    "run_id": "20260908T050638.258508Z-sampling-audit-368534957d07",
+    "run_status": "PUBLIC_SAMPLING_DIAGNOSTICS_RECORDED",
+    "status": "PASS",
+    "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/aivw.dynamic_sampling.public_diagnostic/runs/20260908T050638.258508Z-sampling-audit-368534957d07/summary.json",
+    "summary_sha256": "a22b735cbeee5ee5d27a819fee59bdd7fdbae3b7ad46bbb90588bf2809884f3f"
+  },
+  "schema_version": 1,
+  "source_oa_modified": false,
+  "tests": {
+    "compile_and_recipe_json": "PASS",
+    "final_transition_sampling_passed": 11,
+    "full_aivw_passed": 676,
+    "whitespace": "PASS"
+  },
+  "transition_audit": {
+    "artifact_counts": {
+      "control": 1,
+      "payload": 1
+    },
+    "artifacts_verified": true,
+    "control_core_sha256": "a5dbb2aa6da418027b88dcabb3a9b07226b9bb670c41fdcda1903f1f9e82ac8d",
+    "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T053748.687731Z-transition-audit-f900a16ee1cc/manifest.json",
+    "control_manifest_sha256": "9d6b836880fc1534761fcf2813ab23fa8fd1c1c63db9b33c53ab92d7ccc83c3b",
+    "inputs": [
+      {
+        "artifact_counts": {
+          "control": 1,
+          "payload": 723
+        },
+        "artifacts_verified": true,
+        "candidate_sha256": "ecd1a70b14e02ca16cfb6fbc6966a138a31c4610af64d3700f449c6f38d25d70",
+        "case_count": 17,
+        "control_core_sha256": "e8e1e01119aa62493d83b05dc11722ebb1f4f3c56abee246a5384e074f430b54",
+        "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T051708.122263Z-transition-response-ef4c4e8ec659/manifest.json",
+        "control_manifest_sha256": "e4e6443c6f2ffa340f19513db7f956065b0dfe92885f6a2bc29069b22b77732b",
+        "label": "MASTER_v1",
+        "locator_counts": {
+          "control": 0,
+          "payload": 0
+        },
+        "parity": "PASS",
+        "passed_cases": 15,
+        "payload_core_sha256": "d4205fdee31e4013e6bceb9281985156a774175aba31a45ecd86981cb957440b",
+        "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.transition_response/runs/20260908T051708.122263Z-transition-response-ef4c4e8ec659/payload-manifest.json",
+        "payload_manifest_sha256": "3de3aa8fea140b981af0ecc607207bdf514f37d55b9c83bf7a2df131bd07ff0e",
+        "regressions_from_v6": [],
+        "remaining_failures": [
+          "startup_rate_0",
+          "startup_rate_1"
+        ],
+        "request_digest": "ef4c4e8ec65919cebd5b6ed22a488cb3b258f93e05ae562153ebc06cb74d037a",
+        "run_id": "20260908T051708.122263Z-transition-response-ef4c4e8ec659",
+        "run_status": "BLOCKED_CONTRACT",
+        "status": "PASS",
+        "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.transition_response/runs/20260908T051708.122263Z-transition-response-ef4c4e8ec659/summary.json",
+        "summary_sha256": "b560f305660aeaca2a2ed168e9be69fbb77a1b99c65b5d815bd0f59958fea22f"
+      },
+      {
+        "artifact_counts": {
+          "control": 1,
+          "payload": 1017
+        },
+        "artifacts_verified": true,
+        "candidate_sha256": "2b8f27be474913ed1d9e921dd7530a6928d51706363b038b13f225f60303b256",
+        "case_count": 24,
+        "control_core_sha256": "a4c3b0d898b8b9614c6ee6208b1fb5ef3196fdae64f16fd6ae29cbabbfed4bc3",
+        "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T051705.138145Z-transition-response-d1b4501967fa/manifest.json",
+        "control_manifest_sha256": "5c0554824135a956521a914eeab04b01091320416a2c2f761b3ada37168e11ab",
+        "label": "AON_v1",
+        "locator_counts": {
+          "control": 0,
+          "payload": 0
+        },
+        "parity": "PASS",
+        "passed_cases": 18,
+        "payload_core_sha256": "e0fcf64f24b1dcdbb0ecf86167ffc6cf77c4a7c09489f2e6a001b76723c75ed5",
+        "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.transition_response/runs/20260908T051705.138145Z-transition-response-d1b4501967fa/payload-manifest.json",
+        "payload_manifest_sha256": "ce00ec9ddf3e1e1c10a6262f7ca3b948a1efcb2abd91f89c57e25d05d6250ad9",
+        "regressions_from_v6": [
+          "supply_fall_rate_0"
+        ],
+        "remaining_failures": [
+          "startup_rate_0",
+          "supply_fall_rate_0",
+          "enable_rise_rate_0",
+          "enable_rise_rate_1",
+          "enable_rise_rate_2",
+          "enable_rise_then_enable_fall"
+        ],
+        "request_digest": "d1b4501967faa1f71638b3386e92c04fa0d881e22ff67fecfb214a30bee52a73",
+        "run_id": "20260908T051705.138145Z-transition-response-d1b4501967fa",
+        "run_status": "BLOCKED_CONTRACT",
+        "status": "PASS",
+        "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.transition_response/runs/20260908T051705.138145Z-transition-response-d1b4501967fa/summary.json",
+        "summary_sha256": "5d44a83912f735d6a007e8b583c809b364e9ec641d53341ab1f6f9e08f955686"
+      },
+      {
+        "artifact_counts": {
+          "control": 1,
+          "payload": 723
+        },
+        "artifacts_verified": true,
+        "candidate_sha256": "6b43389d2756b36a4a5bd3e056af0a58675d8d1a12b9d0ac0d470ba317e42ba6",
+        "case_count": 17,
+        "control_core_sha256": "c45e3ebdb112b23bc7bdf81ee111fcf99b33aeb84440abf133ea6dd192a47534",
+        "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T052542.673889Z-transition-response-1c20eca1363a/manifest.json",
+        "control_manifest_sha256": "2243b96c7d810fd3f2b90b1541c38291f4202894233346aa090c35b440027d61",
+        "label": "MASTER_v2",
+        "locator_counts": {
+          "control": 0,
+          "payload": 0
+        },
+        "parity": "PASS",
+        "passed_cases": 16,
+        "payload_core_sha256": "040cda465417adc0edc369424b9af7b53d298e2a08b2f7ab3b091352b38fae77",
+        "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.transition_response/runs/20260908T052542.673889Z-transition-response-1c20eca1363a/payload-manifest.json",
+        "payload_manifest_sha256": "27c1aa1c14c04e1abbdbb7b0cdf6b6f3faf791dda254bffc3ed96a5b8ed10467",
+        "regressions_from_v6": [],
+        "remaining_failures": [
+          "startup_rate_0"
+        ],
+        "request_digest": "1c20eca1363a44bd40fc4a39c7d827e5051fb600cdd1f16f4d6a7d5dd6acc9aa",
+        "run_id": "20260908T052542.673889Z-transition-response-1c20eca1363a",
+        "run_status": "BLOCKED_CONTRACT",
+        "status": "PASS",
+        "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.transition_response/runs/20260908T052542.673889Z-transition-response-1c20eca1363a/summary.json",
+        "summary_sha256": "005e68904da0489625097654269b9535afb8e7b2532a45f0e6d40f00982def6b"
+      },
+      {
+        "artifact_counts": {
+          "control": 1,
+          "payload": 1017
+        },
+        "artifacts_verified": true,
+        "candidate_sha256": "c519a85910751534a6d9a1149f0b1bf2de22241b57f5cbd7e7fc49d6c8be8e20",
+        "case_count": 24,
+        "control_core_sha256": "2f079a8241272f2b0bbaaaf974f5b0c828d28bfe85f5ab128a4436a157635980",
+        "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T052604.979276Z-transition-response-b112f98886ac/manifest.json",
+        "control_manifest_sha256": "d500038d6f1f9ef2a8a79ab0bac8370d786e6e888e770a187723540f7ea18d4e",
+        "label": "AON_v2",
+        "locator_counts": {
+          "control": 0,
+          "payload": 0
+        },
+        "parity": "PASS",
+        "passed_cases": 24,
+        "payload_core_sha256": "0861e887d7bac01d909a086621792575588ea2dc8e5d146fd3dbdeba82df6d43",
+        "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.transition_response/runs/20260908T052604.979276Z-transition-response-b112f98886ac/payload-manifest.json",
+        "payload_manifest_sha256": "47630fffe6c86598408b3a817689bb63aba8fc7a7419ff8d6d0f65d886259eae",
+        "regressions_from_v6": [],
+        "remaining_failures": [],
+        "request_digest": "b112f98886ac2e57e44f14e66421922b04d975d3859fff38934f8d90479e7e15",
+        "run_id": "20260908T052604.979276Z-transition-response-b112f98886ac",
+        "run_status": "BLOCKED_CONTRACT",
+        "status": "PASS",
+        "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.transition_response/runs/20260908T052604.979276Z-transition-response-b112f98886ac/summary.json",
+        "summary_sha256": "b31f11387f698278200f43fe940136db460ce472f2696d4faef458d13827d279"
+      },
+      {
+        "artifact_counts": {
+          "control": 1,
+          "payload": 723
+        },
+        "artifacts_verified": true,
+        "candidate_sha256": "dbf7fb3ce777688239714bc5a2140794c78e3114df9932cbca6553d8a5a72b06",
+        "case_count": 17,
+        "control_core_sha256": "c4fcd51d9e52672c7d24616f88cc04f597029dec5c79df43f04264bf7a684740",
+        "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T053045.674467Z-transition-response-1bd9b6cc1850/manifest.json",
+        "control_manifest_sha256": "2d9711bec0e78681732be0d65ed9c3971287a9f8e6b6b434259a107f1b31f793",
+        "label": "MASTER_v3",
+        "locator_counts": {
+          "control": 0,
+          "payload": 0
+        },
+        "parity": "PASS",
+        "passed_cases": 16,
+        "payload_core_sha256": "f170341a24329418f381dc99a870dea590e900c0ed5d3eb63d7b541e26779475",
+        "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.transition_response/runs/20260908T053045.674467Z-transition-response-1bd9b6cc1850/payload-manifest.json",
+        "payload_manifest_sha256": "024aeaf5f1e48b72ca8f1e0426e8987a9ca1cf57b19a801bbcd0835688179ece",
+        "regressions_from_v6": [],
+        "remaining_failures": [
+          "startup_rate_0"
+        ],
+        "request_digest": "1bd9b6cc18504e6f76e0e70717fcb7da461ab9b34c2962c6a612d3d48ce22fc9",
+        "run_id": "20260908T053045.674467Z-transition-response-1bd9b6cc1850",
+        "run_status": "BLOCKED_CONTRACT",
+        "status": "PASS",
+        "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.transition_response/runs/20260908T053045.674467Z-transition-response-1bd9b6cc1850/summary.json",
+        "summary_sha256": "f23c48e715a7b956007bcaac4acb95055d2f62c5dcac327d0349bf121d53c35c"
+      }
+    ],
+    "locator_counts": {
+      "control": 0,
+      "payload": 0
+    },
+    "payload_core_sha256": "96daad19c1c9f1f8c72b11d407d68ab332cb0276e1d241c4d9f03758587f6325",
+    "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/aivw.transition_checkpoint.evidence/runs/20260908T053748.687731Z-transition-audit-f900a16ee1cc/payload-manifest.json",
+    "payload_manifest_sha256": "8fa2360c44fefafbf2889b0eb3844c888deeeb9675b28a2cbc9c81cbf446124f",
+    "request_digest": "f900a16ee1ccf7f869136f61d96d1f9dd2f79016cf0bcc640dddfa5ade035ec3",
+    "run_id": "20260908T053748.687731Z-transition-audit-f900a16ee1cc",
+    "run_status": "PASS_EVIDENCE_AUDIT",
+    "status": "PASS",
+    "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/aivw.transition_checkpoint.evidence/runs/20260908T053748.687731Z-transition-audit-f900a16ee1cc/summary.json",
+    "summary_sha256": "b5784a1fcaf9c0da9b4b1958bfe7069b60998a95b71c010a245adc539f17bccd"
+  }
+}

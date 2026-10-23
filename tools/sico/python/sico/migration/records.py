@@ -115,24 +115,22 @@ def validate_one(stream, entry, inventory):
         # The session adapter validates this against the authoritative end event.
         return None
     elif schema == "provider":
-        from ..providers.config import validate_config
+        from ..configuration.provider import validate_config
 
         validate_config(row)
     elif schema == "resources":
-        from ..codex.resource_config import validate_manifest
+        from ..agent_resources.schema import validate_manifest
 
         validate_manifest(row)
     elif schema == "project":
         from ..service.project_identity import PROTOCOL, ProjectIdentity
-        from ..service.service_discovery import local_host
 
         if row.pop("protocol", None) != PROTOCOL:
             raise ValueError("Invalid project identity protocol")
         identity = ProjectIdentity(**row)
         directory = inventory["ai/agent"]["identity"]
         lock = inventory["ai/agent/service/owner.lock"]["identity"]
-        if (not identity.matches_location(directory["inode"], directory["device"],
-                                          local_host().host_id)
+        if (not identity.matches_location(directory["inode"])
                 or identity.lock_inode != lock["inode"]):
             raise ValueError("Project identity differs from source directory")
         entry["object_id"] = identity.project_id
@@ -152,7 +150,7 @@ def validate_one(stream, entry, inventory):
             return "unresolved_operation"
     elif schema == "measurement":
         from cadai.result_contract import digest
-        from cadai.result_tools import ARTIFACT_SCHEMAS
+        from cadai.result_store import ARTIFACT_SCHEMAS
 
         prefix, expected = PurePosixPath(path).stem.rsplit("_", 1)
         if row.get("schema") != ARTIFACT_SCHEMAS[prefix] or digest(row) != expected:

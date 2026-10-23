@@ -13,11 +13,14 @@ from ..storage.workbench import WorkbenchIndex
 from ..transport.framing import strict_json
 from .detail_content import DetailContent
 from .display import data_html
-from .events import SESSION_CONTRACT, EventCursor
+from ..core.session_events import SESSION_CONTRACT, EventCursor
 from .native_display import native_html
 from .process_data import ProcessIndex
+from .preview_catalog import preview_index as _preview_index
+from .preview_catalog import read_preview as _read_preview
 from .published import FrozenDict, thaw
 from .schematic_preview import preview_images
+from .task_detail import TaskDetailContent
 from .tool_display import result_html
 from .workbench_budget import WorkbenchBudget
 from .workbench_publication import WorkbenchQueryPublication, publish_query
@@ -195,6 +198,14 @@ class WorkbenchSource:
             result = self._processes.detail(key, self.live_processes)
             self.validate_current()
             return result
+        if kind in {"task", "stage", "work"}:
+            try:
+                result = TaskDetailContent(
+                    self._index, compact=compact).prepare(kind, key)
+            except ValueError as exc:
+                raise DetailLinkError(str(exc)) from exc
+            self.validate_current()
+            return result
         try:
             target = self._index.resolve(kind, key)
             if parent and parent[0] == "report":
@@ -205,6 +216,19 @@ class WorkbenchSource:
         except ValueError as exc:
             raise DetailLinkError(str(exc)) from exc
         result = DetailContent(self._index, compact=compact).prepare(kind, key)
+        self.validate_current()
+        return result
+
+    def preview_artifact(self, name=""):
+        """List, or read by name, the workspace preview products for the viewer."""
+        return self.service._request(self._preview_query, name)
+
+    def _preview_query(self, name):
+        self.validate_current()
+        if name:
+            result = _read_preview(self._reader, name)
+        else:
+            result = _preview_index(self._reader)
         self.validate_current()
         return result
 

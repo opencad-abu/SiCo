@@ -2,7 +2,7 @@
 ; Load AI_protocol.il and AI_eval.il first. No arbitrary SKILL arrives over this channel.
 
 unless(and(boundp('sicoContextVersion)
-           sicoContextVersion=="20260921.sico.context.v1")
+           sicoContextVersion=="20261020.sico.context.v3")
 
 unless(boundp('sicoBindings) sicoBindings=makeTable("sicoBindings" nil))
 
@@ -45,54 +45,23 @@ procedure(sicoAdeCellJson(session)
       aiJsonEscape(libName) aiJsonEscape(cellName) aiJsonEscape(viewName)))))
 
 procedure(sicoContextJson(binding)
-  prog((window cellView liveWindow cellJson valid protected ade historyName historyHandle sharedRef libraryPath libraryName)
-    binding['cwd]=or(binding['cwd] aiWorkingDirectory())
-    window=binding['window]
-    valid=t
-    when(window
-      protected=errset(hiGetWindowList('all) nil)
-      valid=and(protected member(window car(protected)))
-      when(valid
-        when(isCallable('axlGetWindowSession)
-          protected=errset(axlGetWindowSession(window) nil)
-          when(protected ade=car(protected)))
-        if(ade then
-          protected=errset(sicoAdeCellJson(ade) nil)
-          cellJson=when(protected car(protected))
-          when(or(!cellJson cellJson=="null") valid=nil)
-        else
-          unless(and(isCallable('hiGetCIWindow) window==hiGetCIWindow())
-            if(aiWindowGraphical(window) then
-              protected=errset(geGetWindowCellView(window) nil)
-              when(protected cellView=car(protected))
-              unless(cellView valid=nil)
-            else valid=nil)))))
-    cellJson=or(cellJson aiCellViewJson(cellView))
-    when(and(binding['cellJson] cellJson!=binding['cellJson]) valid=nil)
-    unless(binding['cellJson] binding['cellJson]=cellJson)
-    when(and(binding['adeSession] ade!=binding['adeSession]) valid=nil)
-    when(ade unless(binding['adeSession] binding['adeSession]=ade))
-    when(binding['historyHandle]
-      protected=errset(axlGetHistoryName(binding['historyHandle]) nil)
-      historyName=when(protected car(protected))
-      protected=when(ade
-        errset(axlGetHistoryEntry(axlGetMainSetupDB(ade) binding['historyName]) nil))
-      historyHandle=when(protected car(protected))
-      unless(and(historyName==binding['historyName]
-                 historyHandle==binding['historyHandle]) valid=nil))
-    when(binding['testName]
-      protected=when(ade errset(axlGetTests(axlGetMainSetupDB(ade)) nil))
-      unless(and(protected member(binding['testName] cadr(car(protected)))) valid=nil))
-    when(and(window isCallable('sicoEntryRef))
-      sharedRef=sicoEntryRef(binding)
-      unless(and(sharedRef aiWindowResolve(sharedRef)) valid=nil))
-    libraryName=if(ade aiWindowTry('axlGetSessionLibName list(ade)) when(cellView cellView~>libName))
-    when(libraryName libraryPath=car(errset(ddGetObjReadPath(ddGetObj(libraryName)) nil)))
+  prog((window liveWindow cellJson valid ade sharedRef libraryPath viewType observation code)
+    binding['cwd]=or(binding['cwd] aiWorkingDirectory()) window=binding['window]
+    observation=sicoSourceObservation(binding)
+    valid=car(observation)=='valid
+    code=if(car(observation)=='unknown "context_unavailable" "stale_context")
+    binding['contextCode]=unless(valid code)
+    sharedRef=cadr(observation)
+    cellJson=or(binding['cellJson] "null") ade=binding['adeSession]
+    libraryPath=nth(4 observation)
+    viewType=if(ade "maestro"
+      when(and(isCallable('aiWindowGraphical) aiWindowGraphical(window))
+        car(errset(geGetWindowCellView(window)~>cellViewType nil))))
     liveWindow=if(window then sprintf(nil "%L" window) else "")
     binding['valid]=valid
     return(sprintf(nil
-      "{\"native_binding\":\"cad_ai_native_binding.v1\",\"valid\":%s,\"cwd\":\"%s\",\"window\":\"%s\",\"cellview\":%s,\"ade_session\":\"%s\",\"version\":\"%s\",\"entry\":\"%s\",\"history\":\"%s\",\"test\":\"%s\",\"selection_scope\":\"%s\",\"capabilities\":%s,\"window_ref\":\"%s\",\"library_path\":\"%s\"}"
-      if(valid then "true" else "false") aiJsonEscape(or(binding['cwd] aiWorkingDirectory()))
+      "{\"native_binding\":\"cad_ai_native_binding.v1\",\"valid\":%s,\"code\":\"%s\",\"cwd\":\"%s\",\"window\":\"%s\",\"cellview\":%s,\"ade_session\":\"%s\",\"version\":\"%s\",\"entry\":\"%s\",\"history\":\"%s\",\"test\":\"%s\",\"selection_scope\":\"%s\",\"capabilities\":%s,\"window_ref\":\"%s\",\"library_path\":\"%s\",\"view_type\":\"%s\"}"
+      if(valid then "true" else "false") if(valid "" code) aiJsonEscape(or(binding['cwd] aiWorkingDirectory()))
       aiJsonEscape(liveWindow) cellJson
       aiJsonEscape(if(ade then if(stringp(ade) then ade else sprintf(nil "%L" ade)) else ""))
       aiJsonEscape(getVersion(t)) aiJsonEscape(or(binding['entry] "connect"))
@@ -110,7 +79,8 @@ procedure(sicoContextJson(binding)
           ",\"project_session\",\"project_observe\",\"project_receipt\"" "")
         if(isCallable('aiCopilotDispatch) ",\"circuit_call\"" "")
         if(isCallable('aiEvalExpression) ",\"assistant_call\"" "") "]")
-      aiJsonEscape(or(sharedRef "")) aiJsonEscape(or(libraryPath ""))))
+      aiJsonEscape(or(sharedRef "")) aiJsonEscape(or(libraryPath ""))
+      aiJsonEscape(or(viewType ""))))
   )
 )
 
@@ -206,7 +176,7 @@ procedure(sicoReadReply(binding line)
              member(method list("get_context" "get_project_context" "read_ade_setup" "read_ade_history")))
       protected=errset(if(method=="get_project_context"
         sicoProjectContextJson(binding) sicoContextJson(binding)) nil)
-      code="stale_context"
+      code=if(protected or(binding['contextCode] "stale_context") "context_unavailable")
       when(protected
         if(member(method list("get_context" "get_project_context")) then payload=car(protected)
         else when(binding['valid]
@@ -250,8 +220,10 @@ procedure(sicoRequestBody(cid line)
           sicoProjectContextJson(target)
           unless(target['projectValid] error("Stale task project"))
         else
+          code="context_unavailable"
           sicoContextJson(target)
-          unless(target['valid] error("Stale task source")))
+          code=or(target['contextCode] "stale_context")
+          unless(target['valid] error("Task source not confirmed")))
         code="read_failed"
         sicoEntryRead(target cadr(fields) cdddr(fields))) nil)
       payload=when(protected car(protected))
@@ -378,7 +350,7 @@ procedure(sicoDisconnect(cid)
 )
 
 procedure(sicoContextRevision()
-  "20260921.sico.context.v1")
+  "20261020.sico.context.v3")
 
-sicoContextVersion="20260921.sico.context.v1"
+sicoContextVersion="20261020.sico.context.v3"
 )

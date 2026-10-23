@@ -1,9 +1,9 @@
-"""SiCo terminal tool built directly on the QTermWidget class.
+"""Auxiliary user-launched terminal window built on QTermWidget.
 
-The terminal is a first-class SiCo window: shared chrome, theme and the SiCo
-colour scheme.  It opens a local login shell in the current project directory
-and keeps the AI session credentials and the frontend's loader paths out of
-the shell environment.
+This window is not the session command terminal. SiCo/Codex shell and EDA
+commands use the session-owned command terminal; this auxiliary window only
+opens an interactive local shell for the user. Compatibility exports refer to
+the service's sole environment policy.
 """
 
 from __future__ import annotations
@@ -28,52 +28,24 @@ from sico.service.terminal_platform import (
 from sico.service.terminal_platform import (
     platform_name as platform_name,
 )
+from sico.service.terminal_startup import prepare_shell
+# Legacy same-object exports; migrate callers to the service owner before removal.
+from sico.service.terminal_environment import (
+    LOGIN_SHELLS as LOGIN_SHELLS, SHELL_ENV_DROP as SHELL_ENV_DROP,
+    shell_command as shell_command,
+)
 
+from .appearance import AppearancePreferences
 from .chrome import SiWidget
 from .si_prompt import notice
 
 
-COLOR_SCHEME_RELATIVE = "color-schemes/SiCo.colorscheme"
+COLOR_SCHEMES = {
+    "light": "color-schemes/SiCo.colorscheme",
+    "dark": "color-schemes/SiCoDark.colorscheme",
+}
 QTERMWIDGET_BINDING = Path("python") / "QTermWidget.abi3.so"
 QTERMWIDGET_LIBRARY = Path("lib") / "libqtermwidget5.so.1"
-LOGIN_SHELLS = frozenset({"bash", "sh", "dash", "ksh", "zsh"})
-
-# The interactive shell must look like a normal site login shell: the
-# frontend's loader paths would shadow the system libraries for ordinary
-# commands, and the AI session credentials must never reach a shell.
-SHELL_ENV_DROP = frozenset(
-    {
-        "LD_LIBRARY_PATH",
-        "LD_PRELOAD",
-        "LD_AUDIT",
-        "PYTHONHOME",
-        "PYTHONPATH",
-        "PYTHONNOUSERSITE",
-        "SICO_API_KEY",
-        "CAD_AGENT_API_KEY",
-        "CAD_CODEX_API_KEY",
-        "SICO_CODEX_API_KEY",
-        "SICO_MODEL_KEY",
-        "SICO_MCP_TOKEN",
-        "CAD_COPILOT_MODEL_KEY",
-        "CAD_COPILOT_MCP_TOKEN",
-        "CAD_STUDIO_MCP_TOKEN",
-        "CAD_AI_TOKEN",
-        "CAD_AI_SOCKET",
-        "CAD_AI_SPOOL",
-        "SICO_AI_CONTROL_FD",
-        "CAD_AI_CONTROL_FD",
-        "CAD_AI_RUNTIME",
-        "CAD_AI_WORKSPACE",
-        "CAD_AI_PROFILE",
-        "SICO_AI_TOKEN",
-        "SICO_AI_SOCKET",
-        "SICO_AI_SPOOL",
-        "SICO_AI_RUNTIME",
-        "SICO_AI_WORKSPACE",
-        "SICO_AI_PROFILE",
-    }
-)
 
 
 def qtermwidget_runtime(
@@ -124,45 +96,52 @@ def load_qtermwidget(runtime: Path):
     return QTermWidget
 
 
-def shell_command(environment: Mapping[str, str] | None = None) -> list[str]:
-    """The command QTermWidget runs: a login shell without session variables."""
-
-    source = os.environ if environment is None else environment
-    shell = source.get("SHELL", "").strip() or "/bin/bash"
-    arguments = ["-l"] if Path(shell).name in LOGIN_SHELLS else []
-    dropped = sorted(name for name in SHELL_ENV_DROP if name in source)
-    if not dropped:
-        return [shell, *arguments]
-    command = ["/usr/bin/env"]
-    for name in dropped:
-        command.extend(("-u", name))
-    return [*command, shell, *arguments]
-
-
 def fixed_pitch_terminal_font(
     database=QFontDatabase,
     info=QFontInfo,
+    *,
+    allow_bundled=True,
+    point_size=None,
 ):
     """A font Qt resolves to fixed pitch, preferring the common mono families."""
 
+    if allow_bundled:
+        from cadgui.fonts import terminal_font
+
+        bundled = terminal_font(point_size=point_size)
+        if bundled is not None:
+            return bundled
     font = database.systemFont(database.FixedFont)
-    if info(font).fixedPitch():
-        return font
-    instance = database()
-    families = instance.families()
-    for candidate in (
-        "DejaVu Sans Mono",
-        "Liberation Mono",
-        "Nimbus Mono PS",
-        "Courier New",
-        "Monospace",
-    ):
-        if candidate in families and instance.isFixedPitch(candidate):
-            font.setFamily(candidate)
-            font.setStyleHint(font.Monospace)
-            font.setFixedPitch(True)
-            return font
+    if not info(font).fixedPitch():
+        instance = database()
+        families = instance.families()
+        for candidate in (
+            "DejaVu Sans Mono",
+            "Liberation Mono",
+            "Nimbus Mono PS",
+            "Courier New",
+            "Monospace",
+        ):
+            if candidate in families and instance.isFixedPitch(candidate):
+                font.setFamily(candidate)
+                font.setStyleHint(font.Monospace)
+                font.setFixedPitch(True)
+                break
+    if point_size is not None:
+        font.setPointSize(point_size)
     return font
+
+
+def apply_terminal_appearance(terminal, preferences, resource=None):
+    """Apply the active SiCo palette and body-text size to one QTermWidget."""
+
+    terminal.setTerminalFont(
+        fixed_pitch_terminal_font(point_size=preferences.text_point_size))
+    relative = COLOR_SCHEMES.get(preferences.theme)
+    resolver = terminal_resource if resource is None else resource
+    scheme = resolver(relative) if relative is not None else None
+    if scheme:
+        terminal.setColorScheme(str(scheme))
 
 
 class SiTerminalWindow(SiWidget):
@@ -171,28 +150,36 @@ class SiTerminalWindow(SiWidget):
     # SiCo 摆位：工具窗口放右半屏，主窗口占左半屏。
     launch_half = "right"
 
-    def __init__(self, qtermwidget_type, parent=None, workspace=None, command=None):
+    def __init__(self, qtermwidget_type, parent=None, workspace=None, command=None,
+                 environment=None, appearance=None):
+        source = dict(os.environ if environment is None else environment)
+        command, child_environment = prepare_shell(source, command=command, inherited=os.environ)
+        self._appearance = appearance or AppearancePreferences()
         super().__init__(title=f"{PRODUCT_NAME}::终端", parent=parent)
         self.setObjectName("sicoTerminalWindow")
-        command = list(command) if command is not None else shell_command()
         terminal = qtermwidget_type(0, self)
         self.terminal = terminal
         terminal.setObjectName("sicoTerminal")
         terminal.setShellProgram(command[0])
         terminal.setArgs(command[1:])
+        terminal.setEnvironment([name + "=" + value for name, value in child_environment.items()])
         if workspace is not None:
             terminal.setWorkingDirectory(str(workspace))
         terminal.setHistorySize(5000)
         terminal.setScrollBarPosition(qtermwidget_type.ScrollBarRight)
         terminal.setTextCodec(QTextCodec.codecForName(b"UTF-8"))
-        terminal.setTerminalFont(fixed_pitch_terminal_font())
-        scheme = terminal_resource(COLOR_SCHEME_RELATIVE)
-        if scheme:
-            terminal.setColorScheme(str(scheme))
+        apply_terminal_appearance(terminal, self._appearance)
         self.content_layout().addWidget(terminal, 1)
         self._install_context_menu(terminal)
         self.resize(920, 600)
         terminal.startShellProgram()
+
+    def refresh_appearance(self, preferences=None):
+        """Keep the terminal palette and font on the active SiCo appearance."""
+        super().refresh_appearance(preferences)
+        if preferences is not None:
+            self._appearance = preferences
+        apply_terminal_appearance(self.terminal, self._appearance)
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -262,7 +249,7 @@ def _forget_terminal(window) -> None:
 
 
 def open_terminal(window: QWidget | None) -> None:
-    """Open (or raise) the SiCo terminal window for this Studio window."""
+    """Open (or raise) the auxiliary interactive terminal window."""
 
     existing = getattr(window, "_sico_terminal_window", None) if window is not None else None
     if isinstance(existing, SiTerminalWindow):
@@ -287,11 +274,16 @@ def open_terminal(window: QWidget | None) -> None:
     except (ImportError, OSError, ValueError) as exc:
         report_unavailable(window, f"无法加载 QTermWidget：{exc}")
         return
-    terminal_window = SiTerminalWindow(
-        qtermwidget_type,
-        parent=window,
-        workspace=launch_directory(window),
-    )
+    try:
+        terminal_window = SiTerminalWindow(
+            qtermwidget_type,
+            parent=window,
+            workspace=launch_directory(window),
+            appearance=getattr(window, "appearance", None),
+        )
+    except ValueError as exc:
+        report_unavailable(window, f"无法准备终端环境：{exc}")
+        return
     terminal_window.setAttribute(Qt.WA_DeleteOnClose, True)
     if window is not None:
         window._sico_terminal_window = terminal_window

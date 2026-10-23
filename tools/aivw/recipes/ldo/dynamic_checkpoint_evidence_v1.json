@@ -1,0 +1,44 @@
+{
+  "kind": "dynamic-development-checkpoint",
+  "policy": "dynamic_acceptance_proposal_v1.json",
+  "qualification": "NOT_ESTABLISHED",
+  "runs": [
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T234413.784278Z-trajectory-revision-audit-dc89ea8ddb7e/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260907T234413.784278Z-trajectory-revision-audit-dc89ea8ddb7e",
+      "run_status": "BLOCKED_DYNAMIC_QUALIFICATION",
+      "sha256": "261e20d32cc73831d521d9851b86bd370f590007ebc976f195fc119095bb6050"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T234447.381113Z-trajectory-revision-audit-8dbc50f6baf2/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260907T234447.381113Z-trajectory-revision-audit-8dbc50f6baf2",
+      "run_status": "BLOCKED_DYNAMIC_QUALIFICATION",
+      "sha256": "2830dbd6c10c14977f7e4a2b4d217803897bd8b9157497f7c5ee5456efb54fc0"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T234826.883747Z-dynamic-holdout-reservation-fe9c5d995c15/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260907T234826.883747Z-dynamic-holdout-reservation-fe9c5d995c15",
+      "run_status": "RESERVED_NOT_EVALUATED",
+      "sha256": "7a165ce3bc444ee32e912045849d29b9e8b6955049a40cf7b19d3d941d2dee66"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T234827.065413Z-dynamic-holdout-reservation-c6bf5ab61f03/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260907T234827.065413Z-dynamic-holdout-reservation-c6bf5ab61f03",
+      "run_status": "RESERVED_NOT_EVALUATED",
+      "sha256": "f52bc2f26fa34c0bac146aeb9ba51f2cc06e1453b6d5c0f15daf5c555a45fbf8"
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T234715.623528Z-recipe-run-22c11634b854/manifest.json",
+      "integrity": "PASS",
+      "run_id": "20260907T234715.623528Z-recipe-run-22c11634b854",
+      "run_status": "PASS",
+      "sha256": "a89587ab04fedd8e9290d04fb4f10feb5b2466ec3cabf016861d95fdbcbeea15"
+    }
+  ],
+  "schema_version": 1,
+  "scope": "controlled_revision_and_single_event_holdout_reservation"
+}

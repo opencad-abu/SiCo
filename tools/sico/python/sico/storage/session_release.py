@@ -1,7 +1,7 @@
 """Durable resource-release receipt, written only after the session writer closes."""
 
 from ..core.contracts import identifier
-from ..transport.framing import ProtocolError
+from cadai.json_values import ProtocolError
 from .project_files import RegistryError, read_record, write_record
 
 NAME = "end-release.json"

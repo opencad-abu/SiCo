@@ -55,32 +55,52 @@ class SocketClient:
     def call(self, method: str, arguments: dict[str, Any]) -> tuple[bool, dict[str, Any]]:
         request_id = uuid.uuid4().hex
         owned_spool: str | None = None
+        submitted = False
         try:
             params, owned_spool = self._prepare_params(method, arguments)
             self._connect()
             assert self._socket is not None and self._reader is not None
+            # sendall can fail after a partial write; treat the effect as
+            # uncertain once submission starts, not only after it returns.
+            submitted = True
             self._socket.sendall(
                 encode_line({"id": request_id, "method": method, "params": params})
             )
             raw = self._reader.readline(MAX_LINE_BYTES + 2)
             if not raw or len(raw) > MAX_LINE_BYTES + 1 or not raw.endswith(b"\n"):
-                raise ConnectionError(
-                    "cdns-ipc disconnected; execution status is unknown and was not retried"
-                )
+                raise ConnectionError("cdns-ipc disconnected while awaiting the reply")
             response_id, ok, detail = require_response(decode_line(raw[:-1]))
             if response_id != request_id:
                 raise ConnectionError("cdns-ipc returned a mismatched request id")
             return ok, detail
         except (UnicodeError, ValueError) as exc:
-            return False, {"code": "payload_too_large", "message": str(exc)}
+            return False, {
+                "code": "payload_too_large",
+                "message": f"{exc}; shorten or split the submitted source",
+            }
         except _BridgeRejectedError as exc:
             self.close()
-            return False, {"code": exc.code, "message": str(exc)}
+            hint = (
+                "; close an unused MCP client or restart the SiCo service before retrying"
+                if exc.code == "bridge_in_use"
+                else ""
+            )
+            return False, {"code": exc.code, "message": str(exc) + hint}
         except (OSError, TimeoutError, ProtocolError) as exc:
             self.close()
+            if submitted:
+                state = (
+                    "after request submission; execution status is unknown. "
+                    "Verify the operation state before reissuing a write"
+                )
+            else:
+                state = (
+                    "before request submission; no request was sent. "
+                    "Restore the SiCo connection before retrying"
+                )
             return False, {
                 "code": "bridge_unavailable",
-                "message": f"{exc}; the request was not retried",
+                "message": f"cdns-ipc call failed {state}: {exc}; not retried",
             }
         finally:
             if owned_spool is not None:

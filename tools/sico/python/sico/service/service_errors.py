@@ -13,6 +13,15 @@ def is_unknown_outcome(error):
     return isinstance(error, (ProtocolError, ResultUnknown))
 
 
+def is_request_unsent(error):
+    """True when no request bytes left the client.
+
+    A connection failure before the request changes nothing and is safe to
+    retry; callers must not describe it with "unconfirmed operation" wording.
+    """
+    return isinstance(error, RequestUnsent)
+
+
 class ServiceRequestError(RuntimeError):
     """Base class for an operation whose local outcome is classified."""
 
@@ -32,6 +41,10 @@ class ResultUnknown(ServiceRequestError):
 
 class StopResultUnknown(ResultUnknown):
     """Compatibility name for an unknown lifecycle stop outcome."""
+
+
+class ServiceResultUnknown(ResultUnknown):
+    """The service returned an unknown business outcome over a valid transport."""
 
 
 class ServiceCapacityError(ServiceRequestError):

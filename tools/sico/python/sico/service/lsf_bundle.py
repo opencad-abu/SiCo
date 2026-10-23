@@ -168,9 +168,9 @@ def run_node(path):
         _, config = load(directory.parent.parent, row)
         cluster = os.environ.get('LSF_CLUSTER_NAME')
         if not cluster:
-            from .lsf_scheduler import LsfScheduler
+            from ..lsf.job_control import LsfJobControl
 
-            cluster = LsfScheduler(config).verify_cluster()
+            cluster = LsfJobControl(config).verify_cluster()
         actual = dict(cluster=cluster,
                       owner=pwd.getpwuid(os.getuid()).pw_name,
                       name=os.environ.get("LSB_JOBNAME"))

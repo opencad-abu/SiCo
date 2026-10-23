@@ -4,9 +4,10 @@ import os
 import stat
 
 from ..core.contracts import identifier
-from ..transport.framing import strict_json
+from cadai.json_values import strict_json
 from .history_reader import owned_directory
 from .journal import open_private
+from .native_home import selected_native_home
 from .record_removal import MESSAGE, assert_present
 
 MANAGED_EVENTS = frozenset({"session.control", "session.recovered", "session.end_requested",
@@ -31,7 +32,8 @@ def require_components(root, session_id, *, managed=False, empty=False, thread=N
         if empty and any((directory / "end-releases").glob("*.json")):
             raise IncompleteSession(MESSAGE)
         if thread and thread.get("history_mode") == "paginated":
-            _native_history(directory / "codex", thread["thread_id"])
+            home, _scope = selected_native_home(root, session_id)
+            _native_history(home, thread["thread_id"])
     except FileNotFoundError:
         raise IncompleteSession(MESSAGE) from None
 

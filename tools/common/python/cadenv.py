@@ -30,29 +30,66 @@ VIRTUOSO_ENV_NAMES = (
     "PATH", "LD_LIBRARY_PATH", "PYTHONPATH", "MODULEPATH",
     "LOADEDMODULES", "_LMFILES_", "MODULESHOME", "LMOD_CMD",
 )
-VIRTUOSO_MARKERS = tuple(prefix + name for prefix in ("SICO_VIRTUOSO_", "CAD_VIRTUOSO_")
-                        for name in VIRTUOSO_ENV_NAMES)
+VIRTUOSO_MARKERS = tuple(prefix + name + suffix
+                        for prefix in ("SICO_VIRTUOSO_", "CAD_VIRTUOSO_")
+                        for name in VIRTUOSO_ENV_NAMES for suffix in ("", "_SET"))
 
 
-def captured_virtuoso_environment(environment: Mapping[str, str], *, credential=None):
-    """Read only registered EDA provenance; never reinterpret an API credential."""
+def captured_virtuoso_provenance(environment: Mapping[str, str], *, credential=None):
+    """Read finite EDA provenance, including optional empty/unset distinction.
+
+    Older captures without a set marker retain their saved value, including empty.
+    They cannot prove that the original variable was absent.
+    """
     captured = {}
     for name in VIRTUOSO_ENV_NAMES:
         current, old = "SICO_VIRTUOSO_" + name, "CAD_VIRTUOSO_" + name
-        if credential in (name, current, old):
+        if credential in (name, current, old, current + "_SET", old + "_SET"):
             continue
-        saved = environment_value(environment, current, (old,))
+        saved = environment_value(environment, current, (old, old + "_SET"))
+        state = environment.get(current + "_SET")
+        if state is not None and (state not in ("0", "1") or saved is None
+                                  or state == "0" and saved != ""):
+            raise ValueError("Invalid EDA environment provenance")
         if saved is not None:
-            captured[name] = saved
+            captured[current] = saved
+            if state is not None:
+                captured[current + "_SET"] = state
     return captured
+
+
+def captured_virtuoso_environment(environment: Mapping[str, str], *, credential=None):
+    """Read only registered, originally set EDA values; exclude API credentials."""
+    provenance = captured_virtuoso_provenance(environment, credential=credential)
+    return {name: provenance["SICO_VIRTUOSO_" + name] for name in VIRTUOSO_ENV_NAMES
+            if "SICO_VIRTUOSO_" + name in provenance
+            and provenance.get("SICO_VIRTUOSO_" + name + "_SET") != "0"}
 
 
 def preserve_virtuoso_environment(environment: MutableMapping[str, str]) -> None:
     """Capture current EDA provenance once before sanitation."""
-    captured = captured_virtuoso_environment(environment)
+    captured = captured_virtuoso_provenance(environment)
     for name in VIRTUOSO_ENV_NAMES:
-        environment["SICO_VIRTUOSO_" + name] = captured.get(name, environment.get(name, ""))
-        environment.pop("CAD_VIRTUOSO_" + name, None)
+        marker = "SICO_VIRTUOSO_" + name
+        if marker not in captured:
+            captured[marker] = environment.get(name, "")
+            captured[marker + "_SET"] = "1" if name in environment else "0"
+    for marker in VIRTUOSO_MARKERS:
+        environment.pop(marker, None)
+    environment.update(captured)
+
+
+def restore_virtuoso_environment(environment: Mapping[str, str], *, credential=None):
+    """Restore saved EDA values into a detached environment and remove markers."""
+    captured = captured_virtuoso_provenance(environment, credential=credential)
+    restored = {key: value for key, value in environment.items() if key not in VIRTUOSO_MARKERS}
+    for name in VIRTUOSO_ENV_NAMES:
+        marker = "SICO_VIRTUOSO_" + name
+        if captured.get(marker + "_SET") == "0":
+            restored.pop(name, None)
+        elif marker in captured:
+            restored[name] = captured[marker]
+    return restored
 
 
 def cadence_mps_environment_names(environment: Mapping[str, str]) -> tuple[str, ...]:

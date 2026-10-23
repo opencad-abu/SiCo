@@ -5,12 +5,22 @@ from PyQt5.QtWidgets import QComboBox, QHBoxLayout, QLabel, QSizePolicy, QToolBu
 from sico.codex.access_policy import MODES, SCOPE_NOTE, default_access, validate
 
 from .context_usage import ContextUsage
-from .glyphs import INPUT_GLYPH_SIZE, gear_icon, paperclip_icon
+from .glyphs import INPUT_GLYPH_SIZE, gear_icon, goal_icon, paperclip_icon
 from .receipt_scope import ReceiptScope
 from .receipts import DataReceipt
 from .turn_attachments import AttachmentDialog
 from .turn_draft_options import draft_options, model_row, store_options
 from .turn_settings import TurnSettingsDialog
+
+
+EFFORT_LABELS = {
+    "minimal": "最低",
+    "low": "低",
+    "medium": "中",
+    "high": "高",
+    "xhigh": "极高",
+    "max": "最高",
+}
 
 
 class TurnComposer(QWidget):
@@ -50,6 +60,12 @@ class TurnComposer(QWidget):
         layout.addWidget(self.effort)
         self.context_usage = ContextUsage(self)
         layout.addWidget(self.context_usage)
+        self.goal = QToolButton()
+        self.goal.setIcon(goal_icon())
+        self.goal.setIconSize(QSize(INPUT_GLYPH_SIZE, INPUT_GLYPH_SIZE))
+        self.goal.setToolTip("持续目标")
+        self.goal.setAccessibleName("持续目标")
+        self.goal.clicked.connect(self.open_goal)
         self.settings = QToolButton()
         self.settings.setIcon(gear_icon())
         self.settings.setIconSize(QSize(INPUT_GLYPH_SIZE, INPUT_GLYPH_SIZE))
@@ -57,7 +73,8 @@ class TurnComposer(QWidget):
         self.settings.setAccessibleName("回合设置")
         self.settings.clicked.connect(self.open_settings)
         layout.addWidget(self.settings)
-        for widget in (self.attachments, self.access, self.model, self.effort, self.settings):
+        for widget in (self.attachments, self.access, self.model, self.effort,
+                       self.goal, self.settings):
             widget.setFixedHeight(30)
             widget.setEnabled(False)
         self.setFixedHeight(30)
@@ -66,9 +83,10 @@ class TurnComposer(QWidget):
         self.timer.start(100)
 
     def align_actions(self, stop, latest, buttons):
-        for widget in (self.context_usage, self.settings, stop, latest):
+        square_buttons = (self.attachments, self.goal, self.settings, stop, latest)
+        for widget in (self.context_usage, *square_buttons):
             widget.setFixedSize(self.height(), self.height())
-        for widget in (self.settings, stop, latest):
+        for widget in square_buttons:
             widget.setStyleSheet("QToolButton { padding: 0px; }")
         self.layout().setSpacing(6)
         buttons.setSpacing(6)
@@ -113,6 +131,7 @@ class TurnComposer(QWidget):
                 widget.blockSignals(False)
         enabled = self.available()
         self.attachments.setEnabled(enabled)
+        self.goal.setEnabled(enabled)
         self.settings.setEnabled(enabled)
         self.model.setEnabled(enabled and self.catalog is not None)
         self.effort.setEnabled(enabled and self.catalog is not None)
@@ -125,6 +144,9 @@ class TurnComposer(QWidget):
                 self.render_options(options)
         count = len(self.window.input.turn_inputs)
         text = f"{count} 项附件" if count else ""
+        objects = self.window.input.object_ref_count()
+        if objects:
+            text = " · ".join(filter(None, (text, f"{objects} 个对象")))
         if self.window.input.text_attachment() is not None:
             text = " · ".join(filter(None, (text, "已附粘贴文本")))
         self.caption.setToolTip(text)
@@ -188,7 +210,7 @@ class TurnComposer(QWidget):
             self.effort.addItem("模型默认", None)
             for row in model_row(self.catalog, options).get("supportedReasoningEfforts") or []:
                 value = row["reasoningEffort"]
-                self.effort.addItem(value, value)
+                self.effort.addItem(EFFORT_LABELS.get(value, value), value)
             self.effort.setCurrentIndex(max(0, self.effort.findData(options.get("effort"))))
         finally:
             self.model.blockSignals(False)
@@ -242,6 +264,12 @@ class TurnComposer(QWidget):
     def open_settings(self, _checked=False):
         if self.available():
             self.show_dialog(TurnSettingsDialog)
+
+    def open_goal(self, _checked=False):
+        if self.available():
+            from .thread_controls import show_thread_controls
+
+            show_thread_controls(self.window, page="goal")
 
     def show_dialog(self, kind):
         for dialog in self.window.findChildren(kind):

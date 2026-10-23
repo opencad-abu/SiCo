@@ -1,4 +1,4 @@
-"""Validate and resolve the settings for one Calibre XRC extraction."""
+"""Validate and resolve the settings for one Calibre PEX extraction."""
 
 from __future__ import annotations
 
@@ -7,13 +7,14 @@ from pathlib import Path
 from .config import DesignContext, RceConfig
 from .gen_lvs import resolve_lvs_hcell_file
 from .oa_view import view_kind
+from .pex_engine import require_calibre_pex_engine
 from .xrc_cells import validate_xrc_block_cells
 from .xrc_models import XrcSettings
 from .xrc_options import (
     bracket_replacement,
     pin_order_statement,
     selection_switch,
-    xrc_mode_switches,
+    xrc_mode,
 )
 from .xrc_paths import require_xrc_file, xrc_corner_dir
 
@@ -30,10 +31,11 @@ def load_xrc_settings(
     rule_file_override: Path | None = None,
     temperature: str | None = None,
 ) -> XrcSettings:
+    engine = require_calibre_pex_engine(cfg.ext_tool)
     if ctx.input_type not in XRC_INPUT_TYPES:
         raise ValueError(
-            "Calibre XRC requires layout and source input; supported input types are "
-            "OA, SCH+GDS, CDL+LAY, and CDL+GDS"
+            f"{engine.label} requires layout and source input; supported input types "
+            "are OA, SCH+GDS, CDL+LAY, and CDL+GDS"
         )
 
     config_base = cfg.config_path.parent
@@ -52,7 +54,7 @@ def load_xrc_settings(
         "lvs", "runset_file"
     ).strip()
     if not lvs_rule_raw:
-        raise ValueError("Calibre XRC requires lvs.runset_file")
+        raise ValueError(f"{engine.label} requires lvs.runset_file")
     lvs_rule_file = cfg.resolve_path(lvs_rule_raw)
     rule_file = (
         rule_file_override
@@ -68,13 +70,13 @@ def load_xrc_settings(
         fallback_value=legacy_hcell_raw,
         fallback_base=corner_dir,
         fallback_file=corner_dir / "hcell_list",
-        label="Calibre XRC hcell file",
+        label=f"{engine.label} hcell file",
     )
-    require_xrc_file(lvs_rule_file, "Calibre XRC LVS rule file")
-    require_xrc_file(rule_file, "Calibre XRC rule file")
+    require_xrc_file(lvs_rule_file, f"{engine.label} LVS rule file")
+    require_xrc_file(rule_file, f"{engine.label} rule file")
     if lvs_rule_file.resolve() == rule_file.resolve():
         raise ValueError(
-            "Calibre XRC requires different files for lvs.runset_file and "
+            f"{engine.label} requires different files for lvs.runset_file and "
             "extract.xrc.rule_file"
         )
 
@@ -83,7 +85,7 @@ def load_xrc_settings(
     base_xcell_file: Path | None = None
     if explicit_xcell:
         base_xcell_file = cfg.resolve_path(explicit_xcell, base=corner_dir)
-        require_xrc_file(base_xcell_file, "Calibre XRC xcell file")
+        require_xrc_file(base_xcell_file, f"{engine.label} xcell file")
     else:
         candidate = corner_dir / "xcell_list"
         if candidate.is_file():
@@ -92,7 +94,7 @@ def load_xrc_settings(
     base_hcell_file = hcell_file
     if (blocked_cells or base_xcell_file is not None) and base_hcell_file is None:
         raise ValueError(
-            "Calibre XRC xcell extraction requires LVS hcell to be enabled"
+            f"{engine.label} xcell extraction requires LVS hcell to be enabled"
         )
     if blocked_cells:
         validate_xrc_block_cells(
@@ -105,23 +107,24 @@ def load_xrc_settings(
     else:
         xcell_file = base_xcell_file
 
-    pdb_switch, fmt_switches = xrc_mode_switches(cfg)
-    simple_netlist = pdb_switch is None
+    model = xrc_mode(cfg)
     output_type = cfg.output_type.lower()
     if cfg.is_view_output and view_kind(cfg) != "calibre":
-        raise ValueError("Calibre XRC view output requires a Calibre View kind")
+        raise ValueError(
+            f"{engine.label} view output requires a Calibre View kind"
+        )
     try:
         netlist_format = XRC_NETLIST_FORMATS[output_type]
     except KeyError as exc:
-        mode = " NONE/noRC" if simple_netlist else ""
+        suffix = " NONE/noRC" if model.simple_netlist else ""
         raise ValueError(
-            f"Calibre XRC{mode} output supports only the RCE formats: "
+            f"{engine.label}{suffix} output supports only the RCE formats: "
             "view, dspf, and spice"
         ) from exc
 
     output_path = cfg.output_path(ctx)
     if not output_path:
-        raise ValueError("Calibre XRC requires a file-based netlist output")
+        raise ValueError(f"{engine.label} requires a file-based netlist output")
     selected_output = output_file or Path(output_path)
     selected_expected = expected_output_files or (selected_output,)
     character_map_line, bus_delimiter = bracket_replacement(cfg)
@@ -146,10 +149,10 @@ def load_xrc_settings(
             else cfg.text("extract", "temperature")
         ),
         netlist_format=netlist_format,
-        pdb_switch=pdb_switch,
-        fmt_switches=fmt_switches,
-        simple_netlist=simple_netlist,
-        selection_switch=selection_switch(cfg, pdb_switch),
+        pdb_arguments=model.pdb_arguments,
+        fmt_switches=model.formatter_switches,
+        capacitance_only=model.capacitance_only,
+        selection_switch=selection_switch(cfg, model),
         pin_order_line=pin_order_statement(cfg),
         character_map_line=character_map_line,
         bus_delimiter=bus_delimiter,

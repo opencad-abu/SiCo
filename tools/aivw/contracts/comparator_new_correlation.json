@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "name": "saradc-comparator-new-rnm-correlation-m1",
+  "source_contract": "comparator_new.json",
+  "source_rnm_supplement": "comparator_new_rnm.json",
+  "status": "draft_requires_measured_evidence",
+  "target": {
+    "library": "saradc",
+    "cell": "comparator_new",
+    "module": "comparator_new"
+  },
+  "required_case_types": [
+    "positive_differential",
+    "negative_differential",
+    "zero_differential"
+  ],
+  "metrics": {
+    "decision": {
+      "kind": "categorical",
+      "unit": "enum",
+      "required": true,
+      "allowed_values": ["positive", "negative", "tie", "unknown"]
+    },
+    "out": {
+      "kind": "numeric",
+      "unit": "V",
+      "required": true,
+      "absolute_tolerance": 0.01
+    },
+    "outb": {
+      "kind": "numeric",
+      "unit": "V",
+      "required": true,
+      "absolute_tolerance": 0.01
+    }
+  },
+  "policy": {
+    "comparison": "same_case_id_and_corner; categorical exact; numeric absolute error",
+    "promotion": "correlation does not modify the RNM supplement; human review is required",
+    "missing_metric": "BLOCKED_INPUT",
+    "case_mismatch": "BLOCKED_INPUT",
+    "metric_mismatch": "FAIL_CORRELATION"
+  }
+}

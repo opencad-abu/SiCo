@@ -1,0 +1,21 @@
+{
+  "kind": "public-transition-response-hypothesis",
+  "targets": {
+    "AON": "20260908T002018.129961Z-recipe-run-658ff7e7d809",
+    "MASTER": "20260908T001838.659739Z-recipe-run-d98265d71c14"
+  },
+  "discharge_parent": "20260908T022019.819447Z-discharge-hypothesis-6b9732238a2b",
+  "fine_step_s": 1e-9,
+  "pre_s": 2e-8,
+  "tail_s": 5e-6,
+  "knots": 2001,
+  "startup_cases": ["startup_rate_0", "startup_rate_1", "startup_rate_2"],
+  "enable_rise_cases": ["enable_rise_rate_0", "enable_rise_rate_1", "enable_rise_rate_2"],
+  "enable_fall_cases": ["enable_fall_rate_0", "enable_fall_rate_1", "enable_fall_rate_2"],
+  "tail": {
+    "fit_tail_s": 5e-6,
+    "poles": [[2e-8, 0], [1e-7, 0], [5e-7, 0], [2e-6, 0], [1e-7, 5000000], [2e-7, 10000000], [5e-7, 15000000], [2e-6, 2000000]]
+  },
+  "scope": "public_fixed_supply_load_enable_and_nominal_startup_response_surface_with_stable_current_tail",
+  "qualification": "NOT_ESTABLISHED"
+}

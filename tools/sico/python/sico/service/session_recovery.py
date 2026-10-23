@@ -166,6 +166,10 @@ class SessionRecovery:
             if continue_chat:
                 from .continuation_host import current_host
 
+                # Opening this runtime means no prior task is still executing.
+                # Prefer the project's current host so a restarted Virtuoso
+                # generation can resume an interrupted conversation; fall back
+                # to the captured bridge or chat-only when none is reachable.
                 selected = selected or current_host(self.owner, preferred)
             if selected is not None:
                 bridge, context = selected

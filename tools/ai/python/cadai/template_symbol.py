@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from pathlib import Path
 
 from .circuit_schema import string_schema, tool
 from .circuit_spec_schema import ID
@@ -23,17 +24,8 @@ DIGEST = string_schema(64, pattern=r"^[a-f0-9]{64}$")
 TOOLS = [
     tool(
         "preview_template_symbol",
-        "Plan a symbol from a persistent template. Select style=template_outline to preserve "
-        "captured gate/device outlines; grid pin anchors are adjusted so terminal stubs touch "
-        "the actual body and remain <=5 grid steps. Missing schematic ports get explicit pins. "
-        "Default rectangular_module preserves compatibility. "
-        "Validate the saved schematic's full interface, global nets and confirmed task mode. "
-        "Requires an absent symbol in a writable design library; the captured source cell "
-        "may receive its own missing symbol, otherwise use a separate work library. "
-        "No OA writes. Returns "
-        "preview_ref/digest and SVG. Port renaming is explicit; bus indices/order are preserved. "
-        "For a circuit localized through boundary pins, pass the same net_scope_map and "
-        "port_map to check the target schematic against its local interface.",
+        "Plan a symbol. style=auto prefers a captured outline or registered family; rectangular "
+        "fallback reports fallback_reason. family_ref selects a reusable family. No OA writes.",
         {
             "template_ref": REF,
             "task_ref": TASK,
@@ -42,10 +34,25 @@ TOOLS = [
             "cell": NAME,
             "style": {
                 "type": "string",
-                "enum": ["rectangular_module", "template_outline"],
-                "default": "rectangular_module",
+                "enum": ["auto", "rectangular_module", "template_outline", "symbol_family"],
+                "default": "auto",
+            },
+            "family_ref": {
+                "type": "string",
+                "maxLength": 128,
+            },
+            "slot_map": {
+                "type": "object",
+                "additionalProperties": string_schema(96),
+                "maxProperties": 128,
+                "default": {},
             },
             "outline_scale": {"type": "number", "minimum": 0.25, "maximum": 32, "default": 1},
+            "label_policy": {
+                "type": "string",
+                "enum": ["strict", "drop", "preserve"],
+                "default": "strict",
+            },
             "port_roles": {
                 "type": "object",
                 "maxProperties": 128,
@@ -53,7 +60,9 @@ TOOLS = [
                 "default": {},
                 "description": "Source terminal roles for outline placement. Power pins go above, "
                 "ground pins below. Defaults from sig_type=supply/ground; explicitly map roles "
-                "when captured metadata is signal/unknown. Does not change electrical sigType.",
+                "when captured metadata is signal/unknown. Preview returns "
+                "port_role_suggestions; suggestions are not applied until passed back here. "
+                "Does not change electrical sigType.",
             },
             "net_scope_map": NET_SCOPE_MAP,
             "port_map": {
@@ -64,23 +73,31 @@ TOOLS = [
             },
         },
         ("template_ref", "task_ref", "request_id", "library", "cell"),
+        help_text=(
+            "For a circuit localized through boundary pins, pass the same net_scope_map and "
+            "port_map to check the target schematic against its local interface. family_ref "
+            "loads a private symbol family; slot_map binds target terminals to family slots. "
+            "label_policy=strict refuses unrenderable source labels; drop omits and reports "
+            "them in dropped_labels; preserve renders literal plain text and cdsParam "
+            "placeholders as non-evaluated labels and refuses conditional expressions. "
+            "port_role_suggestions are review hints only and require explicit port_roles."
+        ),
     ),
     tool(
         "create_template_symbol",
-        "Create the previewed NEW symbol view; never overwrite. Revalidate target "
-        "interface and library, build pins/labels/selection box, save and read back. Inherits "
-        "confirmed task mode; foreground window remains open. Reuse the identical request after "
-        "unknown transport status. Failures retain partial targets and status. "
-        "Replay returns retained status; inspect revalidates.",
+        "Create the previewed NEW symbol view; never overwrite. Uses the preview's effective "
+        "style and preserves fallback_reason. Revalidates target interface/library, saves and "
+        "reads back. Reuse the identical request after unknown status; inspect revalidates.",
         {"preview_ref": PREVIEW, "preview_digest": DIGEST, "request_id": REQUEST},
         ("preview_ref", "preview_digest", "request_id"),
         True,
     ),
     tool(
         "draw_symbol",
-        "Draw a NEW symbol from a template_outline preview_ref/digest. First build the standard "
-        "symbol, then remove its generated shapes/pins and redraw captured body/stubs, explicit "
-        "terminal pins, selection box, stick-font cdsName/partName/cellName/cdsTerm labels. "
+        "Draw a NEW symbol from a template_outline or symbol_family preview_ref/digest. First "
+        "build the standard symbol, then remove its generated shapes/pins and redraw captured "
+        "body/stubs, explicit terminal pins, selection box, fixed annotations and preserved "
+        "labels. "
         "Never overwrite existing views. Reuses create_template_symbol lifecycle, idempotency, "
         "task mode and inspection.",
         {"preview_ref": PREVIEW, "preview_digest": DIGEST, "request_id": REQUEST},
@@ -89,11 +106,11 @@ TOOLS = [
     ),
     tool(
         "get_symbol_binding",
-        "Read and revalidate a retained created Symbol, returning a design master row and "
-        "per-instance geometry row for generic circuit/TB planning. Includes actual pin centers "
-        "and outward escapes, including power above/ground below; no name-based pin guesses. "
-        "Merge rows into the project's bindings/geometry, then run the ordinary previews and "
-        "prepare_circuit_creation. Requires static flat scalar single-pin terminals and no "
+        "Read and revalidate a retained created Symbol: a design master row and per-instance "
+        "geometry row for generic circuit/TB planning. Includes actual pin centers and outward "
+        "escapes (power above/ground below); no name-based pin guesses. "
+        "Merge rows into the project's bindings/geometry, then run the ordinary previews. "
+        "Requires static flat scalar single-pin terminals and no "
         "parameterized CDF or callbacks. Does not enumerate PDKs, write OA, or create a TB.",
         {"symbol_ref": SYMBOL, "master_id": ID, "instance_id": ID},
         ("symbol_ref", "master_id", "instance_id"),
@@ -120,6 +137,23 @@ def skill_literal(value):
     return json.dumps(value, ensure_ascii=False, allow_nan=False)
 
 
+def annotation_rows(plan):
+    """Flatten preserved labels into the native renderer's literal row format."""
+    return [
+        [
+            item["text"],
+            item["xy"],
+            item["bbox"],
+            item["justify"],
+            item["orient"],
+            item["font"],
+            item["height"],
+            item["label_type"],
+        ]
+        for item in plan.get("annotations", [])
+    ]
+
+
 def call_symbol(name, values, *, workspace, client):
     schema = next(t["inputSchema"] for t in TOOLS if t["name"] == name)
     args = validate(values, schema)
@@ -130,6 +164,39 @@ def call_symbol(name, values, *, workspace, client):
         if name == "preview_template_symbol":
             catalog = TemplateCatalog(workspace=workspace)
             record = catalog.get(args["template_ref"])
+            family_ref = args.get("family_ref")
+            family = None
+            if family_ref:
+                if Path(family_ref).name != family_ref:
+                    raise TemplateUnavailable("family_ref must be a plain file name")
+                from .template_locations import template_root
+
+                family_path = template_root(workspace) / "symbol_families" / (family_ref + ".json")
+                if not family_path.is_file():
+                    raise TemplateUnavailable("symbol family not found: " + family_ref)
+                try:
+                    family = json.loads(family_path.read_text())
+                except (OSError, ValueError) as exc:
+                    raise TemplateUnavailable("cannot read symbol family: " + str(exc)) from exc
+                if family.get("format") != "sico.symbol.family.v1":
+                    raise TemplateUnavailable("unsupported symbol family format")
+            elif args.get("style", "auto") in {"auto", "symbol_family"}:
+                from .template_locations import template_root
+                from .template_symbol_family import select_family
+                from .template_symbol_family_registry import read_registry
+
+                family_root = template_root(workspace) / "symbol_families"
+                try:
+                    families, hints = read_registry(family_root)
+                except (OSError, TemplateError) as exc:
+                    raise TemplateUnavailable(
+                        "cannot read symbol family registry: " + str(exc)
+                    ) from exc
+                selected = select_family(record, families, hints)
+                if selected:
+                    family = selected[1]
+            if family is not None:
+                args = {**args, "family": family}
             plan = make_plan(record, args)
             # Publish first so an I/O error cannot hide a successful live preview.
             artifacts = write_preview(plan, catalog.ensure_private_destination() / "previews")
@@ -147,7 +214,7 @@ def call_symbol(name, values, *, workspace, client):
                 plan["width"],
                 plan["height"],
             ]
-            if plan["style"] == "template_outline":
+            if plan["style"] in {"template_outline", "symbol_family"}:
                 arguments.append(
                     [
                         plan["body"],
@@ -155,11 +222,12 @@ def call_symbol(name, values, *, workspace, client):
                         plan["selection_box"],
                         plan["bootstrap_rows"],
                         plan["pin_labels"],
+                        annotation_rows(plan),
                     ]
                 )
             else:
                 arguments.append(None)
-            arguments.append(plan["source"]["cell"])
+            arguments.extend([plan["source"]["cell"], plan["style"]])
         elif name in {"create_template_symbol", "draw_symbol"}:
             function = "aiDrawSymbol" if name == "draw_symbol" else "aiTemplateSymbolCreate"
             arguments = [args[k] for k in ("preview_ref", "preview_digest", "request_id")]

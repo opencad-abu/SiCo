@@ -24,12 +24,20 @@ def make_reusable(base, contract, classifications, granularity="block"):
     """No OA reads, inferred device names, global policy or source-parameter copying."""
     result = copy.deepcopy(base)
     devices = result["topology"]["devices"]
+    promoted = set()
     if set(classifications) != {d["id"] for d in devices}:
         raise TemplateError("classification evidence must cover every source device")
     for device in devices:
         source_role = device["role"]
         if source_role == "hierarchy":
-            raise TemplateError("classification cannot promote hierarchy source roles")
+            # A constructed device (for example a PMOS built from a pmos plus a
+            # diode) carries a schematic master but keeps one device class; the
+            # supplied classification is the reviewed decision, not a name guess.
+            evidence = classifications[device["id"]]
+            if evidence.get("kind") in (None, "unknown", "subcircuit"):
+                raise TemplateError("classification cannot promote hierarchy source roles")
+            source_role = "unknown"
+            promoted.add(device["id"])
         if source_role not in {"device", "unknown"}:
             raise TemplateError("classification cannot resolve unsupported source role")
         evidence = classifications[device["id"]]
@@ -52,9 +60,12 @@ def make_reusable(base, contract, classifications, granularity="block"):
     # Complete explicit classification resolves only the matching unknown-type
     # gaps. Hierarchy, missing masters/terminals and electrical proof remain gates.
     resolved_names = {d["source_name"] for d in devices if d.get("classification_evidence")}
+    promoted_names = {d["source_name"] for d in devices if d["id"] in promoted}
+    cleared = {"unknown_device_type": resolved_names, "hierarchy_not_expanded": promoted_names}
     result["topology"]["gaps"] = [
-        gap for gap in result["topology"].get("gaps", [])
-        if not (gap.get("code") == "unknown_device_type" and gap.get("instance") in resolved_names)
+        gap
+        for gap in result["topology"].get("gaps", [])
+        if gap.get("instance") not in cleared.get(gap.get("code"), set())
     ]
     result = qualify_source(result)
     result["topology"]["counts"]["device_kinds"] = dict(Counter(d["kind"] for d in devices))

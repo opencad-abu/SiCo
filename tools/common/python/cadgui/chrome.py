@@ -8,10 +8,12 @@ the standalone flows show the site logo or nothing.
 
 from __future__ import annotations
 
-from PyQt5.QtGui import QColor, QCursor, QIcon, QPalette
+from PyQt5.QtGui import QCursor, QIcon
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QMenuBar, QVBoxLayout, QWidget
 
+from .appearance import application_palette
 from .branding import logo_path, logo_text
+from .fonts import apply_ui_family, install as install_fonts
 from .frameless import EdgeGrip as EdgeGrip
 from .frameless import FramelessWindowMixin as FramelessWindowMixin
 from .frameless import apply_dialog_frameless as apply_dialog_frameless
@@ -19,12 +21,18 @@ from .frameless import apply_main_window_frameless as apply_main_window_frameles
 from .frameless import dialog_frameless_flags as dialog_frameless_flags
 from .frameless import half_screen_rect as half_screen_rect
 from .frameless import main_window_frameless_flags as main_window_frameless_flags
+from .palette import active as active_palette
 from .theme import ACCENT as ACCENT  # noqa: F401  (兼容导出)
 from .theme import BACKGROUND as BACKGROUND  # noqa: F401  (兼容导出)
 from .theme import CHROME_STYLESHEET as CHROME_STYLESHEET  # noqa: F401  (兼容导出)
-from .theme import WINDOW_STYLESHEET
+from .theme import WINDOW_STYLESHEET as WINDOW_STYLESHEET  # noqa: F401  (兼容导出)
+from .theme import window_stylesheet
 from .titlebar import WINDOW_BUTTONS as WINDOW_BUTTONS  # noqa: F401  (兼容导出)
 from .titlebar import WINDOW_CONTROLS, SiTitleBar
+
+
+# 窗口内容区左右各留 2 像素：组件边框贴到窗口边缘会被裁掉。
+WINDOW_EDGE_INSET = 2
 
 
 def brand_mark():
@@ -35,13 +43,22 @@ def brand_mark():
 
 
 def apply_family_style(application):
-    """Standalone flows take the family look: light ground, red-brown accent."""
+    """Standalone flows take the family look of the active palette."""
 
-    palette = application.palette()
-    palette.setColor(QPalette.Highlight, QColor(ACCENT))
-    palette.setColor(QPalette.HighlightedText, QColor(BACKGROUND))
-    application.setPalette(palette)
-    application.setStyleSheet(WINDOW_STYLESHEET)
+    install_fonts(application)
+    font = application.font()
+    apply_ui_family(font)
+    application.setFont(font)
+    application.setPalette(application_palette(active_palette(), application.palette()))
+    application.setStyleSheet(window_stylesheet())
+
+
+def refresh_family_style(widget):
+    """Reapply the active family stylesheet to one already-created window."""
+    if not getattr(widget, "_family_styled", False):
+        return False
+    widget.setStyleSheet(window_stylesheet())
+    return True
 
 
 class SiWindowMixin(FramelessWindowMixin):
@@ -83,6 +100,20 @@ class SiWindowMixin(FramelessWindowMixin):
                   max(rect.top(), rect.center().y() - size.height() // 2))
         return self.pos()
 
+    def center_on_point(self, point):
+        """Open centred on a global point, clamped to that point's screen."""
+        screen = QApplication.screenAt(point) or QApplication.primaryScreen()
+        if screen is None:
+            return None
+        area = screen.availableGeometry()
+        size = self.size()
+        left = point.x() - size.width() // 2
+        top = point.y() - size.height() // 2
+        left = max(area.left(), min(left, area.right() + 1 - size.width()))
+        top = max(area.top(), min(top, area.bottom() + 1 - size.height()))
+        self.move(left, top)
+        return self.pos()
+
     def showEvent(self, event):
         # 首次显示时才摆位：对话框此前可能刚 resize 过，尺寸才算定型。
         super().showEvent(event)
@@ -99,7 +130,9 @@ class SiWindowMixin(FramelessWindowMixin):
             self.setWindowIcon(mark)
         title = logo_text() if title is None else title
         self.setWindowTitle(title)
-        self.setStyleSheet(WINDOW_STYLESHEET)
+        self.setStyleSheet(window_stylesheet())
+        self._family_styled = True
+        self._chrome_mark = mark
         self.title_bar = SiTitleBar(self, title, controls or self.controls, mark=mark)
         buttons = self.title_bar.buttons
         if "minimize" in buttons:
@@ -112,6 +145,12 @@ class SiWindowMixin(FramelessWindowMixin):
                 lambda *_checked: self.close_from_chrome())
         self.init_frameless(self.title_bar)
         return self.title_bar
+
+    def set_chrome_mark(self, mark):
+        """Update the title-bar and window icons without recreating the window."""
+        self._chrome_mark = mark
+        self.title_bar.set_mark(mark)
+        self.setWindowIcon(mark if mark is not None else QIcon())
 
     def close_from_chrome(self):
         """Close the window the way its own chrome should: reject for dialogs."""
@@ -131,11 +170,12 @@ class SiMainWindow(SiWindowMixin, QMainWindow):
         self.menu_bar = QMenuBar(self)
         container = QWidget()
         layout = QVBoxLayout(container)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(WINDOW_EDGE_INSET, 0, WINDOW_EDGE_INSET, 0)
         layout.setSpacing(0)
         layout.addWidget(self.title_bar)
         layout.addWidget(self.menu_bar)
         self.setMenuWidget(container)
+        self.setContentsMargins(WINDOW_EDGE_INSET, 0, WINDOW_EDGE_INSET, 0)
 
     def menuBar(self):
         return self.menu_bar
@@ -149,7 +189,7 @@ class SiWidget(SiWindowMixin, QWidget):
         apply_dialog_frameless(self)
         self.install_chrome(title, controls, mark)
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(WINDOW_EDGE_INSET, 0, WINDOW_EDGE_INSET, 0)
         layout.setSpacing(0)
         layout.addWidget(self.title_bar)
         self.body = QWidget()
@@ -173,7 +213,7 @@ class SiDialog(SiWindowMixin, QDialog):
         apply_dialog_frameless(self)
         self.install_chrome(title, controls, mark)
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(WINDOW_EDGE_INSET, 0, WINDOW_EDGE_INSET, 0)
         layout.setSpacing(0)
         layout.addWidget(self.title_bar)
         self.body = QWidget()

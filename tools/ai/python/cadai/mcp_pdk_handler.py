@@ -16,6 +16,23 @@ class PdkHandlerArgumentError(ValueError):
     """Raised when a PDK handler receives invalid tool arguments."""
 
 
+def _unavailable(exc):
+    detail = {"ok": False, "code": exc.code, "message": str(exc)}
+    if isinstance(exc.data, dict):
+        detail.update(exc.data)
+    if detail.get("status") == "preparation_required":
+        detail.update(
+            code="pdk_preparation_required",
+            message=(
+                "PDK data is not prepared for design. Call prepare_pdk_data and publish "
+                "the confirmed package before bind_pdk_device; do not reconstruct "
+                "bindings from discovery summaries."
+            ),
+            next_action="prepare_pdk_data",
+        )
+    return detail
+
+
 def dispatch_pdk(
     name: str,
     arguments: dict[str, Any],
@@ -36,7 +53,13 @@ def dispatch_pdk(
         except PdkArgumentError as exc:
             raise PdkHandlerArgumentError(str(exc)) from exc
         except PdkUnavailable as exc:
-            return False, {"ok": False, "code": exc.code, "message": str(exc)}
+            if (
+                exc.code == "selection_required"
+                and isinstance(exc.data, dict)
+                and exc.data.get("selection_required") is True
+            ):
+                return True, {**exc.data, "ok": False}
+            return False, _unavailable(exc)
 
     if name == "list_project_extensions":
         try:
@@ -46,7 +69,13 @@ def dispatch_pdk(
         except DeviceSupportUnavailable as exc:
             return False, exc.detail
         except PdkUnavailable as exc:
-            return False, {"ok": False, "code": exc.code, "message": str(exc)}
+            if (
+                exc.code == "selection_required"
+                and isinstance(exc.data, dict)
+                and exc.data.get("selection_required") is True
+            ):
+                return True, {**exc.data, "ok": False}
+            return False, _unavailable(exc)
 
     if bindings is None:
         raise PdkHandlerArgumentError("PDK bindings are unavailable")
@@ -57,7 +86,13 @@ def dispatch_pdk(
     except DeviceSupportUnavailable as exc:
         return False, exc.detail
     except PdkUnavailable as exc:
-        return False, {"ok": False, "code": exc.code, "message": str(exc)}
+        if (
+            exc.code == "selection_required"
+            and isinstance(exc.data, dict)
+            and exc.data.get("selection_required") is True
+        ):
+            return True, {**exc.data, "ok": False}
+        return False, _unavailable(exc)
 
 
 __all__ = ["PdkHandlerArgumentError", "dispatch_pdk"]

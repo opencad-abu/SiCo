@@ -20,6 +20,7 @@ from .launch_policy import MCP_TOOL_NAMES as _ALL_MCP_TOOLS
 from .launch_policy import assistant_instructions
 from .runtime import RuntimePaths
 from .mcp_command import mcp_command
+from .mcp_server import SERVER_ID, qualified_name
 from .optional_resources import PATH_NAMES, forwarded as optional_resources
 from .tool_help_schema import DOC_ENV_NAMES
 
@@ -76,7 +77,7 @@ def build_claude_mcp_config(
     command = mcp_command(python, mcp_entry, timeout, environment=source)
     config = {
         "mcpServers": {
-            "virtuoso": {
+            SERVER_ID: {
                 "type": "stdio",
                 "command": command[0],
                 "args": command[1:],
@@ -105,7 +106,7 @@ def build_claude_command(
         "--permission-mode",
         "default",
         "--no-chrome",
-        f"--allowedTools={','.join(f'mcp__virtuoso__{tool}' for tool in allowed)}",
+        f"--allowedTools={','.join(qualified_name(tool) for tool in allowed)}",
         "--name",
         "Virtuoso",
         "--append-system-prompt",

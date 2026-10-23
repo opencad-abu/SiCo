@@ -7,6 +7,8 @@ import json
 import os
 import re
 import secrets
+import threading
+from functools import wraps
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -38,6 +40,14 @@ def _import_sqlite():
     return importlib.import_module("sqlite3")
 
 
+def _synchronized(method):
+    @wraps(method)
+    def locked(self, *args, **kwargs):
+        with self._lock:
+            return method(self, *args, **kwargs)
+    return locked
+
+
 @dataclass
 class _Snapshot:
     snapshot_id: str
@@ -58,13 +68,16 @@ class SchematicSnapshotStore:
         except ImportError as exc:
             raise SnapshotError("schematic snapshot tools require Python sqlite3 support") from exc
         self._snapshots: dict[str, _Snapshot] = {}
+        self._lock = threading.RLock()
 
+    @_synchronized
     def close(self) -> None:
         for snapshot in self._snapshots.values():
             snapshot.connection.close()
             snapshot.database.unlink(missing_ok=True)
         self._snapshots.clear()
 
+    @_synchronized
     def register(self, artifact: Mapping[str, Any]) -> dict[str, Any]:
         """Validate and index one controller-produced JSONL artifact."""
         path, size, digest = _validate_artifact(self.spool, artifact)
@@ -78,7 +91,7 @@ class SchematicSnapshotStore:
         database = self.spool / f".{snapshot_id}-{secrets.token_hex(8)}.sqlite3"
         connection: Any = None
         try:
-            connection = self._sqlite.connect(database)
+            connection = self._sqlite.connect(database, check_same_thread=False)
             os.chmod(database, 0o600)
             _create_schema(connection)
             summary = _index_jsonl(path, connection)
@@ -101,6 +114,7 @@ class SchematicSnapshotStore:
             database.unlink(missing_ok=True)
             raise
 
+    @_synchronized
     def query(
         self,
         snapshot_id: str,
@@ -160,6 +174,7 @@ class SchematicSnapshotStore:
             "summary": snapshot.summary,
         }
 
+    @_synchronized
     def get_item(
         self,
         snapshot_id: str,
@@ -197,6 +212,7 @@ class SchematicSnapshotStore:
             "summary": snapshot.summary,
         }
 
+    @_synchronized
     def export_text(
         self,
         snapshot_id: str,

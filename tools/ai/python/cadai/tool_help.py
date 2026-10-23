@@ -1,4 +1,8 @@
-"""Installed Cadence manual discovery, Search-backed lookup, and HTML reading."""
+"""Installed Cadence manual discovery, Search-backed lookup, and HTML reading.
+
+This is the implementation of the ``cds_help`` tool; the legacy name
+``tool_help`` still dispatches here through the registry alias.
+"""
 
 from __future__ import annotations
 
@@ -12,13 +16,13 @@ from .search_tools import _text
 from .socket_server import RequestFailure
 from .tool_help_html import read_page
 from .tool_help_index import query_index
-from .tool_help_schema import TOOL_ENV, TOOL_HELP_TOOL, discover, installation
+from .tool_help_schema import CDS_HELP_TOOL, TOOL_ENV, discover, installation
 
 
 def options(arguments):
-    properties = TOOL_HELP_TOOL["inputSchema"]["properties"]
+    properties = CDS_HELP_TOOL["inputSchema"]["properties"]
     if set(arguments) - set(properties):
-        raise RequestFailure("invalid_params", "unknown tool_help argument")
+        raise RequestFailure("invalid_params", "unknown cds_help argument")
     action = arguments.get("action", "discover")
     if action not in ("discover", "index", "search", "files", "read"):
         raise RequestFailure(
@@ -34,7 +38,12 @@ def options(arguments):
     if action == "read":
         allowed |= {"page", "offset", "max_chars", "sha256"}
     if set(arguments) - allowed:
-        raise RequestFailure("invalid_params", "argument does not apply to selected action")
+        extra = ", ".join(sorted(set(arguments) - allowed))
+        raise RequestFailure(
+            "invalid_params",
+            f"argument does not apply to action {action}: {extra}; allowed: "
+            + ", ".join(sorted(allowed)),
+        )
     for name in ("tool", "install_root", "query", "manual", "page", "sha256"):
         if name in arguments:
             _text(arguments[name], name, properties[name].get("maxLength", 64))
@@ -49,16 +58,20 @@ def options(arguments):
         raise RequestFailure("invalid_params", "unknown tool; use explicit install_root")
     if "tool" in arguments and "install_root" in arguments:
         raise RequestFailure("invalid_params", "select tool OR install_root")
-    for name, maximum in (
-        ("max_results", 100),
-        ("timeout_seconds", 30),
-        ("max_chars", 6000),
-        ("offset", 1024 * 1024),
-    ):
+    limits = {
+        "max_results": (1, 100),
+        "timeout_seconds": (1, 30),
+        "max_chars": (1, 6000),
+        "offset": (0, 1024 * 1024),
+    }
+    for name, (minimum, maximum) in limits.items():
         if name in arguments:
             value = arguments[name]
-            if type(value) is not int or not (0 if name == "offset" else 1) <= value <= maximum:
-                raise RequestFailure("invalid_params", f"invalid {name}")
+            if type(value) is not int or value < minimum:
+                raise RequestFailure(
+                    "invalid_params", f"{name} must be an integer >= {minimum}"
+                )
+            arguments[name] = min(value, maximum)
     if "sha256" in arguments and not re.fullmatch("[a-f0-9]{64}", arguments["sha256"]):
         raise RequestFailure("invalid_params", "invalid sha256")
     if action == "search" and "query" not in arguments:
@@ -68,7 +81,7 @@ def options(arguments):
     return action
 
 
-def tool_help(arguments, workspace=None):
+def cds_help(arguments, workspace=None):
     action = options(arguments)
     if action == "index":
         return query_index(arguments)

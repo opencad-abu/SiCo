@@ -8,9 +8,10 @@ from ..transport.framing import ProtocolError
 from .service_protocol import exact_fields
 from .service_session_dto import SessionAddress
 from .service_values import json_view, name
+from .published import freeze, thaw
 
 CODES = {"", "unavailable", "capacity", "input_rejected", "operation_conflict",
-         "stale_session", "history_readonly", "unconfirmed", "control_required"}
+         "stale_session", "history_readonly", "unconfirmed", "control_required", "queue_full"}
 
 
 def business_params(method, params):
@@ -87,9 +88,28 @@ class InputResult:
     execution: str = None
     task_id: str = None
     recovery_required: bool = False
+    ask_sequence: int = None
+    queue_head: dict = None
 
     def __post_init__(self):
         name(self.input_id)
+        from ..core.ask_queue import ask_sequence
+
+        try:
+            if self.ask_sequence is not None:
+                ask_sequence(self.ask_sequence)
+            if self.queue_head is not None:
+                if self.ask_sequence is None:
+                    raise ValueError("Queue head requires an explicit sequence")
+                exact_fields(self.queue_head, {"input_id", "ask_sequence"})
+                name(self.queue_head["input_id"])
+                if self.queue_head["ask_sequence"] is not None:
+                    ask_sequence(self.queue_head["ask_sequence"])
+                object.__setattr__(self, "queue_head", freeze(dict(self.queue_head)))
+            if self.outcome != "accepted" and (self.ask_sequence or self.queue_head):
+                raise ValueError("Unaccepted input cannot name a queue head")
+        except ValueError as exc:
+            raise ProtocolError("Invalid Ask queue receipt") from exc
         if self.address is not None and (type(self.address) is not SessionAddress
                                         or self.address.session.runtime_id is None):
             raise ProtocolError("Invalid input result address")
@@ -109,15 +129,21 @@ class InputResult:
             name(self.task_id)
 
     def record(self):
-        return dict(address=None if self.address is None else self.address.record(),
+        row = dict(address=None if self.address is None else self.address.record(),
                     input_id=self.input_id, outcome=self.outcome,
                     code=self.code, execution=self.execution, task_id=self.task_id,
                     recovery_required=self.recovery_required)
+        if self.ask_sequence is not None:
+            row.update(ask_sequence=self.ask_sequence, queue_head=thaw(self.queue_head))
+        return row
 
     @classmethod
     def from_record(cls, row):
-        exact_fields(row, {"address", "input_id", "outcome", "code", "execution",
-                           "task_id", "recovery_required"})
+        if not isinstance(row, dict) or (("ask_sequence" in row) != ("queue_head" in row)):
+            raise ProtocolError("Invalid Ask queue receipt fields")
+        exact_fields({k: v for k, v in row.items() if k not in {"ask_sequence", "queue_head"}},
+                     {"address", "input_id", "outcome", "code", "execution",
+                      "task_id", "recovery_required"})
         return cls(**dict(row, address=None if row["address"] is None
                          else SessionAddress.from_record(row["address"])))
 

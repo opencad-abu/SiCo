@@ -43,6 +43,12 @@ class FrontendHub:
         # continue on the listener even while these bounded adapters are waiting.
         self.slots = {kind: threading.BoundedSemaphore(8) for kind in self.pools}
         self.closed = threading.Event()
+        from .resource_checks import ResourceChecks
+
+        self.resource_checks = ResourceChecks(self)
+        from .knowledge_checks import KnowledgeChecks
+
+        self.knowledge_checks = KnowledgeChecks(self)
         self._lock = threading.Lock()
         self._active = set()
         self._cleanup = CleanupTask(self._release, "copilot-frontend-close")
@@ -84,6 +90,33 @@ class FrontendHub:
         if wire.method == "frontend.events":
             return self.replay.events(wire, operation, params)
         if wire.method == "frontend.query":
+            if operation == "agent_knowledge":
+                return self.knowledge_checks.run(wire, params)
+            if operation == "agent_settings_check":
+                return self.resource_checks.run(wire, params)
+            if operation == "agent_settings":
+                from .agent_settings import read
+
+                return read(self, params)
+            if operation == "feature_defaults":
+                from .feature_defaults import read
+
+                exact_fields(params, set())
+                return read(self.owner.project)
+            if operation == "ask_head":
+                from .service_values import name
+
+                exact_fields(params, {"session_id", "input_id"})
+                name(params["session_id"])
+                name(params["input_id"])
+                controller = self.owner.controllers.get(params["session_id"])
+                if controller is None:
+                    return None
+                from .frontend_session import SessionToken
+
+                address = SessionAddress(self.descriptor.project_id, self.descriptor.service_id,
+                    SessionToken(controller.session_id, controller.runtime_id))
+                return self.inputs.query(address, params["input_id"]).record()
             if operation == "home":
                 exact_fields(params, set())
                 return {"platforms": ["CDNS-IC"]}
@@ -132,6 +165,33 @@ class FrontendHub:
         return address, controller
 
     def command(self, wire, operation, params):
+        if operation == "navigation_labels":
+            return self.workspace.labels.command(params)
+        if operation == "agent_knowledge_cancel":
+            return self.knowledge_checks.cancel(wire, params)
+        if operation == "agent_settings_check_cancel":
+            return self.resource_checks.cancel(wire, params)
+        if operation == "agent_settings_save":
+            from .agent_settings import save
+
+            return save(self, params)
+        if operation == "agent_mode_save":
+            from .agent_settings import save_mode
+
+            return save_mode(self, params)
+        if operation == "agent_model_save":
+            from .agent_settings import save_model
+
+            return save_model(self, params)
+        if operation == "agent_data_save":
+            from .agent_settings import save_data_sources
+
+            return save_data_sources(self, params)
+        if operation == "feature_defaults_save":
+            from .feature_defaults import save
+
+            exact_fields(params, {"groups"})
+            return save(self.owner.project, params["groups"])
         if operation == "continue_session":
             from .session_continuation import continue_session
 
@@ -209,8 +269,19 @@ class FrontendHub:
         if operation == "query_interrupted":
             if len(args) != 1 or set(kwargs) != {"expected_task"}:
                 raise ProtocolError("Query requires the original task and call identity")
-            return self.workspace.worker.command(address.session, operation, *args, **kwargs).result()
-        if operation in {"resource_status", "turn_input_status", "thread_status"}:
+            from .reconcile_audit import reconcile_caller
+
+            def query():
+                self.controller(params["address"])
+                with reconcile_caller(wire.connection, wire.operation):
+                    return controller.reconciliation.query_interrupted(*args, **kwargs)
+            return self.workspace.worker._request(query).result()
+        if operation == "recap_start":
+            if args or set(kwargs) != {"expected_task", "request_id", "automatic"}:
+                raise ProtocolError("Invalid recap request")
+            return self.control.run(address, wire.connection, wire.control,
+                lambda: self.workspace.worker.command(address.session, operation, **kwargs).result())
+        if operation in {"resource_status", "turn_input_status", "thread_status", "recap_status"}:
             if args or kwargs:
                 raise ProtocolError("Unexpected command arguments")
             return self.workspace.worker.command(address.session, operation).result()

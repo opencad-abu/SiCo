@@ -29,6 +29,7 @@ class SessionBinding(QObject):
             raise ValueError("会话回放准备结果已失效")
         self.delivery = BatchDelivery(api, prepared.stream) if prepared is not None else None
         self.cursor = self.delivery.cursor if self.delivery is not None else None
+        self.initial_sequence = self.cursor.sequence if self.cursor is not None else 0
         self.committed_sequence = prepared.committed_sequence if prepared is not None else 0
         self.version = -1
         self.failed = False
@@ -78,12 +79,6 @@ class SessionBinding(QObject):
         if self.lifecycle.ready():
             self.timer.stop()
             self.finish_close()
-
-    def begin_close(self):
-        self.lifecycle.request()
-
-    def close_grace_expired(self):
-        return self.lifecycle.expired()
 
     def fail(self):
         self.failed = True

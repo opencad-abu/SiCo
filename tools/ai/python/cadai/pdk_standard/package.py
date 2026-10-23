@@ -17,7 +17,7 @@ from .jsonio import Writer, atomic, fail, mapping, read, relative, sha
 MAP_FIELDS = {"package.json": ("libraries", "dependencies", "files"),
               "sources.json": ("items",), "category.json": ("items",),
               "device.json": ("items",), "file.json": ("items",),
-              "model.json": ("configs", "corners")}
+              "model.json": ("configs", "corners", "cards")}
 SUFFIX_FIELDS = {"cdf.json": ("parameters", "rules"), "symbol.json": ("terminals",),
                  "simulation.json": ("interfaces",), "properties.json": ("items",), "iv.json": ("runs",)}
 
@@ -37,6 +37,16 @@ def logical(root, name, expected=None, *, logical_name=None):
     for field in (*MAP_FIELDS.get(name, SUFFIX_FIELDS.get(Path(name).name, ())), "evidence"):
         if field in value:
             value[field] = mapping(root, value[field])
+    if name == "package.json":
+        acceptance = (value.get("publication") or {}).get("acceptance") or {}
+        receipts = acceptance.get("receipts")
+        if isinstance(receipts, dict) and "$parts" in receipts:
+            acceptance["receipts"] = mapping(root, receipts)
+        if isinstance(acceptance.get("receipts"), dict):
+            for receipt in acceptance["receipts"].values():
+                if isinstance(receipt, dict) and isinstance(receipt.get("fingerprints"), dict):
+                    for device, fingerprints in receipt["fingerprints"].items():
+                        receipt["fingerprints"][device] = mapping(root, fingerprints)
     return value
 
 
@@ -128,6 +138,104 @@ def publish(root, library, payload, values, index):
             "next_action": "complete_pdk_generation", "confirmation_required": True}
 
 
+def install(root, library, source, roots):
+    """Install a complete reviewed package as the workspace baseline for one library.
+
+    The bundled builtin data arrives as an already published generation (its own
+    sources, dependencies, acceptance and content digest); installation copies
+    those exact bytes and only binds the site roots.  No projection, no edits.
+    """
+    root, source = Path(root), Path(source)
+    package = Package(source)
+    package.verify()
+    from ..pdk_errors import PdkUnavailable
+    from .publication import require
+    try:
+        require(package)
+        design_ready = True
+    except PdkUnavailable as exc:
+        if exc.code not in {'pdk_acceptance_required', 'pdk_generation_incomplete'}:
+            raise
+        design_ready = False
+    package_id = project.safe_id(library)
+    if package.manifest.get("package_id") != package_id:
+        fail("Bundled package identity differs from the requested library")
+    if (not isinstance(roots, dict) or not roots
+            or any(not isinstance(value, str) or not Path(value).is_absolute()
+                   for value in roots.values())):
+        fail("Install requires absolute site roots")
+    revision = package.revision
+    with locked(root):
+        current = read(root / "index.json") if (root / "index.json").exists() else {
+            "format": "sico.pdk.index", "schema_version": VERSION, "packages": {}}
+        if current.get("format") != "sico.pdk.index":
+            fail("Workspace standard index has unexpected format")
+        current["packages"] = mapping(root, current["packages"])
+        for entry in current["packages"].values():
+            installed = relative(root, entry["path"])
+            old = read(installed / "package.json")
+            if old.get("format") == "sico.pdk.overlay" and old.get("base", {}).get("package_id") == package_id:
+                fail("Confirmed workspace changes require explicit rebase before reinstall",
+                     "pdk_update_conflict")
+        existing = current["packages"].get(package_id)
+        if existing is not None:
+            old = Package(relative(root, existing["path"]))
+            if old.manifest_digest == package.manifest_digest:
+                if existing.get("roots") != roots:
+                    existing["roots"] = roots
+                    atomic(root / "index.json", current)
+                return {"schema_version": VERSION, "package_id": package_id, "revision": revision,
+                        "path": str(old.root / "package.json"), "status": "installed",
+                        "device_count": len(package.document('device.json')['items']),
+                        "design_ready": design_ready, "reused": True}
+            if "publication" in old.manifest:
+                fail("A different published generation baseline is already installed",
+                     "pdk_update_conflict")
+            # An unconfirmed capture baseline is replaced by the published bundle;
+            # overlays on it were rejected above, so no increment is orphaned.
+        stage = Path(tempfile.mkdtemp(prefix=".standard-", dir=root))
+        destination = package_id + "." + revision[:12]
+        try:
+            shutil.copytree(source, stage, dirs_exist_ok=True)
+            Package(stage).verify()
+            os.rename(stage, root / destination)
+            current["packages"][package_id] = {"path": destination, "roots": roots}
+            writer = Writer(root)
+            packages = current["packages"]
+            if len(json.dumps(packages).encode()) > 6000:
+                current["packages"] = writer.shard("index." + revision + ".json", "packages", packages)
+            atomic(root / "index.json", current)
+        finally:
+            if stage.exists():
+                shutil.rmtree(stage)
+    return {"schema_version": VERSION, "package_id": package_id, "revision": revision,
+            "path": str(root / destination / "package.json"), "status": "installed",
+            "device_count": len(package.document('device.json')['items']),
+            "design_ready": design_ready}
+
+
+def rebind(root, package_id, expected_digest, roots):
+    """Re-point an installed baseline's site roots; the content never changes."""
+    root = Path(root)
+    if not (root / "index.json").exists():
+        return False
+    with locked(root):
+        current = read(root / "index.json")
+        current["packages"] = mapping(root, current["packages"])
+        entry = current["packages"].get(package_id)
+        if entry is None:
+            return False
+        installed = Package(relative(root, entry["path"]))
+        if installed.manifest_digest != expected_digest:
+            fail("Installed baseline differs from the bundled data; explicit rebase required",
+                 "pdk_update_conflict")
+        if entry.get("roots") == roots:
+            return False
+        entry["roots"] = roots
+        atomic(root / "index.json", current)
+        return True
+
+
 def build(stage, library, revision, payload, values, index):
     writer = Writer(stage)
     at = now()
@@ -135,9 +243,9 @@ def build(stage, library, revision, payload, values, index):
               "collector": "SICO-PDK-DATA-" + VERSION + " projection / " + payload["binding"]["collector_revision"],
               "target": {"library": library}}
     from .symbol_facts import METHOD as geometry_method
-    writer.put("sources.json", {"items": {"capture": source, "geometry_derivation": {
+    sources = {"capture": source, "geometry_derivation": {
         "kind": "derived", "at": at, "summary": "Conservative saved static symbol geometry",
-        "inputs": ["capture"], "method": geometry_method}}})
+        "inputs": ["capture"], "method": geometry_method}}
     envelope = {"source": "capture", "depends_on": []}
     rows, categories, dependencies = {}, {}, {}
     targets = {r["identity"]["target"]["cell"]: r["identity"]["target"] for r in payload["directory"]["items"]}
@@ -171,7 +279,22 @@ def build(stage, library, revision, payload, values, index):
     writer.put("category.json", {**envelope, "items": categories}, ("items",))
     writer.put("device.json", {**envelope, "items": rows}, ("items",))
     lib = payload["binding"]["library"]
-    writer.put("file.json", {**envelope, "items": project.files(index, lib["resolved_path"])}, ("items",))
+    files = project.files(index, lib["resolved_path"])
+    from .model_collection import METHOD as model_method
+    from .model_collection import derive as derive_models
+
+    model_source = "model_deck_derivation"
+    model, files, model_dependencies, _ = derive_models(
+        files, {"pdk": str(Path(lib["resolved_path"]).parent)}, model_source)
+    dependencies.update(model_dependencies)
+    if model:
+        sources[model_source] = {
+            "kind": "derived", "at": at,
+            "summary": "Model configurations and corners derived from registered vendor deck sections",
+            "inputs": ["capture"], "method": model_method}
+        writer.put("model.json", model, ("configs", "corners", "cards"))
+    writer.put("sources.json", {"items": sources})
+    writer.put("file.json", {**envelope, "items": files}, ("items",))
     manifest = {"format": "sico.pdk.package", "schema_version": VERSION,
                 "package_id": project.safe_id(library),
                 "pdk_version": lib.get("pdk_version") or project.unknown("PDK release identity not supplied by session"),

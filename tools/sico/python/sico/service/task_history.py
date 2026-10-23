@@ -6,7 +6,7 @@ import os
 from collections import OrderedDict
 
 from ..core.contracts import BoundContext, json_copy
-from ..storage.journal import open_private
+from ..storage.journal import BULK_KINDS, open_private
 from ..transport.framing import strict_json
 
 
@@ -14,7 +14,7 @@ class TaskHistory:
     def __init__(self, journal, inbox):
         self.rows = OrderedDict()
         self.task_inputs = {}
-        for event in journal.events():
+        for event in journal.events(exclude=BULK_KINDS):
             self.event(event)
         # Old inbox files may outlive a crash between execution and status persistence.
         for path in sorted(inbox.directory.glob("*.json"), key=lambda p: p.stat().st_mtime)[-200:]:
@@ -31,6 +31,7 @@ class TaskHistory:
             existing = self.rows.get(record["id"])
             if existing:
                 existing["origin"] = record.get("origin", "quick")
+                existing["ask_sequence"] = message.get("ask_sequence")
             else:
                 self.record(record)
         for row in self.rows.values():
@@ -55,6 +56,7 @@ class TaskHistory:
             {
                 "id": record["id"],
                 "task_id": record.get("task_id", ""),
+                "ask_sequence": message.get("ask_sequence"),
                 "text": message["text"],
                 "context": message["context"],
                 "attachments": json_copy(message.get("attachments", [])),
@@ -77,6 +79,7 @@ class TaskHistory:
                 {
                     "id": key,
                     "task_id": task_id,
+                    "ask_sequence": old.get("ask_sequence"),
                     "text": payload["text"],
                     "context": payload["context"],
                     "attachments": json_copy(payload.get("attachments", [])),

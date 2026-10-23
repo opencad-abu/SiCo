@@ -58,7 +58,7 @@ backend 先完整解析和校验，再作为严格转义的数据加载到 SKILL
 `<run-dir>/lef.toml` 给 Python backend 使用，两者不会互相覆盖。这里的 `<run-dir>`
 由 `Save Data to` 的输出根目录和 library/cell、layout view 或 batch 输入自动派生，
 不是可编辑的 GUI 字段。Profile 的 schema、
-安全加载、原子发布和相对路径规则见 [环境配置文档](../../docs/html/flows.html)。
+安全加载、原子发布和相对路径规则见 [环境配置文档](../../docs/ENVIRONMENT_FLOWS.md#flow-configuration-profile)。
 不带 `[cad_config]` 元数据的运行 TOML 会被拒绝，不能作为 GUI Profile 导入。
 
 `More Abstract Options` 使用 disclosure triangle，默认折叠。展开后可覆盖 options

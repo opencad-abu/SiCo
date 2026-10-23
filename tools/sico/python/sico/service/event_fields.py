@@ -2,6 +2,8 @@
 
 from html import escape
 
+from cadgui.fonts import mono_family
+
 from .display import FIELD_LABELS
 from .tool_display import TITLES
 
@@ -37,6 +39,7 @@ LABELS.update({"archive": "完整内容归档", "input_tokens": "输入 Token",
                "enabled": "启用", "rows": "记录列表"})
 OUTPUT_FIELDS = frozenset({"command", "code", "script", "diff", "output", "aggregatedOutput",
                            "stdout", "stderr", "diagnostic", "error"})
+DOCUMENT_SURFACE = "#F4F4F4"
 
 
 def scalar(value, key):
@@ -63,14 +66,16 @@ def text_block(text, *, output=False):
     # Escape once for HTML, preserving angle brackets as text rather than tags.
     style = "white-space:pre-wrap; margin:6px 0;"
     if output:
-        style += " font-family:monospace; background-color:#F4F4F4;"
+        style += (f" font-family:'{mono_family()}', monospace;"
+                  f" background-color:{DOCUMENT_SURFACE};")
     return '<pre style="' + style + '">' + escape(text) + "</pre>"
 
 
 def _row(key, value):
     label, text = LABELS.get(key, key), scalar(value, key)
-    return ('<tr><td width="27%" valign="top" bgcolor="#F4F4F4"><b>' + escape(label)
-            + '</b></td><td width="73%" valign="top">' + escape(text) + '</td></tr>')
+    return ('<tr><td width="27%" valign="top" bgcolor="' + DOCUMENT_SURFACE
+            + '"><b>' + escape(label) + '</b></td><td width="73%" valign="top">'
+            + escape(text) + '</td></tr>')
 
 
 def _short(key, value):

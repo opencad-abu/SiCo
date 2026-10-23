@@ -9,8 +9,10 @@ import math
 import unicodedata
 from pathlib import Path
 
+from cadgui.fonts import MONO_FAMILY, UI_FAMILY
+
 from .template_coords import instance_position, is_integer_space
-from .template_schema import PIN_POLICY, TemplateUnavailable, canonical
+from .template_schema import PIN_POLICY, TemplateError, TemplateUnavailable, canonical
 
 
 def symbol_plan(ports, title):
@@ -86,7 +88,8 @@ def symbol_svg(plan):
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width + pad * 2}" '
         f'height="{height + 140}" viewBox="{-pad} -65 {width + pad * 2} {height + 140}">',
         '<rect x="-60" y="-65" width="100%" height="100%" fill="#fff"/>',
-        f'<text x="{width / 2}" y="-35" text-anchor="middle" font-family="sans-serif" '
+        f'<text x="{width / 2}" y="-35" text-anchor="middle" '
+        f'font-family="{UI_FAMILY}, sans-serif" '
         f'font-size="17" fill="#152c42">{html.escape(plan["title"])}</text>',
         f'<rect x="0" y="0" width="{width}" height="{height}" rx="2" '
         'fill="#f4f8fc" stroke="#23435e" stroke-width="2"/>',
@@ -102,13 +105,13 @@ def symbol_svg(plan):
                 'stroke="#23435e" stroke-width="2"/>',
                 f'<circle cx="{outside}" cy="{y}" r="3" fill="#327ea6"/>',
                 f'<text x="{text_x}" y="{y + 5}" text-anchor="{anchor}" '
-                f'font-family="monospace" font-size="14" fill="#152c42">'
+                f'font-family="{MONO_FAMILY}, monospace" font-size="14" fill="#152c42">'
                 f"{html.escape(p['name'])}</text>",
             ]
         )
     out.append(
         f'<text x="{width / 2}" y="{height + 40}" text-anchor="middle" '
-        'font-family="monospace" font-size="12" fill="#637586">'
+        f'font-family="{MONO_FAMILY}, monospace" font-size="12" fill="#637586">'
         "instance / parameters</text></svg>"
     )
     return "\n".join(out)
@@ -164,7 +167,8 @@ def _figure(fig, color="#365a72", stroke_width=0.012):
         angle = {"R90": -90, "R180": -180, "R270": -270}.get(fig.get("orient"), 0)
         return (
             f'<text x="{x}" y="{-y}" text-anchor="{anchor}" dominant-baseline="{baseline}" '
-            f'transform="rotate({angle} {x} {-y})" font-family="monospace" font-size="{height}" '
+            f'transform="rotate({angle} {x} {-y})" '
+            f'font-family="{MONO_FAMILY}, monospace" font-size="{height}" '
             f'fill="{color}">{html.escape(fig["text"])}</text>'
         )
     return ""
@@ -264,17 +268,115 @@ def render_preview(record, root):
     if ports is None and "symbol" in record["assets"]:
         ports = record["assets"]["symbol"]["ports"]
     if ports is not None:
-        plan = symbol_plan(ports, record["source"]["cell"])
-        artifacts.append(_write_once(directory / "symbol-plan.json", canonical(plan) + "\n"))
-        artifacts.append(_write_once(directory / "symbol-proposed.svg", symbol_svg(plan)))
-        reports["symbol_proposed"] = plan["checks"]
-        sections.append(
-            '<h2>Symbol — port policy proposal</h2><img src="symbol-proposed.svg" '
-            'alt="Generated symbol placement proposal">'
-        )
+        from .template_symbol_plan import make_plan
+
+        fallback_reason = None
+        label_fallback = None
+        try:
+            plan = make_plan(
+                record,
+                {
+                    "library": record["source"]["lib"],
+                    "cell": record["source"]["cell"],
+                    "port_map": {},
+                    "style": "auto",
+                    "label_policy": "preserve",
+                },
+            )
+        except (TemplateError, TemplateUnavailable) as exc:
+            label_fallback = {"code": "preserve_unavailable", "message": str(exc)[:512]}
+            try:
+                plan = make_plan(
+                    record,
+                    {
+                        "library": record["source"]["lib"],
+                        "cell": record["source"]["cell"],
+                        "port_map": {},
+                        "style": "auto",
+                        "label_policy": "drop",
+                    },
+                )
+            except (TemplateError, TemplateUnavailable) as drop_exc:
+                plan = None
+                fallback_reason = {"code": "plan_unavailable", "message": str(drop_exc)[:512]}
+        if (
+            plan is not None
+            and plan.get("label_policy") == "preserve"
+            and plan.get("style") != "template_outline"
+            and plan.get("fallback_reason")
+        ):
+            label_fallback = {
+                "code": "preserve_outline_unavailable",
+                "message": str(plan["fallback_reason"].get("message", ""))[:512],
+            }
+            try:
+                dropped = make_plan(
+                    record,
+                    {
+                        "library": record["source"]["lib"],
+                        "cell": record["source"]["cell"],
+                        "port_map": {},
+                        "style": "auto",
+                        "label_policy": "drop",
+                    },
+                )
+                if dropped.get("style") == "template_outline":
+                    plan = dropped
+            except (TemplateError, TemplateUnavailable):
+                pass
+        if plan is not None and plan.get("style") == "template_outline":
+            from .template_symbol_outline import outline_shapes
+
+            lo, hi = plan["selection_box"]
+            svg, _ = source_svg(
+                {
+                    "bbox": [[lo[0] - 1, lo[1] - 0.5], [hi[0] + 1, hi[1] + 0.5]],
+                    "shapes": outline_shapes(plan),
+                },
+                "symbol_plan",
+            )
+            artifacts.append(_write_once(directory / "symbol-plan.json", canonical(plan) + "\n"))
+            artifacts.append(_write_once(directory / "symbol-proposed.svg", svg))
+            reports["symbol_plan"] = {
+                "style": plan["style"],
+                "fallback_reason": plan.get("fallback_reason"),
+                "label_policy": plan.get("label_policy"),
+                "label_fallback": label_fallback,
+                "annotation_count": plan.get("annotation_count", 0),
+                "annotation_overlaps": plan.get("annotation_overlaps", []),
+                "dropped_labels": plan.get("dropped_labels", []),
+                "body_shapes": len(plan.get("body", [])),
+                "stubs": len(plan.get("stubs", [])),
+                "rows": len(plan.get("rows", [])),
+            }
+            sections.append(
+                '<h2>Symbol — captured outline</h2><img src="symbol-proposed.svg" '
+                'alt="Generated symbol outline proposal">'
+            )
+        else:
+            rectangular = symbol_plan(ports, record["source"]["cell"])
+            artifacts.append(
+                _write_once(directory / "symbol-plan.json", canonical(rectangular) + "\n")
+            )
+            artifacts.append(
+                _write_once(directory / "symbol-proposed.svg", symbol_svg(rectangular))
+            )
+            reports["symbol_plan"] = {
+                "style": "rectangular_module",
+                "fallback_reason": (
+                    plan.get("fallback_reason") if plan is not None else fallback_reason
+                ),
+                "label_fallback": label_fallback,
+                "checks": rectangular["checks"],
+            }
+            sections.append(
+                "<h2>Symbol — rectangular compatibility proposal</h2>"
+                '<img src="symbol-proposed.svg" alt="Generated symbol placement proposal">'
+            )
     page = (
         '<!doctype html><meta charset="utf-8"><title>Circuit template preview</title>'
-        "<style>body{font:16px sans-serif;max-width:1100px;margin:32px auto;color:#18344b}"
+        f"<style>body{{font:16px '{UI_FAMILY}', sans-serif;max-width:1100px;"
+        "margin:32px auto;color:#18344b}"
         "img{max-width:100%;background:white;border:1px solid #d8e2eb}"
         "pre{white-space:pre-wrap}h2{margin-top:36px}</style>"
     )

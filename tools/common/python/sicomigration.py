@@ -6,10 +6,13 @@ import os
 import re
 import socket
 import stat
+import tempfile
 from pathlib import Path
 
 FORMAT = "sico.state.migration.activation.v1"
+LEGACY_FORMAT = "sico.state.legacy-ignored.v1"
 MARKER = "migration.json"
+LEGACY_MARKER = "legacy-ignored.json"
 SERVICE = "ai/agent/service"
 DEFAULT_RECORD_LIMIT = 16 * 1024
 INVENTORY_RECORD_LIMIT = 64 * 1024 * 1024
@@ -91,10 +94,69 @@ def record(root, relative, *, limit=DEFAULT_RECORD_LIMIT):
     return _parse_record(read_bytes(root, relative, limit))
 
 
-def matches(info, expected, *, same_host):
+def _write_private(root, name, raw):
+    root = Path(root)
+    fd, temporary = tempfile.mkstemp(prefix="." + name + ".", dir=root)
+    try:
+        os.fchmod(fd, 0o600)
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(raw)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, root / name)
+        directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+    finally:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+
+
+def matches(info, expected):
+    # Persistent receipts outlive mount/boot-specific st_dev numbers. Directory
+    # inode/owner and the separately checked fixed lock bind the published state.
     return (isinstance(expected, dict) and type(expected.get("inode")) is int
-            and expected["inode"] == info.st_ino and expected.get("uid") == info.st_uid
-            and (not same_host or expected.get("device") == info.st_dev))
+            and expected["inode"] == info.st_ino and expected.get("uid") == info.st_uid)
+
+
+def legacy_ignored(root):
+    """Validate the explicit decision to keep an existing .cad root isolated."""
+    root = Path(root)
+    path = root / LEGACY_MARKER
+    if not exists(path):
+        return None
+    value = record(root, LEGACY_MARKER)
+    if (set(value) != {"format", "source_identity"}
+            or value["format"] != LEGACY_FORMAT):
+        raise ValueError("Invalid legacy state isolation marker")
+    source = root.parent / ".cad"
+    if not exists(source) or not matches(directory(source, private=False),
+                                         value["source_identity"]):
+        raise ValueError("Legacy state isolation source changed")
+    return value
+
+
+def ignore_legacy(root):
+    """Record that a fresh .sico root intentionally leaves an old .cad untouched."""
+    root = Path(root)
+    source = root.parent / ".cad"
+    info = directory(source, private=False)
+    expected = {
+        "format": LEGACY_FORMAT,
+        "source_identity": {"inode": info.st_ino, "uid": info.st_uid},
+    }
+    current = legacy_ignored(root)
+    if current is not None:
+        if current != expected:
+            raise ValueError("Legacy state isolation marker changed")
+        return current
+    raw = json.dumps(expected, sort_keys=True, separators=(",", ":")).encode()
+    _write_private(root, LEGACY_MARKER, raw)
+    return expected
 
 
 def admission_payload(root):
@@ -102,9 +164,14 @@ def admission_payload(root):
     root = Path(root)
     legacy = root.parent / ".cad"
     has_legacy, has_marker = exists(legacy), exists(root / MARKER)
-    if not has_legacy and not has_marker:
+    if not has_legacy:
+        if has_marker:
+            raise ValueError("Completed migration activation requires its legacy source")
         return None
-    if not has_legacy or not has_marker:
+    if not has_marker:
+        directory(root)
+        if legacy_ignored(root) is not None:
+            return None
         raise ValueError("Existing legacy state requires completed migration activation")
     target_info, source_info = directory(root), directory(legacy, private=False)
     marker = record(root, MARKER)
@@ -117,9 +184,8 @@ def admission_payload(root):
     identity = marker["project_identity"]
     if not isinstance(identity, dict) or not isinstance(identity.get("created_host"), str):
         raise ValueError("Invalid migrated project identity")
-    same_host = identity["created_host"] == local_host_id()
-    if (not matches(target_info, marker["target_identity"], same_host=same_host)
-            or not matches(source_info, marker["source_identity"], same_host=same_host)):
+    if (not matches(target_info, marker["target_identity"])
+            or not matches(source_info, marker["source_identity"])):
         raise ValueError("Migration source or target directory identity changed")
     control = root.parent / ".sico-migration"
     directory(control)
@@ -155,8 +221,7 @@ def admission_payload(root):
     directory(root / SERVICE)
     lock = (root / SERVICE / "owner.lock").lstat()
     read_bytes(root, SERVICE + "/owner.lock", 0)
-    if (identity.get("directory_inode") != agent.st_ino or identity.get("lock_inode") != lock.st_ino
-            or same_host and identity.get("directory_device") != agent.st_dev):
+    if identity.get("directory_inode") != agent.st_ino or identity.get("lock_inode") != lock.st_ino:
         raise ValueError("Migrated project directory or lock binding changed")
     history = marker["history_sha256"]
     if history is not None:

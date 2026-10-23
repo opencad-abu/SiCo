@@ -83,7 +83,7 @@ def published_identity(root, marker):
     identity = read_identity(root / SERVICE)
     if identity.record() != marker["project_identity"]:
         raise ValueError("Published migration has another project identity")
-    identity.verify(root / SERVICE, identity.created_host)
+    identity.verify(root / SERVICE)
     expected = marker["history_sha256"]
     history = root / "ai/agent" / HISTORY_NAME
     if expected is not None:

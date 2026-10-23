@@ -1,7 +1,7 @@
 ; Normalize RCE summary strings, paths and readiness.
 
 unless(and(boundp('RCEsummaryValuesVersion)
-             RCEsummaryValuesVersion=="20260919.gui.modules.v1")
+             RCEsummaryValuesVersion=="20261011.calibre.pex.tool.v1")
 procedure(rceSummaryString(value)
   cond(
     (null(value) "")
@@ -89,5 +89,5 @@ procedure(rceSummaryFirstLine(path)
   )
 )
 
-RCEsummaryValuesVersion="20260919.gui.modules.v1"
+RCEsummaryValuesVersion="20261011.calibre.pex.tool.v1"
 )

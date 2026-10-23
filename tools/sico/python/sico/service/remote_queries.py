@@ -3,7 +3,7 @@
 from dataclasses import fields, replace
 
 from ..transport.framing import ProtocolError
-from .frontend_assets import detail_value
+from .frontend_assets import detail_value, preview_content_value, preview_index_value
 from .remote_validation import query_publication
 from .service_protocol import exact_fields
 from .service_query_dto import query_record, read_query
@@ -83,3 +83,8 @@ class RemoteSource:
 
     def processes(self, keyword="", offset=0):
         return self._request("processes", lambda: dict(keyword=keyword, offset=offset))
+
+    def preview_artifact(self, name=""):
+        """List preview products, or read one by name, through the viewer lane."""
+        return self._request("preview", lambda: dict(name=name),
+                             preview_index_value if not name else preview_content_value)

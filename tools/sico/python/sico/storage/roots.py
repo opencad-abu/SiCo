@@ -9,6 +9,10 @@ def state_root(project, *, create=False):
     return project_root(project, create=create)
 
 
+def startup_root(project):
+    return project_root(project, create=True, isolate_legacy=True)
+
+
 def agent_root(project, *, create=False):
     return project_directory(project, "ai/agent", create=create)
 

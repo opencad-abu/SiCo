@@ -5,22 +5,23 @@ import uuid
 from cadai.pdk_errors import PdkUnavailable
 
 from ..core.contracts import NeedsReconcile
-from .audit_questions import questions
+from ..core.audit_questions import questions
+from ..core.review_classes import BLOCKING
 from .pdk_update_review import preview, semantic_preview
 
 
 def require(audit, data, evidence_id, context):
-    with audit.loop.lock:
-        if not audit.loop.active or audit.loop.cancelled() or audit.loop.stale:
+    with audit.runtime.lock:
+        if not audit.runtime.admitted():
             return
-        current = audit.workbench.active()
-        task = audit.loop.state.task["id"]
+        current = audit.active_work()
+        task = audit.runtime.snapshot().task_id
         for row in audit.index.audits.values():
             if (row["task_id"] == task and row.get("pdk_update_ref") == data["update_ref"]
                     and row["context"] == context.record()
                     and row["status"] in {"pending", "answer_received", "answered"}):
                 return
-        if audit.pending:
+        if audit.waiting_for_input() or audit.waiting_for_host():
             raise NeedsReconcile("Finish the current question before another PDK update")
         evidence = audit.index.resolve("data", evidence_id)
         if evidence["task_id"] != task or audit.index.evidence_value(evidence_id).get("data") != data:
@@ -28,27 +29,22 @@ def require(audit, data, evidence_id, context):
         record = {"id": "a_" + uuid.uuid4().hex, "title": "确认 PDK 数据更新",
                   "questions": questions([data["selection_question"]]), "recommendation": "",
                   "rationale": "请核对工具预览中的具体字段差异；确认仅覆盖所示对象和修订。",
+                  "review_class": BLOCKING,
                   "context": context.record(), "task_id": task,
                   "work_id": current["work_id"], "stage_id": current["stage_id"],
                   "evidence": [{"id": evidence_id, "digest": evidence["digest"]}],
                   "pdk_update_ref": data["update_ref"], "pdk_update_revision": data["revision"]}
         audit.emit("prepared", record)
-        audit.pending[record["id"]] = {
-            "rpc_id": None, "binding": None, "blocking": True, "source": "host",
-            "host_rpc": getattr(getattr(audit.loop, "runtime", None), "rpc", None),
-            "host_connection_id": getattr(audit.loop, "connection_id", ""),
-            "host_thread_id": getattr(audit.loop, "thread_id", None)}
-        audit.loop.state.task["waiting_audits"] = list(audit.pending)
-        audit.emit("opened", {"id": record["id"], "source": "pdk_data_update"})
+        audit.open_host(record, "pdk_data_update")
 
 
 def answer(audit, data, context):
-    with audit.loop.lock:
-        if not audit.loop.active or audit.loop.cancelled() or audit.loop.stale:
+    with audit.runtime.lock:
+        if not audit.runtime.admitted():
             return None
         audit.index.sync()
         for row in audit.index.audits.values():
-            if (row["task_id"] == audit.loop.state.task["id"] and row["status"] == "answered"
+            if (row["task_id"] == audit.runtime.snapshot().task_id and row["status"] == "answered"
                     and row["context"] == context.record()
                     and row.get("pdk_update_ref") == data["update_ref"]
                     and row.get("pdk_update_revision") == data["revision"]):

@@ -2,6 +2,11 @@
 
 from .mcp_transport import MAX_EVAL_BYTES
 
+APPROVAL_DIGEST = {
+    "type": "string",
+    "pattern": "^[a-f0-9]{64}$",
+}
+
 GET_CONTEXT = {
     "name": "get_context",
     "title": "Get Virtuoso context",
@@ -19,14 +24,15 @@ EVAL_SKILL = {
     "name": "eval_skill",
     "title": "Evaluate one SKILL expression",
     "description": (
-        "Evaluate exactly one classic Cadence SKILL expression in the current "
-        "Virtuoso process. Returns value and synchronous poport/woport/errport "
-        "text in output, including buffered warnings and errors, with "
-        "output_capture=skill_ports and *_truncated flags. Read this reply "
-        "instead of polling CDS.log; legacy Assistant errors use data.output, "
-        "and spooled results use artifact.path. Does not collect CIW history or later "
-        "asynchronous output. "
-        "For multiple forms, write a .il/.ils file and use load_skill_file."
+        "Evaluate one classic SKILL expression in the current Virtuoso "
+        "process. Returns the value and synchronous poport/woport/errport text "
+        "(output, output_capture=skill_ports, *_truncated flags), including "
+        "buffered warnings and errors. Read this reply instead of polling "
+        "CDS.log; legacy Assistant errors use data.output, spooled results use "
+        "artifact.path. Does not collect CIW history or later asynchronous "
+        "output. "
+        "For multiple forms, write a .il/.ils file and use load_skill_file. "
+        "Deletion requires an approved review."
     ),
     "inputSchema": {
         "type": "object",
@@ -35,7 +41,8 @@ EVAL_SKILL = {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": MAX_EVAL_BYTES,
-            }
+            },
+            "approval_digest": APPROVAL_DIGEST,
         },
         "required": ["code"],
         "additionalProperties": False,
@@ -57,11 +64,15 @@ LOAD_SKILL_FILE = {
         "poport/woport/errport text in output, including warnings and errors, "
         "with output_capture=skill_ports and *_truncated flags. Ports are restored "
         "after loading; later asynchronous output is not captured. Legacy Assistant "
-        "errors use data.output, and spooled results use artifact.path."
+        "errors use data.output, and spooled results use artifact.path. Deletion or "
+        "reviewed native writes require an approved deletion review."
     ),
     "inputSchema": {
         "type": "object",
-        "properties": {"path": {"type": "string", "minLength": 1}},
+        "properties": {
+            "path": {"type": "string", "minLength": 1},
+            "approval_digest": APPROVAL_DIGEST,
+        },
         "required": ["path"],
         "additionalProperties": False,
     },

@@ -1,0 +1,14 @@
+# AIVW runtime and tool output
+.aivw/
+*.log
+xrun.history
+
+# Python and local test caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Extracted development-only reference tree; keep the checked-in archive only.
+reference/codex-main/

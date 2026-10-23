@@ -6,7 +6,7 @@ import stat
 import uuid
 from pathlib import Path
 
-from ..transport.framing import strict_json
+from cadai.json_values import strict_json
 from .journal import open_private, private_dir, sync_directory
 from .roots import state_root
 

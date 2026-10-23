@@ -14,10 +14,12 @@ MIGRATED_FIELDS = {
     "couple_to_ground": "COUPLE_TO_GROUND",
     "xref_use_layout_device_name": "XREF_USE_LAYOUT_DEVICE_NAME",
     "extract_via_caps": "EXTRACT_VIA_CAPS",
-    "remove_floating_nets": "REMOVE_FLOATING_NETS",
     "remove_dangling_nets": "REMOVE_DANGLING_NETS",
     "skip_cells": "SKIP_CELLS",
     "translate_retain_bulk_layers": "TRANSLATE_RETAIN_BULK_LAYERS",
+}
+GUI_OWNED_FIELDS = {
+    "remove_floating_nets": "extract.remove_floating_nets",
 }
 _RESERVED = {
     "BLOCK", "CALIBRE_RUNSET", "CALIBRE_QUERY_FILE", "CASE_SENSITIVE",
@@ -26,6 +28,7 @@ _RESERVED = {
     "COUPLING_REPORT_FILE", "XREF", "CELL_TYPE", "NET_TYPE", "NETLIST_FORMAT",
     "NETLIST_FILE", "SPICE_SUBCKT_FILE", "NETS", "NETS_FILE", "SKIP_CELLS_FILE",
     "INCLUDE_FILE", "3D_IC", "3D_IC_SUBCKT_FILE", "POWER_REDUCTION",
+    "REMOVE_FLOATING_NETS",
     "NETLIST_TAIL_COMMENTS", "NETLIST_CONNECT_SECTION", "NETLIST_NODE_SECTION",
     "EXTRA_GEOMETRY_INFO", "KEEP_VIA_NODES", "CAPACITOR_TAIL_COMMENTS",
     "NETLIST_UNSCALED_COORDINATES", "NETLIST_UNSCALED_RES_PROP",
@@ -42,6 +45,12 @@ class StarDefaults:
                 raise ValueError(
                     f"extract.starrc.{field} moved to {self.source.path}: "
                     f"set {command} there and remove the old TOML field"
+                )
+        for field, key in GUI_OWNED_FIELDS.items():
+            if field in cfg.section("extract", "starrc"):
+                raise ValueError(
+                    f"extract.starrc.{field} moved to the GUI-owned {key}: "
+                    "remove the old TOML field"
                 )
         self.groups = sections(
             self.source, {"extraction", "coupling", "xref", "database", "after_selection", "netlist.file"},

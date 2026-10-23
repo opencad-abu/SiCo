@@ -19,7 +19,7 @@ callback = "(witMenuLoadRelative \"ai/skill++/AI.ils\") (when (isCallable 'cadDi
 [[ciw.items]]
 name = "lsfLoadMonitor"
 text = "LSF Load Monitor"
-callback = "(witMenuLoadRelative \"common/skill/SICO_environment.il\") (witMenuLoadRelative \"common/skill/SICO_installation.il\") (witMenuLoadRelative \"common/skill/SICO_toml.il\") (witMenuLoadRelative \"common/skill/SICO_guiProtocol.il\") (witMenuLoadRelative \"common/skill/SICO_lsf.il\") (witMenuLoadRelative \"common/skill/SICO_lsfSelection.il\") (witMenuLoadRelative \"common/skill/SICO_lsfProtocol.il\") (witMenuLoadRelative \"common/skill/SICO_lsfProcess.il\") (witMenuLoadRelative \"common/skill/SICO_lsfCommands.il\") (witMenuLoadRelative \"common/skill/SICO_lsfHosts.il\") (witMenuLoadRelative \"common/skill/SICO_lsfQueues.il\") (witMenuLoadRelative \"common/skill/SICO_lsfChoices.il\") (witMenuLoadRelative \"common/skill/SICO_lsfMonitor.il\") (when (isCallable 'SICO_lsfMonitorStart) (SICO_lsfMonitorStart))"
+callback = "(witMenuLoadRelative \"common/skill++/LSF.ils\") (when (isCallable 'SICO_lsfMonitorStart) (SICO_lsfMonitorStart))"
 
 [[ciw.items]]
 text = "DRC"
@@ -54,17 +54,17 @@ callback = "(witMenuLoadRelative \"lef/skill++/LEF.ils\") (when (isCallable 'cad
 [[ciw.items]]
 name = "cadChangeTechLib"
 text = "Change Tech Library..."
-callback = "(witMenuLoadRelative \"utility/skill/cadChangeTechLibForm.il\") (when (isCallable 'cadChangeTechLibGui) (cadChangeTechLibGui))"
+callback = "(witMenuLoadRelative \"utility/skill++/TECHLIB.ils\") (when (isCallable 'cadChangeTechLibGui) (cadChangeTechLibGui))"
 
 [[ciw.items]]
 name = "nl2view"
 text = "Netlist to View..."
-callback = "(witMenuLoadRelative \"utility/skill/nl2view.il\") (when (isCallable 'cadDisplayNl2ViewForm) (cadDisplayNl2ViewForm))"
+callback = "(witMenuLoadRelative \"utility/skill++/NL2VIEW.ils\") (when (isCallable 'cadDisplayNl2ViewForm) (cadDisplayNl2ViewForm))"
 
 [[ciw.items]]
 name = "mtsNetlistor"
 text = "MTS Netlistor..."
-callback = "(unless (and (isCallable 'mtsNetlistorRevision) (mtsNetlistorRevision)==\"20260924.sico.mts.launcher.v7\" (isCallable 'mtsNetlistorStart)) (witMenuLoadRelative \"mtsnl/skill/MTS_netlistor.il\")) (if (isCallable 'mtsNetlistorStart) then (mtsNetlistorStart) else (warn \"%s::MTS Netlistor launcher could not be loaded.\\n\" (witMenuLogo)))"
+callback = "(witMenuLoadRelative \"mtsnl/skill++/MTS.ils\") (when (isCallable 'mtsNetlistorStart) (mtsNetlistorStart))"
 
 [layout]
 enabled = true
@@ -84,7 +84,7 @@ callback = "(witMenuLoadRelative \"ai/skill++/AI.ils\") (when (isCallable 'cadDi
 [[layout.items]]
 name = "lsfLoadMonitor"
 text = "LSF Load Monitor"
-callback = "(witMenuLoadRelative \"common/skill/SICO_environment.il\") (witMenuLoadRelative \"common/skill/SICO_installation.il\") (witMenuLoadRelative \"common/skill/SICO_toml.il\") (witMenuLoadRelative \"common/skill/SICO_guiProtocol.il\") (witMenuLoadRelative \"common/skill/SICO_lsf.il\") (witMenuLoadRelative \"common/skill/SICO_lsfSelection.il\") (witMenuLoadRelative \"common/skill/SICO_lsfProtocol.il\") (witMenuLoadRelative \"common/skill/SICO_lsfProcess.il\") (witMenuLoadRelative \"common/skill/SICO_lsfCommands.il\") (witMenuLoadRelative \"common/skill/SICO_lsfHosts.il\") (witMenuLoadRelative \"common/skill/SICO_lsfQueues.il\") (witMenuLoadRelative \"common/skill/SICO_lsfChoices.il\") (witMenuLoadRelative \"common/skill/SICO_lsfMonitor.il\") (when (isCallable 'SICO_lsfMonitorStart) (SICO_lsfMonitorStart))"
+callback = "(witMenuLoadRelative \"common/skill++/LSF.ils\") (when (isCallable 'SICO_lsfMonitorStart) (SICO_lsfMonitorStart))"
 
 [[layout.items]]
 text = "DRC"
@@ -115,17 +115,17 @@ callback = "(witMenuLoadRelative \"lef/skill++/LEF.ils\") (when (isCallable 'cad
 [[layout.items]]
 name = "cadChangeTechLib"
 text = "Change Tech Library..."
-callback = "(witMenuLoadRelative \"utility/skill/cadChangeTechLibForm.il\") (when (isCallable 'cadChangeTechLibGui) (cadChangeTechLibGui))"
+callback = "(witMenuLoadRelative \"utility/skill++/TECHLIB.ils\") (when (isCallable 'cadChangeTechLibGui) (cadChangeTechLibGui))"
 
 [[layout.items]]
 name = "nl2view"
 text = "Netlist to View..."
-callback = "(witMenuLoadRelative \"utility/skill/nl2view.il\") (when (isCallable 'cadDisplayNl2ViewForm) (cadDisplayNl2ViewForm))"
+callback = "(witMenuLoadRelative \"utility/skill++/NL2VIEW.ils\") (when (isCallable 'cadDisplayNl2ViewForm) (cadDisplayNl2ViewForm))"
 
 [[layout.items]]
 name = "mtsNetlistor"
 text = "MTS Netlistor..."
-callback = "(unless (and (isCallable 'mtsNetlistorRevision) (mtsNetlistorRevision)==\"20260924.sico.mts.launcher.v7\" (isCallable 'mtsNetlistorStart)) (witMenuLoadRelative \"mtsnl/skill/MTS_netlistor.il\")) (if (isCallable 'mtsNetlistorStart) then (mtsNetlistorStart) else (warn \"%s::MTS Netlistor launcher could not be loaded.\\n\" (witMenuLogo)))"
+callback = "(witMenuLoadRelative \"mtsnl/skill++/MTS.ils\") (when (isCallable 'mtsNetlistorStart) (mtsNetlistorStart))"
 
 [schematic]
 enabled = true
@@ -145,7 +145,7 @@ callback = "(witMenuLoadRelative \"ai/skill++/AI.ils\") (when (isCallable 'cadDi
 [[schematic.items]]
 name = "lsfLoadMonitor"
 text = "LSF Load Monitor"
-callback = "(witMenuLoadRelative \"common/skill/SICO_environment.il\") (witMenuLoadRelative \"common/skill/SICO_installation.il\") (witMenuLoadRelative \"common/skill/SICO_toml.il\") (witMenuLoadRelative \"common/skill/SICO_guiProtocol.il\") (witMenuLoadRelative \"common/skill/SICO_lsf.il\") (witMenuLoadRelative \"common/skill/SICO_lsfSelection.il\") (witMenuLoadRelative \"common/skill/SICO_lsfProtocol.il\") (witMenuLoadRelative \"common/skill/SICO_lsfProcess.il\") (witMenuLoadRelative \"common/skill/SICO_lsfCommands.il\") (witMenuLoadRelative \"common/skill/SICO_lsfHosts.il\") (witMenuLoadRelative \"common/skill/SICO_lsfQueues.il\") (witMenuLoadRelative \"common/skill/SICO_lsfChoices.il\") (witMenuLoadRelative \"common/skill/SICO_lsfMonitor.il\") (when (isCallable 'SICO_lsfMonitorStart) (SICO_lsfMonitorStart))"
+callback = "(witMenuLoadRelative \"common/skill++/LSF.ils\") (when (isCallable 'SICO_lsfMonitorStart) (SICO_lsfMonitorStart))"
 
 [[schematic.items]]
 text = "Export CDL"
@@ -158,14 +158,14 @@ callback = "(printf \"[%s] Create Pin For Instance is not configured yet.\\n\" (
 [[schematic.items]]
 name = "cadChangeTechLib"
 text = "Change Tech Library..."
-callback = "(witMenuLoadRelative \"utility/skill/cadChangeTechLibForm.il\") (when (isCallable 'cadChangeTechLibGui) (cadChangeTechLibGui))"
+callback = "(witMenuLoadRelative \"utility/skill++/TECHLIB.ils\") (when (isCallable 'cadChangeTechLibGui) (cadChangeTechLibGui))"
 
 [[schematic.items]]
 name = "nl2view"
 text = "Netlist to View..."
-callback = "(witMenuLoadRelative \"utility/skill/nl2view.il\") (when (isCallable 'cadDisplayNl2ViewForm) (cadDisplayNl2ViewForm))"
+callback = "(witMenuLoadRelative \"utility/skill++/NL2VIEW.ils\") (when (isCallable 'cadDisplayNl2ViewForm) (cadDisplayNl2ViewForm))"
 
 [[schematic.items]]
 name = "mtsNetlistor"
 text = "MTS Netlistor..."
-callback = "(unless (and (isCallable 'mtsNetlistorRevision) (mtsNetlistorRevision)==\"20260924.sico.mts.launcher.v7\" (isCallable 'mtsNetlistorStart)) (witMenuLoadRelative \"mtsnl/skill/MTS_netlistor.il\")) (if (isCallable 'mtsNetlistorStart) then (mtsNetlistorStart) else (warn \"%s::MTS Netlistor launcher could not be loaded.\\n\" (witMenuLogo)))"
+callback = "(witMenuLoadRelative \"mtsnl/skill++/MTS.ils\") (when (isCallable 'mtsNetlistorStart) (mtsNetlistorStart))"

@@ -3,13 +3,15 @@
 from types import SimpleNamespace
 
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
-from PyQt5.QtWidgets import QHeaderView, QLabel, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import (QHBoxLayout, QHeaderView, QLabel, QPushButton, QTreeWidget,
+                             QTreeWidgetItem, QVBoxLayout, QWidget)
 
 from sico import PRODUCT_NAME
-from .close_choice import CloseChoice
+from .close_choice import CloseChoice, PLATFORM_CLOSE_NOTE
 from .info_app import InfoApp
 from .platform_menu import PlatformMenu, UNCONNECTED
 from .receipts import DataReceipt
+from .row_stripes import enable_row_stripes
 from .session_end_group import SessionEndGroup
 from .si_prompt import SiConfirm
 from .workspace import CopilotWorkspace
@@ -20,6 +22,8 @@ class HomeWindow(CopilotWorkspace):
 
     def __init__(self, project, settings_path, opened, *, args=None):
         super().__init__(settings_path)
+        # 首页没有工作区会话操作：空菜单不占菜单栏。
+        self.workspace_menu.menuAction().setVisible(False)
         self.api = None
         self.lifecycle = SimpleNamespace(closing=False)
         self.opened = opened
@@ -45,12 +49,41 @@ class HomeWindow(CopilotWorkspace):
         self.hint.setWordWrap(True)
         layout.addWidget(self.hint)
         self.connect_button = QPushButton("连接 CDNS-IC…")
-        self.connect_button.setEnabled(False)
-        layout.addWidget(self.connect_button, 0, Qt.AlignLeft)
+        self.launch_button = QPushButton("启动 CDNS-IC…")
+        entry_row = QHBoxLayout()
+        for button in (self.connect_button, self.launch_button):
+            button.setEnabled(False)
+            entry_row.addWidget(button)
+        entry_row.addStretch(1)
+        layout.addLayout(entry_row)
+        from .agent_settings import show_agent_settings
+        from .feature_settings import show_project_feature_settings
+
+        self.settings_button = QPushButton("智能体设置…")
+        self.settings_button.setEnabled(False)
+        self.settings_button.clicked.connect(lambda _checked=False: show_agent_settings(self))
+        self.feature_button = QPushButton("Codex 特性…")
+        self.feature_button.setEnabled(False)
+        self.feature_button.setToolTip("工程默认 Codex 内建特性，应用于新会话（含启动任务）")
+        self.feature_button.clicked.connect(
+            lambda _checked=False: show_project_feature_settings(self))
+        settings_row = QHBoxLayout()
+        settings_row.addWidget(self.settings_button)
+        settings_row.addWidget(self.feature_button)
+        settings_row.addStretch(1)
+        layout.addLayout(settings_row)
+        self.settings_action = self.settings_menu.addAction(
+            "智能体设置…", lambda _checked=False: show_agent_settings(self))
+        self.settings_action.setEnabled(False)
+        self.feature_action = self.settings_menu.addAction(
+            "Codex 特性（工程默认）…",
+            lambda _checked=False: show_project_feature_settings(self))
+        self.feature_action.setEnabled(False)
         layout.addWidget(QLabel("会话历史（双击浏览）"))
         self.history = QTreeWidget()
         self.history.setHeaderLabels(["会话", "状态"])
         self.history.setRootIsDecorated(False)
+        enable_row_stripes(self.history)
         self.history.header().setSectionResizeMode(0, QHeaderView.Stretch)
         self.history.header().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         layout.addWidget(self.history, 1)
@@ -64,6 +97,7 @@ class HomeWindow(CopilotWorkspace):
         self.stop_action.setEnabled(False)
         self.platform_menu = PlatformMenu(self, opened, args=args)
         self.connect_button.clicked.connect(lambda _checked=False: self.platform_menu.connect())
+        self.launch_button.clicked.connect(lambda _checked=False: self.platform_menu.launch())
         self.session_tail_action("关闭SiCo", self.close, "Ctrl+W")
         self.retry = lambda: None
         self._version = -1
@@ -78,6 +112,11 @@ class HomeWindow(CopilotWorkspace):
         self.api = api
         self._version = -1
         self.connect_button.setEnabled(True)
+        self.launch_button.setEnabled(True)
+        self.settings_button.setEnabled(True)
+        self.settings_action.setEnabled(True)
+        self.feature_button.setEnabled(True)
+        self.feature_action.setEnabled(True)
         self.stop_action.setEnabled(True)
         self.retry_action.setEnabled(False)
         self.service_label.setText("项目服务已连接")
@@ -137,7 +176,8 @@ class HomeWindow(CopilotWorkspace):
                 self._dialog.raise_()
                 return
             dialog = self._dialog = SiConfirm("关闭 SiCo",
-                "关闭窗口后项目服务按空闲策略继续运行；结束服务需先完成工程中的活动工作。", self)
+                "关闭窗口后项目服务按空闲策略继续运行；结束服务需先完成工程中的活动工作。\n"
+                + PLATFORM_CLOSE_NOTE, self)
             dialog.add_choice("service", "结束服务")
             dialog.add_choice("window", "关闭窗口", default=True)
             dialog.add_choice("cancel", "取消", escape=True)

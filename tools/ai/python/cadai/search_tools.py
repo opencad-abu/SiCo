@@ -12,14 +12,16 @@ SEARCH_TOOL = {
     "name": "Search",
     "title": "Search local text or file names",
     "description": (
-        "Read-only local search using bundled ripgrep; no system rg required. "
-        "mode=content searches text (literal by default), mode=files lists paths using globs. "
-        "path defaults to the session workspace; relative paths stay inside it, absolute "
-        "paths select an explicit external file/directory. Does not follow symlinks. "
-        "Respects project ignore files and skips hidden files by default. Content files "
-        "over 8 MiB are skipped; binary detection is ripgrep's default. Returns at most "
-        "64 KiB of JSON, with truncation/timeout details; narrow the search if incomplete. "
-        "Use search_skill_api for Cadence API documentation and inspection tools for OA data."
+        "Read-only local search via bundled ripgrep. mode=content searches text (literal by "
+        "default); mode=files lists paths using globs. path defaults to the session workspace "
+        "(relative paths stay inside; absolute paths select an external file/directory); symlinks "
+        "are not followed and project ignore files apply. Returns at most 64 KiB of JSON; narrow "
+        "the search if incomplete. Use search_skill_api for Cadence API documentation and "
+        "inspection tools for OA data."
+    ),
+    "help": (
+        "No system ripgrep is required. Content files over 8 MiB are skipped and binary "
+        "detection is ripgrep's default; truncation and timeout are reported explicitly."
     ),
     "inputSchema": {
         "type": "object",

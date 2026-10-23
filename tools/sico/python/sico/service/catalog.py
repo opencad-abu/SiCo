@@ -11,16 +11,19 @@ from .published import freeze
 
 
 class CatalogService:
-    def __init__(self, root, controllers):
+    MAX_LABEL_ROWS = 2048
+
+    def __init__(self, root, controllers, labels=None):
         self._index = CatalogIndex(root)
         self._controllers = controllers
+        self._labels = labels
         self._lock = threading.Lock()
         self._wake = threading.Event()
         self._stop = threading.Event()
         self._requests = []
         self._snapshot = freeze({
             "version": 0, "rows": (), "retained": {}, "availability": {}, "error": "",
-            "complete": False,
+            "complete": False, "labels": self._empty_labels(), "label_rows": (),
         })
         self._thread = threading.Thread(target=self._run, name="copilot-catalog", daemon=True)
         self._thread.start()
@@ -43,6 +46,33 @@ class CatalogService:
             value = self._snapshot
         return None if value["version"] == since_version else value
 
+    def publish_labels(self, labels):
+        """Publish a label mutation immediately without rescanning session journals."""
+
+        label_state = self._label_value(lambda: labels)
+        with self._lock:
+            previous = self._snapshot
+        value = dict(previous)
+        value["labels"] = label_state
+        referenced = set(label_state["loose_order"])
+        for label in label_state["labels"]:
+            referenced.update(label.get("sessions", ()))
+        known = {}
+        for row in (*previous["rows"], *previous["label_rows"],
+                    *previous["retained"].values()):
+            if isinstance(row, dict) and row.get("id"):
+                known[row["id"]] = row
+        base_ids = {row["id"] for row in previous["rows"]}
+        extra = [
+            row for key, row in known.items()
+            if key in referenced and key not in base_ids
+            and not row.get("unavailable")
+        ]
+        extra.sort(key=lambda row: row.get("modified", 0), reverse=True)
+        value["label_rows"] = tuple(extra[:self.MAX_LABEL_ROWS])
+        self._store(value)
+        return self.snapshot()["version"]
+
     def _run(self):
         while not self._stop.is_set():
             with self._lock:
@@ -62,10 +92,11 @@ class CatalogService:
                     self._publish(partial, controllers)
 
                 available = self._index.scan(progress)
-                value = self._value(available, controllers)
+                value = self._value(available, controllers, labels=self._labels)
             except Exception as exc:
                 value = {"rows": (), "retained": {}, "availability": {}, "error": str(exc),
-                         "complete": False}
+                         "complete": False, "labels": self._empty_labels(),
+                         "label_rows": ()}
             version = self._store(value)
             for future in requests:
                 if not future.cancelled():
@@ -82,7 +113,7 @@ class CatalogService:
         self._wake.set()
 
     @staticmethod
-    def _value(available, controllers, *, complete=True):
+    def _value(available, controllers, *, complete=True, labels=None):
         available = dict(available)
         for controller in controllers:
             row = available.get(controller.session_id)
@@ -92,6 +123,19 @@ class CatalogService:
             (row for row in available.values() if not row.get("unavailable") or row.get("damaged")),
             key=lambda row: row["modified"], reverse=True,
         )[:200]
+        label_state = CatalogService._label_value(labels)
+        base_ids = {row["id"] for row in rows}
+        referenced = set(label_state["loose_order"])
+        for label in label_state["labels"]:
+            referenced.update(label.get("sessions", ()))
+        extra = sorted(
+            (
+                row for key, row in available.items()
+                if key in referenced and key not in base_ids
+                and not row.get("unavailable")
+            ),
+            key=lambda row: row.get("modified", 0), reverse=True,
+        )[:CatalogService.MAX_LABEL_ROWS]
         retained = {}
         for controller in controllers:
             key = controller.session_id
@@ -105,6 +149,8 @@ class CatalogService:
             "rows": tuple(rows), "retained": retained, "error": "", "complete": complete,
             "availability": {key: row.get("unavailable", "")
                              for key, row in available.items()},
+            "labels": label_state,
+            "label_rows": tuple(extra),
         }
 
     def _publish(self, available, controllers):
@@ -118,7 +164,7 @@ class CatalogService:
             if reason and key not in merged:
                 merged[key] = {"id": key, "unavailable": reason}
         merged.update(available)
-        value = self._value(merged, controllers, complete=False)
+        value = self._value(merged, controllers, complete=False, labels=self._labels)
         value["availability"] = {**previous["availability"], **value["availability"]}
         self._store(value)
 
@@ -140,3 +186,43 @@ class CatalogService:
     def wait(self, timeout=None):
         self._thread.join(timeout)
         return not self._thread.is_alive()
+
+    @staticmethod
+    def _empty_labels():
+        return {"revision": None, "labels": (), "loose_order": (), "error": ""}
+
+    @staticmethod
+    def _label_value(labels):
+        if labels is None:
+            return CatalogService._empty_labels()
+        try:
+            value = labels()
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            return {**CatalogService._empty_labels(), "error": str(exc)}
+        if not isinstance(value, dict):
+            return {**CatalogService._empty_labels(), "error": "标签布局不可读"}
+        revision = value.get("revision")
+        rows = value.get("labels")
+        loose = value.get("loose_order")
+        if (revision is not None and not isinstance(revision, str)
+                or not isinstance(rows, (list, tuple))
+                or not isinstance(loose, (list, tuple))):
+            return {**CatalogService._empty_labels(), "error": "标签布局不可读"}
+        clean = []
+        for row in rows:
+            if (not isinstance(row, dict)
+                    or not isinstance(row.get("id"), str)
+                    or not isinstance(row.get("name"), str)
+                    or not isinstance(row.get("sessions"), (list, tuple))):
+                return {**CatalogService._empty_labels(), "error": "标签布局不可读"}
+            clean.append({
+                "id": row["id"],
+                "name": row["name"],
+                "sessions": tuple(row["sessions"]),
+            })
+        return {
+            "revision": revision,
+            "labels": tuple(clean),
+            "loose_order": tuple(loose),
+            "error": str(value.get("error", "")),
+        }

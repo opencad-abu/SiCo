@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T102305.715304Z-recipe-run-f5d4dcb80a87/manifest.json",
+  "sha256": "2d26d0aefa977b23a55552823d52a906d20e8bfdffce7ef1fd1f49e5ef6492ba",
+  "dataset": "public_calibration"
+}

@@ -349,7 +349,7 @@
     "SessionController",
     "DesktopSessions",
     "SessionJournal",
-    "AgentLoop",
+    "AgentLoop", "PythonBackend",
     "WorkerApi",
     "WorkbenchService",
     "EventService",

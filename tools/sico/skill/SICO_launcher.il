@@ -1,7 +1,7 @@
 ; One-click, local Python Agent launch. No model task runs on the SKILL thread.
 
 unless(and(boundp('sicoLauncherVersion)
-           sicoLauncherVersion=="20260922.sico.launcher.v2")
+           sicoLauncherVersion=="20261020.sico.launcher.v7")
 
 unless(boundp('sicoLaunchCounter) sicoLaunchCounter=0)
 unless(boundp('sicoInstanceBridge) sicoInstanceBridge=nil)
@@ -32,8 +32,12 @@ procedure(sicoQuote(value)
 procedure(sicoLaunchCommand(@optional (mode "launch"))
   prog((python root entry invocation libraryPath inherited name value product)
     product=SICO_installationRoot(simplifyFilename(strcat(sicoRoot "/../..")))
-    root=or(SICO_environmentValue("SICO_PYTHON_ROOT" list("CAD_PYTHON_ROOT")) "/software/pkgs/python/3.9.13")
-    python=or(SICO_environmentValue("SICO_PYTHON" list("CAD_PYTHON")) strcat(root "/bin/python3"))
+    python=SICO_installedPython(product)
+    unless(python
+      root=or(SICO_environmentValue("SICO_PYTHON_ROOT" list("CAD_PYTHON_ROOT"))
+              "/software/pkgs/python/3.9.13")
+      python=or(SICO_environmentValue("SICO_PYTHON" list("CAD_PYTHON"))
+                strcat(root "/bin/python3")))
     unless(and(substring(python 1 1)=="/" isExecutable(python))
       warn("Silicon Copilot: SICO_PYTHON must be an absolute executable.\n")
       return(nil))
@@ -52,8 +56,9 @@ procedure(sicoLaunchCommand(@optional (mode "launch"))
     inherited=""
     foreach(name list("PATH" "LD_LIBRARY_PATH" "PYTHONPATH" "MODULEPATH"
                       "LOADEDMODULES" "_LMFILES_" "MODULESHOME" "LMOD_CMD")
-      value=or(getShellEnvVar(name) "")
-      inherited=strcat(inherited " SICO_VIRTUOSO_" name "=" sicoQuote(value)))
+      value=getShellEnvVar(name)
+      inherited=strcat(inherited " SICO_VIRTUOSO_" name "=" sicoQuote(or(value ""))
+        " SICO_VIRTUOSO_" name "_SET=" if(value then "1" else "0")))
     return(strcat(
       "env -u PYTHONHOME -u PYTHONPATH -u LD_PRELOAD -u LD_AUDIT "
       "-u QT_PLUGIN_PATH -u QT_QPA_PLATFORM_PLUGIN_PATH -u QT_SELECT "
@@ -145,6 +150,31 @@ procedure(sicoReconnectSession(arsCid arsTargetId)
       hiRegTimer("sicoFinishReconnect()" 1))
     return(t)))
 
+/* SiCo 主窗口占左半屏；拉起后把 CIW 收到右下四分之一屏。
+   hiGetScreenSize() 返回 ((像素宽 像素高)(毫米宽 毫米高))，兼容扁平返回。 */
+procedure(sicoPlaceCiw()
+  let((ciw pixels width height halfWidth halfHeight box)
+    ciw=when(isCallable('hiGetCIWindow) car(errset(hiGetCIWindow() nil)))
+    when(ciw
+      pixels=when(isCallable('hiGetScreenSize) car(errset(hiGetScreenSize() nil)))
+      when(listp(car(pixels)) pixels=car(pixels))
+      when(and(pixels fixp(car(pixels)) fixp(cadr(pixels))
+          car(pixels)>=640 cadr(pixels)>=600)
+        width=car(pixels) height=cadr(pixels)
+        halfWidth=width/2 halfHeight=height/2
+        box=list(list(halfWidth 0) list(width halfHeight))
+        errset(hiResizeWindow(ciw box) nil)
+        errset(hiMoveWindow(ciw car(box)) nil)))
+    ciw))
+
+/* Only a Virtuoso started by SiCo requests this layout; normal SiCo loads keep
+   the user's CIW position. The generated loader runs this after all definitions. */
+procedure(sicoPlaceLaunchedCiw()
+  when(equal(sicoEnv("SICO_VIRTUOSO_LAUNCH_CIW_LAYOUT") "lower-right-quarter")
+    setShellEnvVar("SICO_VIRTUOSO_LAUNCH_CIW_LAYOUT" "")
+    sicoPlaceCiw())
+  t)
+
 procedure(sicoShow(@optional window captured newSession allowLaunch)
   prog((binding cid existing command probe bridge targetId)
     binding=or(captured makeTable("sicoLaunchBinding" nil))
@@ -177,6 +207,7 @@ procedure(sicoShow(@optional window captured newSession allowLaunch)
     when(cid
       sicoBindings[cid]['desktopSession]=t
       sicoBindSession(binding['window] cid)
+      sicoPlaceCiw()
       printf("[AI] Starting Silicon Copilot for the captured target.\n"))
     return(cid)
   ))
@@ -186,8 +217,35 @@ procedure(sicoStopDesktop(cid)
     sicoBindings[cid]['stopping]=t
     ipcWriteProcess(cid "@shutdown\n")))
 
-procedure(sicoLauncherRevision()
-  "20260922.sico.launcher.v2")
+procedure(sicoRequestShutdown(cid)
+  when(tablep(sicoBindings[cid])
+    sicoBindings[cid]['stopping]=t
+    errset(ipcWriteProcess(cid "@shutdown\n") nil)))
 
-sicoLauncherVersion="20260922.sico.launcher.v2"
+procedure(sicoExitCleanup()
+  when(boundp('sicoBindings)
+    let((cids cid)
+      foreach(cid sicoBindings cids=cons(cid cids))
+      foreach(cid cids
+        when(and(tablep(sicoBindings[cid]) sicoBindings[cid]['desktopSession])
+          sicoRequestShutdown(cid)))
+      foreach(cid cids
+        when(and(tablep(sicoBindings[cid]) !sicoBindings[cid]['desktopSession])
+          sicoRequestShutdown(cid)))
+      t)))
+
+procedure(sicoRegisterExitCleanup()
+  unless(boundp('sicoExitCleanupRegistered)
+    when(isCallable('regExitBefore)
+      regExitBefore('sicoExitCleanup)
+      sicoExitCleanupRegistered=t))
+  sicoExitCleanupRegistered)
+
+unless(and(boundp('cadContextBuilding) cadContextBuilding)
+  sicoRegisterExitCleanup())
+
+procedure(sicoLauncherRevision()
+  "20261020.sico.launcher.v7")
+
+sicoLauncherVersion="20261020.sico.launcher.v7"
 )

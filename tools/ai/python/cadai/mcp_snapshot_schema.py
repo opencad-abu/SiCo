@@ -6,8 +6,8 @@ SNAPSHOT_SCHEMATIC = {
     "name": "snapshot_schematic",
     "title": "Snapshot schematic",
     "description": (
-        "Create a complete, immutable JSONL snapshot of the direct schematic instances, "
-        "nets, and terminals. The response contains only a snapshot_id and artifact metadata; "
+        "Create a complete immutable JSONL snapshot of the direct schematic instances, "
+        "nets, and terminals. The response has only a snapshot_id and artifact metadata; "
         "query it with query_schematic or get_schematic_item."
     ),
     "inputSchema": {
@@ -33,7 +33,7 @@ QUERY_SCHEMATIC = {
     "name": "query_schematic",
     "title": "Query schematic snapshot",
     "description": (
-        "Return one bounded page from a previously created schematic snapshot. Filter by "
+        "Return a bounded page from a created schematic snapshot. Filter by "
         "entity, exact/prefix name, hierarchy path, or connected net."
     ),
     "inputSchema": {

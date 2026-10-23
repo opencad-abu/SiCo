@@ -122,6 +122,9 @@ class WindowActions:
         self.submit(_checked, queued=True)
 
     def submit(self, _checked=False, *, queued=False):
+        if self.ui.input.toPlainText().strip() == "/recap":
+            self.ui.parent.recap_panel.request(from_input=True)
+            return
         if not self.steering().available():
             return
         if not queued and self.presentation.state and self.open_audit_ids():
@@ -129,8 +132,12 @@ class WindowActions:
             return
         text = self.ui.input.toPlainText().strip()
         attachment = self.ui.input.text_attachment()
+        object_inputs = self.ui.input.object_inputs()
         if attachment is not None and not text:
             text = "请阅读随消息附加的完整文本，并据此处理当前任务。"
+        if object_inputs and not text:
+            self.ui.notices.notice("请说明对象操作", "请输入要对所选 CAD 对象做什么。")
+            return
         if self.ui.input.turn_inputs and not text:
             text = "请分析所附资料。"
         if not text:
@@ -167,9 +174,16 @@ class WindowActions:
         def failed(exc):
             if self.presentation.state:
                 self.update_session(self.presentation.state)
-            from sico.service.service_errors import is_unknown_outcome
+            from sico.service.service_errors import is_request_unsent, is_unknown_outcome
 
-            if is_unknown_outcome(exc):
+            if is_request_unsent(exc):
+                connection = getattr(self.ui.parent, "service_connection", None)
+                if connection is not None:
+                    connection.reconnect(automatic=True)
+                self.ui.notices.warning(
+                    "任务未接收", "项目服务连接已更换，正在恢复；草稿已保留。"
+                )
+            elif is_unknown_outcome(exc):
                 self.ui.notices.warning("任务接收结果未确认", "草稿保留；请查询原请求：" + str(exc))
             else:
                 self.ui.notices.error("任务未接收", str(exc))
@@ -178,10 +192,20 @@ class WindowActions:
         options = {"context": self.presentation.submission_context}
         if attachment is not None:
             options["attachment_text"] = attachment
-        if self.ui.input.turn_inputs:
-            options["inputs"] = self.ui.input.draft()[4]
+        inputs = list(self.ui.input.draft()[4])
+        inputs.extend(object_inputs)
+        if inputs:
+            if len(inputs) > 8:
+                self.ui.notices.notice(
+                    "上下文过多", "每回合最多 8 项附件或 CAD 对象，请先移除一项。"
+                )
+                return
+            options["inputs"] = inputs
         if self.ui.input.turn_options is not None:
             options["turn_options"] = self.ui.input.draft()[5]
+        if not queued:
+            # 发送即回到实时尾部：翻阅历史时冻结的视图不应挡住本回合的输入和输出。
+            self.ui.parent.chat_scroll.latest()
         self.run_command("submit", text, controller=controller, success=accepted,
                          failure=failed, settled=settled, **options)
 
@@ -293,13 +317,20 @@ class WindowActions:
         advance()
 
     def answer_audit(self, audit_id, answers):
-        if self.page.reviewing is not None or self.presentation.state is None or self.lifecycle.closing:
+        if self.page.reviewing is not None:
+            self.ui.notices.info(
+                "答复未提交",
+                "当前正在浏览历史（只读）；点击“继续”回到当前会话后再答复",
+            )
+            return
+        if self.presentation.state is None or self.lifecycle.closing:
             return
         controller = self.page.session
         receipt_scope = self.capture(controller)
         task_id = self.presentation.state["task"].get("id", "")
         key = (controller.runtime_id, task_id, audit_id)
         if not self._answering.begin(key):
+            self.ui.notices.info("答复未提交", "上一份答复仍在提交，请稍候")
             return
         answering = self._answering
 
@@ -310,8 +341,20 @@ class WindowActions:
 
         def failed(exc):
             if visible():
-                self.ui.notices.error("答复未提交", str(exc))
-                self.centers.audit.show_error("答复未提交：" + str(exc))
+                from sico.service.service_errors import is_request_unsent
+
+                if is_request_unsent(exc):
+                    connection = getattr(self.ui.parent, "service_connection", None)
+                    if connection is not None:
+                        connection.reconnect(automatic=True)
+                    message = "项目服务连接已更换，正在恢复；请刷新后重新答复。"
+                    self.ui.notices.warning("答复未提交", message)
+                    self.centers.audit.show_error(message)
+                else:
+                    self.ui.notices.error("答复未提交", str(exc))
+                    self.centers.audit.show_error("答复未提交：" + str(exc))
+            else:
+                self.ui.notices.info("答复未提交", "会话视图已切换：" + str(exc))
             return False
 
         def accepted(result):
@@ -322,6 +365,8 @@ class WindowActions:
         def resolved(answers):
             if answers is None or not visible():
                 answering.finish(key)
+                if answers is not None:
+                    self.ui.notices.info("答复未提交", "会话或任务已变化，请刷新后再答复")
                 return
             self.run_command("answer_audit", controller.session_id, task_id,
                              audit_id, answers, uuid.uuid4().hex, controller=controller,

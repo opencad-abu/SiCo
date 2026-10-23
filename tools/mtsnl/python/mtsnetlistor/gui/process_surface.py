@@ -5,6 +5,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QAbstractItemView,
     QComboBox,
+    QFrame,
     QGroupBox,
     QHeaderView,
     QHBoxLayout,
@@ -12,6 +13,7 @@ from PyQt5.QtWidgets import (
     QLineEdit,
     QListWidget,
     QPushButton,
+    QScrollArea,
     QSplitter,
     QSizePolicy,
     QTableWidget,
@@ -141,11 +143,14 @@ class ProcessSurface(QWidget):
         self.move_model_up = QPushButton("Move Up")
         self.move_model_down = QPushButton("Move Down")
         self.duplicate_model = QPushButton("Duplicate")
-        model_buttons.addWidget(self.add_model)
-        model_buttons.addWidget(self.remove_model)
-        model_buttons.addWidget(self.move_model_up)
-        model_buttons.addWidget(self.move_model_down)
-        model_buttons.addWidget(self.duplicate_model)
+        for button in (
+            self.add_model,
+            self.remove_model,
+            self.move_model_up,
+            self.move_model_down,
+            self.duplicate_model,
+        ):
+            model_buttons.addWidget(button)
         model_buttons.addStretch(1)
         model_layout.addWidget(self.models_table)
         # Keep the model list as the primary, stretchable surface and place
@@ -168,8 +173,27 @@ class ProcessSurface(QWidget):
         self.workspace_splitter.setStretchFactor(0, 3)
         self.workspace_splitter.setStretchFactor(1, 3)
         self.workspace_splitter.setStretchFactor(2, 1)
+        # A short window must scroll the settings pane instead of squeezing
+        # form rows until labels and fields overlap.  Keep every settings
+        # group at its minimum size hint and let the scroll area own the
+        # remaining height.
+        for pane in (simulator_form, model_box, publication_form):
+            pane.setMinimumHeight(pane.minimumSizeHint().height())
+        self.workspace_splitter.setMinimumHeight(
+            sum(
+                pane.minimumHeight()
+                for pane in (simulator_form, model_box, publication_form)
+            )
+            + 2 * self.workspace_splitter.handleWidth()
+        )
         self.workspace_splitter.setSizes([330, 300, 160])
-        cell_settings_layout.addWidget(self.workspace_splitter)
+        self.settings_scroll = QScrollArea(self.cell_settings_frame)
+        self.settings_scroll.setObjectName("cellSettingsScroll")
+        self.settings_scroll.setWidgetResizable(True)
+        self.settings_scroll.setFrameShape(QFrame.NoFrame)
+        self.settings_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.settings_scroll.setWidget(self.workspace_splitter)
+        cell_settings_layout.addWidget(self.settings_scroll)
 
         self.main_splitter = QSplitter(Qt.Horizontal)
         self.main_splitter.setChildrenCollapsible(False)
@@ -219,4 +243,3 @@ class ProcessSurface(QWidget):
         self.execution_row.addWidget(self.run_button)
         self.execution_row.addWidget(self.cancel_button)
         outer.addLayout(self.execution_row)
-

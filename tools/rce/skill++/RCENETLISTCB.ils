@@ -9,7 +9,7 @@ procedure(rceSyncNetlistCustomize(form)
     nameSource=lowerCase(or(form~>nameSource~>value "schematic"))
     viewOutput=rceNativeViewOutputP(outputType)
     qrcView=and(viewOutput tool=="QRC")
-    noParasitics=and(tool=="CalXRC" form~>rcType~>value=="NONE")
+    noParasitics=and(RCE_calibrePexToolP(tool) form~>rcType~>value=="NONE")
 
     form~>nameSource~>enabled=!qrcView
     when(qrcView
@@ -24,7 +24,7 @@ procedure(rceSyncNetlistCustomize(form)
                                 or(tool!="StarRC"
                                     member(outputType '("dspf" "spf" "spef"))))
                          then t else nil)
-    capacitanceOnly=if(and(tool=="CalXRC"
+    capacitanceOnly=if(and(RCE_calibrePexToolP(tool)
                              member(form~>rcType~>value '("Cg+Cc" "Cg")))
                       then t else nil)
     coordinatesSupported=if(and(parasiticSupported
@@ -54,11 +54,18 @@ procedure(rceSyncNetlistCustomize(form)
       form~>absFilterCapBtn~>value=nil
       form~>absFilterResBtn~>value=nil
       form~>nlRmInst~>value="FALSE"
+      form~>rmFloatNetsBtn~>value=nil
     )
     form~>netSelBtn~>enabled=!noParasitics
     form~>relFilterCapBtn~>enabled=!noParasitics
     form~>absFilterCapBtn~>enabled=!noParasitics
     form~>absFilterResBtn~>enabled=!noParasitics
+    unless(noParasitics
+      when(!form~>rmFloatNetsBtn~>enabled
+        form~>rmFloatNetsBtn~>value=t
+      )
+    )
+    form~>rmFloatNetsBtn~>enabled=!noParasitics
     form~>nlRmInst~>enabled=and(outputType=="dspf" !noParasitics)
     rceNetSelBtnCB(form)
     rceRelFilterCapBtnCB(form)

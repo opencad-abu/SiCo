@@ -30,7 +30,10 @@ def check_wait(deadline, cancelled):
 
 @contextmanager
 def service_connection(descriptor, *, deadline):
-    if descriptor.host != local_host():
+    host = local_host()
+    # host_id can change after a hostname or machine-id update during one boot.
+    # The socket peer and PID start ticks below still bind the local owner.
+    if descriptor.host.boot_id != host.boot_id:
         raise ProtocolError("Service host identity mismatch")
     validate_endpoint(descriptor.endpoint)
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:

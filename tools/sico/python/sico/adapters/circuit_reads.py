@@ -12,6 +12,7 @@ EVIDENCE_READS = {
     "get_symbol_binding": frozenset({"target"}),
     "get_circuit_operation": frozenset({"target"}),
     "get_simulation_recipe_status": frozenset({"target"}),
+    "preview_simulation_recipe": frozenset(),
     "match_circuit_template": frozenset({"target"}),
     "query_circuit_templates": frozenset(),
     "get_circuit_template": frozenset(),

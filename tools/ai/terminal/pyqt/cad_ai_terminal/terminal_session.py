@@ -7,7 +7,7 @@ when supported callers have migrated to input_behavior and shell_environment.
 
 from __future__ import annotations
 
-from cadgui import theme
+from cadgui.palette import active
 from sicoenv import read as environment_setting
 
 import os
@@ -51,15 +51,15 @@ def create_terminal_session_class(
         ) -> None:
             super().__init__(parent)
             self.number = number
-            self.title = f"Session {number}"
+            self.title = f"会话 {number}"
             self._terminal = None
             self._context = None
             self._finished_callback = finished_callback
             self._status_callback = status_callback
             self._finished = False
             self._closing = False
-            self._status_text = "Starting"
-            self._status_color = "#9a6700"
+            self._status_text = "启动中"
+            self._status_color = active().state_warn
             self._monitor = QTimer(self)
             self._monitor.setInterval(250)
             self._monitor.timeout.connect(self._poll_session)
@@ -216,7 +216,7 @@ def create_terminal_session_class(
             sanitize_shell_environment()
             terminal.startShellProgram()
             self._monitor.start()
-            self._set_status("Running", theme.STATE_READY)
+            self._set_status("运行中", active().state_ready)
             self._queue_input_method_cursor_update()
 
         def _queue_input_method_cursor_update(self, *_arguments) -> None:
@@ -255,7 +255,7 @@ def create_terminal_session_class(
             self._finished = True
             self._monitor.stop()
             self._input_method_cursor_timer.stop()
-            self._set_status("Exited", theme.STATE_ERROR)
+            self._set_status("已退出", active().state_error)
             self._finished_callback(self)
 
         def _set_status(self, text: str, color: str) -> None:

@@ -1,7 +1,7 @@
 ; Render RCE completion details as escaped HTML.
 
 unless(and(boundp('RCEsummaryHtmlVersion)
-             RCEsummaryHtmlVersion=="20260919.gui.modules.v1")
+             RCEsummaryHtmlVersion=="20261011.calibre.pex.tool.v1")
 procedure(rceSummaryHtmlEscape(value)
   let((source result index character)
     source=rceSummaryString(value)
@@ -84,5 +84,5 @@ procedure(rceSummaryDetailsHtml(meta exitStatus success reason netlistReady
   )
 )
 
-RCEsummaryHtmlVersion="20260919.gui.modules.v1"
+RCEsummaryHtmlVersion="20261011.calibre.pex.tool.v1"
 )

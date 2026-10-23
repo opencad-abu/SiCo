@@ -1,0 +1,1169 @@
+{
+  "schema_version": 1,
+  "rules": [
+    {
+      "id": "assistant-window-no-command-aliases",
+      "paths": [
+        "tools/sico/python/sico_ui/window.py",
+        "tools/sico/python/sico_ui/window_composition.py"
+      ],
+      "forbid_definitions": [
+        "router_receipt_scope",
+        "refresh_router_receipt",
+        "query_router_receipt",
+        "router_cancel_scope",
+        "refresh_task_panel",
+        "cancel_router_request",
+        "reconnect_instance",
+        "update_host_notices",
+        "run_command",
+        "rename_session",
+        "delete_session",
+        "initialize_context",
+        "queue_input",
+        "submit",
+        "_attachment_pasted",
+        "show_pending_audit",
+        "open_audit_ids",
+        "target_family",
+        "target_picker_provider",
+        "pick_design_target",
+        "resolve_target_choice",
+        "answer_audit",
+        "receive",
+        "update_session",
+        "_update_token_usage",
+        "_fit_token_usage",
+        "refresh_status",
+        "refresh_busy_cursor",
+        "cancel_task",
+        "resume_queue",
+        "abandon_interrupted",
+        "_resume_after_reconcile",
+        "queue_hold_reason",
+        "_tick_activity",
+        "sync_activity_animation",
+        "flush",
+        "replay_caught_up",
+        "open_object",
+        "open_object_link",
+        "toggle_tool_details",
+        "current_transcript",
+        "open_tool_reference",
+        "return_from_detail",
+        "update_latest",
+        "scroll_to_bottom",
+        "show_latest",
+        "activate_session",
+        "preview_session",
+        "return_from_preview",
+        "__getattr__",
+        "__getattribute__",
+        "connect_commands",
+        "command_slot"
+      ],
+      "forbid_calls": [
+        "setattr",
+        "__setattr__"
+      ],
+      "forbid_private_attributes": [
+        "self.router_receipt_scope",
+        "self.refresh_router_receipt",
+        "self.query_router_receipt",
+        "self.router_cancel_scope",
+        "self.refresh_task_panel",
+        "self.cancel_router_request",
+        "self.reconnect_instance",
+        "self.update_host_notices",
+        "self.run_command",
+        "self.rename_session",
+        "self.delete_session",
+        "self.initialize_context",
+        "self.queue_input",
+        "self.submit",
+        "self._attachment_pasted",
+        "self.show_pending_audit",
+        "self.open_audit_ids",
+        "self.target_family",
+        "self.target_picker_provider",
+        "self.pick_design_target",
+        "self.resolve_target_choice",
+        "self.answer_audit",
+        "self.receive",
+        "self.update_session",
+        "self._update_token_usage",
+        "self._fit_token_usage",
+        "self.refresh_status",
+        "self.refresh_busy_cursor",
+        "self.cancel_task",
+        "self.resume_queue",
+        "self.abandon_interrupted",
+        "self._resume_after_reconcile",
+        "self.queue_hold_reason",
+        "self._tick_activity",
+        "self.sync_activity_animation",
+        "self.flush",
+        "self.replay_caught_up",
+        "self.open_object",
+        "self.open_object_link",
+        "self.toggle_tool_details",
+        "self.current_transcript",
+        "self.open_tool_reference",
+        "self.return_from_detail",
+        "self.update_latest",
+        "self.scroll_to_bottom",
+        "self.show_latest",
+        "self.activate_session",
+        "self.preview_session",
+        "self.return_from_preview"
+      ],
+      "rationale": "Window constructs widgets and component owners. It must not regain callable aliases or dynamic dispatch to those owners.",
+      "evidence": [
+        "tools/ai/python/tests/test_window_command_owners.py",
+        "tools/utility/tests/test_window_slot_boundaries.py"
+      ]
+    },
+    {
+      "id": "assistant-window-canonical-consumers",
+      "root": "tools/sico/python/sico_ui",
+      "forbid_private_attributes": [
+        "window.router_receipt_scope",
+        "window.refresh_router_receipt",
+        "window.query_router_receipt",
+        "window.router_cancel_scope",
+        "window.refresh_task_panel",
+        "window.cancel_router_request",
+        "window.reconnect_instance",
+        "window.update_host_notices",
+        "window.run_command",
+        "window.rename_session",
+        "window.delete_session",
+        "window.initialize_context",
+        "window.queue_input",
+        "window.submit",
+        "window._attachment_pasted",
+        "window.show_pending_audit",
+        "window.open_audit_ids",
+        "window.target_family",
+        "window.target_picker_provider",
+        "window.pick_design_target",
+        "window.resolve_target_choice",
+        "window.answer_audit",
+        "window.receive",
+        "window.update_session",
+        "window._update_token_usage",
+        "window._fit_token_usage",
+        "window.refresh_status",
+        "window.refresh_busy_cursor",
+        "window.cancel_task",
+        "window.resume_queue",
+        "window.abandon_interrupted",
+        "window._resume_after_reconcile",
+        "window.queue_hold_reason",
+        "window._tick_activity",
+        "window.sync_activity_animation",
+        "window.flush",
+        "window.replay_caught_up",
+        "window.open_object",
+        "window.open_object_link",
+        "window.toggle_tool_details",
+        "window.current_transcript",
+        "window.open_tool_reference",
+        "window.return_from_detail",
+        "window.update_latest",
+        "window.scroll_to_bottom",
+        "window.show_latest",
+        "window.activate_session",
+        "window.preview_session",
+        "window.return_from_preview"
+      ],
+      "rationale": "Qt signals, navigation, binding/dialog actions and host notices call the existing command component; callbacks created before composition resolve that component only when invoked.",
+      "evidence": [
+        "tools/ai/python/tests/test_window_command_owners.py",
+        "tools/utility/tests/test_window_slot_boundaries.py"
+      ]
+    },
+    {
+      "id": "assistant-window-retired-adapter-commands",
+      "paths": [
+        "tools/sico/python/sico_ui/detail_navigation.py",
+        "tools/sico/python/sico_ui/session_binding.py"
+      ],
+      "forbid_definitions": [
+        "show_latest",
+        "begin_close",
+        "close_grace_expired"
+      ],
+      "rationale": "Scroll-only navigation uses scroll_to_bottom; CloseLifecycle alone owns close requests and deadlines.",
+      "evidence": [
+        "tools/ai/python/tests/test_window_command_owners.py",
+        "tools/utility/tests/test_window_slot_boundaries.py",
+        "tools/ai/python/tests/test_agent_local_entrypoints.py"
+      ]
+    },
+    {
+      "id": "session-controller-no-command-aliases",
+      "paths": [
+        "tools/sico/python/sico/service/controller.py"
+      ],
+      "forbid_definitions": [
+        "reserve_submission",
+        "release_submission",
+        "attach_targets",
+        "poll_binding_events",
+        "propose_binding",
+        "resolve_binding",
+        "select_binding_target",
+        "configure_bindings",
+        "release_binding",
+        "release_binding_resource",
+        "reconcile_binding_operation",
+        "released_targets",
+        "turn_input_status",
+        "resource_status",
+        "steer",
+        "steering_scope",
+        "check_target_request",
+        "answer_audit",
+        "elicitation",
+        "thread_scope",
+        "thread_status",
+        "thread_operation",
+        "query_interrupted",
+        "resolve_interrupted",
+        "poll_router_status",
+        "cancel_router_request",
+        "router_receipt",
+        "read_updates",
+        "_state_snapshot",
+        "__getattr__",
+        "__getattribute__"
+      ],
+      "forbid_calls": [
+        "setattr",
+        "__setattr__"
+      ],
+      "forbid_private_attributes": [
+        "self.reserve_submission",
+        "self.release_submission",
+        "self.attach_targets",
+        "self.poll_binding_events",
+        "self.propose_binding",
+        "self.resolve_binding",
+        "self.select_binding_target",
+        "self.configure_bindings",
+        "self.release_binding",
+        "self.release_binding_resource",
+        "self.reconcile_binding_operation",
+        "self.released_targets",
+        "self.turn_input_status",
+        "self.resource_status",
+        "self.steer",
+        "self.steering_scope",
+        "self.check_target_request",
+        "self.answer_audit",
+        "self.elicitation",
+        "self.thread_scope",
+        "self.thread_status",
+        "self.thread_operation",
+        "self.query_interrupted",
+        "self.resolve_interrupted",
+        "self.poll_router_status",
+        "self.cancel_router_request",
+        "self.router_receipt",
+        "self.read_updates",
+        "self._state_snapshot"
+      ],
+      "rationale": "Controller owns lifecycle and task state; six existing components are the only implementations of their commands. Retired aliases must not be reinstalled.",
+      "evidence": [
+        "tools/ai/python/tests/test_controller_command_owners.py",
+        "tools/utility/tests/test_controller_alias_boundaries.py"
+      ]
+    },
+    {
+      "id": "session-controller-canonical-consumers",
+      "root": "tools/sico/python/sico/service",
+      "forbid_private_attributes": [
+        "controller.reserve_submission",
+        "controller.release_submission",
+        "controller.attach_targets",
+        "controller.poll_binding_events",
+        "controller.propose_binding",
+        "controller.resolve_binding",
+        "controller.select_binding_target",
+        "controller.configure_bindings",
+        "controller.release_binding",
+        "controller.release_binding_resource",
+        "controller.reconcile_binding_operation",
+        "controller.released_targets",
+        "controller.turn_input_status",
+        "controller.resource_status",
+        "controller.steer",
+        "controller.steering_scope",
+        "controller.check_target_request",
+        "controller.answer_audit",
+        "controller.elicitation",
+        "controller.thread_scope",
+        "controller.thread_status",
+        "controller.thread_operation",
+        "controller.query_interrupted",
+        "controller.resolve_interrupted",
+        "controller.poll_router_status",
+        "controller.cancel_router_request",
+        "controller.router_receipt",
+        "controller.read_updates",
+        "controller._state_snapshot",
+        "owner.reserve_submission",
+        "owner.release_submission",
+        "owner.attach_targets",
+        "owner.poll_binding_events",
+        "owner.propose_binding",
+        "owner.resolve_binding",
+        "owner.select_binding_target",
+        "owner.configure_bindings",
+        "owner.release_binding",
+        "owner.release_binding_resource",
+        "owner.reconcile_binding_operation",
+        "owner.released_targets",
+        "owner.turn_input_status",
+        "owner.resource_status",
+        "owner.steer",
+        "owner.steering_scope",
+        "owner.check_target_request",
+        "owner.answer_audit",
+        "owner.elicitation",
+        "owner.thread_scope",
+        "owner.thread_status",
+        "owner.thread_operation",
+        "owner.query_interrupted",
+        "owner.resolve_interrupted",
+        "owner.poll_router_status",
+        "owner.cancel_router_request",
+        "owner.router_receipt",
+        "owner.read_updates",
+        "owner._state_snapshot",
+        "destination.reserve_submission",
+        "destination.release_submission",
+        "destination.attach_targets",
+        "destination.poll_binding_events",
+        "destination.propose_binding",
+        "destination.resolve_binding",
+        "destination.select_binding_target",
+        "destination.configure_bindings",
+        "destination.release_binding",
+        "destination.release_binding_resource",
+        "destination.reconcile_binding_operation",
+        "destination.released_targets",
+        "destination.turn_input_status",
+        "destination.resource_status",
+        "destination.steer",
+        "destination.steering_scope",
+        "destination.check_target_request",
+        "destination.answer_audit",
+        "destination.elicitation",
+        "destination.thread_scope",
+        "destination.thread_status",
+        "destination.thread_operation",
+        "destination.query_interrupted",
+        "destination.resolve_interrupted",
+        "destination.poll_router_status",
+        "destination.cancel_router_request",
+        "destination.router_receipt",
+        "destination.read_updates",
+        "destination._state_snapshot"
+      ],
+      "rationale": "Service consumers select the existing component after identity and admission checks, instead of retrieving retired Controller commands.",
+      "evidence": [
+        "tools/ai/python/tests/test_controller_command_owners.py",
+        "tools/ai/python/tests/test_agent_service_session_commands.py",
+        "tools/utility/tests/test_controller_alias_boundaries.py"
+      ]
+    },
+    {
+      "id": "stable-identity-event-result-values",
+      "paths": [
+        "tools/sico/python/sico/core/contracts.py",
+        "tools/sico/python/sico/core/host_contracts.py",
+        "tools/sico/python/sico/core/input_scope.py",
+        "tools/sico/python/sico/core/session_events.py",
+        "tools/sico/python/sico/core/native_origin.py",
+        "tools/sico/python/sico/core/display_batch.py",
+        "tools/ai/python/cadai/result_contract.py"
+      ],
+      "forbid_modules": [
+        "sico.service",
+        "sico.storage",
+        "sico.transport",
+        "sico.providers",
+        "sico.codex",
+        "sico_ui",
+        "PyQt5",
+        "PySide",
+        "subprocess",
+        "socket",
+        "requests",
+        "httpx",
+        "cadai.result_store",
+        "cadai.result_tools",
+        "cadai.skill_result",
+        "cadai.circuit_schema"
+      ],
+      "rationale": "Identity, event sequence/origin projections and result values own no journal, host, provider or event worker; persistence and publication remain application adapters.",
+      "evidence": [
+        "tools/utility/tests/test_stable_contract_boundaries.py",
+        "tools/ai/python/tests/test_stable_event_contracts.py"
+      ]
+    },
+    {
+      "id": "shared-events-canonical-consumers",
+      "root": "tools/sico/python",
+      "forbid_modules": [
+        "sico.service.events",
+        "sico.storage.native_origin"
+      ],
+      "rationale": "All in-repository consumers use the core event and native-origin authorities; the former internal paths are retired without new compatibility facades.",
+      "evidence": [
+        "tools/utility/tests/test_stable_contract_boundaries.py"
+      ]
+    },
+    {
+      "id": "display-values-no-worker-import",
+      "paths": [
+        "tools/sico/python/sico_ui/event_batches.py",
+        "tools/sico/python/sico/service/remote_replay.py"
+      ],
+      "forbid_modules": [
+        "sico.service.event_stream"
+      ],
+      "rationale": "Remote and UI consumers obtain display values without importing the worker lifecycle implementation.",
+      "evidence": [
+        "tools/utility/tests/test_stable_contract_boundaries.py",
+        "tools/ai/python/tests/test_agent_event_contract.py"
+      ]
+    },
+    {
+      "id": "audit-question-values-runtime-free",
+      "paths": [
+        "tools/sico/python/sico/core/audit_questions.py"
+      ],
+      "forbid_modules": [
+        "sico.codex",
+        "sico.service",
+        "sico.storage",
+        "sico.transport",
+        "sico.providers",
+        "sico_ui",
+        "PyQt5",
+        "PySide",
+        "subprocess",
+        "socket",
+        "requests",
+        "httpx"
+      ],
+      "rationale": "Shared question values define bounded text and presentation-neutral identity without application state, persistence or delivery.",
+      "evidence": [
+        "tools/ai/python/tests/test_approval_contracts.py",
+        "tools/utility/tests/test_approval_boundaries.py"
+      ]
+    },
+    {
+      "id": "codex-approval-no-service",
+      "paths": [
+        "tools/sico/python/sico/codex/approval_requests.py",
+        "tools/sico/python/sico/codex/input_records.py"
+      ],
+      "forbid_modules": [
+        "sico.service",
+        "sico.storage",
+        "sico.transport",
+        "sico.providers",
+        "sico_ui",
+        "PyQt5",
+        "PySide",
+        "subprocess",
+        "socket",
+        "requests",
+        "httpx"
+      ],
+      "rationale": "Codex projects native input and child attribution through explicit capabilities. The service consumes these records and remains responsible for evidence validation, persistence and delivery.",
+      "evidence": [
+        "tools/ai/python/tests/test_approval_contracts.py",
+        "tools/utility/tests/test_approval_boundaries.py"
+      ]
+    },
+    {
+      "id": "core-read-dependencies-one-way-boundary",
+      "paths": [
+        "tools/sico/python/sico/core/read_dependencies.py"
+      ],
+      "forbid_modules": [
+        "sico.transport",
+        "sico.service",
+        "sico.storage",
+        "sico.codex",
+        "sico.providers",
+        "sico_ui",
+        "PyQt5",
+        "PySide",
+        "subprocess",
+        "requests",
+        "httpx"
+      ],
+      "rationale": "Project-declared read dependencies consume shared strict JSON values and project-state location only. Transport framing, application owners and decision delivery do not belong to this read-only proof contract.",
+      "evidence": [
+        "tools/utility/tests/test_read_contract_boundaries.py",
+        "tools/ai/python/tests/test_project_read_contract.py",
+        "tools/ai/python/tests/test_wait_read_dependencies.py",
+        "tools/ai/python/tests/test_codex_wait_reads_lifecycle.py"
+      ]
+    },
+    {
+      "id": "input-scope-runtime-free",
+      "paths": [
+        "tools/sico/python/sico/core/input_scope.py"
+      ],
+      "forbid_modules": [
+        "sico.codex",
+        "sico.service",
+        "sico.storage",
+        "sico.transport",
+        "sico.providers",
+        "sico_ui",
+        "cadai",
+        "PyQt5",
+        "PySide",
+        "subprocess",
+        "socket",
+        "requests",
+        "httpx"
+      ],
+      "rationale": "Detached input scope values have no task owner, transport, persistence or application runtime dependencies.",
+      "evidence": [
+        "tools/ai/python/tests/test_input_assembly.py",
+        "tools/utility/tests/test_input_assembly_boundaries.py"
+      ]
+    },
+    {
+      "id": "input-assembly-no-service",
+      "paths": [
+        "tools/sico/python/sico/codex/input_assembly.py",
+        "tools/sico/python/sico/codex/backend.py",
+        "tools/sico/python/sico/codex/input_requests.py",
+        "tools/sico/python/sico/codex/child_input.py"
+      ],
+      "forbid_modules": [
+        "sico.service"
+      ],
+      "rationale": "Codex owns input composition and lifecycle. The audit service consumes shared scope and explicit operations; backend construction cannot call back into service assembly.",
+      "evidence": [
+        "tools/ai/python/tests/test_input_assembly.py",
+        "tools/utility/tests/test_input_assembly_boundaries.py"
+      ]
+    },
+    {
+      "id": "lsf-no-application-runtime",
+      "root": "tools/sico/python/sico/lsf",
+      "forbid_modules": [
+        "sico.service",
+        "sico.codex",
+        "sico.providers",
+        "sico.transport",
+        "sico.storage",
+        "sico_ui",
+        "PyQt5",
+        "PySide",
+        "httpx",
+        "requests"
+      ],
+      "rationale": "Shared LSF CLI and job identity control are consumed by background submission and Codex gateway. Background-node submission, application evidence and model transport remain in their callers.",
+      "evidence": [
+        "tools/utility/tests/test_lsf_boundaries.py",
+        "tools/ai/python/tests/test_lsf_shared_control.py",
+        "tools/ai/python/tests/test_agent_service_lsf_lifecycle.py"
+      ]
+    },
+    {
+      "id": "codex-gateway-no-service",
+      "paths": [
+        "tools/sico/python/sico/codex/gateway_job.py"
+      ],
+      "forbid_modules": [
+        "sico.service"
+      ],
+      "rationale": "The gateway owns interactive launch and reconciliation evidence; it consumes shared configuration, local process custody and LSF observation/cancellation without the background-node service adapter.",
+      "evidence": [
+        "tools/utility/tests/test_lsf_boundaries.py",
+        "tools/ai/python/tests/test_lsf_gateway_cleanup.py",
+        "tools/ai/python/tests/test_lsf_gateway.py"
+      ]
+    },
+    {
+      "id": "storage-no-transport-runtime",
+      "root": "tools/sico/python/sico/storage",
+      "forbid_modules": [
+        "sico.transport"
+      ],
+      "rationale": "Durable records consume the shared strict JSON value contract directly. Storage does not require framing, sockets, bridges or transport runtime imports; transport may consume storage.",
+      "evidence": [
+        "tools/utility/tests/test_storage_boundaries.py",
+        "tools/ai/python/tests/test_storage_json_contract.py",
+        "tools/ai/python/tests/test_agent_journal_recovery_io.py"
+      ]
+    },
+    {
+      "id": "shared-json-values-runtime-free",
+      "paths": [
+        "tools/ai/python/cadai/json_values.py"
+      ],
+      "forbid_modules": [
+        "sico",
+        "cadai",
+        "sico_ui",
+        "PyQt5",
+        "PySide",
+        "socket",
+        "subprocess",
+        "requests",
+        "httpx"
+      ],
+      "rationale": "The existing shared JSON owner provides detached values and one ProtocolError identity for storage, transport and independent AI tools, with no application or I/O implementation dependencies.",
+      "evidence": [
+        "tools/utility/tests/test_storage_boundaries.py",
+        "tools/ai/python/tests/test_storage_json_contract.py",
+        "tools/ai/python/tests/test_shared_responses_boundary.py"
+      ]
+    },
+    {
+      "id": "local-process-application-boundary",
+      "paths": [
+        "tools/sico/python/sico/local_process.py"
+      ],
+      "forbid_modules": [
+        "sico.codex",
+        "sico.service",
+        "sico.transport",
+        "sico.storage",
+        "sico.providers",
+        "sico_ui",
+        "cadai",
+        "PyQt5",
+        "PySide"
+      ],
+      "rationale": "The shared owner only manages local supervisor lifetime and pipes. Protocols, SSH policy, scheduler reconciliation and application state belong to consumers.",
+      "evidence": [
+        "tools/utility/tests/test_local_process_boundaries.py",
+        "tools/ai/python/tests/test_local_process.py",
+        "tools/ai/python/tests/test_agent_service_local_descendants.py"
+      ]
+    },
+    {
+      "id": "diagnostics-runtime-free",
+      "paths": [
+        "tools/sico/python/sico/diagnostics.py"
+      ],
+      "forbid_modules": [
+        "sico",
+        "cadai",
+        "sico_ui",
+        "PyQt5",
+        "PySide",
+        "socket",
+        "subprocess",
+        "requests",
+        "httpx"
+      ],
+      "rationale": "The private evidence owner must remain a bounded standard-library service usable by process supervision before application runtimes are available.",
+      "evidence": [
+        "tools/utility/tests/test_local_process_boundaries.py",
+        "tools/ai/python/tests/test_diagnostics.py"
+      ]
+    },
+    {
+      "id": "transport-codex-one-way-boundary",
+      "root": "tools/sico/python/sico/transport",
+      "forbid_modules": [
+        "sico.codex"
+      ],
+      "rationale": "Transport uses shared local process custody without importing the Codex application or its compatibility path.",
+      "evidence": [
+        "tools/utility/tests/test_local_process_boundaries.py",
+        "tools/ai/python/tests/test_bridge_tunnel_lifecycle.py"
+      ]
+    },
+    {
+      "id": "configuration-no-application-runtime",
+      "root": "tools/sico/python/sico/configuration",
+      "forbid_modules": ["sico.service", "sico.providers", "sico.codex", "sico.storage", "sico.transport", "sico_ui", "PyQt5", "PySide", "subprocess", "requests", "httpx"],
+      "rationale": "Shared configuration values and validators cannot import application runtimes or construct providers, workers or schedulers.",
+      "evidence": ["tools/utility/tests/test_snapshot_boundaries.py", "tools/ai/python/tests/test_configuration_contracts.py"]
+    },
+    {
+      "id": "session-snapshot-one-way-boundary",
+      "paths": ["tools/sico/python/sico/storage/session_snapshot.py"],
+      "forbid_modules": ["sico.service", "sico.providers", "sico.codex", "sico_ui", "PyQt5", "PySide"],
+      "rationale": "Durable snapshots validate captured configuration without service composition, credentials or provider construction.",
+      "evidence": ["tools/utility/tests/test_snapshot_boundaries.py", "tools/ai/python/tests/test_session_snapshot_contract.py"]
+    },
+    {
+      "id": "core-tool-registry-one-way-boundary",
+      "paths": ["tools/sico/python/sico/core/tools.py"],
+      "forbid_modules": [
+        "sico.transport",
+        "sico.service",
+        "sico.providers",
+        "sico_ui",
+        "PyQt5",
+        "PySide"
+      ],
+      "forbid_symbols": ["_CALL_CONTEXT"],
+      "rationale": "The core tool registry receives a narrow execution capability; it must not reach into transport, service, provider, or UI state.",
+      "evidence": [
+        "tools/sico/python/sico/core/contracts.py",
+        "tools/sico/python/sico/core/tools.py",
+        "tools/utility/tests/test_core_boundaries.py"
+      ]
+    },
+    {
+      "id": "core-contracts-runtime-free",
+      "paths": ["tools/sico/python/sico/core/contracts.py"],
+      "forbid_modules": [
+        "sico.transport",
+        "sico.service",
+        "sico.providers",
+        "sico_ui",
+        "PyQt5",
+        "PySide"
+      ],
+      "rationale": "Versioned identity, result, and execution contracts are importable without host, UI, transport, or model-provider runtimes.",
+      "evidence": [
+        "tools/sico/python/sico/core/contracts.py",
+        "tools/utility/tests/test_core_boundaries.py"
+      ]
+    },
+    {
+      "id": "core-host-contracts-runtime-free",
+      "paths": ["tools/sico/python/sico/core/host_contracts.py"],
+      "forbid_modules": [
+        "sico.transport",
+        "sico.service",
+        "sico.providers",
+        "sico_ui",
+        "PyQt5",
+        "PySide"
+      ],
+      "rationale": "Host and session identity values are shared as detached core contracts; storage must not import service DTO implementations.",
+      "evidence": [
+        "tools/sico/python/sico/core/host_contracts.py",
+        "tools/sico/python/sico/storage/host_routes.py",
+        "tools/utility/tests/test_core_boundaries.py"
+      ]
+    },
+    {
+      "id": "codex-managed-exec-no-application-owner",
+      "paths": ["tools/sico/python/sico/codex/exec_events.py", "tools/sico/python/sico/codex/exec_policy.py", "tools/sico/python/sico/codex/exec_process.py"],
+      "forbid_modules": ["sico.service", "sico.storage", "sico.providers", "sico_ui", "PyQt5", "PySide", "subprocess", "sicoprocess"],
+      "rationale": "The fixed-version managed process adapter reuses RPC and LocalProcess; it cannot own terminal history, select model routing or launch an alternate unsandboxed process tree.",
+      "evidence": ["tools/utility/tests/test_exec_boundaries.py", "tools/ai/python/tests/test_exec_process_contract.py", "tools/ai/python/tests/test_exec_process_live.py"]
+    },
+    {
+      "id": "managed-bash-composition-no-product-route",
+      "paths": [
+        "tools/sico/python/sico/execution/managed_bash.py"
+      ],
+      "forbid_modules": [
+        "sico.storage",
+        "sico_ui",
+        "sico.providers",
+        "subprocess",
+        "sicoprocess"
+      ],
+      "rationale": "The explicit backend combines the managed transport and value protocol; it owns no product routing, journal, UI or alternate process supervisor.",
+      "evidence": [
+        "tools/ai/python/tests/test_managed_bash_backend_live.py",
+        "tools/ai/python/tests/test_managed_bash_failures.py"
+      ]
+    },
+    {
+      "id": "managed-bash-relay-no-host-policy",
+      "paths": [
+        "tools/sico/python/sico/execution/bash_relay.py"
+      ],
+      "forbid_modules": [
+        "sico.storage",
+        "sico.service",
+        "sico.codex",
+        "sico_ui",
+        "sico.providers",
+        "sico.local_process",
+        "sicoprocess"
+      ],
+      "rationale": "The sandbox child only holds command descriptors and one Bash. The existing external supervisor retains custody; no session history, host policy or secondary supervisor may enter the relay.",
+      "evidence": [
+        "tools/ai/python/tests/test_managed_bash_backend_live.py"
+      ]
+    },
+    {
+      "id": "terminal-command-channel-no-launcher",
+      "root": "tools/sico/python/sico/terminal",
+      "forbid_modules": ["sico.service", "sico.storage", "sico.codex", "sico.providers", "sico.local_process", "sico_ui", "PyQt5", "PySide", "subprocess", "socket", "sicoprocess"],
+      "rationale": "Bash control framing and ephemeral command descriptors launch no shell, own no supervisor or history, and cannot select or bypass a permission policy.",
+      "evidence": ["tools/utility/tests/test_exec_boundaries.py", "tools/ai/python/tests/test_bash_command_channel.py", "tools/ai/python/tests/test_bash_session_persistence.py"]
+    },
+    {
+      "id": "core-terminal-contracts-runtime-free",
+      "paths": [
+        "tools/sico/python/sico/core/terminal_commands.py",
+        "tools/sico/python/sico/core/terminal_output.py",
+        "tools/sico/python/sico/core/terminal_receipts.py",
+        "tools/sico/python/sico/core/terminal_state.py"
+      ],
+      "forbid_modules": ["sico.transport", "sico.service", "sico.storage", "sico.providers", "sico.codex", "sico.local_process", "sico_ui", "PyQt5", "PySide", "subprocess", "socket", "sicoprocess"],
+      "rationale": "Terminal command values and recovery reduction cannot execute, reconnect, control processes or own a journal writer.",
+      "evidence": ["tools/utility/tests/test_terminal_boundaries.py", "tools/ai/python/tests/test_terminal_command_contract.py"]
+    },
+    {
+      "id": "core-terminal-session-runtime-free",
+      "paths": ["tools/sico/python/sico/core/terminal_session.py", "tools/sico/python/sico/core/terminal_session_events.py", "tools/sico/python/sico/core/terminal_session_state.py"],
+      "forbid_modules": ["sico.transport", "sico.service", "sico.storage", "sico.providers", "sico.codex", "sico.local_process", "sico_ui", "PyQt5", "PySide", "subprocess", "socket", "sicoprocess"],
+      "rationale": "One-session terminal identity and FIFO admission cannot create processes, reconnect shells, or own application state.",
+      "evidence": ["tools/utility/tests/test_terminal_boundaries.py", "tools/ai/python/tests/test_terminal_session_contract.py"]
+    },
+    {
+      "id": "storage-journal-snapshot-no-execution",
+      "paths": ["tools/sico/python/sico/storage/journal_snapshot.py"],
+      "forbid_modules": ["sico.service", "sico.codex", "sico.execution", "sico.providers", "sico.transport", "sico.local_process", "sico_ui", "PyQt5", "PySide", "subprocess", "socket", "sicoprocess"],
+      "rationale": "Snapshots only read an existing writer's published boundary or hold a released writer lock. They do not create writers, acquire process custody or select execution routes.",
+      "evidence": ["tools/ai/python/tests/test_terminal_history_snapshot.py", "tools/utility/tests/test_terminal_boundaries.py"]
+    },
+    {
+      "id": "storage-terminal-history-read-only",
+      "paths": ["tools/sico/python/sico/storage/terminal_history.py", "tools/sico/python/sico/storage/artifact_reference.py"],
+      "forbid_modules": ["sico.service", "sico.codex", "sico.execution", "sico.providers", "sico.transport", "sico.local_process", "sico_ui", "PyQt5", "PySide", "subprocess", "socket", "sicoprocess"],
+      "forbid_symbols": ["SessionJournal"],
+      "rationale": "History owns bounded read-only projections of the existing journal and selected artifacts. It cannot construct writers, execution backends or model/UI routes.",
+      "evidence": ["tools/ai/python/tests/test_terminal_history.py", "tools/utility/tests/test_terminal_boundaries.py"]
+    },
+    {
+      "id": "storage-terminal-records-one-way-boundary",
+      "paths": ["tools/sico/python/sico/storage/terminal_records.py"],
+      "forbid_modules": ["sico.service", "sico.codex", "sico.providers", "sico.transport", "sico.local_process", "sico_ui", "PyQt5", "PySide", "subprocess", "socket", "sicoprocess"],
+      "rationale": "Terminal observation encoding uses the existing session writer and read-only artifact capability without acquiring execution or application ownership.",
+      "evidence": ["tools/utility/tests/test_terminal_boundaries.py", "tools/ai/python/tests/test_terminal_journal_records.py"]
+    },
+    {
+      "id": "service-terminal-environment-runtime-free",
+      "paths": ["tools/sico/python/sico/service/terminal_environment.py", "tools/sico/python/sico/service/terminal_startup.py", "tools/sico/python/sico/service/terminal_command_profile.py"],
+      "forbid_modules": ["sico.storage", "sico.transport", "sico.providers", "sico.codex", "sico.local_process", "sico_ui", "PyQt5", "PySide", "subprocess", "socket", "sicoprocess"],
+      "rationale": "Terminal environment preparation returns detached values and argv without creating processes, persisting credentials, or importing a GUI or execution backend.",
+      "evidence": ["tools/utility/tests/test_terminal_boundaries.py", "tools/ai/python/tests/test_terminal_user_environment.py"]
+    },
+    {
+      "id": "service-terminal-dispatch-no-launcher-ui",
+      "paths": [
+        "tools/sico/python/sico/service/terminal_dispatcher.py",
+        "tools/sico/python/sico/service/session_terminal.py"
+      ],
+      "forbid_modules": ["sico.transport", "sico.providers", "sico.codex", "sico.local_process", "sico_ui", "PyQt5", "PySide", "subprocess", "socket", "sicoprocess"],
+      "rationale": "Dispatch consumes the committed session FIFO and an injected qualified backend; it cannot select a process launcher, model route or UI.",
+      "evidence": ["tools/utility/tests/test_terminal_boundaries.py", "tools/ai/python/tests/test_session_terminal_dispatch.py", "tools/ai/python/tests/test_session_terminal_failures.py", "tools/ai/python/tests/test_product_session_terminal.py"]
+    },
+    {
+      "id": "service-terminal-backend-runtime-free",
+      "paths": ["tools/sico/python/sico/service/terminal_backend.py"],
+      "forbid_modules": ["sico.storage", "sico.transport", "sico.providers", "sico.codex", "sico.local_process", "sico_ui", "PyQt5", "PySide", "subprocess", "socket", "sicoprocess"],
+      "rationale": "The required backend capabilities and completion value select no runtime implementation or permission fallback.",
+      "evidence": ["tools/utility/tests/test_terminal_boundaries.py", "tools/ai/python/tests/test_session_terminal_dispatch.py"]
+    },
+    {
+      "id": "storage-terminal-journal-one-way-boundary",
+      "paths": ["tools/sico/python/sico/storage/terminal_journal.py"],
+      "forbid_modules": ["sico.service", "sico.codex", "sico.providers", "sico.transport", "sico.local_process", "sico_ui", "PyQt5", "PySide", "subprocess", "socket", "sicoprocess"],
+      "rationale": "Terminal facts share the existing session writer and append lock; the derived bounded view cannot create processes or select a service owner.",
+      "evidence": ["tools/utility/tests/test_terminal_boundaries.py", "tools/ai/python/tests/test_session_terminal_persistence.py"]
+    },
+    {
+      "id": "storage-host-routes-one-way-boundary",
+      "paths": ["tools/sico/python/sico/storage/host_routes.py"],
+      "forbid_modules": ["sico.service"],
+      "rationale": "Durable host-route storage validates detached identity values and leaves service DTO construction to the application layer.",
+      "evidence": [
+        "tools/sico/python/sico/storage/host_routes.py",
+        "tools/utility/tests/test_core_boundaries.py"
+      ]
+    },
+    {
+      "id": "transport-host-payload-contract-runtime-free",
+      "paths": ["tools/sico/python/sico/transport/host_payload_contract.py"],
+      "forbid_modules": [
+        "sico.service",
+        "sico.providers",
+        "sico.storage",
+        "sico_ui",
+        "PyQt5",
+        "PySide"
+      ],
+      "rationale": "Bridge payload validation is a transport value boundary and must load without service, provider, storage, or UI runtimes.",
+      "evidence": [
+        "tools/sico/python/sico/transport/host_payload_contract.py",
+        "tools/utility/tests/test_transport_boundaries.py"
+      ]
+    },
+    {
+      "id": "transport-host-payloads-one-way-boundary",
+      "paths": ["tools/sico/python/sico/transport/host_payloads.py"],
+      "forbid_modules": ["sico.service"],
+      "rationale": "Expiring bridge payload references use a transport-owned payload contract and cannot reach upward into service DTOs.",
+      "evidence": [
+        "tools/sico/python/sico/transport/host_payloads.py",
+        "tools/utility/tests/test_transport_boundaries.py"
+      ]
+    },
+    {
+      "id": "transport-platform-environment-runtime-free",
+      "paths": ["tools/sico/python/sico/transport/platform_environment.py"],
+      "forbid_modules": ["sico.service", "sico.providers", "sico.storage", "sico_ui", "PyQt5", "PySide"],
+      "rationale": "Captured platform environment values belong to the bridge contract, independent of worker launch or service state.",
+      "evidence": ["tools/utility/tests/test_platform_boundaries.py", "tools/ai/python/tests/test_platform_environment_contract.py"]
+    },
+    {
+      "id": "process-identity-read-only-boundary",
+      "paths": ["tools/sico/python/sico/process_identity.py"],
+      "forbid_modules": ["sico.service", "sico.transport", "sico.storage", "sico.providers", "sico.codex", "sico_ui", "PyQt5", "PySide", "subprocess", "signal", "sicoprocess"],
+      "forbid_calls": ["kill", "killpg", "pidfd_send_signal", "system", "popen", "fork", "spawnv", "execv"],
+      "rationale": "Boot and process identity observation must not acquire process-control or application runtime responsibilities.",
+      "evidence": ["tools/utility/tests/test_platform_boundaries.py", "tools/ai/python/tests/test_process_identity.py"]
+    },
+    {
+      "id": "transport-service-one-way-boundary",
+      "root": "tools/sico/python/sico/transport",
+      "forbid_modules": ["sico.service"],
+      "rationale": "Transport owns bridge and archive operations; environment values and OS identity observation must not import the service worker implementations.",
+      "evidence": ["tools/utility/tests/test_platform_boundaries.py", "tools/ai/python/tests/test_agent_router_archive.py", "tools/ai/python/tests/test_router_owner_evidence.py"]
+    },
+    {
+      "id": "interaction-waiting-projection-owner",
+      "root": "tools/sico/python/sico",
+      "exclude_files": ["input_requests.py"],
+      "forbid_mapping_mutations": ["waiting_audits"],
+      "rationale": "Only InputRequests generates the live waiting projection; consumers may read or copy an existing snapshot.",
+      "evidence": ["tools/ai/python/tests/test_interaction_owner.py", "tools/utility/tests/test_interaction_boundaries.py"]
+    },
+    {
+      "id": "interaction-private-owner-state",
+      "root": "tools/sico/python/sico",
+      "forbid_private_attributes": [
+        "requests._pending", "requests._seen", "requests._closed", "requests._host_delivered",
+        "requests._connection", "requests._connection_id",
+        "_requests._pending", "_requests._seen", "_requests._closed", "_requests._host_delivered",
+        "_requests._connection", "_requests._connection_id",
+        "inputs._pending", "inputs._seen", "inputs._closed", "inputs._host_delivered",
+        "inputs._connection", "inputs._connection_id"
+      ],
+      "rationale": "Interaction collaborators use transitions and detached snapshots instead of mutating the owner's storage.",
+      "evidence": ["tools/ai/python/tests/test_interaction_owner.py", "tools/utility/tests/test_interaction_boundaries.py"]
+    },
+    {
+      "id": "interaction-narrow-capabilities",
+      "paths": [
+        "tools/sico/python/sico/codex/input_requests.py",
+        "tools/sico/python/sico/codex/elicitation.py",
+        "tools/sico/python/sico/codex/input_delivery.py",
+        "tools/sico/python/sico/codex/child_input.py",
+        "tools/sico/python/sico/codex/approval_requests.py",
+        "tools/sico/python/sico/service/audit.py",
+        "tools/sico/python/sico/service/audit_delivery.py",
+        "tools/sico/python/sico/service/pdk_data_confirmation.py"
+      ],
+      "forbid_attributes": ["loop", "backend", "state", "journal", "workbench", "_loop", "_backend"],
+      "forbid_symbols": ["CodexBackend", "AgentLoop", "PythonBackend", "WorkbenchService"],
+      "forbid_modules": ["sico.codex.backend", "sico.core.loop", "sico.service.python_backend", "sico.service.workbench"],
+      "rationale": "input_assembly binds input owners and audit_runtime adapts service operations with explicit callbacks; handlers retain no whole backend, workbench or mutable task state.",
+      "evidence": ["tools/ai/python/tests/test_interaction_capabilities.py", "tools/utility/tests/test_interaction_boundaries.py"]
+    },
+    {
+      "id": "core-workbench-instructions-runtime-free",
+      "paths": [
+        "tools/sico/python/sico/core/workbench_instructions.py"
+      ],
+      "forbid_modules": [
+        "sico.codex",
+        "sico.service",
+        "sico.storage",
+        "sico.transport",
+        "sico.providers",
+        "sico_ui",
+        "cadai",
+        "PyQt5",
+        "PySide",
+        "subprocess",
+        "socket",
+        "requests",
+        "httpx"
+      ],
+      "rationale": "Shared workbench guidance is a detached value contract. Core and Codex consume it without service tools, storage or runtime construction.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_workbench.py",
+        "tools/utility/tests/test_runtime_guidance_boundaries.py"
+      ]
+    },
+    {
+      "id": "codex-audit-instructions-runtime-free",
+      "paths": [
+        "tools/sico/python/sico/codex/audit_instructions.py"
+      ],
+      "forbid_modules": [
+        "sico.codex.backend",
+        "sico.service",
+        "sico.storage",
+        "sico.transport",
+        "sico.providers",
+        "sico_ui",
+        "cadai",
+        "PyQt5",
+        "PySide",
+        "subprocess",
+        "socket",
+        "requests",
+        "httpx"
+      ],
+      "rationale": "Native Codex question guidance is a value contract owned by Codex and cannot load service decision implementations or runtime I/O.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_audit.py",
+        "tools/utility/tests/test_runtime_guidance_boundaries.py"
+      ]
+    },
+    {
+      "id": "codex-runtime-assembly-no-service",
+      "paths": [
+        "tools/sico/python/sico/codex/runtime_assembly.py"
+      ],
+      "forbid_modules": [
+        "sico.service"
+      ],
+      "rationale": "Codex runtime assembly receives explicit instruction values from core and Codex owners; it must not import service implementations.",
+      "evidence": [
+        "tools/ai/python/tests/test_codex_thread_connection.py",
+        "tools/utility/tests/test_runtime_guidance_boundaries.py"
+      ]
+    },
+    {
+      "id": "core-loop-no-service-runtime",
+      "paths": [
+        "tools/sico/python/sico/core/loop.py",
+        "tools/sico/python/sico/core/run_journal.py",
+        "tools/sico/python/sico/core/startup.py",
+        "tools/sico/python/sico/core/backend_support.py",
+        "tools/sico/python/sico/core/target_validation.py"
+      ],
+      "forbid_modules": [
+        "sico.service",
+        "sico.storage",
+        "sico.transport",
+        "sico.codex",
+        "sico.providers",
+        "sico_ui",
+        "cadai.process_monitor",
+        "cadai.pdk_preparation",
+        "cadai.pdk_selection",
+        "cadai.circuit_guidance",
+        "PyQt5",
+        "PySide",
+        "subprocess",
+        "socket",
+        "requests",
+        "httpx"
+      ],
+      "rationale": "Core owns task state, model iteration and durable receipts; service.python_backend supplies routing, startup, decisions and guidance. RunJournal is a narrow structural persistence capability.",
+      "evidence": [
+        "tools/utility/tests/test_core_loop_boundaries.py",
+        "tools/ai/python/tests/test_python_backend_composition.py",
+        "tools/ai/python/tests/test_backend_support.py",
+        "tools/ai/python/tests/test_backend_target_contract.py",
+        "tools/ai/python/tests/test_agent_core.py"
+      ]
+    },
+    {
+      "id": "result-store-no-application-runtime",
+      "paths": [
+        "tools/ai/python/cadai/result_store.py"
+      ],
+      "forbid_modules": [
+        "cadai.result_tools",
+        "cadai.skill_result",
+        "cadai.circuit_schema",
+        "sico",
+        "sico_ui",
+        "PyQt5",
+        "PySide",
+        "subprocess",
+        "socket",
+        "requests",
+        "httpx"
+      ],
+      "rationale": "Result artifact publication and reading depend only on storage and value contracts, never on tool definitions, host dispatch or application runtimes.",
+      "evidence": [
+        "tools/ai/python/tests/test_result_store.py",
+        "tools/utility/tests/test_result_store_boundaries.py"
+      ]
+    },
+    {
+      "id": "workbench-no-result-tool-runtime",
+      "paths": [
+        "tools/sico/python/sico/storage/workbench.py",
+        "tools/sico/python/sico/migration/records.py"
+      ],
+      "forbid_modules": [
+        "cadai.result_tools"
+      ],
+      "forbid_symbols": [
+        "ResultStore"
+      ],
+      "rationale": "Workbench material reads use the explicit read-only archive function; migration consumes schema values. Neither consumer may load tool implementations or subclass the writable store.",
+      "evidence": [
+        "tools/ai/python/tests/test_result_store.py",
+        "tools/utility/tests/test_result_store_boundaries.py",
+        "tools/ai/python/tests/test_sico_migration_material.py"
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "id": "interaction-AuditRuntime",
+      "source": "tools/sico/python/sico/service/audit_runtime.py:AuditRuntime",
+      "public": ["lock", "snapshot", "admitted", "activity", "validate_target", "invalidate", "child_current", "child_scope", "approval_changes", "require"],
+      "fields": ["lock", "snapshot", "admitted", "activity", "validate_target", "invalidate", "child_current", "child_scope", "approval_changes", "require"],
+      "frozen": true,
+      "rationale": "The task port exposes reviewed operations, detached scope values and explicit backend capability admission; it never exposes the backend owner.",
+      "evidence": ["tools/ai/python/tests/test_interaction_capabilities.py"]
+    },
+    {
+      "id": "interaction-InputScope",
+      "source": "tools/sico/python/sico/core/input_scope.py:InputScope",
+      "public": [
+        "task_id",
+        "context",
+        "thread_id",
+        "turn_id",
+        "origin",
+        "access",
+        "executing",
+        "admitted"
+      ],
+      "fields": [
+        "task_id",
+        "context",
+        "thread_id",
+        "turn_id",
+        "origin",
+        "access",
+        "executing",
+        "admitted"
+      ],
+      "frozen": true,
+      "rationale": "One detached snapshot describes current input identity and admission; it contains no owner, service, RPC or journal handle.",
+      "evidence": [
+        "tools/ai/python/tests/test_input_assembly.py"
+      ]
+    }
+  ]
+}

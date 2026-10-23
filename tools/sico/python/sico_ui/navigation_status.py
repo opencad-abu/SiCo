@@ -5,17 +5,25 @@ from datetime import datetime
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
 
+from .theme import LIGHT_PALETTE, active_palette
+
 # Session activity dot drawn in front of every session name. Painting the dot
 # with Qt keeps the runtime free of image assets and emoji rendering.
 ACTIVITY = {
-    "active": ("活跃", QColor(46, 158, 79)),
-    "pending": ("挂起", QColor(224, 134, 0)),
+    "active": ("活跃", QColor(LIGHT_PALETTE.activity_active)),
+    "pending": ("挂起", QColor(LIGHT_PALETTE.activity_pending)),
     # 本桌面已打开、当前没有任务在跑：可用待命。
-    "free": ("空闲", QColor(45, 127, 249)),
+    "free": ("空闲", QColor(LIGHT_PALETTE.activity_free)),
     # 未打开、历史或来源未知：只有记录，不算待命。
-    "idle": ("静默", QColor(154, 160, 166)),
+    "idle": ("静默", QColor(LIGHT_PALETTE.activity_idle)),
 }
-CHILD_ACTIVITY = {"started": "active", "interrupted": "pending"}
+CHILD_ACTIVITY = {
+    "started": "active",
+    "interrupted": "pending",
+    "failed": "pending",
+    "completed": "idle",
+    "closed": "idle",
+}
 STATUS_DOT = 16
 _dots = {}
 
@@ -36,11 +44,22 @@ def session_activity(activity):
     return "free" if activity == "idle" else activity
 
 
+def _activity_color(activity):
+    palette = active_palette()
+    return {
+        "active": QColor(palette.activity_active),
+        "pending": QColor(palette.activity_pending),
+        "free": QColor(palette.activity_free),
+        "idle": QColor(palette.activity_idle),
+    }.get(activity, QColor(palette.activity_idle))
+
+
 def activity_icon(activity, size=STATUS_DOT):
     """One cached Qt-painted status dot: green active, orange pending, blue free, gray idle."""
 
-    label, color = ACTIVITY.get(activity, ACTIVITY["idle"])
-    cached = _dots.get(activity)
+    color = _activity_color(activity)
+    key = (activity if activity in ACTIVITY else "idle", color.name())
+    cached = _dots.get(key)
     if cached is None:
         pixmap = QPixmap(size, size)
         pixmap.fill(Qt.transparent)
@@ -56,7 +75,7 @@ def activity_icon(activity, size=STATUS_DOT):
         cached = QIcon()
         for mode in (QIcon.Normal, QIcon.Selected, QIcon.Active):
             cached.addPixmap(pixmap, mode)
-        _dots[activity] = cached
+        _dots[key] = cached
     return cached
 
 

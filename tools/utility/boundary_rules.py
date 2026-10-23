@@ -68,6 +68,11 @@ def violations(source, rule, *, path="", module="", package=False):
                for value in rule.get("forbid_private_attributes", [])):
             reason = "private attribute " + name
         if kind == "call":
+            if leaf in {'pop', 'setdefault', '__setitem__', '__delitem__'} and node.args:
+                key = node.args[0]
+                if (isinstance(key, ast.Constant)
+                        and key.value in rule.get('forbid_mapping_mutations', [])):
+                    reason = 'owned mapping key mutation ' + str(key.value)
             if leaf in rule.get("forbid_calls", []) or name in rule.get("forbid_exact_calls", []):
                 reason = "forbidden call " + name
             if leaf == "result" and rule.get("forbid_result_calls"):
@@ -78,6 +83,22 @@ def violations(source, rule, *, path="", module="", package=False):
         if reason and not (permitted(rule, path, name, kind, node)
                            or permitted(rule, path, leaf, kind, node)):
             found.add((node.lineno, reason))
+    for node in ast.walk(tree):
+        keys = []
+        if isinstance(node, ast.Subscript) and isinstance(node.ctx, (ast.Store, ast.Del)):
+            keys = [part.slice for part in ast.walk(node) if isinstance(part, ast.Subscript)]
+        elif isinstance(node, ast.Dict):
+            keys = node.keys
+        elif isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Attribute) and node.func.attr in {
+                    'append', 'extend', 'clear', 'insert', 'remove', 'pop', 'update', 'sort', 'reverse'}:
+                keys = [part.slice for part in ast.walk(node.func.value)
+                        if isinstance(part, ast.Subscript)]
+            keys += [ast.Constant(k.arg) for k in node.keywords if k.arg]
+        for key in keys:
+            if (isinstance(key, ast.Constant)
+                    and key.value in rule.get('forbid_mapping_mutations', [])):
+                found.add((node.lineno, 'owned mapping key mutation ' + str(key.value)))
     return sorted(found)
 
 

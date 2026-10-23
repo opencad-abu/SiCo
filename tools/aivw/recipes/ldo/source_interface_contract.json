@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "name": "amsLDO-source-interface-v1",
+  "status": "source_interface_calibrated_rnm_domain_pending",
+  "provenance": {
+    "kind": "read-only-OA-and-CDF",
+    "run_id": "20260906T113328.649366Z-ldo-contract-0ed1c1d25132",
+    "reference_only": false,
+    "artifacts": {
+      "LDO_MASTER-symbol-before.json": "bcdc5bf5717b8faba63607012eb518633dc1bb755a033b01d13d44a77b90f3c2",
+      "LDO_AON-symbol-before.json": "1e32f972c7289881a22685b20180208946a7750e7d9cd53a23a5766e77addf69",
+      "LDO_MASTER-cdf-before.json": "9fcab24be7b25453734d86b302ae3fdb966d305e61c9105a9dc0886255920ff2",
+      "LDO_AON-cdf-before.json": "ed96bf68b5e32bd4f1b976327b37fafcfe007ed20187cb623860421d15cddf6e"
+    }
+  },
+  "variants": {
+    "LDO_MASTER": {
+      "cell": "LDO_MASTER",
+      "port_order": [
+        "VDD",
+        "VSS",
+        "VOUT"
+      ],
+      "ports": {
+        "VDD": {
+          "direction": "input",
+          "kind": "power",
+          "unit": "V",
+          "physical_domain": "electrical",
+          "physical_unit": "V",
+          "proposed_rnm_type": "real"
+        },
+        "VSS": {
+          "direction": "input",
+          "kind": "ground",
+          "unit": "V",
+          "physical_domain": "electrical",
+          "physical_unit": "V",
+          "proposed_rnm_type": "real"
+        },
+        "VOUT": {
+          "direction": "output",
+          "kind": "power",
+          "unit": "V",
+          "physical_domain": "electrical",
+          "physical_unit": "V",
+          "proposed_rnm_type": "real"
+        }
+      },
+      "source": "oa-cdf-interface-v1",
+      "spectre_term_order": [
+        "VDD",
+        "VOUT",
+        "VSS"
+      ],
+      "rnm_connection_policy": "named_ports"
+    },
+    "LDO_AON": {
+      "cell": "LDO_AON",
+      "port_order": [
+        "VDD",
+        "VSS",
+        "EN",
+        "VOUT"
+      ],
+      "ports": {
+        "VDD": {
+          "direction": "input",
+          "kind": "power",
+          "unit": "V",
+          "physical_domain": "electrical",
+          "physical_unit": "V",
+          "proposed_rnm_type": "real"
+        },
+        "VSS": {
+          "direction": "input",
+          "kind": "ground",
+          "unit": "V",
+          "physical_domain": "electrical",
+          "physical_unit": "V",
+          "proposed_rnm_type": "real"
+        },
+        "EN": {
+          "direction": "input",
+          "kind": "digital",
+          "unit": "1",
+          "physical_domain": "electrical",
+          "physical_unit": "V",
+          "proposed_rnm_type": "logic",
+          "threshold_contract": null,
+          "qualification": "BLOCKED_THRESHOLD_CONTRACT"
+        },
+        "VOUT": {
+          "direction": "output",
+          "kind": "power",
+          "unit": "V",
+          "physical_domain": "electrical",
+          "physical_unit": "V",
+          "proposed_rnm_type": "real"
+        }
+      },
+      "source": "oa-cdf-interface-v1",
+      "spectre_term_order": [
+        "EN",
+        "VDD",
+        "VOUT",
+        "VSS"
+      ],
+      "rnm_connection_policy": "named_ports"
+    }
+  }
+}

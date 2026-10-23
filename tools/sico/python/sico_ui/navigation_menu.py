@@ -5,6 +5,9 @@ from __future__ import annotations
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMenu
 
+from .navigation_labels import KIND_LABEL, KIND_UNCLASSIFIED
+from .navigation_rows import CHILD_KIND, KIND_ROLE
+
 
 class SessionRowMenu:
     """Session-row actions menu: continue, end, rename, delete — nothing else."""
@@ -23,6 +26,12 @@ class SessionRowMenu:
                 tree = self.current if self.current.itemAt(position) is not None else self.list
             item = tree.itemAt(position)
             if item is None:
+                return
+            kind = item.data(0, KIND_ROLE)
+            if kind == CHILD_KIND:
+                return
+            if kind in {KIND_LABEL, KIND_UNCLASSIFIED}:
+                self._label_menu(tree, position, item)
                 return
             parent_id = item.data(0, Qt.UserRole + 1)
             session_id = parent_id or item.data(0, Qt.UserRole)
@@ -45,6 +54,9 @@ class SessionRowMenu:
             end = self._end_entry(menu, session_id) if live else None
             rename = menu.addAction("重命名")
             delete = None if live else menu.addAction("删除")
+            self._session_label_menu(menu, session_id)
+            create_label = menu.addAction("新建标签…")
+            create_label.triggered.connect(lambda _checked=False: self._create_label())
             action = menu.exec_(tree.viewport().mapToGlobal(position))
             if action is None:
                 return

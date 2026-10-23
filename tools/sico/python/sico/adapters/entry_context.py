@@ -14,10 +14,16 @@ def register_context(registry, broker):
                 data = enrich(broker.read(context, name, arguments), name, arguments)
             except QueryUnavailable as exc:
                 if exc.code == "source_not_captured":
-                    return ToolResult(exc.code,
-                        "本次入口未捕获窗口；可先列出窗口并指定 window_ref，"
-                        "或按明确的 library/cell/view 继续查询。无需重新安装 SKILL。",
-                        {"code": exc.code, "next_action": "list_windows_or_inspect_explicit_target"})
+                    return ToolResult(
+                        "ok",
+                        "入口上下文未捕获；工程级操作可继续。",
+                        {
+                            "ok": True,
+                            "captured": False,
+                            "code": exc.code,
+                            "next_action": "use_get_project_context_or_inspect_explicit_target",
+                        },
+                    )
                 return ToolResult(exc.code, str(exc))
             return ToolResult(data=data)
 
@@ -32,5 +38,6 @@ def register_context(registry, broker):
                 definition["inputSchema"],
                 lambda args, tool=name: validate_arguments(tool, args),
                 handler(name),
+                effect="read",
             )
         )

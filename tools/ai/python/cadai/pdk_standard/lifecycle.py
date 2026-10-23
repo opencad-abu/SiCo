@@ -20,29 +20,46 @@ def status(workspace, library, environment):
         require(package)
         published = True
     except PdkUnavailable as exc:
-        if exc.code != 'pdk_generation_incomplete':
+        if exc.code not in {'pdk_generation_incomplete', 'pdk_acceptance_required'}:
             return {'status': 'conflict', 'design_ready': False, 'reason': exc.code}
         published = False
+    from .acceptance_state import collection_complete
+    ready_for_acceptance = not published and collection_complete(package)
+    next_action = 'get_pdk_data' if published else (
+        'accept_pdk_data' if ready_for_acceptance else None)
+    if next_action is None:
+        from .blockers import report as blocker_report
+
+        next_action = blocker_report(package)['next_action']
     return {'schema_version': package.manifest['schema_version'], 'status': 'published' if published else 'capture_ready',
             'revision': package.revision,
             'path': str((package.overlay or package.base.root) / 'package.json'),
             'design_ready': published,
             'readiness_scope': PROFILE if published else 'metadata_capture_only',
-            'next_action': 'get_pdk_data' if published else 'complete_pdk_generation'}
+            'acceptance_required': ready_for_acceptance,
+            'next_action': next_action}
 
 
 def attach(prepared, data, library):
     prepared['standard'] = status(data.workspace, library, data.environment)
-    if data.workspace and prepared['source'] == 'builtin' and prepared['standard']['status'] == 'legacy':
+    if data.workspace and prepared['source'] == 'builtin':
+        state = prepared['standard']['status']
+    else:
+        state = None
+    if state in {'legacy', 'capture_ready', 'published'}:
+        from pathlib import Path
         from ..pdk_normalize import context
-        from ..pdk_data import binding
-        from .package import publish
         ctx = context(prepared['capture']['context'])
-        catalog = data.builtin.discover(ctx, 'symbol')[library]
-        values = {cell: data.builtin.device(ctx, {'library': library, 'cell': cell, 'view': 'symbol'}, row['digest'])
-                  for cell, row in catalog['payload']['devices'].items()}
-        payload = {**catalog['payload'], 'binding': binding(ctx, library)}
-        prepared['standard'] = publish(project_directory(data.workspace, "ai/pdk-data", create=True), library, payload, values, {})
+        lib = next(row for row in ctx['libraries'] if row['name'] == library)
+        root = project_directory(data.workspace, "ai/pdk-data", create=True)
+        roots = {'pdk': str(Path(lib['resolved_path']).parent)}
+        if state == 'published':
+            # A moved installation re-points the same bundled baseline; content never changes.
+            data.builtin.rebind(root, library, roots)
+        else:
+            # Fresh install, or an unconfirmed projection replaced by the published bundle.
+            data.builtin.install(root, library, roots)
+        prepared['standard'] = status(data.workspace, library, data.environment)
     return prepared
 
 

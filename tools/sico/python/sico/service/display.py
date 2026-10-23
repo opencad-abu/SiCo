@@ -6,17 +6,27 @@ from datetime import datetime
 from html import escape
 
 
-def event_time(value):
-    """Local ``MM-DD HH:MM`` for a journal or row timestamp; empty when unknown."""
+def _local_stamp(value):
+    """Local ``datetime`` for a journal or row timestamp; None when unknown."""
     if not isinstance(value, str) or not value.strip():
-        return ""
+        return None
     try:
         stamp = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
     except ValueError:
-        return ""
-    if stamp.tzinfo is not None:
-        stamp = stamp.astimezone()
-    return stamp.strftime("%m-%d %H:%M")
+        return None
+    return stamp.astimezone() if stamp.tzinfo is not None else stamp
+
+
+def event_time(value):
+    """Local ``MM-DD HH:MM`` for a journal or row timestamp; empty when unknown."""
+    stamp = _local_stamp(value)
+    return "" if stamp is None else stamp.strftime("%m-%d %H:%M")
+
+
+def event_clock(value):
+    """Local ``HH:MM`` clock for a chat header; empty when unknown."""
+    stamp = _local_stamp(value)
+    return "" if stamp is None else stamp.strftime("%H:%M")
 
 
 def token_amount(value):

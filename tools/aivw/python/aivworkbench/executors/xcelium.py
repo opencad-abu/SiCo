@@ -12,7 +12,7 @@ from ..l1 import build_l1_test_plan
 from ..profiles import product_root
 from ..plugins.xcelium_evidence import get_xcelium_evidence_adapter
 from ..workspace import sha256_file, stable_digest, write_json_once
-from ..agent.runtime_info import production_python
+from ..runtime_info import production_python
 from .xcelium_binding import _compare_evidence_binding, _evidence_locators, _validate_evidence_binding
 from .xcelium_events import _evaluate_l1_events
 from .xcelium_process import _generation_outputs, _payload_file, _run, _xrun_version

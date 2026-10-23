@@ -7,9 +7,10 @@ from sicoresources import icon as resource_icon
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
 
-from .theme import BACKGROUND
+from .theme import active_palette
 
-LOGO = "logo-dark.png"
+LOGO = "logo-light.png"
+LOGO_BY_THEME = {"light": LOGO, "dark": "logo-dark.png"}
 _BRAND = frozenset({"logo.png", "logo-dark.png", "logo-light.png", "logo-clear.png", "ai-small.png"})
 _STATUS = frozenset({"active.png", "check.png", "correct.png", "error.png",
                      "idel.png", "info.png", "info2.png", "pend.png"})
@@ -46,12 +47,13 @@ def tinted(pixmap, color):
     return tint
 
 
-def filled_icon(value, size=(18, 18), color=BACKGROUND):
+def filled_icon(value, size=(18, 18), color=None):
     """Icon for one accent-filled button: light glyph while the button is usable.
 
     Hover keeps the same glyph, and a disabled button falls back to the
     original dark asset because its background is white again.
     """
+    color = active_palette().on_accent if color is None else color
     base = value.pixmap(QSize(*size))
     light = tinted(base, color)
     icon = QIcon()
@@ -62,12 +64,17 @@ def filled_icon(value, size=(18, 18), color=BACKGROUND):
     return icon
 
 
+def logo_name():
+    """Logo asset follows the active theme: light file on light, dark on dark."""
+    return LOGO_BY_THEME.get(active_palette().name, LOGO)
+
+
 def logo_path():
-    return share_path(LOGO)
+    return share_path(logo_name())
 
 
 def logo_icon():
-    return icon(LOGO)
+    return icon(logo_name())
 
 
 def install_logo(target):

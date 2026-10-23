@@ -9,6 +9,7 @@ from pathlib import Path
 
 from ..storage.journal import open_private, sync_directory
 from ..transport.framing import strict_json
+from .background_evidence import custody_record, same_identity, watchdog_record
 from .background_watchdog import boot_id, process_alive, process_identity, wake_guardian
 from .background_worker import IDENTITY, PROTOCOL, _read, _write, read_background_artifact
 
@@ -98,6 +99,23 @@ def remove_temporary(directory, job):
     sync_directory(directory)
 
 
+def _tree_proved(report):
+    return bool(report and report.get('phase') == 'finished'
+                and report.get('process_stopped') is True
+                and type(report.get('children_remaining')) is int
+                and report.get('children_remaining') == 0)
+
+
+def _custody_for(directory, job, watcher):
+    custody = custody_record(directory, job)
+    if (custody and watcher and (not same_identity(custody.get('custodian'),
+                                                   watcher.get('custodian'))
+                                 or not same_identity(custody.get('watcher'),
+                                                      watcher.get('guardian')))):
+        return None
+    return custody
+
+
 def recover_record(records, worker_root, row):
     """Caller has checked the owner lease. Serialize multiple recovery readers."""
     path = records / (row['job_id'] + '.json')
@@ -128,46 +146,53 @@ def recover_record(records, worker_root, row):
                 watcher = strict_json(_read(directory / 'watcher.json'))
                 if any(watcher.get(k) != job[k] for k in ('job_id', 'worker_id', 'instance_id', 'generation')):
                     raise ValueError('Watchdog identity mismatch')
-                if watcher['boot_id'] == boot_id() and process_alive(watcher['guardian']):
-                    _write(directory / 'stop', b'1')
-                    if watcher.get('tree_owned'):
-                        wake_guardian(watcher['guardian'])
-                    since = row.get('recovery_started_at', time.time())
-                    if time.time() - since < 2:
-                        result.update(state='recovering', reason='waiting_for_watchdog',
-                                      recovery_started_at=since, recovery=dict(process_stopped=False))
-                        _write(path, result)
-                        return result
-                    if watcher.get('tree_owned'):
-                        result.update(state='cleanup_failed', reason='local_tree_unconfirmed',
-                                      recovery=dict(process_stopped=False))
-                        _write(path, result)
-                        return result
-                    if not stop_abandoned(watcher) or not stop_guardian(watcher['guardian']):
-                        result.update(state='cleanup_failed', reason='orphan_process_unconfirmed',
-                                      recovery=dict(process_stopped=False))
-                        _write(path, result)
-                        return result
-            report = None
-            if (directory / 'watchdog.json').exists():
-                report = strict_json(_read(directory / 'watchdog.json'))
-                if any(report.get(k) != job[k] for k in ('job_id', 'worker_id', 'instance_id', 'generation')):
-                    raise ValueError('Watchdog report identity mismatch')
-            if watcher and watcher.get('tree_owned') and not report:
+            report = watchdog_record(directory, job)
+            custody = _custody_for(directory, job, watcher)
+            proved = bool((report and report.get('process_stopped')) or _tree_proved(custody))
+            guardian = watcher.get('guardian') if watcher else None
+            guardian_live = bool(guardian and watcher.get('boot_id') == boot_id()
+                                 and process_alive(guardian))
+            owner = guardian if guardian_live else (
+                (watcher.get('custodian') if watcher and watcher.get('boot_id') == boot_id() else None)
+                or (custody or {}).get('custodian'))
+            owner_live = bool(owner and process_alive(owner))
+            if not proved and owner_live:
+                _write(directory / 'stop', b'1')
+                wake_guardian(owner)
+                since = row.get('recovery_started_at', time.time())
+                if time.time() - since < 2:
+                    result.update(state='recovering', reason='waiting_for_tree_owner',
+                                  recovery_started_at=since, recovery=dict(process_stopped=False))
+                    _write(path, result)
+                    return result
+                report = watchdog_record(directory, job)
+                custody = _custody_for(directory, job, watcher)
+                proved = bool((report and report.get('process_stopped')) or _tree_proved(custody))
+            if not proved and guardian_live and watcher.get('tree_owned'):
+                result.update(state='cleanup_failed', reason='local_tree_unconfirmed',
+                              recovery=dict(process_stopped=False, custody=custody))
+                _write(path, result)
+                return result
+            if not proved and guardian_live:
+                if not stop_abandoned(watcher) or not stop_guardian(watcher['guardian']):
+                    result.update(state='cleanup_failed', reason='orphan_process_unconfirmed',
+                                  recovery=dict(process_stopped=False, custody=custody))
+                    _write(path, result)
+                    return result
+            if watcher and watcher.get('tree_owned') and not proved:
                 stop_abandoned(watcher)  # Contain known members; this cannot prove the whole tree.
-            stopped = (bool(report and report.get('process_stopped'))
-                       if watcher and watcher.get('tree_owned') else
-                       stop_abandoned(watcher) if watcher else (
+            stopped = (proved if watcher and watcher.get('tree_owned') else
+                       proved or (stop_abandoned(watcher) if watcher else (
                 not receipt.get('pid') or bool(receipt.get('finished_at') and receipt.get('cleanup')
-                                              and all(receipt['cleanup'].values()))))
+                                              and all(receipt['cleanup'].values())))))
             if not stopped:
                 result.update(state='cleanup_failed', reason='orphan_process_unconfirmed',
-                              recovery=dict(process_stopped=False))
+                              recovery=dict(process_stopped=False, custody=custody))
             else:
                 remove_temporary(directory, job)
                 result.update({k: v for k, v in receipt.items() if k != 'protocol'})
                 result['recovery'] = dict(process_stopped=True, temporary_removed=True,
-                                          prior_state=original, watchdog=report)
+                                          prior_state=original, watchdog=report, custody=custody)
                 if receipt['state'] == 'completed':
                     if not receipt.get('cleanup') or not all(receipt['cleanup'].values()):
                         raise ValueError('Worker cleanup not confirmed')

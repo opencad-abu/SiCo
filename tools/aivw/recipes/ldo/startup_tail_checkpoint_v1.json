@@ -1,0 +1,9 @@
+{
+  "runs": {
+    "initial_fidelity": "20260908T071343.935190Z-startup-fidelity-31a1fcffd657",
+    "failed_fidelity": "20260908T071715.472246Z-startup-fidelity-4300c9d5e1a8",
+    "converged_fidelity": "20260908T072213.856175Z-startup-fidelity-44efac112d9c",
+    "refit_v1": "20260908T072631.360029Z-tail-refit-38489c846027",
+    "refit": "20260908T073136.127521Z-tail-refit-38d7249223ca"
+  }
+}

@@ -8,6 +8,7 @@ from pathlib import Path
 from ..storage.journal import sync_directory
 from ..storage.project_files import RegistryError, registry_directory, write_record
 from ..storage.project_lock import ProjectLock
+from ..storage.roots import startup_root
 from .background_watchdog import process_identity
 from .project_identity import create_identity, read_identity
 from .service_discovery import ServiceDescriptor, local_host, occupied_discovery
@@ -37,6 +38,11 @@ class ProjectServiceLease:
     @classmethod
     def acquire(cls, project):
         host = local_host()
+        try:
+            startup_root(project)
+        except ValueError as exc:
+            code = "unavailable" if not Path(project).is_dir() else "unsafe_directory"
+            raise RegistryError(code, str(exc)) from None
         directory = registry_directory(project, create=True)
         try:
             lock = ProjectLock(directory, create=True)
@@ -50,7 +56,7 @@ class ProjectServiceLease:
                     raise RegistryError("missing_identity",
                                         "Existing service lost its project identity")
                 identity = create_identity(directory, host.host_id)
-            identity.verify(directory, host.host_id)
+            identity.verify(directory)
             lock.check()
             retire_endpoint(directory, identity.project_id, host)
             # Retire the previous endpoint before the new service starts listening.
@@ -72,7 +78,7 @@ class ProjectServiceLease:
     def publish(self, endpoint):
         """Publish only an already bound private Unix socket; readiness needs a handshake."""
         self._lock.check()
-        self._identity.verify(self._directory, self._host.host_id)
+        self._identity.verify(self._directory)
         endpoint = Path(endpoint)
         descriptor = ServiceDescriptor(self.project_id, self.service_id, self._host,
                                        self._pid, self._process_start, str(endpoint))
@@ -113,7 +119,7 @@ def initialize_project_copy(project, *, expected_project_id):
     host = local_host()
     with ProjectLock(directory):
         previous = read_identity(directory)
-        if previous.project_id != expected_project_id or previous.matches(directory, host.host_id):
+        if previous.project_id != expected_project_id or previous.matches(directory):
             raise RegistryError("not_a_copy",
                                 "Expected a copied project with the supplied identity")
         (directory / "discovery.json").unlink(missing_ok=True)

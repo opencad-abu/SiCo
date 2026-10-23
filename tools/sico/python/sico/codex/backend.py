@@ -6,7 +6,6 @@ import json
 import threading
 import time
 import uuid
-from contextlib import contextmanager
 
 from ..core.contracts import (
     TERMINAL,
@@ -16,8 +15,12 @@ from ..core.contracts import (
     ToolCall,
 )
 from ..core.startup import INITIAL_PROMPT
+from ..core.backend_support import CODEX_SUPPORT
+from ..core.target_validation import context_method
 from ..orchestration import ChildTaskPolicy, CodexCollaborationClient, CopilotTaskOrchestrator
 from ..orchestration.thread_binding import ThreadBinding
+from ..storage.journal import BULK_KINDS
+from .input_delivery import send_controls
 from .backend_children import project_collaboration, project_subagent
 
 # Compatibility alias; migrate instruction imports to backend_instructions.
@@ -25,22 +28,27 @@ from .backend_instructions import INSTRUCTIONS as INSTRUCTIONS
 from .backend_notifications import route as route_notification
 from .backend_source import (
     attachment_instruction,
-    context_method,
     validate_target_result,
 )
-from .child_input import ChildInputs
-from .mcp import ToolBridge
 from .names import ThreadNames
 from .native_history import NativeHistory
 from .native_projection import NOTIFICATIONS as NATIVE_NOTIFICATIONS
 from .native_projection import NativeProjection
 from .resources import ExternalResources
-from .runtime import CodexRuntime
+from .runtime_lifecycle import (
+    authorize_new_task_recovery,
+    ensure_runtime,
+    metadata_rpc,
+    poll_runtime,
+    recover_interrupted_task,
+    retire_runtime,
+    runtime_rpc,
+)
 from .settings import DEFAULT_IDLE_TIMEOUT, DEFAULT_TOOL_TIMEOUT
 from .steering import TurnSteering
 from .task_driver import TaskDriver
 from .task_journal import TaskJournal
-from .thread_startup import bind_thread, metadata_connection, prepare_thread
+from .thread_startup import bind_thread
 from .tool_dispatch import encode_receipt, execute_call
 from .tool_receipts import current_receipt
 from .turn_input import accept_input, idle_request
@@ -56,11 +64,14 @@ _KNOWN_NOTIFICATIONS = frozenset({
 
 
 class CodexBackend:
-    def __init__(self, provider, tools, journal, context):
+    support = CODEX_SUPPORT
+
+    def __init__(self, provider, tools, journal, context, *, terminal=None):
         self.provider, self.tools, self.journal = provider, tools, journal
+        self.terminal = terminal
         self.config = RunConfig()
         self.state = journal.state or RunState(context)
-        records = journal.events()
+        records = journal.events(exclude=BULK_KINDS)
         bindings = [r["payload"] for r in records if r["kind"] == "codex.thread"]
         if not bindings and any(r["kind"] == "task.started" for r in records):
             raise ValueError("An existing Python session cannot be resumed as Codex")
@@ -75,17 +86,30 @@ class CodexBackend:
         self._child_status = {e["payload"]["thread_id"]: e["payload"] for e in records
                               if e["kind"] == "codex.child"}
         self.runtime, self.bridge = None, None
-        self._input_rpc, self.connection_id = None, ""
-        self.child_inputs = ChildInputs(self)
+        self._pre_dispatch_recovery = False
+        self._retired_runtime_recovery = False
+        self._runtime_cleanup_unconfirmed = False
+        from .input_assembly import request_owner, child_inputs
+
+        self.inputs = request_owner(self)
+        self.child_inputs = child_inputs(self)
         self._tools_changed = threading.Condition(self.lock)
         self._inflight = set()
         self._tool_stop = threading.Event()
         self.cancelled = lambda: True
+        self._cancel_baseline = False
         self.active = False
-        self.stale = False
-        self.stale_reason = ""
+        self.stale, self.stale_reason = False, ""
         self.tool_started_at = {}
         self.task_journal = TaskJournal(self.journal, self.state, self.lock, self._child_status, lambda: time)
+        from .profile_setting import ProfileSetting
+
+        # One automatic product envelope; explicit embedders may still select
+        # a narrower scope before runtime assembly.
+        self.tool_profile = ProfileSetting(self)
+        from .feature_groups import FeatureSetting
+
+        self.features = FeatureSetting(self)
         self.names = ThreadNames(self, records)
         self.native = NativeProjection(self, records)
         self.native_history = NativeHistory(self, records)
@@ -99,8 +123,7 @@ class CodexBackend:
 
         self.thread_ops = ThreadOperations(self, records)
         self.steering.recover()
-        if self.state.task and self.state.task["status"] not in TERMINAL:
-            self._finish("needs_reconcile", "Previous Codex task was interrupted; no replay")
+        recover_interrupted_task(self, records)
 
     @property
     def thread_id(self):
@@ -119,17 +142,25 @@ class CodexBackend:
 
     def _finish(self, status, message=""):
         with self.lock:
+            user_stopped = bool(self.cancelled()) and not self._cancel_baseline
             if hasattr(self, "audit"):
-                self.audit.end_inputs("宿主任务已结束；答复不会转入下一任务")
+                self.audit.end_inputs("宿主任务已结束；答复不会转入下一任务", send=False)
             self.steering.end()
             self.active = False
             self._tool_stop.set()
-            self.native.finish()
+            self.native.finish(unconfirmed=user_stopped)
+            # A running task cannot hide unknown native receipts behind a terminal state.
+            # Leaving an already paused task is the controller-authorized acknowledgement.
+            if (not user_stopped
+                    and self.state.task.get("status") != "needs_reconcile"
+                    and "needs_reconcile" in self.native.completed.values()):
+                status = "needs_reconcile"
+                message += "；原生操作结果未确认，请核对原命令或文件现状，不会自动重放"
+            elif user_stopped and "needs_reconcile" in self.native.completed.values():
+                message += "；原生操作结果未确认；任务已停止，原操作不会自动重放"
             status, message = self.task_journal.seal_tools(
-                status, message, self.tool_started_at)
-            if hasattr(self, "audit"):
-                self.audit.finish()
-            self.state.task.pop("waiting_audits", None)
+                status, message, self.tool_started_at, promote=not user_stopped)
+            self.inputs.finish()
             self.state.task.update(status=status, diagnostic=message)
             self.state.task.pop("activity", None)
             return self._event("task." + status, {"message": message})
@@ -138,7 +169,7 @@ class CodexBackend:
         return self.task_journal.activity(phase, label, tool=tool)
 
     def _begin(self, text, context, input_id, origin, attachments=None,
-               inputs=None, turn_options=None):
+               inputs=None, turn_options=None, *, cancel_baseline=None):
         if self._inflight:
             raise ValueError("上一任务的工具仍在收尾，请等待回执后继续")
         if self.state.task and self.state.task["status"] not in TERMINAL:
@@ -155,6 +186,7 @@ class CodexBackend:
         self.task_journal.usage_turns = {}
         self.stale = False
         self.stale_reason = ""
+        self._cancel_baseline = bool(self.cancelled()) if cancel_baseline is None else cancel_baseline
         return self.task_journal.started(
             text, context, input_id, origin, attachments, inputs, turn_options)
 
@@ -174,44 +206,15 @@ class CodexBackend:
         self._ensure_runtime()
 
     def _ensure_runtime(self):
-        if self.runtime:
-            return
-        self.bridge = ToolBridge(
-            self.tools, self._execute,
-            timeout=getattr(self.provider, "tool_timeout", DEFAULT_TOOL_TIMEOUT),
-        )
-        try:
-            from ..service.audit import INSTRUCTIONS as AUDIT_INSTRUCTIONS
-            from ..service.workbench import INSTRUCTIONS as WORKBENCH_INSTRUCTIONS
+        ensure_runtime(self)
 
-            self.resources.prepare()
-            self.runtime = CodexRuntime(self.provider, self.journal, self.bridge,
-                                        memory_settings=self.thread_ops.memory.pending)
-            self.input_connection()
-            self.runtime.rpc.notification_handler = self._notification
-            self.resources.register(self.runtime.rpc)
-            prepare_thread(
-                self.runtime, self.thread_id, provider=self.provider, options=self.turn_options,
-                operations=self.thread_ops, resources=self.resources, names=self.names,
-                history=self.native_history, bind_thread=self._bind_thread,
-                has_audit=hasattr(self, "audit"), has_workbench=hasattr(self, "workbench"),
-                instructions=INSTRUCTIONS, workbench_instructions=WORKBENCH_INSTRUCTIONS,
-                audit_instructions=AUDIT_INSTRUCTIONS)
-        except BaseException:
-            self.close()
-            raise
+    @property
+    def connection_id(self):
+        return self.inputs.connection_id
 
     def input_connection(self):
-        """One nonce for every input type on this exact app-server connection."""
-        if self.runtime is None:
-            raise ValueError("No input connection")
-        if self.runtime.rpc is not self._input_rpc:
-            if hasattr(self, "audit"):
-                self.audit.end_inputs("原连接已结束；答复不会转发到新连接", send=False)
-            self._input_rpc = self.runtime.rpc
-            self.connection_id = uuid.uuid4().hex
-            self._event("codex.connection", {"connection_id": self.connection_id})
-        return self.connection_id
+        """Bind every input type to the same connection owner."""
+        return self.inputs.connect()
 
     def _input_request(self, event, turn_id, *, parent_ended=False):
         return accept_input(
@@ -269,7 +272,7 @@ class CodexBackend:
             elif self.stale:
                 self._activity("blocked", "任务已暂停：" + self.stale_reason)
             elif self.state.task.get("waiting_audits"):
-                self._activity("waiting_user", "等待答复：" + self.audit.pending_title())
+                self._activity("waiting_user", "等待答复：" + self.audit.waiting_title())
             elif self.state.task["pending_calls"]:
                 self._activity("processing_result", "整理工具结果")
             else:
@@ -284,9 +287,7 @@ class CodexBackend:
         return self.task_journal.drain()
 
     def validate_audit_target(self):
-        method = self._context_method(self.state.context)
-        if any(self.state.context.snapshot.get(k) for k in ("ade_session", "history", "test")):
-            method = "get_context"
+        method = context_method(self.state.context, self.tools.schemas(), audit=True)
         result = self._execute(method, {}, internal=True)
         validate_target_result(result, self.journal.artifact_text)
 
@@ -310,8 +311,13 @@ class CodexBackend:
         if turn_options is None:
             turn_options = self.turn_options.freeze()
         with self.lock:
-            self._begin(text, context, input_id, origin, attachments, inputs, turn_options)
-            self.cancelled, self.active = cancelled, True
+            recover_stopped = authorize_new_task_recovery(self)
+            self.cancelled = cancelled
+            self._cancel_baseline = bool(cancelled())
+            self._begin(text, context, input_id, origin, attachments, inputs, turn_options,
+                        cancel_baseline=self._cancel_baseline)
+            self.active = True
+            self._pre_dispatch_recovery = recover_stopped
         driver = TaskDriver(
             self.task_journal, self.turn_options, self.thread_ops, self._thread_binding,
             connection=self._task_connection, source_status=lambda: (self.stale, self.stale_reason),
@@ -334,7 +340,9 @@ class CodexBackend:
                 self.thread_ops.finish()
 
     def _task_connection(self):
-        self._ensure_runtime()
+        recover_stopped = self._pre_dispatch_recovery
+        self._pre_dispatch_recovery = False
+        ensure_runtime(self, recover_stopped=recover_stopped)
         return self.runtime.rpc
 
     def _turn(self, turn_id, cancelled):
@@ -393,9 +401,10 @@ class CodexBackend:
     def _record_collaboration(self, item):
         """Project Codex collaboration items into the Copilot session tree."""
         with self.lock:
-            project_collaboration(
+            replies = project_collaboration(
                 item, self.thread_id, self.collaboration, self.orchestration,
                 self.child_inputs, self._child_events, self._child_scope, self._event)
+        send_controls(replies)
 
     def expect_child_task(self, policy: ChildTaskPolicy) -> None:
         """Bind a business policy to the next native child spawn."""
@@ -409,18 +418,23 @@ class CodexBackend:
 
     def _record_subagent(self, item, *, live=False):
         with self.lock:
-            project_subagent(
+            replies = project_subagent(
                 item, live=live, thread_id=self.thread_id, statuses=self._child_status,
                 orchestration=self.orchestration, child_inputs=self.child_inputs,
                 child_scope=self._child_scope, emit=self._event)
+        send_controls(replies)
 
     def _notification(self, event):
-        with self.lock:
-            return self._route_notification(event)[0]
+        return self._route_notification(event)[0]
 
     def _route_notification(self, event, *, turn_id=None, consuming=False):
+        if event.get("method") == "skills/changed":
+            self.resources.snapshot["inventory_stale"] = True
+            self.resources.publish()
+            self.turn_options.catalog["skills"] = []
+            return True, consuming
         return route_notification(
-            event, goals=self.thread_ops.goals, audit=getattr(self, "audit", None),
+            event, lock=self.lock, goals=self.thread_ops.goals, audit=getattr(self, "audit", None),
             names=self.names, children=self.child_inputs, history=self.native_history,
             active=self.active, turn_id=turn_id, consuming=consuming)
 
@@ -436,7 +450,7 @@ class CodexBackend:
             if self._inflight:
                 raise ValueError("工具仍在收尾，请等待回执后核对结果")
         self.state.task["pending_calls"] = []
-        event = self._finish("cancelled", "Interrupted task abandoned without replay")
+        event = self._finish("cancelled", "Interrupted task reconciled without replay")
         list(self._drain())
         return event
 
@@ -446,23 +460,15 @@ class CodexBackend:
         with self._metadata_rpc() as rpc:
             return self.names.set(rpc, name)
 
-    @contextmanager
     def _metadata_rpc(self):
-        """Manage an existing thread even if its external resources cannot be loaded."""
-        if self.runtime or not self.thread_id:
-            self._ensure_runtime()
-            yield self.runtime.rpc
-            return
-        with metadata_connection(
-                self.provider, self.journal, self.tools, self._execute, self._notification,
-                bridge_factory=ToolBridge, runtime_factory=CodexRuntime) as rpc:
-            yield rpc
+        return metadata_rpc(self)
+
+    def _runtime_rpc(self):
+        return runtime_rpc(self)
 
     def poll_thread_names(self):
         """Drain already received name updates without issuing an idle RPC."""
-        if self.runtime:
-            self.runtime.rpc.poll_notifications()
-            self.runtime.rpc.poll_requests(self._idle_request)
+        poll_runtime(self)
 
     def _idle_request(self, event):
         return idle_request(event, active=self.active, audit=getattr(self, "audit", None),
@@ -482,19 +488,13 @@ class CodexBackend:
                 self._tool_stop.set()
                 try:
                     if hasattr(self, "audit"):
-                        self.audit.end_inputs("会话已关闭，未交付的答复不会重发")
+                        self.audit.end_inputs("会话已关闭，未交付的答复不会重发", send=False)
                 finally:
+                    self.inputs.finish()
                     self.steering.end()
         finally:
-            # A failed journal append must not leave the native process alive.
-            try:
-                if self.runtime:
-                    runtime, self.runtime = self.runtime, None
-                    runtime.close()
-            finally:
-                if self.bridge:
-                    bridge, self.bridge = self.bridge, None
-                    bridge.close()
+            # Keep resource ownership until every close is confirmed.
+            retire_runtime(self)
 
         with self._tools_changed:
             self._tools_changed.wait_for(lambda: not self._inflight, timeout=1.0)

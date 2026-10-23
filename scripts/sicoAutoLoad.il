@@ -5,8 +5,7 @@ let((root)
     when(getShellEnvVar("CAD_HOME") error("CAD_HOME was removed; set SICO_HOME")))
   unless(and(root strlen(root)>0 substring(root 1 1)=="/")
     error("SICO_HOME must name an absolute installation\n"))
-  load(strcat(root "/tools/common/skill/SICO_environment.il"))
-  load(strcat(root "/tools/common/skill/SICO_installation.il")))
+  load(strcat(root "/scripts/sicoSource.il")))
 
 ;------------------------------------------------------------------------------
 ; Canonical source for CAD_HOME/scripts/sicoAutoLoad.il.

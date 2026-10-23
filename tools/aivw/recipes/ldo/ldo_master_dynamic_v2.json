@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "recipe_id": "ldo.master_dynamic_v2",
+  "revision": 1,
+  "purpose": "Public multi-rate and sequential dynamic characterization; reserve independent holdout before fitting",
+  "target": {
+    "library": "amsLDO",
+    "cell": "LDO_MASTER",
+    "module": "LDO_MASTER",
+    "source_views": {
+      "schematic": "schematic",
+      "symbol": "symbol",
+      "config": "config"
+    },
+    "output_view": {
+      "name": "rnm_candidate",
+      "view_type": "systemVerilogText",
+      "language": "systemverilog",
+      "primary_file": "verilog.sv"
+    }
+  },
+  "structure": {
+    "provider": "cadence_si",
+    "authoritative": true,
+    "required_artifacts": [
+      "netlist",
+      "map",
+      "globalmap",
+      "netlister_log"
+    ]
+  },
+  "inputs": {
+    "interface_contract": "recipe:source_interface_contract.json",
+    "behavior_spec": "recipe:source_behavior_spec.json",
+    "correlation_policy": "recipe:source_correlation_policy.json",
+    "experiment_contract": "recipe:experiment/test_ldo_nominal_v2.json",
+    "characterization_plan": "recipe:experiment/ldo_master_dynamic_v2.json",
+    "acceptance_policy": "recipe:acceptance_method_v1.json"
+  },
+  "model": {
+    "class": "ldo.linear_regulator",
+    "generation": "ai_iterative",
+    "template_policy": "registered_scaffold",
+    "provenance_required": [
+      "model",
+      "model_version",
+      "prompt_hash",
+      "template_hashes",
+      "context_hashes",
+      "revision_parent",
+      "feedback_hashes"
+    ]
+  },
+  "workflow": {
+    "gates": [
+      {
+        "id": "snapshot",
+        "executor": "virtuoso.snapshot",
+        "needs": []
+      },
+      {
+        "id": "config_binding",
+        "executor": "virtuoso.config_binding",
+        "needs": [
+          "snapshot"
+        ]
+      },
+      {
+        "id": "experiment_contract",
+        "executor": "ldo.experiment_contract",
+        "needs": [
+          "snapshot",
+          "config_binding"
+        ]
+      },
+      {
+        "id": "characterization",
+        "executor": "spectre.block_characterization",
+        "needs": [
+          "snapshot",
+          "config_binding",
+          "experiment_contract"
+        ]
+      }
+    ]
+  },
+  "verification": {
+    "corner": {
+      "process": "tt",
+      "vdd": 5.0,
+      "temperature_c": 27.0
+    },
+    "clock": {
+      "edge": "rising",
+      "sample_delay_seconds": 1e-06
+    },
+    "cases": [
+      {
+        "id": "exploratory",
+        "type": "characterization",
+        "inputs": {
+          "VDD": 5.0,
+          "VSS": 0.0
+        },
+        "expected": {},
+        "assertions": [
+          "behavior_contract_pending"
+        ]
+      }
+    ],
+    "metrics": [
+      {
+        "name": "vout",
+        "kind": "numeric",
+        "unit": "V"
+      }
+    ],
+    "l1": {
+      "protocol": "AIVW_L1_EVENT v1 JSONL",
+      "require_exact_case_set": true,
+      "require_exact_metric_set": true,
+      "require_assertion_pass": true,
+      "minimum_case_coverage": 1.0,
+      "required_metrics": [
+        "vout"
+      ],
+      "required_checks": [
+        "initial-state"
+      ],
+      "hold_case": "exploratory"
+    }
+  },
+  "live_update": {
+    "triggers": [
+      "manual"
+    ],
+    "formal_requires_saved": true,
+    "debounce_ms": 750,
+    "invalidation": {
+      "schematic": [
+        "snapshot",
+        "config_binding",
+        "experiment_contract",
+        "characterization"
+      ],
+      "config": [
+        "snapshot",
+        "config_binding",
+        "experiment_contract",
+        "characterization"
+      ],
+      "spec": [
+        "snapshot",
+        "config_binding",
+        "experiment_contract",
+        "characterization"
+      ]
+    }
+  },
+  "publication": {
+    "mode": "ipc_text_view",
+    "allowed_languages": [
+      "systemverilog"
+    ],
+    "optimistic_concurrency": true,
+    "promotion": "human_approved",
+    "symbol_update": "forbidden",
+    "config_update": "forbidden",
+    "restore_on_failure": true
+  }
+}

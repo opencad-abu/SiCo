@@ -6,6 +6,8 @@ from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5.QtWidgets import QLabel, QLineEdit, QStyle, QToolBar
 
+from cadgui.palette import active
+
 
 class TerminalToolbar(QToolBar):
     def __init__(
@@ -20,19 +22,19 @@ class TerminalToolbar(QToolBar):
         zoom_in_callback,
         interrupt_callback,
     ) -> None:
-        super().__init__("Terminal", parent)
+        super().__init__("终端", parent)
         self.setObjectName("terminalToolbar")
         self.setMovable(False)
         self.setFloatable(False)
         self.setIconSize(QSize(18, 18))
 
-        self._status = QLabel(" Starting ", self)
+        self._status = QLabel(" 启动中 ", self)
         self._status.setObjectName("sessionStatus")
         self._status.setMinimumWidth(82)
         self._status.setAlignment(Qt.AlignCenter)
         self.addWidget(self._status)
         self.addSeparator()
-        workspace_label = QLabel("Workspace:", self)
+        workspace_label = QLabel("工作区：", self)
         workspace_label.setObjectName("workspaceLabel")
         workspace_label.setContentsMargins(6, 0, 6, 0)
         self.addWidget(workspace_label)
@@ -48,43 +50,43 @@ class TerminalToolbar(QToolBar):
         self._copy = self._tool_action(
             "edit-copy",
             QStyle.SP_FileDialogDetailedView,
-            "Copy selection",
+            "复制选中内容",
             QKeySequence("Ctrl+Shift+C"),
         )
         self._copy.setObjectName("copyAction")
-        self._copy.setText("Copy")
+        self._copy.setText("复制")
         self._copy.setEnabled(False)
         self._paste = self._tool_action(
             "edit-paste",
             QStyle.SP_DialogOpenButton,
-            "Paste clipboard",
+            "粘贴剪贴板",
             QKeySequence("Ctrl+Shift+V"),
         )
         self._paste.setObjectName("pasteAction")
-        self._paste.setText("Paste")
+        self._paste.setText("粘贴")
         self._paste.setEnabled(False)
         self._find = self._tool_action(
             "edit-find",
             QStyle.SP_FileDialogContentsView,
-            "Search terminal",
+            "搜索终端",
             QKeySequence("Ctrl+Shift+F"),
         )
         self._find.setObjectName("searchAction")
-        self._find.setText("Find")
+        self._find.setText("查找")
         self._find.setEnabled(False)
         zoom_out = self._tool_action(
-            "zoom-out", QStyle.SP_ArrowDown, "Decrease terminal font"
+            "zoom-out", QStyle.SP_ArrowDown, "减小终端字体"
         )
         zoom_out.setObjectName("zoomOutAction")
         zoom_out.setEnabled(False)
         zoom_in = self._tool_action(
-            "zoom-in", QStyle.SP_ArrowUp, "Increase terminal font"
+            "zoom-in", QStyle.SP_ArrowUp, "增大终端字体"
         )
         zoom_in.setObjectName("zoomInAction")
         zoom_in.setEnabled(False)
         self.addSeparator()
         interrupt = self._tool_action(
-            "process-stop", QStyle.SP_MediaStop, "Interrupt agent (Ctrl+C)"
+            "process-stop", QStyle.SP_MediaStop, "中断智能体（Ctrl+C）"
         )
         interrupt.setObjectName("interruptAction")
         interrupt.setEnabled(False)
@@ -125,6 +127,7 @@ class TerminalToolbar(QToolBar):
     def set_status(self, text: str, color: str) -> None:
         self._status.setText(f" {text} ")
         self._status.setStyleSheet(
-            f"QLabel {{ color: white; background: {color}; border-radius: 3px; "
+            f"QLabel {{ color: {active().on_accent}; background: {color}; "
+            "border-radius: 3px; "
             "padding: 2px 6px; }"
         )

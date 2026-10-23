@@ -112,7 +112,7 @@ class InlineReview:
         self.backend._event("codex.review.interrupt_requested", binding)
         self.require_current(self.rpc, scope)
         self.rpc.request("turn/interrupt", {"threadId": binding["thread_id"],
-                         "turnId": binding["execution_turn_id"]})
+                         "turnId": binding["execution_turn_id"]}, timeout=5, cancelled=lambda: False)
 
     def clear(self):
         self.binding, self.rpc = None, None

@@ -44,9 +44,10 @@ def force_stop(project, descriptor, *, deadline):
     if not Path(project).is_absolute() or type(descriptor) is not ServiceDescriptor:
         raise ValueError("强制停止需要明确的工程目录和原服务身份。")
     host = local_host()
-    if (descriptor.host.host_id != host.host_id or descriptor.host.boot_id != host.boot_id
-            or descriptor.pid == os.getpid()):
-        raise ValueError("只能强制停止本机独立运行的原 Agent Service。")
+    # Same-boot host identity drift is resolved by the pinned local PID,
+    # endpoint owner record and repeated discovery checks below.
+    if descriptor.host.boot_id != host.boot_id or descriptor.pid == os.getpid():
+        raise ValueError("只能强制停止本机独立运行的原智能体服务。")
     if not _check(project, descriptor):
         return ForceStopResult(descriptor.service_id)
     try:

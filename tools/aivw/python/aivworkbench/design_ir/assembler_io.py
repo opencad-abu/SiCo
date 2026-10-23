@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from ..agent.context import ArtifactLocator
+from ..contract import ArtifactLocator
 
 MAX_DESIGN_IR_RECORDS = 4096
 MAX_DESIGN_IR_FIELD_BYTES = 256 * 1024

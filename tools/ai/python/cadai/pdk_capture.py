@@ -146,3 +146,42 @@ def pool_captures(pool, job, items):
         "started": pool.started,
         "maximum": 32,
     }
+
+
+def captures(job, items, *, capture, pool_factory, pools, root, environment):
+    """Yield device captures from the session or the configured worker pool."""
+    pending = [
+        row
+        for row in items
+        if job["tasks"][row["identity"]["target"]["cell"]]["state"] != "done"
+    ]
+    if not pool_factory:
+        for row in pending[:4]:
+            task = job["tasks"][row["identity"]["target"]["cell"]]
+            task.update(state="running", attempts=task["attempts"] + 1)
+            yield row, capture("device", row["identity"]["target"])
+        return
+    if not pending:
+        return
+    ref = job["collection_ref"]
+    pool = pools.get(ref)
+    if pool is None:
+        probe = capture("device", pending[0]["identity"]["target"])
+        pool = create_pool(
+            pool_factory,
+            root / "workers" / ref.split(":")[1],
+            environment,
+            job,
+            pending,
+            probe,
+        )
+        config = pool.configuration
+        if job.get("worker_configuration", config) != config:
+            pool.close()
+            raise PdkUnavailable(
+                "collection_changed", "PDK worker configuration changed; refresh the collection"
+            )
+        job["worker_configuration"] = config
+        pools[ref] = pool
+        pool.start()
+    yield from pool_captures(pool, job, items)

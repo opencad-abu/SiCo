@@ -17,7 +17,7 @@ def encode_text(text):
 
 def decode_submission(raw):
     message = strict_json(raw)
-    if not isinstance(message, dict) or set(message) != {"kind", "id", "text_b64", "context"}:
+    if not isinstance(message, dict) or set(message) - {"ask_sequence"} != {"kind", "id", "text_b64", "context"}:
         raise ValueError("Invalid encoded quick input")
     encoded = message.pop("text_b64")
     if not isinstance(encoded, str) or len(encoded) > 86000:

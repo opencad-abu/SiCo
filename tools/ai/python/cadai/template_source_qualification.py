@@ -13,6 +13,7 @@ import copy
 import math
 import re
 
+from . import template_source_inheritance as INHERITANCE
 from .template_classification import SEMANTICS, graphic_role
 from .template_schema import TemplateError, digest
 from .template_topology import electrical_issues, evidence_gaps
@@ -125,6 +126,18 @@ def _list_or_null(value, field):
         _error(field + " must be null or a string list")
 
 
+def _text_map(value, field, names):
+    """Optional verbatim net-expression texts for the named terminals/signals."""
+    if value is None:
+        return
+    if not isinstance(value, dict) or any(
+        not isinstance(k, str) or not isinstance(v, str) for k, v in value.items()
+    ):
+        _error(field + " must be a name-to-text map")
+    if set(value) - set(names):
+        _error(field + " names an expression the view does not report")
+
+
 def _observation(record):
     source = record.get("source") or {}
     observation = source.get("electrical_observation")
@@ -144,7 +157,7 @@ def _observation(record):
             "target", "view_type", "source_view", "parameterized", "hierarchy_count",
             "instance_count", "mosaic_count", "terminal_expressions", "signal_expressions",
         }
-        if set(row) != required:
+        if required - set(row) or set(row) - required - set(INHERITANCE.TEXT_FIELDS):
             _error("electrical observation view fields are incomplete")
         target = row["target"]
         if not isinstance(target, list) or len(target) != 3 or any(
@@ -171,6 +184,12 @@ def _observation(record):
                 _error("electrical observation " + field + " is invalid")
         _list_or_null(row["terminal_expressions"], "terminal_expressions")
         _list_or_null(row["signal_expressions"], "signal_expressions")
+        for field, names in (
+            (INHERITANCE.PARAMETER_TEXTS, row["terminal_expressions"]),
+            (INHERITANCE.SIGNAL_TEXTS, row["signal_expressions"]),
+        ):
+            if field in row:
+                _text_map(row[field], field, names or [])
         indexed[key] = row
     missing = expected - set(indexed)
     if missing:
@@ -189,9 +208,8 @@ def _observation(record):
     proof = {
         "hierarchy_not_expanded": all(row["hierarchy_count"] == 0 for row in indexed.values()),
         "parameter_values_are_static": all(not row["parameterized"] for row in indexed.values()),
-        "inherited_connections_not_resolved": all(
-            not row["terminal_expressions"] and not row["signal_expressions"]
-            for row in indexed.values()
+        "inherited_connections_not_resolved": INHERITANCE.record_discharged(
+            record, list(indexed.values())
         ),
         "mosaic_members_not_expanded": all(row["mosaic_count"] == 0 for row in indexed.values()),
         "bus_members_not_expanded": _bus_proof(record),
@@ -429,8 +447,46 @@ def validate_qualification(record):
 
 def require_qualified(record):
     """Adaptation entry point: legacy structural v3 records are read-only."""
+    if record.get("standard_capabilities") is not None:
+        checks = record["standard_capabilities"]
+        if record["standard_use"]["reuse"] != "allow" or not any(
+            checks[p] == "passed" for p in ("whole-reuse-v1", "core-reuse-v1")
+        ):
+            _error("standard reuse capability or permission is unavailable")
     try:
         validate_qualification(record)
     except TemplateError:
         raise
     return True
+
+
+def topology_qualification_issues(record):
+    """Electrical-only profile; geometry/dynamic text do not prove or block connectivity."""
+    ignored = {"master_geometry_not_captured", "parameter_values_are_static",
+               "dynamic_text_not_evaluated"}
+    return [
+        row
+        for row in qualification_issues(record)
+        if row["code"] not in ignored and row["code"] not in discharged_codes(record)
+    ]
+
+
+def discharged_codes(record):
+    """Generic capture-header limitations the electrical observation rules out.
+
+    The reviewed v3 qualifier discharges the header's five boilerplate gaps from
+    the same observation; the flat standard path must not treat them as new
+    defects once the observation proves absence.  Geometry and dynamic-text
+    codes stay because the observation does not cover them.
+    """
+    try:
+        proof = _observation(record)[1]
+    except TemplateError:
+        return frozenset()
+    electrical = {
+        "hierarchy_not_expanded",
+        "inherited_connections_not_resolved",
+        "mosaic_members_not_expanded",
+        "bus_members_not_expanded",
+    }
+    return frozenset(code for code, passed in proof.items() if passed) & electrical

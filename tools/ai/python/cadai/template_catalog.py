@@ -1,15 +1,16 @@
-"""Immutable SQLite template catalogs and bounded cross-session queries.
+"""Flat JSON collection and explicit legacy SQLite catalog compatibility.
 
-CLI: python -m cadai.template_catalog build --manifest INPUT --output OUTPUT
+CLI: python -m cadai.template_catalog build --legacy-sqlite --manifest INPUT --output OUTPUT
      python -m cadai.template_catalog import --capture INPUT --output OUTPUT
+     python -m cadai.template_catalog project --workspace WORK --template-ref REF
+         --level L1 --output PUBLIC
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from .template_build import build_manifest, make_template, publish
-from .template_capture import read_capture
+from .template_build import build_manifest, publish
 from .template_graph import match
 from .template_locations import normalize_root as normalize_root
 from .template_locations import template_root as template_root
@@ -27,12 +28,30 @@ from .template_storage import TemplateStorage
 
 
 class TemplateCatalog(TemplateStorage):
+    def locate(self, reference):
+        if reference.startswith("ctpl_"):
+            from .template_standard.reader import locate
+            from .template_standard.replay import engine_record
+
+            item, revision = locate(self, reference)
+            origin = item["origin"] | dict(catalog=str(item["path"] / "package.json"))
+            return engine_record(item), dict(
+                catalog_origin=origin, available_from=[origin], standard_revision=revision
+            )
+        return super().locate(reference)
+
     def query(self, args):
+        from .template_standard.reader import available, query
+
+        if args.get("data_format") == "standard" or (
+            available(self) and args.get("data_format") != "legacy"
+        ):
+            return self._empty_query_hint(query(self, args))
         entries = self._entries()
         all_rows = query_rows(self, args, entries)
         start, limit = args["offset"], args["limit"]
         page = bounded_page(all_rows, start, limit)
-        return self.bounded(
+        return self._empty_query_hint(self.bounded(
             {
                 "ok": True,
                 "schema_version": SCHEMA,
@@ -51,9 +70,23 @@ class TemplateCatalog(TemplateStorage):
                     "source/text/direct_device_counts; text_aliases_are_not_function_proofs"
                 ),
             }
-        )
+        ))
+
+    @staticmethod
+    def _empty_query_hint(result):
+        """An empty template search is terminal; do not retry it for direct creation."""
+        if result.get("total") != 0:
+            return result
+        result = dict(result)
+        result["next_action"] = "preview_circuit_spec"
+        result["template_query_required"] = False
+        return result
 
     def detail(self, args):
+        if args["template_ref"].startswith("ctpl_"):
+            from .template_standard.reader import detail
+
+            return detail(self, args)
         record, origins = self.locate(args["template_ref"])
         section = args["section"]
         if section == "summary":
@@ -152,11 +185,23 @@ def call_template(name, values, workspace=None, client=None):
     args = arguments(name, values)
     try:
         catalog = TemplateCatalog(workspace=workspace)
+        if name == "project_circuit_template":
+            from .template_standard.projection import project
+
+            if not workspace:
+                raise TemplateUnavailable("projection requires a workspace for private evidence")
+            return project(catalog, **args)
         if name == "query_circuit_templates":
             return catalog.query(args)
         if name == "get_circuit_template":
             return catalog.detail(args)
         if name == "match_circuit_template":
+            if args["match_mode"] == "exact" and any(
+                args[key].startswith("ctpl_") for key in ("template_ref", "target_ref")
+            ):
+                from .template_standard.matching import exact
+
+                return exact(catalog, args)
             left, origins = catalog.locate(args["template_ref"])
             right, target_origins = (
                 (left, origins)
@@ -168,10 +213,21 @@ def call_template(name, values, workspace=None, client=None):
             if args["match_mode"] == "core":
                 from .template_core_match import match_core
 
-                return catalog.bounded({"ok": True, "template_ref": args["template_ref"],
-                    "target_ref": args["target_ref"], **origins, "target_origins": target_origins,
-                    **match_core(left, right["topology"], port_map=args["port_map"],
-                                 omitted_groups=args["omitted_groups"])})
+                return catalog.bounded(
+                    {
+                        "ok": True,
+                        "template_ref": args["template_ref"],
+                        "target_ref": args["target_ref"],
+                        **origins,
+                        "target_origins": target_origins,
+                        **match_core(
+                            left,
+                            right["topology"],
+                            port_map=args["port_map"],
+                            omitted_groups=args["omitted_groups"],
+                        ),
+                    }
+                )
             if args["omitted_groups"]:
                 raise TemplateError("omitted_groups requires match_mode=core")
             return catalog.bounded(
@@ -217,12 +273,19 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     build = commands.add_parser("build")
+    build.add_argument("--legacy-sqlite", action="store_true", required=True)
     build.add_argument("--manifest", type=Path, required=True)
     build.add_argument("--output", type=Path, required=True)
     imp = commands.add_parser("import")
     imp.add_argument("--capture", type=Path, action="append", required=True)
     imp.add_argument("--output", type=Path, required=True)
     project = commands.add_parser("project")
+    project.add_argument("--legacy-sqlite", action="store_true")
+    project.add_argument(
+        "--master-policy",
+        type=Path,
+        help="JSON exact target/fingerprint publication allowlist for L2/L3",
+    )
     project.add_argument("--workspace", type=Path, required=True)
     project.add_argument("--template-ref", required=True)
     project.add_argument("--level", choices=list(LEVELS), required=True)
@@ -231,16 +294,32 @@ def main(argv=None):
     if args.command == "build":
         result = build_manifest(args.manifest, args.output)
     elif args.command == "import":
-        result = publish(
-            [make_template(read_capture(p)) for p in args.capture], args.output
-        )
+        from .template_capture import parse_capture, read_bytes
+        from .template_standard.collect import collect
+
+        catalog = TemplateCatalog(root=args.output)
+        result = []
+        for path in args.capture:
+            raw = read_bytes(path)
+            result.append(collect(catalog, parse_capture(raw), raw, {}))
     else:
         catalog = TemplateCatalog(workspace=args.workspace)
-        record = catalog.get(args.template_ref)
-        projected = project_record(record, args.level)
-        result = publish([projected], args.output)
-        result["detail_level"] = projected["detail_level"]
-        result["base_template_ref"] = record["template_ref"]
+        if args.legacy_sqlite:
+            if args.master_policy:
+                parser.error("--master-policy applies only to standard projection")
+            record = catalog.get(args.template_ref)
+            projected = project_record(record, args.level)
+            result = publish([projected], args.output)
+            result["detail_level"] = projected["detail_level"]
+            result["base_template_ref"] = record["template_ref"]
+        else:
+            from .template_standard.codec import read
+            from .template_standard.projection import project as project_standard
+
+            policy = read(args.master_policy)[0] if args.master_policy else None
+            result = project_standard(
+                catalog, args.template_ref, args.level, output=args.output, master_policy=policy
+            )
     print(canonical(result))
 
 

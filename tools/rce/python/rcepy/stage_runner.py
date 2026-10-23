@@ -13,6 +13,8 @@ from .stage_result import (
     path_signature,
 )
 
+LVS_CHECK = "lvs"
+
 
 @dataclass(frozen=True)
 class Stage:
@@ -23,6 +25,8 @@ class Stage:
     cwd: Path
     log_file: Path
     required_file: Path | None = None
+    # "lvs" runs the LVS completion check; any other value is the extractor
+    # transcript summary label whose zero-error line the stage must report.
     check: str | None = None
     stdin_file: Path | None = None
     expected_paths: tuple[Path, ...] = ()
@@ -103,8 +107,8 @@ class StageExecutor:
             ignored = self._check_lvs(stage.log_file, exit_code, allow_lvs_mismatch)
         if exit_code != 0 and not ignored:
             self._fail(f"Stage {stage.name} failed with exit code {exit_code}")
-        elif stage.check == "xrc":
-            self._check_xrc(stage.log_file)
+        elif stage.check not in (None, LVS_CHECK):
+            self._check_extractor_summary(stage.log_file, stage.check)
         self._check_outputs(stage, before)
         return ignored
 
@@ -125,12 +129,16 @@ class StageExecutor:
             )
         return False
 
-    def _check_xrc(self, log_file: Path) -> None:
+    def _check_extractor_summary(self, log_file: Path, summary: str) -> None:
+        """Require a zero-error engine summary such as "xRC"/"xACT" Errors = 0."""
         text = log_file.read_text(errors="ignore") if log_file.is_file() else ""
-        match = re.search(r"\bxRC Errors\s*=\s*(\d+)", text, re.IGNORECASE)
+        match = re.search(
+            rf"\b{summary} Errors\s*=\s*(\d+)", text, re.IGNORECASE
+        )
         if not match or int(match.group(1)) != 0:
             self._fail(
-                f"Calibre XRC reported errors or an incomplete summary in {log_file}"
+                f"Calibre {summary} reported errors or an incomplete summary "
+                f"in {log_file}"
             )
 
     def _check_outputs(

@@ -344,7 +344,7 @@ class BindingPanel(QWidget):
         def settled(_result, _error):
             pending.set()
 
-        self.window.run_command(
+        self.window.actions.run_command(
             name, *args, controller=controller, success=completed, failure=failed,
             settled=settled, **kwargs
         )

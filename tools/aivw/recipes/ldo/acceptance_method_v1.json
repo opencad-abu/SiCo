@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "kind": "acceptance-method-decision",
+  "decision_id": "ldo_reference_acceptance_20260907_v1",
+  "status": "approved_method",
+  "approval_source": "user_conversation_2026_09_07",
+  "scope": "source_faithful_rnm_reference_case",
+  "product_relative_tolerance": 0.03,
+  "correlation_relative_tolerance": 0.05,
+  "normalization": {
+    "product": "nominal_target_magnitude",
+    "correlation": "spectre_reference_magnitude"
+  },
+  "repeat": {
+    "required_runs": 2,
+    "inputs": "identical_frozen_source_candidate_experiment_tools_and_seed",
+    "measurement_comparison": "exact_normalized_measurements",
+    "new_process_and_payload": true
+  },
+  "holdout": {
+    "strategy": "boundary_coverage_plus_latin_hypercube",
+    "split_unit": "whole_case_or_trajectory",
+    "reservation": "before_model_fitting",
+    "evaluation": "after_candidate_and_contract_freeze",
+    "owner": "independent_evaluator",
+    "public_vectors": false,
+    "public_seed": false,
+    "reuse_for_tuning": false,
+    "repeat_replays_same_reservation": true
+  },
+  "targets": {
+    "LDO_MASTER": {
+      "nominal_supply_v": 5.0,
+      "nominal_output_v": 2.5
+    },
+    "LDO_AON": {
+      "nominal_supply_v": 2.5,
+      "nominal_output_v": 1.25
+    }
+  },
+  "deferred": {
+    "zero_reference_absolute_tolerance": "pending",
+    "dynamic_correlation_window": "pending",
+    "current_and_timing_acceptance": "pending"
+  },
+  "publication": "separate_human_approval"
+}

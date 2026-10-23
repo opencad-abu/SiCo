@@ -20,7 +20,8 @@ class UnavailableBridge:
 
     def read(self, *args, **kwargs):
         raise QueryUnavailable("router_unavailable",
-            "原 Virtuoso 连接已断开，当前无法使用设计工具；可以继续对话。")
+            "原 Virtuoso 连接已断开，当前无法使用设计工具；请在会话列表右键选择“继续”"
+            "重新连接当前 Virtuoso，或仅继续对话。")
 
     circuit_call = read
     assistant_call = read

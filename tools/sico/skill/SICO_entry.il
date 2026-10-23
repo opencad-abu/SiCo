@@ -1,9 +1,18 @@
 ; Thin adapters: source capture remains owned by Ask, facts come from shared readers.
+procedure(sicoEntryObservation(aeoBinding)
+  prog((aeoState)
+    when(aeoBinding['sharedWindowCaptured]
+      aeoState=aiWindowResolveState(aeoBinding['sharedWindowRef])
+      return(list(car(aeoState) aeoBinding['sharedWindowRef] caddr(aeoState))))
+    aeoState=aiWindowCaptureState(aeoBinding['window])
+    unless(car(aeoState)=='unknown
+      aeoBinding['sharedWindowCaptured]=t
+      aeoBinding['sharedWindowRef]=cadr(aeoState))
+    return(aeoState)))
 procedure(sicoEntryRef(aerBinding)
-  unless(aerBinding['sharedWindowCaptured]
-    aerBinding['sharedWindowCaptured]=t
-    aerBinding['sharedWindowRef]=aiWindowCapture(aerBinding['window]))
-  aerBinding['sharedWindowRef])
+  let((aerState)
+    aerState=sicoEntryObservation(aerBinding)
+    when(car(aerState)=='valid cadr(aerState))))
 procedure(sicoEntryRead(aeaBinding aeaMethod aeaFields)
   prog((aeaRef aeaLimit aeaOffset aeaBasics)
     unless(length(aeaFields)==4 error("Invalid shared context arguments"))

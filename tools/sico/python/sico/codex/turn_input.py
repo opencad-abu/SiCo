@@ -2,6 +2,7 @@
 
 from .input_requests import InputIdentityConflict, request_id
 from .approval_requests import METHODS as APPROVALS, open_request
+from .input_delivery import send_controls
 
 
 def accept_input(event, turn_id, *, parent_ended, thread_id, children, audit, admitted, rpc, emit):
@@ -33,10 +34,10 @@ def accept_input(event, turn_id, *, parent_ended, thread_id, children, audit, ad
     except (ValueError, KeyError, TypeError):
         # Reasons and protocol errors are deliberately bounded; never copy challenge/params.
         if audit is None or audit.requests.discard(event):
-            rpc.send({"id": event["id"] if request_id(event.get("id")) else None,
+            send_controls([(rpc, {"id": event["id"] if request_id(event.get("id")) else None,
                                   "error": {
                 "code": -32602,
-                "message": "Input request does not match a live registered turn"}})
+                "message": "Input request does not match a live registered turn"}})])
         emit("codex.input_ignored", {"reason": "unmatched_or_invalid_input"})
     return True
 
@@ -51,6 +52,6 @@ def idle_request(event, *, active, audit, rpc, emit):
             return True
     response = ({"result": {"action": "cancel"}} if method == "mcpServer/elicitation/request"
                 else {"error": {"code": -32602, "message": "No active task for input request"}})
-    rpc.send({"id": event["id"], **response})
+    send_controls([(rpc, {"id": event["id"], **response})])
     emit("codex.elicitation.unsupported", {"reason": "空闲会话没有可绑定的执行任务"})
     return True

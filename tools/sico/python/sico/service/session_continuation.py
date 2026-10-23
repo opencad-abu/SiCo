@@ -2,7 +2,7 @@
 
 from contextlib import ExitStack
 
-from ..core.contracts import identifier
+from ..core.contracts import TERMINAL, identifier
 from .continuation_host import current_host
 from .frontend_attach import session_record
 from .service_protocol import exact_fields
@@ -23,6 +23,8 @@ def continue_session(hub, wire, params):
             with controller._lock:
                 idle = (not controller.busy and not controller.closing
                         and not controller._shutdown.is_set()
+                        and controller._task.get("status", "completed")
+                        in TERMINAL | {"needs_reconcile"}
                         and not getattr(controller.loop, "_inflight", ()))
             if idle:
                 candidate = current_host(hub.owner, preferred)

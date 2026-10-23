@@ -5,24 +5,28 @@ import threading
 from concurrent.futures import Future
 
 from ..transport.framing import ProtocolError
+from ..core.ask_queue import SERVICE_CAPACITY
 from .cleanup_task import DEFAULT_CLEANUP_SECONDS, CleanupTask
 from .service_business import ServiceBusiness
 from .service_lifecycle import PendingWork
 from .service_protocol import result_message
 from .session_control import ControlRefused, SessionControl
 
+REFUSAL_CAPACITY = 256  # Listener: at most 32 clients with eight outstanding frames each.
+
 
 class ServiceDispatch:
-    def __init__(self, owner, descriptor, *, capacity=64):
+    def __init__(self, owner, descriptor, *, capacity=SERVICE_CAPACITY):
         from .frontend_hub import FrontendHub
 
         self.control = SessionControl(owner, descriptor)
         self.frontend = FrontendHub(owner, descriptor, self.control)
         self._business = ServiceBusiness(owner, descriptor, self.control)
         self._owner = owner
-        self._queue = queue.Queue(maxsize=capacity)
+        self._queue = queue.Queue(maxsize=capacity + REFUSAL_CAPACITY)
         self._capacity = capacity
         self._pending = 0
+        self._refusals = 0
         self._closing = False
         self._lock = threading.Lock()
         self._thread = threading.Thread(target=self._run, name="copilot-service-commands")
@@ -36,7 +40,18 @@ class ServiceDispatch:
                     "capacity" if self._pending >= self._capacity else None)
             if code is None:
                 self._pending += 1
-                self._queue.put_nowait((request, future, connection))
+                self._queue.put_nowait((request, future, connection, False))
+            elif (code == "capacity" and request["method"] == "host.submit"
+                  and self._refusals < REFUSAL_CAPACITY):
+                # Refusals share the sole admission authority. No bridge I/O or
+                # durable writes run on the socket listener, even under pressure.
+                self._refusals += 1
+                self._queue.put_nowait((request, future, connection, True))
+                return future
+        if code == "capacity" and request["method"] == "host.submit":
+            future.set_result(result_message(request,
+                self._business.failure(request, "unknown", "unconfirmed")))
+            return future
         if code is not None:
             future.set_result(result_message(request,
                 self._business.failure(request, "rejected", code)))
@@ -45,6 +60,7 @@ class ServiceDispatch:
     def pending_work(self):
         with self._lock:
             pending = self._pending
+            refusals = self._refusals
         frontend_pending = self.frontend.pending
         # Observe admission first: a completing open publishes its session before
         # decrementing this count. The reverse order could report a false idle gap.
@@ -53,12 +69,14 @@ class ServiceDispatch:
         # queryable on disk without making archived sessions block service stop.
         # Includes admitted creation commands before a session has been published.
         return PendingWork(work.sessions, work.queued, work.approvals,
-                           work.jobs + pending + frontend_pending
+                           work.jobs + pending + refusals + frontend_pending
                            + int(self.frontend.workspace.background.busy),
                            work.reconcile)
 
-    def _execute(self, request, connection):
+    def _execute(self, request, connection, refusal=False):
         try:
+            if refusal:
+                return self._business.host.refuse_capacity(request).record()
             return self._business.execute(request, connection)
         except ProtocolError:
             return {"error": "protocol_error"}
@@ -74,17 +92,21 @@ class ServiceDispatch:
         try:
             while True:
                 try:
-                    request, future, connection = self._queue.get(timeout=0.05)
+                    request, future, connection, refusal = self._queue.get(timeout=0.05)
                 except queue.Empty:
                     with self._lock:
                         if self._closing:
                             break
                     continue
                 try:
-                    future.set_result(result_message(request, self._execute(request, connection)))
+                    future.set_result(result_message(request, self._execute(request, connection,
+                                                                           refusal)))
                 finally:
                     with self._lock:
-                        self._pending -= 1
+                        if refusal:
+                            self._refusals -= 1
+                        else:
+                            self._pending -= 1
         finally:
             self._cleanup.start()
 

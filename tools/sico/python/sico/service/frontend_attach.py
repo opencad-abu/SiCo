@@ -10,6 +10,7 @@ from types import SimpleNamespace
 
 from ..core.contracts import BoundContext
 from ..demo import DemoPeer
+from ..transport.bindings import project_key
 from ..transport.bridge_client import BridgeClient
 from ..transport.broker import ContextBroker
 from .connection import connection_instructions
@@ -90,16 +91,41 @@ class FrontendAttach:
     def _existing_target(self, params):
         """Reopening an owned design observes its captured session configuration."""
         context = params["context"]
-        for session_id, controller in self.owner.controllers.items():
-            deps = self.owner.dependencies_for(session_id)
-            if deps.bridge_descriptor != params["bridge"]:
-                continue
-            if (controller.current == context or QuickInputRouting._affinity(
-                    controller, context, design_keys(context)) == 2):
-                if controller.closing or controller._shutdown.is_set():
-                    raise ValueError("原会话正在结束，请核对后重新打开")
+        controllers = [
+            controller
+            for session_id, controller in reversed(list(self.owner.controllers.items()))
+            if self.owner.dependencies_for(session_id).bridge_descriptor == params["bridge"]
+        ]
+        for controller in controllers:
+            if controller.current == context:
+                return self._reusable(controller)
+        for controller in controllers:
+            if QuickInputRouting._affinity(controller, context, design_keys(context)) == 2:
+                return self._reusable(controller)
+        # A CIW/windowless context carries no design identity; its target handle
+        # changes each time the window is opened. Reuse the latest live session
+        # instead of creating a duplicate session for the same project anchor.
+        for controller in controllers:
+            if (self._shared_anchor(controller.current, context)
+                    and not controller.closing and not controller._shutdown.is_set()):
                 return controller
         return None
+
+    @staticmethod
+    def _shared_anchor(current, context):
+        if design_keys(current) or design_keys(context):
+            return False
+        if ((current.instance_id, current.generation)
+                != (context.instance_id, context.generation)):
+            return False
+        project = project_key(current.snapshot)
+        return project is not None and project == project_key(context.snapshot)
+
+    @staticmethod
+    def _reusable(controller):
+        if controller.closing or controller._shutdown.is_set():
+            raise ValueError("原会话正在结束，请核对后重新打开")
+        return controller
 
     @staticmethod
     def _dependencies(params):

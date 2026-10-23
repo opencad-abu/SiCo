@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "name": "saradc-comparator-new-rnm-m1",
+  "source_contract": "comparator_new.json",
+  "status": "assumption_pending_spectre_correlation",
+  "target": {
+    "library": "saradc",
+    "cell": "comparator_new",
+    "module": "comparator_new",
+    "view": "rnm"
+  },
+  "provenance": {
+    "kind": "human-authored-supplement",
+    "purpose": "Executable M1 RNM pilot contract; behavior parameters remain assumptions until Spectre correlation.",
+    "source_contract_sha256": "computed-at-run-time",
+    "requires_spectre_correlation": true
+  },
+  "interface": {
+    "port_order": ["out", "outb", "Din+", "Din-", "clk"],
+    "roles": {
+      "positive_output": "out",
+      "negative_output": "outb",
+      "positive_input": "Din+",
+      "negative_input": "Din-",
+      "clock": "clk"
+    },
+    "ports": {
+      "out": {"direction": "output", "kind": "analog", "net_type": "wreal1driver", "unit": "V"},
+      "outb": {"direction": "output", "kind": "analog", "net_type": "wreal1driver", "unit": "V"},
+      "Din+": {"direction": "input", "kind": "analog", "net_type": "wreal1driver", "unit": "V"},
+      "Din-": {"direction": "input", "kind": "analog", "net_type": "wreal1driver", "unit": "V"},
+      "clk": {"direction": "input", "kind": "digital", "net_type": "logic", "active_edge": "posedge"}
+    },
+    "implicit_supplies": ["vdda!", "vssa!", "gnd!"]
+  },
+  "behavior": {
+    "class": "latched_dynamic_comparator",
+    "decision": "On each rising edge of clk, compare Din+ - Din- + input_offset; out is driven to vdd_high for a positive decision and outb is complementary.",
+    "metastability": "When the differential input magnitude is within decision_epsilon, both outputs drive vdd_high/2.0 as an explicit deterministic placeholder.",
+    "approved_region_policy": {
+      "status": "approved_direction_pending_calibration",
+      "strategy": "indeterminate_band",
+      "condition": "abs(Din+ - Din-) <= epsilon",
+      "outside_region": "deterministic_rail_level_correlation",
+      "inside_region": "indeterminate_or_statistical_correlation",
+      "encoding": "undecided",
+      "calibration_required": [
+        "near_zero_differential_sweep",
+        "pvt",
+        "mismatch_monte_carlo",
+        "resolution_time"
+      ]
+    },
+    "initial_state": "out=vss_low, outb=vdd_high before the first active clock edge.",
+    "power_validity": "This L1 model has no explicit supply ports; vdd_high and vss_low are parameters and must be correlated to the target testbench supply values."
+  },
+  "parameters": {
+    "vdd_high": {"value": 1.2, "unit": "V", "source": "assumption"},
+    "vss_low": {"value": 0.0, "unit": "V", "source": "assumption"},
+    "input_offset": {"value": 0.0, "unit": "V", "source": "assumption"},
+    "decision_epsilon": {"value": 1.0e-12, "unit": "V", "source": "assumption"}
+  },
+  "verification": {
+    "must_cover": ["positive differential decision", "negative differential decision", "zero-differential baseline placeholder (not physical signoff behavior)", "clock hold", "complementary outputs"],
+    "does_not_prove": ["Spectre waveform equivalence", "propagation delay", "metastability distribution", "mismatch Monte Carlo", "power-invalid behavior"]
+  }
+}

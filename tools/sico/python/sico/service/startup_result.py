@@ -7,6 +7,7 @@ from cadai.codex_selection import CodexConfigurationError
 
 class StartupFailure(Exception):
     def __init__(self, phase, error):
+        self.phase = phase
         self.title = ("模型配置" if phase in {"config", "credentials", "provider"}
                       else "已有一个 SiCo 窗口在运行" if phase == "window" else "启动失败")
         if phase == "window":

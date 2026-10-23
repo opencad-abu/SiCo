@@ -1,4 +1,4 @@
-"""Validate and write Calibre XRC cell selection lists."""
+"""Validate and write Calibre PEX cell selection lists."""
 
 from __future__ import annotations
 
@@ -78,7 +78,7 @@ def _uncovered_block_cells(
             if not compatible_source or not compatible_flag:
                 kind = "xcell" if xcell else "hcell"
                 raise ValueError(
-                    f"Calibre XRC Block Cell {cell!r} conflicts with foundry "
+                    f"Calibre PEX Block Cell {cell!r} conflicts with foundry "
                     f"{kind} mapping: {layout_pattern} {source_pattern} "
                     f"{' '.join(sorted(flags))}"
                 )

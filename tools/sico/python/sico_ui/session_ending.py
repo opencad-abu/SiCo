@@ -75,7 +75,7 @@ class SessionEnding(SessionEndGroup):
         if not self.window.lifecycle.closing:
             self.refresh()
             if self.window.presentation.state is not None:
-                self.window.update_session(self.window.presentation.state)
+                self.window.renderer.update_session(self.window.presentation.state)
 
     def observe(self):
         token = self.window.page.session

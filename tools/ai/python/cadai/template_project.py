@@ -1,4 +1,6 @@
-"""Sanitized publication projections of one stored template record.
+"""Legacy SQLite projections; standard JSON uses template_standard.projection.
+
+Retire this compatibility path after the remaining tpl_ catalogs are migrated.
 
 Levels (per the schematic reuse plan):
 

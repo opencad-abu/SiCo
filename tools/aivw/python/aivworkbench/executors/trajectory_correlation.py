@@ -9,7 +9,8 @@ from ..workspace import sha256_file, stable_digest, write_json_once
 from .trajectory_xcelium import model_inputs
 
 
-def correlation_report(plan, evidence, reference, candidate, policy, candidate_sha256):
+def correlation_report(plan, evidence, reference, candidate, policy, candidate_sha256, *,
+                       dataset="public_calibration", holdout="NOT_EVALUATED"):
     validate_waveform_policy(policy)
     if set(candidate) != set(reference) or set(reference) != {c["id"] for c in plan["cases"]}:
         raise ValueError("trajectory correlation case coverage differs")
@@ -22,13 +23,13 @@ def correlation_report(plan, evidence, reference, candidate, policy, candidate_s
             "diagnostic_status": "PASS" if passed else "FAIL_CORRELATION", "cases": cases,
             "source_generation": evidence["source_generation"], "experiment_digest": stable_digest(plan),
             "candidate_sha256": candidate_sha256, "policy_digest": stable_digest(policy),
-            "dataset": "public_calibration", "holdout": "NOT_EVALUATED", "repeat": "NOT_EVALUATED",
+            "dataset": dataset, "holdout": holdout, "repeat": "NOT_EVALUATED",
             "qualification": "NOT_ESTABLISHED", "product_current_timing_status": "BLOCKED_CONTRACT",
             "system_readiness": "BLOCKED_DYNAMIC_QUALIFICATION"}
 
 
 def feedback_from_report(report):
-    from ..agent.qualification import GateFeedback
+    from ..gate_feedback import GateFeedback
     failed = [c["id"] for c in report["cases"] if c["diagnostic_status"] != "PASS"]
     # A proposal cannot yield PASS, even for a structurally valid candidate.
     status = "BLOCKED" if report["status"].startswith("BLOCKED_") else "FAIL" if failed else "PASS"

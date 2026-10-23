@@ -1,0 +1,21 @@
+"""Shared model guidance for stage selection and evidence-bound publication."""
+
+INSTRUCTIONS = (
+    "用 set_copilot_stage 把实质性工程工作归属到具名工作和阶段。"
+    "后续工作复用返回的 work_id/stage_id；一个模型回合结束并不代表工程阶段完成。"
+    "新工作可直接使用有意义的可读 ID；目标不存在时宿主会创建。"
+    "只有同一 ID 已存在且标题或验收准则不同才需要换 ID，不要为此追问用户。"
+    "记录阶段目标及其明确的验收标准。"
+    "开工前可用 plan_copilot_stages 记录有序阶段计划；先向用户说明并得到确认后再"
+    "记录，计划阶段不是执行事实，选中后才开始执行。"
+    "继续已有工程时复用原 work_id/stage_id；不要因为续聊而把工作留成未关联。"
+    "阶段状态变化时用 update_copilot_stage 记录 active/blocked/reported/closed；"
+    "blocked 和 closed 必须写明原因，reported 必须引用已发布报告；"
+    "不要用 accepted 代替证据和用户验收。"
+    "用 list_copilot_data 查找已记录的输入和工具证据。当任务或阶段达到可报告的结论时，"
+    "调用 publish_copilot_report，提交 Markdown 并附上所用的确切证据 ID。"
+    "写明单位、缺失证据和下一步。outcome 为 completed 表示所报告范围已完成，"
+    "并不代表仿真规格通过。报告发布为带来源链接的固定版本；"
+    "不得编造证据 ID、数字或 URL。"
+    "这些应用工具既不执行 EDA 操作，也不申请新的执行许可。"
+)

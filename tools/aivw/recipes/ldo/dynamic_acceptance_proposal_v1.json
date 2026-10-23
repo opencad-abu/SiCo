@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "kind": "physical-time-correlation",
+  "status": "proposed",
+  "decision_source": "agent_proposal_pending_user_confirmation_20260907",
+  "correlation": {
+    "voltage": {
+      "unit": "V",
+      "relative": 0.05,
+      "absolute": 0.001,
+      "normalization": "reference_magnitude"
+    },
+    "current": {
+      "unit": "A",
+      "relative": 0.05,
+      "absolute": 1e-06,
+      "normalization": "reference_magnitude"
+    },
+    "time": {
+      "unit": "s",
+      "relative": 0.05,
+      "absolute": 1e-07,
+      "normalization": "reference_magnitude"
+    }
+  },
+  "product": {
+    "current_limit_a": null,
+    "startup_limit_s": null,
+    "settling_limit_s": null
+  }
+}

@@ -1,7 +1,7 @@
 ; RCE net/cell selection and parasitic filter controls.
 
 unless(and(boundp('RCESELECTIONGUIVersion)
-             RCESELECTIONGUIVersion=="20260919.gui.modules.v1")
+             symeval('RCESELECTIONGUIVersion)=="20261019.floating.net.include.all.v1")
 defmethod(makeExtNetSelOpt ((inst EXTOPTGUI))
   inst->netSelBtn=hiCreateBooleanButton(
     ?name           'netSelBtn
@@ -102,11 +102,22 @@ defmethod(makeExtMoreOpt ((inst EXTOPTGUI))
   inst->moreOpt=hiCreateDisclosureTriangle(
     ?name        'moreOpt
     ?labelText   "More Extraction Options"
-    ?onFields    '(extractTopCellRow nameSource netSel cellSel filter)
+    ?onFields    '(extractTopCellRow nameSource netSel cellSel filter rmFloatNets)
     ?offFields   '()
     ?persistent  nil
   )
 )
 
-RCESELECTIONGUIVersion="20260919.gui.modules.v1"
+defmethod(makeExtRemoveFloatingNets ((inst EXTOPTGUI))
+  inst->rmFloatNetsBtn=hiCreateBooleanButton(
+    ?name           'rmFloatNetsBtn
+    ?buttonText     "Remove Floating Nets"
+    ?buttonLocation 'left
+    ?defValue       t
+  )
+  inst->rmFloatNets=makehbl('rmFloatNets
+    list(inst->rmFloatNetsBtn) ?a left)
+)
+
+set('RCESELECTIONGUIVersion "20261019.floating.net.include.all.v1")
 )

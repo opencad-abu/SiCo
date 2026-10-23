@@ -1,8 +1,10 @@
-"""Audit evidence and native-question record projections."""
+"""Service audit evidence and reply projections with a retained native alias."""
 
-import uuid
+# Compatibility export; native input records are owned by Codex.
+from ..codex.input_records import native_record as native_record
 
 from ..core.contracts import ToolResult, identifier
+from ..core.review_classes import BLOCKING, review_class
 from ..storage.workbench import object_link
 
 
@@ -15,36 +17,26 @@ def prepared_record(args, context, resolve_evidence, current, task_id, *, normal
         "evidence": resolve_evidence(args["evidence_ids"], current),
         "work_id": current["work_id"], "stage_id": current["stage_id"],
         "task_id": task_id,
+        "review_class": review_class(args.get("review_class"), default=BLOCKING),
     }
     return record
 
 
-def native_record(incoming, task_id, context, current, source_digest, child, expected_turn, audits, pending_count, child_scope):
-    row = {
-        "id": "a_" + uuid.uuid4().hex, "title": incoming[0]["header"],
-        "questions": incoming, "recommendation": "", "rationale": "",
-        "task_id": task_id,
-        "work_id": current["work_id"], "stage_id": current["stage_id"],
-        "context": context,
-        "evidence": [{"id": current["source"],
-                      "digest": source_digest}],
-    }
-    if child is not None:
-        existing = [r for r in audits
-                    if r["task_id"] == task_id]
-        if len(existing) >= 32 or pending_count >= 4:
-            raise ValueError("Child input limit reached")
-        row.update({"child_thread_id": child.thread_id,
-                    "parent_thread_id": child.parent_thread_id,
-                    "child_turn_id": expected_turn,
-                    "child_name": child.policy.name,
-                    "title": child.policy.name + " · " + row["title"],
-                    "input_origin": child_scope(child)})
-    return row
-
-
 def host_content(row):
-    if row.get("pdk_update_ref"):
+    if row.get("destructive_kind"):
+        answer_id = row["destructive_answer_id"]
+        answer = row["reply"]["answers"][answer_id]
+        content = (
+            "用户已答复删除审阅（"
+            + row["destructive_kind"]
+            + "，review_digest="
+            + row["destructive_digest"]
+            + "）："
+            + (answer["choice"] or answer["text"])
+        )
+        if answer["choice"] and answer["text"]:
+            content += "；附加说明：" + answer["text"]
+    elif row.get("pdk_update_ref"):
         answer = row["reply"]["answers"]["pdk_data_update"]
         content = "用户已答复 PDK 数据更新 " + row["pdk_update_ref"] + "：" + (answer["choice"] or answer["text"])
         if answer["choice"] and answer["text"]:
@@ -93,5 +85,6 @@ def matching_preparation(audits, record):
 def prepared_result(record, session_id):
     return ToolResult(data={
         "audit_id": record["id"], "questions": record["questions"],
+        "review_class": record.get("review_class", BLOCKING),
         "url": object_link("audit", session_id, record["id"]),
     })

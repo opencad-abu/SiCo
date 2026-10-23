@@ -99,6 +99,30 @@ def check_load_ownership(root, paths, manifest):
             errors.append(f"duplicate SKILL load owner: {path}")
         ownership[path] = (kind, owner)
 
+    if manifest.get("source_contract"):
+        try:
+            if __package__:
+                from .skill_loader import MANIFEST, manifest as source_manifest, members, render
+            else:
+                from skill_loader import MANIFEST, manifest as source_manifest, members, render
+            if manifest["source_contract"] != str(MANIFEST):
+                raise ValueError("unknown source loader contract")
+            groups = source_manifest(root)
+            for name, group in groups.items():
+                owner = group["output"]
+                if read(owner) != render(root, name, groups):
+                    errors.append(f"{owner}: stale generated source entry")
+                for path in members(root, group):
+                    if not path.endswith(".il"):
+                        continue
+                    source = read(path)
+                    guards, _ = local_guards(source)
+                    if any(not any(start < pos < end for start, end, _ in guards)
+                           for pos in definition_positions(source)):
+                        claim(path, "source-contract", owner)
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            errors.append(f"invalid source loader ownership: {exc}")
+
     for group in manifest.get("loaders", []):
         owner = group["owner"]
         try:
@@ -162,12 +186,14 @@ def check_load_ownership(root, paths, manifest):
 
 def check_repository(root=ROOT):
     if __package__:
-        from .a_philosophy_sources import git
+        from .a_philosophy_sources import source_rows
     else:
-        from a_philosophy_sources import git
-    paths = git(root, "ls-files", "*.il").decode().splitlines()
+        from a_philosophy_sources import source_rows
+    rows, inventory_errors = source_rows(root)
+    paths = [row.path for row in rows if Path(row.path).suffix == ".il"]
     manifest = json.loads((root / "tools/utility/skill_load_ownership.json").read_text())
-    return check_load_ownership(root, paths, manifest)
+    errors, records = check_load_ownership(root, paths, manifest)
+    return inventory_errors + errors, records
 
 
 if __name__ == "__main__":

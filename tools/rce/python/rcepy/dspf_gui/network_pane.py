@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from PyQt5.QtCore import QRectF, Qt, pyqtSignal
-from PyQt5.QtGui import QColor, QIcon, QLinearGradient, QPainter, QPen
+from PyQt5.QtGui import QColor, QLinearGradient, QPainter, QPen
 from PyQt5.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -22,6 +22,8 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from cadgui.palette import active
 
 from .network_canvas import RcNetworkCanvas
 from .network_format import engineering as _engineering
@@ -62,7 +64,8 @@ class NetworkLegend(QWidget):
     def paintEvent(self, _event) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(QColor("#4b5563"))
+        palette = active()
+        painter.setPen(QColor(palette.muted))
         painter.drawText(
             QRectF(4, 1, self.width() - 8, 32),
             Qt.AlignLeft | Qt.AlignTop | Qt.TextWordWrap,
@@ -84,22 +87,22 @@ class NetworkLegend(QWidget):
         ):
             gradient.setColorAt(offset / 6, QColor(color))
         painter.fillRect(bar, gradient)
-        painter.setPen(QPen(QColor("#8b949e"), 1))
+        painter.setPen(QPen(QColor(palette.table_border), 1))
         painter.drawRect(bar)
 
 
 def _tool_button(
-    parent: QWidget, theme: str, fallback: str, tooltip: str
+    parent: QWidget, glyph: str, tooltip: str
 ) -> QToolButton:
     button = QToolButton(parent)
-    icon = QIcon.fromTheme(theme)
-    if icon.isNull():
-        button.setText(fallback)
-    else:
-        button.setIcon(icon)
+    button.setText(glyph)
+    button.setToolButtonStyle(Qt.ToolButtonTextOnly)
     button.setToolTip(tooltip)
     button.setAccessibleName(tooltip)
     button.setFixedSize(28, 28)
+    font = button.font()
+    font.setPixelSize(13)
+    button.setFont(font)
     return button
 
 
@@ -117,9 +120,9 @@ class RcNetworkPane(QWidget):
         self.labels = QCheckBox("Labels", self)
         self.labels.setToolTip("Show positioned node labels")
         self.labels.toggled.connect(self.canvas.set_labels)
-        self.zoom_out = _tool_button(self, "zoom-out", "-", "Zoom out")
-        self.zoom_in = _tool_button(self, "zoom-in", "+", "Zoom in")
-        self.fit_button = _tool_button(self, "zoom-fit-best", "Fit", "Fit network")
+        self.zoom_out = _tool_button(self, "\u2212", "Zoom out")
+        self.zoom_in = _tool_button(self, "+", "Zoom in")
+        self.fit_button = _tool_button(self, "Fit", "Fit network")
         self.zoom_out.clicked.connect(lambda: self.canvas.zoom_by(1 / 1.25))
         self.zoom_in.clicked.connect(lambda: self.canvas.zoom_by(1.25))
         self.fit_button.clicked.connect(self.canvas.fit_network)
@@ -136,15 +139,10 @@ class RcNetworkPane(QWidget):
         )
         self.short_threshold.setFixedWidth(132)
         self.check_integrity = QToolButton(self)
-        self.check_integrity.setText("Check")
+        self.check_integrity.setText("\u2713 Check")
         self.check_integrity.setToolTip("Check resistance opens and shorts")
         self.check_integrity.setAccessibleName("Check resistance opens and shorts")
-        self.check_integrity.setToolButtonStyle(
-            Qt.ToolButtonTextBesideIcon
-        )
-        check_icon = QIcon.fromTheme("dialog-ok")
-        if not check_icon.isNull():
-            self.check_integrity.setIcon(check_icon)
+        self.check_integrity.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.check_integrity.setFixedHeight(28)
         self.check_integrity.clicked.connect(
             lambda: self.integrityRequested.emit(self.short_threshold.value())

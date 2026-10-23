@@ -6,7 +6,7 @@ files, and runs the selected stages serially.
 
 ## Path Setup
 
-See [the repository environment guide](../../../docs/html/environment.html) for the complete
+See [the repository environment guide](../../../docs/ENVIRONMENT.md) for the complete
 DRC/LVS/RCE variable list. This section focuses on paths used by RCE TOML.
 
 Hand-written TOML files can use `$VAR` or `${VAR}` in path values. The backend
@@ -67,8 +67,9 @@ RCE_RUNTIME="${RCE_RUNTIME:-python3}"
 ```
 
 `--stop-after` accepts `cdl`, `gds`, `lvs`, `query`, `extract`,
-`xrc_lvs`, `xrc_pdb`, and `xrc_fmt`. For an XRC run, use the upstream
-`cdl`/`gds` names when present, or one of the three `xrc_*` names.
+`xrc_lvs`, `xrc_pdb`, and `xrc_fmt`. For a Calibre PEX (CalXRC/CalXACT) run,
+use the upstream `cdl`/`gds` names when present, or one of the three `xrc_*`
+stage names, which keep the Calibre PEX stage family spelling.
 
 ## Run Directory Ownership
 
@@ -147,6 +148,7 @@ corners = ["Typ"]
 temperature = "25"
 corner_temperatures = ["25"]
 rc_type = "R+Cg+Cc"
+remove_floating_nets = true
 top_cell_source = "schematic"
 name_source = "schematic"
 output_type = "dspf"
@@ -330,8 +332,10 @@ The extractor-specific execution is:
 
 - Quantus uses a generated named technology library with
   `process_technology -technology_corner` and aligned temperatures. DSPF/SPEF
-  files are published per corner; multi-corner SPICE and native view outputs
-  remain one vectorized result.
+  runs switch Quantus to single-value files with
+  `output_db -output_multi_value_rc false` and publish them as
+  `<stem>_<corner><suffix>`; multi-corner SPICE and native view outputs remain
+  one vectorized result.
 - StarRC uses `CORNERS_FILE`, `SELECTED_CORNERS`, and
   `SIMULTANEOUS_MULTI_CORNER`. It accepts at most 15 corners and requires a file
   netlist for multi-corner runs.
@@ -441,7 +445,7 @@ prefixes. Quantus extracted-view output is always in the schematic namespace.
 The RCE form keeps advanced controls collapsed by default. `More Input Options`
 contains `CDL Include`, `More LVS Options` contains `Customized SVRF Command`,
 and `More Extraction Options` contains `Top Cell Name`, `Use Name From`, net
-selection, block-cell selection, and filtering controls.
+selection, block-cell selection, filtering controls, and `Remove Floating Nets`.
 
 Net and Block Cell selection use one input contract for all three extraction
 engines:
@@ -499,6 +503,71 @@ compatible foundry entries. Conflicting foundry mappings fail before Calibre
 starts. The base hcell file follows the normal `[lvs]` hcell resolution; any
 xcell use therefore requires an enabled, accessible hcell file. Use cell names
 that are identical in source and layout for this normalized one-name input.
+
+`Remove Floating Nets` is one GUI boolean for all three extraction engines and
+is checked by default:
+
+```toml
+[extract]
+remove_floating_nets = true
+```
+
+| Engine | Checked: remove floating nets | Unchecked: include all floating nets |
+| --- | --- | --- |
+| Quantus QRC | `filter_cap -exclude_floating_nets true` | `filter_cap -exclude_floating_nets false` |
+| StarRC | `REMOVE_FLOATING_NETS: YES` | `REMOVE_FLOATING_NETS: NO` |
+| Calibre XRC/xACT | `PEX EXTRACT FLOATING NETS GROUNDED` | `PEX EXTRACT FLOATING NETS ALL` |
+
+The request owns the choice: `quantus.options` and `starrc.options` no longer
+carry it, and a corner `common.opt` that sets a different
+`REMOVE_FLOATING_NETS` fails command generation instead of silently overriding
+the GUI. Calibre NONE/noRC output has no parasitic extraction, so the option is
+disabled in the GUI and ignored by the generator.
+
+### Floating-Net Semantics Per Engine
+
+Checked removes floating nets (metal fill, spare shapes, unconnected polygons)
+from the extracted netlist. Unchecked keeps every floating net and its parasitic
+capacitance in the netlist; for Calibre this is `PEX EXTRACT FLOATING NETS ALL`,
+including coupling capacitors between floating polygons. "All" still means the
+engine's own definition of a floating net, so the retained set can differ on the
+same layout.
+
+When checked, each engine removes the net its own way, and none of them offers
+the other treatment, so one request cannot produce identical netlists:
+
+| Engine | How the net is removed | Coupling through the floating net |
+| --- | --- | --- |
+| Quantus QRC | the floating node is removed and the capacitors attached to it are merged | kept: `c_ab` and `c_bc` merge serially into one equivalent coupling capacitor `c_ac`; large clusters use Quantus's documented approximation limit |
+| StarRC | the floating net is re-assigned to ground | dropped; its capacitance becomes capacitance to ground |
+| Calibre XRC | `GROUNDED` treats floating nets as grounded and does not netlist them | dropped; the effect appears as intrinsic capacitance on the signal net, and the Calibre manual notes that this treatment usually overestimates coupled capacitance |
+
+Evidence: the Quantus Extraction User's Manual (`filter_cap`), the SVRF Manual
+(`PEX EXTRACT FLOATING NETS`, keywords `GROUNDED`/`ALL`/`REDUCED`), and the
+StarRC messages SX-2148 (ground re-assignment) and SX-0246
+(`TRANSLATE_FLOATING_AS_FILL: YES` and `REMOVE_FLOATING_NETS: YES` are
+incompatible).
+
+Practical consequences:
+
+- RCE always states the Calibre choice instead of relying on Calibre's own
+  `GROUNDED` default. The statement follows both `INCLUDE` lines, so the GUI
+  choice applies after the foundry decks; Customized SVRF is appended later and
+  can still intentionally override it.
+- StarRC also turns `REMOVE_FLOATING_PORTS` on when
+  `XREF_REMOVE_FLOATING_NETS: YES` is configured (SX-0003), while
+  `REMOVE_DANGLING_NETS` stays a separate option owned by `starrc.options`.
+- Each engine defines a floating net slightly differently (Calibre: no device
+  connection, no port text and not a pin, with `IGNORE_PORT_TEXT` available;
+  Quantus: not an I/O net, has parasitic capacitance, and connects to no device
+  or parasitic resistor; StarRC: its own connection-count criteria), so the
+  removed set can differ on the same layout.
+- Aligning further is an engine-level decision, not a flow option: Calibre
+  would use `PEX EXTRACT FLOATING NETS REDUCED` to remove the net while keeping
+  its coupling effect (at the cost of extra coupling capacitors and a larger
+  netlist), StarRC would have to translate floating nets as fill
+  (`TRANSLATE_FLOATING_AS_FILL: YES`, mutually exclusive with
+  `REMOVE_FLOATING_NETS: YES`), and Quantus has no grounded-only mode.
 
 ## Netlist Customize
 
@@ -701,7 +770,7 @@ above, `Analyze DSPF` starts the external PyQt5 analyzer with a streaming SQLite
 index, an interactive per-net R Network view with resistance Open/Short checks,
 and an optional
 read-only OA exact-net/region bridge. Setup, CLI, cache, GUI, and interaction
-details are in the [DSPF Analyzer user guide](../../../docs/html/rce.html).
+details are in the [DSPF Analyzer user guide](../docs/DSPF_ANALYZER_USER_GUIDE.md).
 The SiCo pulldown in the CIW and Layout Editor also provides
 `DSPF Analyzer...` for manually choosing a DSPF/SPF. That standalone entry does
 not bind an arbitrary file to the current OA layout, so OA actions remain off.
@@ -721,7 +790,7 @@ The common configuration is:
 cds_lib = "${PROJECT_ROOT}/cds.lib"
 
 [extract]
-tool = "QRC"                 # QRC, StarRC, or CalXRC
+tool = "QRC"                 # QRC, StarRC, CalXRC, or CalXACT
 output_type = "view"
 top_cell_source = "schematic"
 name_source = "schematic"
@@ -887,12 +956,18 @@ output types. Like `extview` and `smartview`, they should not be used in new
 TOML; the portable spelling is `view` with an engine-appropriate
 `extract.view.kind`.
 
-## Calibre XRC
+## Calibre PEX (xRC / xACT)
 
-Select XRC with `extract.tool = "CalXRC"` (aliases `XRC`,
-`CALIBRE-XRC`, and `CALIBRE_XRC` are also accepted). XRC owns its LVS
-database, so it replaces the generic `lvs -> query -> extract` tail and never
-runs the generic Calibre query stage:
+The Calibre PEX flow covers both Calibre xRC and Calibre xACT. Select the
+engine with `extract.tool = "CalXRC"` (aliases `XRC`, `CALIBRE-XRC`, and
+`CALIBRE_XRC`) or `extract.tool = "CalXACT"` (aliases `CALIBRE-XACT` and
+`CALIBRE_XACT`). The Virtuoso form's `EXT Engine` radio lists `StarRC`, `QRC`,
+`CalXRC`, and `CalXACT`; the selected entry is what the profile and the TOML
+carry. `RCE_DEF_TOOL` may still spell the legacy `XRC` alias, which restores
+the `CalXRC` entry.
+
+The Calibre PEX flow owns its LVS database, so it replaces the generic
+`lvs -> query -> extract` tail and never runs the generic Calibre query stage:
 
 | Input type | XRC stages |
 | --- | --- |
@@ -901,11 +976,11 @@ runs the generic Calibre query stage:
 | `CDL+LAY` | `gds -> xrc_lvs -> xrc_pdb -> xrc_fmt` |
 | `CDL+GDS` | `xrc_lvs -> xrc_pdb -> xrc_fmt` |
 
-`SVDB` and `CCI` inputs are intentionally rejected for XRC. This flow creates
-the matching PHDB/XDB itself; restarting from an external PHDB requires the
-original, unchanged SVRF control file and is a separate reuse workflow.
+`SVDB` and `CCI` inputs are intentionally rejected for both engines. This flow
+creates the matching PHDB/XDB itself; restarting from an external PHDB requires
+the original, unchanged SVRF control file and is a separate reuse workflow.
 
-For Calibre XRC, `extract.tech_dir` names the RC technology root and
+`extract.tech_dir` names the RC technology root and
 `extract.corner` selects a directory below it. The default rule path is
 therefore `tech_dir/corner/xrc.cal`. `rule_file` is preferred over its
 compatibility alias `deck_file` if both are present.
@@ -938,17 +1013,21 @@ rule_file = "xrc.cal"
 ```
 
 The generated `_xrc.cal_` is shared by all three stages. It declares the
-layout/source inputs, `PEX NETLIST`, `MASK SVDB DIRECTORY ... QUERY XRC`, and
-the LVS report, then includes `lvs.runset_file` followed by the selected XRC
-rule file. This keeps device recognition/LVS rules ahead of `rules.C/R/S` even
+layout/source inputs, `PEX NETLIST`, the LVS report, and the engine-specific
+`MASK SVDB DIRECTORY ... QUERY XRC` (CalXRC) or `QUERY XACT` (CalXACT) keyword
+(`XRC` and `XACT` are mutually exclusive in SVRF), then includes
+`lvs.runset_file` followed by the selected rule file. This keeps device recognition/LVS rules ahead of `rules.C/R/S` even
 when a normal `xrc.cal` does not include an LVS deck itself. It also translates
 these TOML controls into SVRF:
 
 - `extract.temperature` -> `PEX EXTRACT TEMPERATURE`
+- `extract.remove_floating_nets` -> `PEX EXTRACT FLOATING NETS GROUNDED` when
+  checked, `PEX EXTRACT FLOATING NETS ALL` when unchecked
 - `filter.cap_value` / `filter.cap_percentage` -> `PEX REDUCE CC`
 - `filter.res_value` -> `PEX REDUCE MINRES`
-- included/excluded `selection.nets` -> `PEX EXTRACT INCLUDE/EXCLUDE`; coupled
-  `-c`/`-rcc` modes use `-cselect` so selected-net Cc remains distinct
+- included/excluded `selection.nets` -> `PEX EXTRACT INCLUDE/EXCLUDE`; the
+  CalXRC `-c`/`-rcc` modes use `-cselect` so selected-net Cc remains distinct,
+  CalXACT always uses `-select`
 - `netlist.pin_order_enable` -> `PEX PIN ORDER SOURCE` for `CDL Netlist File`,
   or `PEX PIN ORDER FILE` for a user-defined simulator netlist
 
@@ -959,43 +1038,67 @@ into run-local hcell/xcell files as described under More Extraction Options.
 The foundry files are never modified.
 
 The runner resolves Calibre as `$MGC_HOME/bin/calibre` when `MGC_HOME` is
-set, otherwise as `calibre` from `PATH`. Its XRC commands are:
+set, otherwise as `calibre` from `PATH`. The commands are:
 
 ```text
 calibre -lvs -hier -spice <svdb>/<layout>.sp [-hcell <hcell_file>] -nowait _xrc.cal_
+# CalXRC
 calibre -xrc -pdb <pdb-mode> [-xcell <xcell_file>] -turbo <runtime.ext_cpus> -nowait _xrc.cal_
 calibre -xrc -fmt <fmt-mode> -nowait _xrc.cal_
+# CalXACT
+calibre -xact -3d -pdb <pdb-mode> [-xcell <xcell_file>] -turbo <runtime.ext_cpus> -nowait _xrc.cal_
+calibre -xact -fmt <fmt-mode> -nowait _xrc.cal_
 ```
 
-For `CalXRC`, the Virtuoso form shows `Start RVE` beside `Create Parasitic
-Netlist View`. Enabling it writes `extract.start_rve = true`. After the complete
+Both engines share the PHDB/LVS stage. The xACT PDB stage needs `-3d -pdb`
+because Calibre has no plain `-xact -pdb` invocation; resistance-only
+extraction uses the standalone `calibre -xact -r` mode instead. Both engines
+report their own transcript summary, `xRC Errors` or `xACT Errors`, which the
+runner requires to be zero before publishing the netlist.
+
+For the Cal family, the Virtuoso form shows `Start RVE` beside `Create
+Parasitic Netlist View`. Enabling it writes `extract.start_rve = true`. After the complete
 XRC flow and netlist postprocessing succeed, RCE starts a detached command:
 
 ```text
 calibre -rve <run_dir>/db/svdb.<layout_cell>
 ```
 
-The executable follows the same `$MGC_HOME/bin/calibre` resolution as the XRC
-stages. RVE does not inherit the RCE IPC pipes, so the Python process can exit
+The executable follows the same `$MGC_HOME/bin/calibre` resolution as the
+extraction stages. RVE does not inherit the RCE IPC pipes, so the Python process can exit
 and the Virtuoso completion summary appears without waiting for RVE to close.
 The option defaults off and is ignored for non-XRC tools, generate-only runs,
 dry runs, and runs stopped before `xrc_fmt`.
 
-`extract.rc_type` controls both modes:
+`extract.rc_type` controls both modes. Calibre xRC supports a native
+capacitance-only PDB:
 
-| `rc_type` | PDB mode | FMT mode |
+| `rc_type` | CalXRC PDB | CalXRC FMT |
 | --- | --- | --- |
-| `RCC`, `R+Cg+Cc` | `-rcc` | `-all` |
-| `RC`, `R+C`, `R+Cg` | `-rc` | `-all` |
-| `R` | `-r` | `-r` |
-| `C`, `CC`, `Cg+Cc` | `-c` | `-c` |
-| `Cg` | `-c` | `-c -g` |
+| `RCC`, `R+Cg+Cc` | `-pdb -rcc` | `-all` |
+| `RC`, `R+C`, `R+Cg` | `-pdb -rc` | `-all` |
+| `R` | `-pdb -r` | `-r` |
+| `C`, `CC`, `Cg+Cc` | `-pdb -c` | `-c` |
+| `Cg` | `-pdb -c` | `-c -g` |
 | `NONE`, `NO-RC`, `NORC` | skipped | `-simple` |
 
-Pure-capacitance PDBs must use formatter `-c`; formatter `-all` requires
+Calibre xACT has no capacitance-only PDB mode, so capacitance-only output
+extracts the distributed RC PDB and asks the formatter for capacitance only.
+Resistance-only extraction uses the standalone `-r` mode:
+
+| `rc_type` | CalXACT PDB | CalXACT FMT |
+| --- | --- | --- |
+| `RCC`, `R+Cg+Cc` | `-3d -pdb -rcc` | `-all` |
+| `RC`, `R+C`, `R+Cg` | `-3d -pdb -rc` | `-all` |
+| `R` | `-r` | `-r` |
+| `C`, `CC`, `Cg+Cc` | `-3d -pdb -rc` | `-c` |
+| `Cg` | `-3d -pdb -rc` | `-c -g` |
+| `NONE`, `NO-RC`, `NORC` | skipped | `-simple` |
+
+Pure-capacitance formatter output must use `-c`; formatter `-all` requires
 distributed resistance data. `-g` grounds coupling capacitance for `Cg`.
 `NONE`/noRC keeps the LVS/PHDB stage, writes `PEX NETLIST SIMPLE`, skips PDB,
-and invokes `calibre -xrc -fmt -simple` to create an ideal netlist without
+and invokes the formatter with `-simple` to create an ideal netlist without
 parasitic R/C.
 
 For text output, `netlist.output_path` can select an explicit destination;
@@ -1083,7 +1186,7 @@ three_d_ic = false
 Non-GUI StarRC behavior defaults now live in the installation's
 `etc/flow-defaults/starrc.options`. Old TOML behavior fields such as `mode` and
 `reduction` report a migration error naming the replacement command. See
-[flow defaults maintenance](../../../docs/html/flows.html).
+[flow defaults maintenance](../../../docs/SICO_FLOW_DEFAULTS_MAINTENANCE.md).
 
 For QRC native-view output with CDL+GDS, CDL+LAY, SVDB, or CCI input,
 set **More Input Options → CDL Run Directory** to the existing CDL export

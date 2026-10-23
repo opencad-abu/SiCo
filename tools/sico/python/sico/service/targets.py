@@ -8,11 +8,20 @@ from concurrent.futures import CancelledError, Future
 from contextlib import nullcontext
 
 from ..core.contracts import BoundContext
+from ..core.cad_ref import normalize_ref
+from .cad_highlight import validate_highlight
+from .cad_object_list import validate_object_list
+from .cad_windows import validate_window_list, validate_windows
+from .selection import validate_selection
 from ..transport.broker import skill_call_context
 
 
 class TargetBridgeError(RuntimeError):
     """The bridge could not answer a target lookup or open request."""
+
+    def __init__(self, message, code=""):
+        super().__init__(message)
+        self.code = code
 
 
 class BridgeTargetProvider:
@@ -47,6 +56,52 @@ class BridgeTargetProvider:
                       if isinstance(data.get(key), str) and data[key]}
         return {**target, **normalized, "window": data.get("window", "")}
 
+    def selection(self, window_ref, offset=0, max_items=50):
+        if type(offset) is not int or not 0 <= offset <= 4096:
+            raise ValueError("Invalid selection offset")
+        if type(max_items) is not int or not 1 <= max_items <= 50:
+            raise ValueError("Invalid selection limit")
+        data = self._call("aiCopilotInspectSelected", [
+            str(window_ref), offset, max_items,
+        ])
+        return validate_selection(data, expected_window=str(window_ref))
+
+    def highlight(self, ref, window_ref=None):
+        ref = normalize_ref(ref)
+        target = ref["target"]
+        master = ref.get("master")
+        values = [
+            target["library"], target["cell"], target["view"], ref["kind"], ref["name"],
+            list(ref["hierarchy"]), None if master is None else [
+                master["library"], master["cell"], master["view"],
+            ],
+        ]
+        if window_ref is not None:
+            values.append(str(window_ref))
+        return validate_highlight(self._call("aiCopilotHighlightObject", values))
+
+    def windows(self, ref):
+        ref = normalize_ref(ref)
+        target = ref["target"]
+        return validate_windows(self._call("aiCopilotListObjectWindows", [
+            target["library"], target["cell"], target["view"],
+        ]))
+
+    def window_list(self):
+        return validate_window_list(self._call("aiCopilotListWindows", [0, 200]))
+
+    def objects(self, window_ref, kind="all", query="", offset=0, max_items=50):
+        if kind not in {"all", "instance", "net", "terminal", "shape"}:
+            raise ValueError("Invalid object kind")
+        if type(offset) is not int or not 0 <= offset <= 4096:
+            raise ValueError("Invalid object offset")
+        if type(max_items) is not int or not 1 <= max_items <= 50:
+            raise ValueError("Invalid object limit")
+        data = self._call("aiCopilotListObjects", [
+            str(window_ref), kind, str(query), offset, max_items,
+        ])
+        return validate_object_list(data, expected_window=str(window_ref))
+
     def _rows(self, function, values, field, *keys):
         rows = self._call(function, values).get(field)
         if not isinstance(rows, list):
@@ -72,7 +127,7 @@ class BridgeTargetProvider:
             raise TargetBridgeError("Bridge returned an unrecognized target response")
         if data.get("ok") is False:
             message = data.get("message") or data.get("code") or "Bridge refused request"
-            raise TargetBridgeError(str(message))
+            raise TargetBridgeError(str(message), str(data.get("code") or ""))
         return data
 
 
@@ -113,6 +168,38 @@ class TargetSource:
             raise ValueError("Target creation is unavailable")
         return self._service._request(self._create, dict(target))
 
+    def selection(self, window_ref, offset=0, max_items=50):
+        if type(offset) is not int or not 0 <= offset <= 4096:
+            raise ValueError("Invalid selection offset")
+        if type(max_items) is not int or not 1 <= max_items <= 50:
+            raise ValueError("Invalid selection limit")
+        return self._service._request(
+            self._call, "selection", str(window_ref), offset, max_items
+        )
+
+    def highlight(self, ref, window_ref=None):
+        return self._service._request(
+            self._call, "highlight", normalize_ref(ref),
+            None if window_ref is None else str(window_ref),
+        )
+
+    def objects(self, window_ref, kind="all", query="", offset=0, max_items=50):
+        if kind not in {"all", "instance", "net", "terminal", "shape"}:
+            raise ValueError("Invalid object kind")
+        if type(offset) is not int or not 0 <= offset <= 4096:
+            raise ValueError("Invalid object offset")
+        if type(max_items) is not int or not 1 <= max_items <= 50:
+            raise ValueError("Invalid object limit")
+        return self._service._request(
+            self._call, "objects", str(window_ref), kind, str(query), offset, max_items
+        )
+
+    def windows(self, ref):
+        return self._service._request(self._call, "windows", normalize_ref(ref))
+
+    def window_list(self):
+        return self._service._request(self._call, "window_list")
+
     def _create(self, target):
         created = self._call("create", target)
         if not created:
@@ -144,7 +231,7 @@ class TargetService:
         def check():
             if validate is not None:
                 validate()
-            controller.check_target_request(context, task_id, audit_id)
+            controller.backend_commands.check_target_request(context, task_id, audit_id)
 
         return self.source(
             BridgeTargetProvider(broker, context, controller.session_id),

@@ -120,7 +120,7 @@ procedure(rceCreateNativeViewFromRequest(request launchLog)
     oldStamp=nth(6 request)
     importResult=t
 
-    when(member(tool '("CalXRC" "XRC"))
+    when(RCE_calibrePexToolP(tool)
       if(and(setupFile isFile(setupFile)
                isCallable('mgc_rve_load_setup_file)) then
         protected=errset(mgc_rve_load_setup_file(setupFile) t)

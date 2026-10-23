@@ -24,6 +24,6 @@ def default_files(cfg: RceConfig, flow: str = "rce") -> tuple[str, ...]:
             names.extend(("quantus.options", "quantus.launch.args"))
         elif tool in {"STARRC", "STARXTRACT"}:
             names.append("starrc.options")
-        elif cfg.is_xrc:
+        elif cfg.is_calibre_pex:
             names.append("calibre-xrc.svrf")
     return tuple(names)

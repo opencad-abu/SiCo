@@ -1,0 +1,336 @@
+{
+  "source": {
+    "path": "/tmp/DMS_AMS_FLOW/Lab2/src/ams/control_files/LDO.scs",
+    "dialect": "spectre"
+  },
+  "cell_count": 1,
+  "cells": [
+    {
+      "name": "LDO_MASTER",
+      "line": 207,
+      "ports": [
+        "VDD",
+        "VSS",
+        "VOUT"
+      ],
+      "port_count": 3,
+      "device_count": 12,
+      "device_summary": {
+        "mos": 9,
+        "resistor": 3
+      },
+      "submasters": [],
+      "internal_nets": [
+        "N1",
+        "N2",
+        "N3",
+        "REF",
+        "net9"
+      ],
+      "devices": [
+        {
+          "name": "M1",
+          "master": "g45p2svt",
+          "kind": "mos",
+          "nodes": [
+            "net9",
+            "N3",
+            "VDD",
+            "VDD"
+          ],
+          "params": {
+            "w": "(20u)",
+            "l": "500n",
+            "nf": "2",
+            "as": "3p",
+            "ad": "2p",
+            "ps": "40.6u",
+            "pd": "20.4u",
+            "nrd": "5m",
+            "nrs": "7.5m",
+            "sa": "150n",
+            "sb": "150n",
+            "sd": "200n",
+            "sca": "6.57583",
+            "scb": "0.00453",
+            "scc": "0.00006",
+            "m": "(1)"
+          },
+          "line": 208
+        },
+        {
+          "name": "M0",
+          "master": "g45p2svt",
+          "kind": "mos",
+          "nodes": [
+            "N3",
+            "N3",
+            "VDD",
+            "VDD"
+          ],
+          "params": {
+            "w": "(20u)",
+            "l": "500n",
+            "nf": "2",
+            "as": "3p",
+            "ad": "2p",
+            "ps": "40.6u",
+            "pd": "20.4u",
+            "nrd": "5m",
+            "nrs": "7.5m",
+            "sa": "150n",
+            "sb": "150n",
+            "sd": "200n",
+            "sca": "6.57583",
+            "scb": "0.00453",
+            "scc": "0.00006",
+            "m": "(1)"
+          },
+          "line": 211
+        },
+        {
+          "name": "M8",
+          "master": "g45n2svt",
+          "kind": "mos",
+          "nodes": [
+            "net9",
+            "VOUT",
+            "N2",
+            "VSS"
+          ],
+          "params": {
+            "w": "(5u)",
+            "l": "500n",
+            "nf": "1",
+            "as": "750f",
+            "ad": "750f",
+            "ps": "10.3u",
+            "pd": "10.3u",
+            "nrd": "30m",
+            "nrs": "30m",
+            "sa": "150n",
+            "sb": "150n",
+            "sd": "200n",
+            "sca": "20.00143",
+            "scb": "0.01843",
+            "scc": "0.00144",
+            "m": "(10)"
+          },
+          "line": 214
+        },
+        {
+          "name": "M7",
+          "master": "g45n2svt",
+          "kind": "mos",
+          "nodes": [
+            "VDD",
+            "net9",
+            "VOUT",
+            "VSS"
+          ],
+          "params": {
+            "w": "(10u)",
+            "l": "500n",
+            "nf": "2",
+            "as": "1.5p",
+            "ad": "1p",
+            "ps": "20.6u",
+            "pd": "10.4u",
+            "nrd": "10m",
+            "nrs": "15m",
+            "sa": "150n",
+            "sb": "150n",
+            "sd": "200n",
+            "sca": "20.00143",
+            "scb": "0.01843",
+            "scc": "0.00144",
+            "m": "(100)"
+          },
+          "line": 217
+        },
+        {
+          "name": "M6",
+          "master": "g45n2svt",
+          "kind": "mos",
+          "nodes": [
+            "N3",
+            "REF",
+            "N2",
+            "VSS"
+          ],
+          "params": {
+            "w": "(5u)",
+            "l": "500n",
+            "nf": "1",
+            "as": "750f",
+            "ad": "750f",
+            "ps": "10.3u",
+            "pd": "10.3u",
+            "nrd": "30m",
+            "nrs": "30m",
+            "sa": "150n",
+            "sb": "150n",
+            "sd": "200n",
+            "sca": "20.00143",
+            "scb": "0.01843",
+            "scc": "0.00144",
+            "m": "(10)"
+          },
+          "line": 220
+        },
+        {
+          "name": "M5",
+          "master": "g45n2svt",
+          "kind": "mos",
+          "nodes": [
+            "VOUT",
+            "N1",
+            "VSS",
+            "VSS"
+          ],
+          "params": {
+            "w": "(5u)",
+            "l": "500n",
+            "nf": "1",
+            "as": "750f",
+            "ad": "750f",
+            "ps": "10.3u",
+            "pd": "10.3u",
+            "nrd": "30m",
+            "nrs": "30m",
+            "sa": "150n",
+            "sb": "150n",
+            "sd": "200n",
+            "sca": "20.00143",
+            "scb": "0.01843",
+            "scc": "0.00144",
+            "m": "(1)"
+          },
+          "line": 223
+        },
+        {
+          "name": "M3",
+          "master": "g45n2svt",
+          "kind": "mos",
+          "nodes": [
+            "N2",
+            "N1",
+            "VSS",
+            "VSS"
+          ],
+          "params": {
+            "w": "(5u)",
+            "l": "500n",
+            "nf": "1",
+            "as": "750f",
+            "ad": "750f",
+            "ps": "10.3u",
+            "pd": "10.3u",
+            "nrd": "30m",
+            "nrs": "30m",
+            "sa": "150n",
+            "sb": "150n",
+            "sd": "200n",
+            "sca": "20.00143",
+            "scb": "0.01843",
+            "scc": "0.00144",
+            "m": "(1)"
+          },
+          "line": 226
+        },
+        {
+          "name": "M2",
+          "master": "g45n2svt",
+          "kind": "mos",
+          "nodes": [
+            "N1",
+            "N1",
+            "VSS",
+            "VSS"
+          ],
+          "params": {
+            "w": "(5u)",
+            "l": "500n",
+            "nf": "1",
+            "as": "750f",
+            "ad": "750f",
+            "ps": "10.3u",
+            "pd": "10.3u",
+            "nrd": "30m",
+            "nrs": "30m",
+            "sa": "150n",
+            "sb": "150n",
+            "sd": "200n",
+            "sca": "20.00143",
+            "scb": "0.01843",
+            "scc": "0.00144",
+            "m": "(1)"
+          },
+          "line": 229
+        },
+        {
+          "name": "M4",
+          "master": "g45ncap2",
+          "kind": "mos",
+          "nodes": [
+            "VSS",
+            "VOUT",
+            "VSS",
+            "VSS"
+          ],
+          "params": {
+            "w": "(32.0u)",
+            "l": "10u",
+            "m": "(100)"
+          },
+          "line": 232
+        },
+        {
+          "name": "R2",
+          "master": "resnsnpoly_pcell_0",
+          "kind": "resistor",
+          "nodes": [
+            "REF",
+            "REF",
+            "VDD"
+          ],
+          "params": {
+            "segl": "8u",
+            "segw": "1.5u"
+          },
+          "line": 233
+        },
+        {
+          "name": "R1",
+          "master": "resnsnpoly_pcell_0",
+          "kind": "resistor",
+          "nodes": [
+            "VSS",
+            "VSS",
+            "REF"
+          ],
+          "params": {
+            "segl": "8u",
+            "segw": "1.5u"
+          },
+          "line": 234
+        },
+        {
+          "name": "R0",
+          "master": "resnsnpoly_pcell_1",
+          "kind": "resistor",
+          "nodes": [
+            "N1",
+            "N1",
+            "VDD"
+          ],
+          "params": {
+            "segl": "8u",
+            "segw": "1.5u"
+          },
+          "line": 235
+        }
+      ]
+    }
+  ]
+}

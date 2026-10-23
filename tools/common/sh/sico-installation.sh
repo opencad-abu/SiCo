@@ -80,3 +80,87 @@ sico_launcher_environment() {
         return 2
     fi
 }
+
+sico_runtime_python() {
+    # The bundled runtime is authoritative. Source trees may provide a dev
+    # marker, then the explicit compatibility selectors.
+    sico_runtime_python_value=
+    if [ -x "$SICO_HOME/runtime/python/bin/python3" ]; then
+        sico_runtime_python_value=$SICO_HOME/runtime/python/bin/python3
+        # The bundled runtime is authoritative. Replace stale site selectors
+        # instead of letting source and native launchers choose differently.
+        SICO_PYTHON=$sico_runtime_python_value
+        SICO_PYTHON_ROOT=$SICO_HOME/runtime/python
+        SICO_SYSTEM_LD_LIBRARY_PATH=$SICO_HOME/runtime/python/lib:$SICO_HOME/lib
+        SICO_AI_PYTHON_LIBRARY_PATH=$SICO_SYSTEM_LD_LIBRARY_PATH
+        export SICO_PYTHON SICO_PYTHON_ROOT
+        export SICO_SYSTEM_LD_LIBRARY_PATH SICO_AI_PYTHON_LIBRARY_PATH
+    elif [ -f "$SICO_HOME/etc/config/dev-runtime" ]; then
+        sico_runtime_python_value=$(cat -- "$SICO_HOME/etc/config/dev-runtime") || return 2
+        case $sico_runtime_python_value in
+            /*) ;;
+            *)
+                echo "SiCo dev-runtime must contain an absolute Python path" >&2
+                return 2
+                ;;
+        esac
+    elif [ -n "${SICO_PYTHON-}" ]; then
+        sico_runtime_python_value=$SICO_PYTHON
+    elif [ -n "${SICO_PYTHON_ROOT-}" ]; then
+        sico_runtime_python_value=${SICO_PYTHON_ROOT%/}/bin/python3
+    else
+        echo "SiCo Python is unavailable: provide \$SICO_HOME/runtime/python or \${SICO_HOME}/etc/config/dev-runtime" >&2
+        return 2
+    fi
+    case $sico_runtime_python_value in
+        */*)
+            if [ ! -f "$sico_runtime_python_value" ] || [ ! -x "$sico_runtime_python_value" ]; then
+                echo "SiCo Python is not executable: $sico_runtime_python_value" >&2
+                return 2
+            fi
+            ;;
+        *)
+            command -v "$sico_runtime_python_value" >/dev/null 2>&1 || {
+                echo "SiCo Python is not executable: $sico_runtime_python_value" >&2
+                return 2
+            }
+            ;;
+    esac
+}
+
+sico_runtime_library_path() {
+    if [ -x "$SICO_HOME/runtime/python/bin/python3" ]; then
+        sico_runtime_library_path_value=$SICO_HOME/runtime/python/lib:$SICO_HOME/lib
+        return 0
+    fi
+    if [ -f "$SICO_HOME/etc/config/dev-runtime" ]; then
+        sico_dev_python=$(cat -- "$SICO_HOME/etc/config/dev-runtime") || return 2
+        sico_dev_root=$(CDPATH='' cd -- "$(dirname -- "$sico_dev_python")/.." && pwd -P) || return 2
+        sico_runtime_library_path_value=$sico_dev_root/lib:$SICO_HOME/lib
+        return 0
+    fi
+    case ${1:-ai} in
+        ai)
+            if [ "${SICO_AI_PYTHON_LIBRARY_PATH+x}" = x ]; then
+                sico_runtime_library_path_value=$SICO_AI_PYTHON_LIBRARY_PATH
+            elif [ "${SICO_SYSTEM_LD_LIBRARY_PATH+x}" = x ]; then
+                sico_runtime_library_path_value=$SICO_SYSTEM_LD_LIBRARY_PATH
+            else
+                sico_runtime_library_path_value=
+            fi
+            ;;
+        flow)
+            if [ "${SICO_SYSTEM_LD_LIBRARY_PATH+x}" = x ]; then
+                sico_runtime_library_path_value=$SICO_SYSTEM_LD_LIBRARY_PATH
+            elif [ "${SICO_AI_PYTHON_LIBRARY_PATH+x}" = x ]; then
+                sico_runtime_library_path_value=$SICO_AI_PYTHON_LIBRARY_PATH
+            else
+                sico_runtime_library_path_value=
+            fi
+            ;;
+        *)
+            echo "sico_runtime_library_path: unknown mode: $1" >&2
+            return 2
+            ;;
+    esac
+}

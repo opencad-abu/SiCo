@@ -1,0 +1,11 @@
+{
+  "step_s": 2e-08,
+  "knots_per_voltage_axis": 21,
+  "time_constants_s": [
+    0.0,
+    2e-08,
+    1e-07,
+    5e-07,
+    1e-06
+  ]
+}

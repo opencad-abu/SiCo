@@ -46,7 +46,7 @@ class NavigationActions:
             return
 
         try:
-            self.window.activate_session(session_id)
+            self.window.page.activate_session(session_id)
         except (ValueError, OSError, RuntimeError) as exc:
             self._alert("会话未激活：" + str(exc))
             return
@@ -99,7 +99,7 @@ class NavigationActions:
                 return
             if activation != window.page.activation:
                 raise ValueError("所选会话已切换，请重新选择")
-            window.rename_session(
+            window.actions.rename_session(
                 session_id, name,
                 success=lambda _result: self._operation_finished(),
                 failure=lambda exc: self._failed(
@@ -181,7 +181,7 @@ class NavigationActions:
         if activation != window.page.activation:
             raise ValueError("所选会话已切换，请重新选择")
         options = {"review_version": review["version"]} if review is not None else {}
-        window.delete_session(session_id,
+        window.actions.delete_session(session_id,
             success=lambda _result: self._deleted(session_id),
             failure=lambda exc: self._failed("删除失败", exc, ""), **options)
         self._progress("正在删除会话…")
@@ -191,7 +191,7 @@ class NavigationActions:
         target = window.api.session(session_id)
         live = target == window.page.session
         if window.page.reviewing == session_id or live:
-            window.return_from_preview()
+            window.page.return_from_preview()
             if live:
                 self._disable_input()
                 if session_id != window.api.initial_id:
@@ -228,13 +228,13 @@ class NavigationActions:
             self.selected_id = ""
             self._sync_input_scope()
             if window.page.reviewing is not None:
-                window.return_from_preview()
+                window.page.return_from_preview()
                 self.catalog_state = None
                 self.refresh()
                 return
             if window.page.session.session_id == target:
-                window.return_from_preview()
+                window.page.return_from_preview()
                 return
-            window.activate_session(target)
+            window.page.activate_session(target)
         except Exception as exc:  # A Qt signal/slot must never abort the worker.
             self._alert("当前会话暂不可用：" + str(exc))

@@ -26,7 +26,8 @@ def ready_result(key, prepared):
         "coverage": prepared.get("coverage"),
         "quality": prepared.get("quality"),
         "notices": prepared.get("notices", []),
-        "next_action": "get_pdk_data" if published else "complete_pdk_generation",
+        "next_action": standard.get("next_action") or (
+            "get_pdk_data" if published else "complete_pdk_generation"),
         "design_ready": published,
         "readiness_scope": standard.get("readiness_scope", "metadata_capture_only"),
         "live_device_validation_required": True,
@@ -63,7 +64,8 @@ def result(job):
         "next_action": (
             "advance_pdk_collection"
             if job["status"] == "collecting"
-            else ("get_pdk_data" if published else "complete_pdk_generation")
+            else (standard.get("next_action") or (
+                "get_pdk_data" if published else "complete_pdk_generation"))
             if job["status"] == "ready"
             else "respect_user_cancellation"
             if job["status"] == "cancelled"

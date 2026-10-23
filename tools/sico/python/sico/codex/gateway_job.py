@@ -10,11 +10,11 @@ import uuid
 from pathlib import Path
 
 from ..interpreter import cad_python, agent_command
-from ..service.lsf_commands import command_environment, run_command
-from ..service.lsf_config import LsfConfig
-from ..service.lsf_scheduler import LsfScheduler
+from ..lsf.commands import command_environment, run_command
+from ..configuration.lsf import LsfConfig
+from ..lsf.job_control import LsfJobControl
 from ..storage.journal import open_private
-from .local_process import LocalProcess
+from ..local_process import LocalProcess
 import os
 
 
@@ -64,7 +64,7 @@ class GatewayJob:
             bsub=executable,
             **tools,
         )
-        self.scheduler = LsfScheduler(config, environment=scheduler_env)
+        self.scheduler = LsfJobControl(config, environment=scheduler_env)
         self.expected = dict(
             cluster=config.cluster, owner=config.owner, name="sico-ai-" + self.path.stem
         )

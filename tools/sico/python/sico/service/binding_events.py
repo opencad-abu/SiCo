@@ -3,6 +3,7 @@
 import time
 
 from ..core.contracts import BoundContext, json_copy
+from ..storage.journal import BULK_KINDS
 
 
 class SessionBindingEvents:
@@ -18,7 +19,7 @@ class SessionBindingEvents:
         self.default_explicit = False
         self.mirrored = {
             (row["kind"], row["payload"].get("event_id"))
-            for row in journal.events()
+            for row in journal.events(exclude=BULK_KINDS)
             if row["kind"].startswith("binding.")
         }
 

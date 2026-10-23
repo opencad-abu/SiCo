@@ -1,5 +1,7 @@
 """Explicit, bounded Spectre setup recipe; no project/PDK defaults."""
 
+import math
+
 from .circuit_schema import string_schema
 from .circuit_spec_schema import ID, TARGET, array, enum, mapping, obj
 
@@ -8,6 +10,42 @@ PATH = string_schema(2048, pattern=r"^/[^\x00-\x1f]+$")
 VALUE = {"type": ["string", "number", "boolean"], "maxLength": 1024}
 VARIABLES = mapping(TEXT, maximum=64)
 ANALYSIS = obj({"name": enum("dc", "ac", "tran"), "options": mapping(VALUE, maximum=24)})
+# Simulator options the recipe consumer can apply to a test; PDK setup.options
+# entries outside this registry stay unsupported instead of being dropped.
+SIMULATOR_OPTIONS = {"scale": {"type": "number", "exclusiveMinimum": 0, "maximum": 1000,
+                                  "native": "string"}}
+
+
+def native_options(options):
+    """The option pairs as the ADE SKILL surface expects them.
+
+    ADE simulator options are string-valued (spectre's scale rejects a number
+    with ADE-5007), so registry entries declaring native=="string" are
+    formatted here once instead of at every call site.
+    """
+    rows = []
+    for name, value in sorted(options.items()):
+        spec = SIMULATOR_OPTIONS.get(name) or {}
+        rows.append([name, ("%g" % value) if spec.get("native") == "string" else value])
+    return rows
+
+
+def option_problems(options):
+    """Unsupported or invalid entries of one explicit simulator-option mapping."""
+    if not isinstance(options, dict):
+        return ["simulator options must be a mapping"]
+    problems = []
+    for name, value in sorted(options.items(), key=lambda row: str(row[0])):
+        spec = SIMULATOR_OPTIONS.get(name)
+        if not spec:
+            problems.append("unsupported simulator option: " + str(name))
+            continue
+        if spec["type"] == "number" and (
+                isinstance(value, bool) or not isinstance(value, (int, float))
+                or not math.isfinite(value)
+                or not spec["exclusiveMinimum"] < value <= spec["maximum"]):
+            problems.append("invalid value for simulator option: " + str(name))
+    return problems
 OUTPUT = obj(
     {
         "name": ID,
@@ -54,6 +92,7 @@ TEST = obj(
         "models": array(MODEL, 32),
         "analyses": array(ANALYSIS, 3, 1),
         "outputs": array(OUTPUT, 64, 1),
+        "simulator_options": mapping(VALUE, maximum=16),
         "switch_views": array(ID, 16, 1),
         "stop_views": array(ID, 16, 1),
     },
@@ -65,8 +104,6 @@ TEST = obj(
         "models",
         "analyses",
         "outputs",
-        "switch_views",
-        "stop_views",
     ),
 )
 RECIPE = obj(
@@ -87,3 +124,9 @@ OPTIONS = {
     "ac": {"start", "stop", "dec", "lin", "log", "values"},
     "tran": {"stop", "start", "step", "maxstep", "errpreset", "skipdc"},
 }
+
+# Project view-list defaults, kept identical to create_circuit_config's
+# switch_views/stop_views.  ADE searches the list in order: builtin
+# analogLib/basic primitives (res, vdc, vpulse, gnd) have no schematic view,
+# so a list without `spectre` cannot netlist them.
+VIEW_DEFAULTS = {"switch_views": ["spectre", "schematic"], "stop_views": ["spectre"]}

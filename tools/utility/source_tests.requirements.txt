@@ -1,0 +1,4 @@
+# Source-test development dependencies; never part of runtime distribution.
+pytest==8.4.2
+PyQt5==5.15.11
+rfc8785==0.1.4

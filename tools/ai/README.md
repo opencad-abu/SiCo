@@ -1,5 +1,9 @@
 # AI Assistant for Virtuoso
 
+当前版本、状态根和操作入口见[现行文档索引](../docs/SICO_CURRENT_DOCUMENTATION.md)。
+带日期的验收记录是历史证据；本文的当前默认值以该索引和
+[环境配置](../docs/ENVIRONMENT.md)为准。
+
 SiCo PDK data follows [《面向智能体的定制电路工艺数据标准（试行）》](docs/SICO_PDK_DATA_STANDARD.md)
 (SICO-PDK-DATA 1.0.0, effective 2026-09-22). It defines the authoritative compact
 format, confirmed device/CDF usage rules, workspace updates and bounded reads.
@@ -60,7 +64,7 @@ live modeling through the authenticated MCP server:
   See [template MCP v1](docs/CIRCUIT_TEMPLATE_MCP_V1.md) for examples, catalog
   location, qualification results and the optional graph-matching dependency.
   Libraries merge bundled, project (`SICO_CIRCUIT_TEMPLATES_DIR`), and workspace-private
-  (`$CWD/.cad/ai/circuit_templates`) references. Extraction and previews write privately;
+  (`$CWD/.sico/ai/circuit_templates`) references. Extraction and previews write privately;
   see [three library tiers](docs/CIRCUIT_TEMPLATE_LIBRARY_TIERS.md).
 - `preview_template_symbol`, `create_template_symbol`, `inspect_template_symbol`:
   consume a persistent template to create a new rectangular symbol for an existing
@@ -72,10 +76,11 @@ live modeling through the authenticated MCP server:
   preparation through `template_use`. See [circuit template adapter](docs/CIRCUIT_TEMPLATE_CIRCUIT_V1.md).
 - `list_libraries` and `inspect_library`: inspect visible library metadata.
 - `list_windows`: inspect open Virtuoso windows and cellviews.
-- `tool_help`: use the bundled 248-directory Virtuoso index to narrow topics,
+- `cds_help`: use the bundled 248-directory Virtuoso index to narrow topics,
   discover Cadence installations from PATH, search installed HTML
   manuals under `doc`, and read version-specific pages and local chapter links.
-  See [tool_help MCP](docs/TOOL_HELP_MCP.md).
+  The former tool name `tool_help` still dispatches (hidden compatibility alias).
+  See [cds_help MCP](docs/CDS_HELP_MCP.md).
 - `Search`: search local text or file names using bundled ripgrep, with bounded
   results and no dependency on system `rg`. See [Search MCP](docs/SEARCH_MCP.md).
 - `search_skill_api` and `get_skill_api`: query the bundled offline Cadence
@@ -125,7 +130,7 @@ live modeling through the authenticated MCP server:
   `live_model_cancel_publish`: manage the bounded live-model session.
 
 The interactive AI Assistant launch configuration enables its advertised MCP tools. Codex
-0.156.1 uses the native Responses namespace format; Claude uses its tool
+0.162.1 uses the native Responses namespace format; Claude uses its tool
 allowlist to avoid repeated prompts. The server still requires the authenticated per-session
 socket, exposes only the documented tool allowlist, and validates every
 argument and path. A mutating call is never retried after a timeout or
@@ -150,7 +155,7 @@ Virtuoso menu/form
   -> optional interactive LSF stdio proxy
   -> Python 3.9+ session controller
   -> external Python/PyQt5/QTermWidget terminal
-  -> bundled Codex CLI 0.156.1 or site-managed Claude Code 2.1.198
+  -> bundled Codex CLI 0.162.1 or site-managed Claude Code 2.1.198
   -> stdio MCP helper
   -> authenticated private Unix socket
   -> controller JSONL
@@ -172,13 +177,15 @@ Persistent circuit template catalogs require Python's `sqlite3` extension. Their
 optional graph matcher requires `networkx==3.2.1` through `cadai[templates]`;
 capture, query and preview do not import NetworkX. `SICO_CIRCUIT_TEMPLATES_DIR` selects
 the persistent catalog directory and is forwarded to Codex and Claude MCP sessions.
+A project-level `.sico/ai/data-sources.json` can override that environment default;
+the setting only changes the read root and never the private write tier.
 
 ## Production Requirements
 
 - Linux with Virtuoso and `ipcBeginProcess`.
-- Production Python 3.9 or newer selected by `CAD_PYTHON`, or by
-  `CAD_PYTHON_ROOT/bin/python3` when `CAD_PYTHON` is unset. The same path must
-  be available on local and LSF execution hosts.
+- Production Python 3.9.13 derived from `$SICO_HOME/runtime/python`. Source test
+  trees point `$SICO_HOME/etc/config/dev-runtime` at the site interpreter. The
+  same path must be available on local and LSF execution hosts.
 - PyQt5, `PyQt5.sip`, and their Qt 5 libraries, XCB/input-context plugins, and
   matching ICU installed in the production Python tree. User-site PyQt wheels
   and PyQt6/Qt 6 are not supported.
@@ -187,24 +194,21 @@ the persistent catalog directory and is forwarded to Codex and Claude MCP sessio
 - QTermWidget exactly 1.4.0. The release supplies its platform binding,
   `libqtermwidget5.so.1`, resources, and license texts, but does not bundle
   Python, PyQt5, Qt, ICU, or Qt plugins.
-- The release bundles OpenAI Codex CLI `0.156.1` as a native
+- The release bundles OpenAI Codex CLI `0.162.1` as a native
   `x86_64-unknown-linux-musl` executable. Claude Code `2.1.198` (or a
   compatible site-managed release) remains optional.
 - A writable project workspace selected in the launch form.
 
-Codex is pinned to `0.156.1`. MCP tools use the native Responses namespace
+Codex is pinned to `0.162.1`. MCP tools use the native Responses namespace
 format and the app-server owns thread/turn lifecycle. The optional HTTP/SSE
 wrapper is used only when a configured gateway needs flat tool names. The old
 0.114 flat compatibility format is retired. See
-[the runtime compatibility notes](docs/codex-0.156-compatibility.md) for
+[the runtime compatibility notes](docs/codex-0.162-compatibility.md) for
 source references, checksums, and local verification commands.
 
-The qualified site setup is:
-
-```bash
-export CAD_PYTHON_ROOT=/software/pkgs/python/3.9.13
-export CAD_PYTHON="$CAD_PYTHON_ROOT/bin/python3"
-```
+The release launcher derives the interpreter and its OpenSSL/CA libraries from
+the installation root. Do not set `SICO_PYTHON` or `SICO_PYTHON_ROOT` in a
+release modulefile.
 
 The AI Assistant provides one terminal GUI implementation: the Python/PyQt5
 frontend. The native QTermWidget binding and shared library are backend
@@ -561,9 +565,9 @@ for the input, status, compatibility, and sign-off boundaries.
 The Codex executable is resolved in this order:
 
 1. the `--codex` command-line option
-2. `CAD_CODEX_CLI`
+2. `SICO_CODEX_CLI`
 3. the release's bundled native Codex runtime
-4. `$CAD_HOME/bin/codex`
+4. `$SICO_HOME/bin/codex`
 5. `codex` from `PATH`
 
 The bundled Codex runtime is the official `x86_64-unknown-linux-musl` static
@@ -574,40 +578,40 @@ searches the resolved `bin/sico-ai-terminal` release first, then an absolute
 helper remain paired with the controller's source tree. A missing or
 non-executable override is skipped without disabling the remaining fallbacks.
 
-Claude retains its existing site-managed order: `$CAD_HOME/bin/claude`, then
-`--claude` (or `CAD_CLAUDE_CLI` when the option is unset), then `claude` from
+Claude retains its existing site-managed order: `$SICO_HOME/bin/claude`, then
+`--claude` (or `SICO_CLAUDE_CLI` when the option is unset), then `claude` from
 `PATH`. Claude is not bundled.
 
 ## Environment Variables
 
 | Variable | Purpose |
 | --- | --- |
-| `CAD_PYTHON` | Production Python 3.9+ executable used by the controller and PyQt5 terminal. |
-| `CAD_PYTHON_ROOT` | Production Python prefix; its `bin/python3` is used when `CAD_PYTHON` is unset. |
-| `CAD_CODEX_CLI` | Optional Codex executable override; the bundled native runtime is the default. |
-| `CAD_CLAUDE_CLI` | Optional Claude fallback when `$CAD_HOME/bin/claude` is unavailable. |
+| `SICO_PYTHON` | Deprecated source-tree compatibility override; release launchers use `$SICO_HOME/runtime/python/bin/python3`. |
+| `SICO_PYTHON_ROOT` | Deprecated source-tree compatibility override; use `etc/config/dev-runtime` instead. |
+| `SICO_CODEX_CLI` | Optional Codex executable override; the bundled native runtime is the default. |
+| `SICO_CLAUDE_CLI` | Optional Claude fallback when the site Claude command is unavailable. |
 | `NODEJS_HOME` | Optional Node.js prefix or `bin` directory used when an npm Codex launcher cannot find `node` in `PATH`. |
-| `CAD_AI_TERMINAL` | Optional agent-neutral terminal executable override; the installed default is the PyQt5 dispatcher. |
-| `CAD_AI_PYQT_ROOT` | Optional absolute Python frontend root for source/synchronized testing. It is strict and never falls back to an installed frontend. |
-| `CAD_AI_PLATFORM` | Optional `rhel7` or `rhel8` override for the combined-release dispatcher. |
-| `CAD_AI_QTERMWIDGET_RUNTIME` | Internal absolute path selected by the dispatcher for the platform QTermWidget binding/library pair; users must not set it. |
-| `CAD_AI_QTERMWIDGET_DATA_PATH` | Internal QTermWidget resource root selected by the dispatcher; users must not set it. |
-| `CAD_CODEX_HOME` | Optional dedicated Codex state directory override. |
-| `CAD_CODEX_MODEL` | Optional model ID passed to Codex with `--model`. |
-| `CAD_CLAUDE_MODEL` | Optional model ID passed to Claude with `--model`. |
-| `CAD_CODEX_API_BASE_URL` | Optional OpenAI-compatible Responses API base URL. |
-| `CAD_CODEX_API_KEY` | Optional API key read by the environment-configured provider. |
-| `CAD_AI_REQUEST_TIMEOUT` | Virtuoso request timeout in seconds. Default: 300. |
-| `CAD_AI_MCP_TIMEOUT` | MCP request timeout in seconds. Default: 305. |
-| `CAD_AI_PYTHON_ENTRY` | Optional controller entry override for a source or deployment tree. |
-| `CAD_AI_RELEASE_ROOT` | Optional absolute `ai/` release root when the controller/source tree and terminal/runtime release are separate; normally inferred from `CAD_AI_TERMINAL`. |
-| `CAD_AI_PYTHON_LIBRARY_PATH` | Clean production Python library path used by the controller, terminal, and MCP helper; falls back to `CAD_SYSTEM_LD_LIBRARY_PATH`. |
-| `CAD_AI_SKILL_REFERENCE_ROOT` | Optional absolute directory containing alternate `skill_api.sqlite3` and `skill_api.json.gz` payloads. |
+| `SICO_AI_TERMINAL` | Optional agent-neutral terminal executable override; the installed default is the PyQt5 dispatcher. |
+| `SICO_AI_PYQT_ROOT` | Optional absolute Python frontend root for source/synchronized testing. It is strict and never falls back to an installed frontend. |
+| `SICO_AI_PLATFORM` | Optional `rhel7` or `rhel8` override for the combined-release dispatcher. |
+| `SICO_AI_QTERMWIDGET_RUNTIME` | Internal absolute path selected by the dispatcher for the platform QTermWidget binding/library pair; users must not set it. |
+| `SICO_AI_QTERMWIDGET_DATA_PATH` | Internal QTermWidget resource root selected by the dispatcher; users must not set it. |
+| `SICO_CODEX_HOME` | Optional dedicated Codex state directory override. |
+| `SICO_MODEL` | Current Responses model ID; the retired `CAD_CODEX_MODEL` is not a new configuration entry. |
+| `SICO_CLAUDE_MODEL` | Optional model ID passed to Claude with `--model`. |
+| `SICO_API_URL` | Current OpenAI-compatible Responses API base URL. |
+| `SICO_API_KEY` | Current API key read by the environment-configured provider. |
+| `SICO_AI_REQUEST_TIMEOUT` | Virtuoso request timeout in seconds. Default: 300. |
+| `SICO_AI_MCP_TIMEOUT` | MCP request timeout in seconds. Default: 305. |
+| `SICO_AI_PYTHON_ENTRY` | Optional controller entry override for a source or deployment tree. |
+| `SICO_AI_RELEASE_ROOT` | Optional absolute `ai/` release root when the controller/source tree and terminal/runtime release are separate; normally inferred from `SICO_AI_TERMINAL`. |
+| `SICO_AI_PYTHON_LIBRARY_PATH` | Deprecated source-tree compatibility override; release launchers derive the runtime library path from `SICO_HOME`. |
+| `SICO_AI_SKILL_REFERENCE_ROOT` | Optional absolute directory containing alternate `skill_api.sqlite3` and `skill_api.json.gz` payloads. |
 | `PROJ_AI_LSF_EXE` | Optional interactive LSF executable or site wrapper; unset keeps the complete session local. |
 | `PROJ_AI_LSF_ARGS` | Arguments passed to `PROJ_AI_LSF_EXE` before the remote session command. |
 
-`CAD_AI_RUNTIME`, `CAD_AI_SOCKET`, `CAD_AI_SPOOL`, `CAD_AI_TOKEN`,
-`CAD_AI_WORKSPACE`, and `CAD_AI_CONTROL_FD` are internal per-session values. Do
+`SICO_AI_RUNTIME`, `SICO_AI_SOCKET`, `SICO_AI_SPOOL`, `SICO_AI_TOKEN`,
+`SICO_AI_WORKSPACE`, and `SICO_AI_CONTROL_FD` are internal per-session values. Do
 not set them in a site environment.
 
 ### Remote LSF Session
@@ -652,7 +656,7 @@ The Python entry, launch directory, workspace, terminal runtime, and selected
 agent must be available at the same paths on the execution host. The launch
 directory and workspace must be writable shared filesystems with the same
 numeric user ID on both hosts. A remote session creates a private
-`$CWD/.cad/ai/.cad-ai-runtime-<uid>/session-*` bridge directory below the launch
+`$CWD/.sico/ai/.sico-ai-runtime-<uid>/session-*` bridge directory below the launch
 directory. Only the bounded SKILL source and result files
 that Virtuoso must read or write cross this bridge. The session directory is
 removed with a non-recursive `rmdir` on a clean exit; the per-user container
@@ -662,15 +666,15 @@ diagnosis.
 
 The session token, MCP configuration, MCP large-payload spool, large result
 artifacts, Unix socket, and all other runtime files use private permissions
-below the launch directory's `.cad/ai`. LSF must preserve the X11 variables
+below the launch directory's `.sico/ai`. LSF must preserve the X11 variables
 described below so the remotely running terminal opens on the local desktop.
 The controller, MCP helper, private Unix socket, PTY, terminal, and agent all
 stay together on the execution host; no network listener is opened.
 
-All AI child processes receive `CAD_TEMP_DIR`, `TMPDIR`, `TMP`, `TEMP`, and
-`SQLITE_TMPDIR` pointing at the launch directory's `.cad/ai`. Their cache and XDG
-runtime roots are `.cad/ai/cache` and the private `0700` `.cad/ai/runtime`. A
-legacy `CAD_TEMP_DIR=.../.cad` is normalized to `.../.cad/ai`. Shared mount
+All AI child processes receive `SICO_TEMP_DIR`, `TMPDIR`, `TMP`, `TEMP`, and
+`SQLITE_TMPDIR` pointing at the launch directory's `.sico/ai`. Their cache and XDG
+runtime roots are `.sico/ai/cache` and the private `0700` `.sico/ai/runtime`. A
+legacy `CAD_TEMP_DIR=.../.cad` is normalized only during explicit migration. Shared mount
 aliases are preserved instead of resolving to host-only filesystem paths. The
 selected workspace does not change these paths. The persistent Codex login
 home remains in its configured state location.
@@ -683,8 +687,8 @@ actual SKILL failure without a result file preserves its original diagnostic.
 Both Codex and Claude receive startup instructions identifying the current
 Virtuoso MCP session, requiring context/inspection first and preferring
 dedicated tools and SKILL for design work. Supporting Python scripts use
-`"$CAD_PYTHON" -s`; the selected interpreter's directory leads the child PATH.
-Codex also sets `CAD_PYTHON` explicitly in its shell environment policy.
+`"$SICO_HOME/runtime/python/bin/python3" -s`; the selected interpreter's
+directory leads the child PATH.
 
 Before sanitizing Python/Qt library settings or handing off to LSF, the
 launcher captures the source Virtuoso environment into these exported values:
@@ -882,24 +886,24 @@ all representative execution hosts. Every run must exit normally without a
 question before enabling the assistant. If it does not, inspect the effective
 `HOME`, identity/known-hosts paths, agent socket, and real proxy endpoint.
 
-`CAD_CODEX_MODEL` changes the model while retaining the normal dedicated Codex
-login and provider. To use a model through a custom API gateway, set the model
-and Responses API endpoint before starting Virtuoso:
+`SICO_MODEL` changes the model while retaining the normal dedicated Codex
+login and provider. To use a model through a custom API gateway, set the model,
+Responses API endpoint and key before starting Virtuoso:
 
 ```bash
-export CAD_CODEX_MODEL="gateway-model-id"
-export CAD_CODEX_API_BASE_URL="https://gateway.example/v1"
-export CAD_CODEX_API_KEY="value-from-your-secret-manager"
+export SICO_MODEL="gateway-model-id"
+export SICO_API_URL="https://gateway.example/v1"
+export SICO_API_KEY="value-from-your-secret-manager"
 ```
 
-When only `CAD_CODEX_API_KEY` is set, the endpoint defaults to
-`https://api.openai.com/v1`. Omitting the key allows an unauthenticated local
-endpoint. The endpoint must implement the OpenAI Responses API, including
+The retired `CAD_CODEX_MODEL`/`CAD_CODEX_API_BASE_URL`/`CAD_CODEX_API_KEY`
+names are migration inputs only; new configuration uses `SICO_*`. The endpoint
+must implement the OpenAI Responses API, including
 streaming, and the selected model must support function/tool calls. A Chat
-Completions-only endpoint is not supported by Codex 0.145.
+Completions-only endpoint is not supported by the Codex 0.162.1 Responses path.
 
 The API key value is never placed in the Codex command line. The Codex process
-reads it by variable name, while the existing `CAD_CODEX_*` environment policy
+reads it by variable name, while the existing `SICO_*` environment policy
 keeps it out of model-launched shell commands and the MCP helper's explicit
 environment allowlist. Prefer a secret manager or protected session setup over
 storing the key directly in a shared setup file. The base URL is visible in the
@@ -917,34 +921,19 @@ credentials are retained because other CAD tools may depend on them.
 
 ## Verification
 
-Run the Python tests with the production interpreter:
+Run source regressions through the repository entry point with the supported interpreter:
 
 ```bash
-cd tools/ai/python
-"${CAD_PYTHON:-/usr/bin/python3}" -m pytest -q -p no:cacheprovider
-"${CAD_PYTHON:-/usr/bin/python3}" -m compileall -q cadai tests
-ruff check --no-cache .
+/software/pkgs/python/3.9.13/bin/python3 -B -s tools/utility/source_tests.py \
+  --output .cad/source-tests
 ```
 
-When `dbAccess` is available, the test suite also loads the SKILL sources twice
-and verifies evaluation, error handling, bounded output, file loading, JSON,
-and context collection against the installed Cadence runtime.
-
-Run the Virtuoso form probe explicitly on an active display:
-
-```bash
-CAD_AI_RUN_VIRTUOSO_PROBE=1 \
-  "${CAD_PYTHON:-/usr/bin/python3}" -m pytest -q tests/test_skill_virtuoso.py
-```
-
-Run the complete Virtuoso -> controller -> PyQt5 terminal -> MCP session probe
-against an installed terminal:
-
-```bash
-CAD_AI_RUN_FULL_PROBE=1 \
-CAD_AI_TERMINAL=/path/to/ai/bin/sico-ai-terminal \
-  "${CAD_PYTHON:-/usr/bin/python3}" -m pytest -q tests/test_skill_virtuoso.py
-```
+Run this command from the repository root, or use an absolute script path from another
+working directory. Groups, development dependencies, explicit Codex/EDA selection and
+private result evidence are documented in [Source tests](../../docs/SICO_SOURCE_TESTS.md).
+Ordinary, offscreen GUI, source EDA and synthetic release-policy results are separate.
+The default groups do not launch Virtuoso or qualify a compiled runtime. Full-repository
+regression and formal target release acceptance remain separate work.
 
 ## Security Boundaries
 

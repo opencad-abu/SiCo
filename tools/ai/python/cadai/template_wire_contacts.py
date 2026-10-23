@@ -11,6 +11,10 @@ VERSION = "cad.template.wire-reference.v2"
 NET_SEMANTICS = "oa_shape_net_v1"
 
 
+class WireBudgetExceeded(TemplateError):
+    """The wire evidence exceeds the bounded contact-analysis budgets."""
+
+
 def capture_contact_evidence(header, shapes):
     """Only newly attested captures gain the OA interior-crossing semantics."""
     semantics = header.get("wire_net_semantics")
@@ -41,9 +45,9 @@ def source_contacts(lines, anchors, *, observed=False, markers=()):
     """
     all_lines = [(net, s) for net, rows in lines.items() for s in rows]
     if len(all_lines) > 2048:
-        raise TemplateError("source exceeds 2048 wire segments")
+        raise WireBudgetExceeded("source exceeds 2048 wire segments")
     if observed and (len(markers) > 2048 or sum(map(len, anchors.values())) > 4096):
-        raise TemplateError("source contact evidence exceeds marker/terminal budget")
+        raise WireBudgetExceeded("source contact evidence exceeds marker/terminal budget")
     vertices = {tuple(p) for _, s in all_lines for p in s["points"]}
     vertices.update(tuple(a["xy"]) for rows in anchors.values() for a in rows)
     gaps, isolated = defaultdict(set), defaultdict(list)
@@ -58,7 +62,7 @@ def source_contacts(lines, anchors, *, observed=False, markers=()):
             if observed and point is not None:
                 crossing_count += 1
                 if crossing_count > 4096:
-                    raise TemplateError("source exceeds 4096 wire crossings")
+                    raise WireBudgetExceeded("source exceeds 4096 wire crossings")
             marked = observed and point is not None and any(
                 all(box[0][k] <= point[k] <= box[1][k] for k in (0, 1)) for box in markers)
             if observed and point is not None and point not in vertices and not marked:

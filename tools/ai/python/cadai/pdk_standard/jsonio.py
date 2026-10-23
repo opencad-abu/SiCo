@@ -138,7 +138,8 @@ def mapping(root, value, *, depth=0, seen=None):
 
 class Writer:
     def __init__(self, root):
-        self.root, self.files = Path(root), {}
+        # A None root computes the identical file layout/digests without writing.
+        self.root, self.files = Path(root) if root is not None else None, {}
         self.serial = 0
 
     def put(self, name, value, fields=(), *, inventory=True):
@@ -146,12 +147,15 @@ class Writer:
         for field in fields:
             if isinstance(value.get(field), dict) and len(encode(value[field])) > TARGET:
                 value[field] = self.shard(name, field, value[field], inventory=inventory)
-        digest = atomic(relative(self.root, name), value)
+        raw = encode(value)
+        if len(raw) > LIMIT:
+            fail("Standard JSON exceeds 16 KiB")
+        digest = atomic(relative(self.root, name), value) if self.root is not None else sha(raw)
         if inventory:
             self.files[name] = digest
         return digest
 
-    def shard(self, name, field, values, *, inventory=True, depth=0):
+    def shard(self, name, field, values, *, inventory=True, depth=0, target=TARGET):
         if depth >= 4:
             fail("Shard depth exceeds standard limit")
         parts, chunk = [], {}
@@ -164,19 +168,22 @@ class Writer:
             chunk[key] = value
         if chunk:
             parts.append(self._part(name, field, chunk, inventory))
-        if len(encode({"$parts": parts})) > TARGET:
-            grouped = []
-            for start in range(0, len(parts), 12):
-                rows = parts[start:start + 12]
-                self.serial += 1
-                path = str(Path(name).with_suffix("")) + f".{field}.{self.serial:04d}.json"
-                digest = self.put(path, {"$parts": rows}, inventory=inventory)
-                grouped.append(dict(path=path, sha256=digest, count=sum(p["count"] for p in rows),
-                                    first=rows[0]["first"], last=rows[-1]["last"]))
-            parts = grouped
-            if len(encode({"$parts": parts})) > TARGET:
-                fail("Shard directory exceeds supported package capacity")
-        return {"$parts": parts}
+        return self._group(name, field, parts, inventory, target, depth)
+
+    def _group(self, name, field, parts, inventory, target, depth):
+        if len(encode({"$parts": parts})) <= target:
+            return {"$parts": parts}
+        if depth >= 4:
+            fail("Shard depth exceeds standard limit")
+        grouped = []
+        for start in range(0, len(parts), 12):
+            rows = parts[start:start + 12]
+            self.serial += 1
+            path = str(Path(name).with_suffix("")) + f".{field}.{self.serial:04d}.json"
+            digest = self.put(path, {"$parts": rows}, inventory=inventory)
+            grouped.append(dict(path=path, sha256=digest, count=sum(p["count"] for p in rows),
+                                first=rows[0]["first"], last=rows[-1]["last"]))
+        return self._group(name, field, grouped, inventory, target, depth + 1)
 
     def _part(self, name, field, chunk, inventory):
         self.serial += 1

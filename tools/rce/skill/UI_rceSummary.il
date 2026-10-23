@@ -1,7 +1,7 @@
 ; Create and display the native RCE completion form.
 
 unless(and(boundp('UIrceSummaryVersion)
-             UIrceSummaryVersion=="20260919.gui.modules.v1")
+             UIrceSummaryVersion=="20261011.calibre.pex.tool.v1")
 procedure(rceSummaryFormValidP(form)
   and(form
       if(isCallable('hiIsForm) then hiIsForm(form) else t))
@@ -137,8 +137,8 @@ when(and(boundp('rceSummaryForm) rceSummaryForm
           !rceSummaryFormValidP(rceSummaryForm))
   rceSummaryForm=nil)
 procedure(rceSummaryModulesRevision()
-  "20260919.gui.modules.v1"
+  "20261011.calibre.pex.tool.v1"
 )
 rceSummaryUiVersion="20260911.flow.audit.v1"
-UIrceSummaryVersion="20260919.gui.modules.v1"
+UIrceSummaryVersion="20261011.calibre.pex.tool.v1"
 )

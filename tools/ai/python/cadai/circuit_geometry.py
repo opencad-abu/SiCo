@@ -18,7 +18,7 @@ from .circuit_pin_links import pin_links
 from .circuit_pin_style import placed_pin_orientation
 from .circuit_port_routing import port_stub_issues
 from .circuit_spec_plan import preview_circuit
-from .circuit_spec_schema import CircuitSpecError, canonical, digest, unique, validate
+from .circuit_spec_schema import CircuitSpecError, Problems, canonical, digest, unique, validate
 from .circuit_stub_labels import reserve_stub_labels
 
 # Wiring is a user decision, not an agent default: the creation flow requires an
@@ -91,16 +91,25 @@ def _instances(plan, geometry, layout):
     routing_mode = (layout.get("routing") or {}).get("mode", DEFAULT_ROUTING_MODE)
     masters = {m["id"]: m for m in plan["bindings"]["masters"]}
     placed, pins, wires, interior = {}, [], [], []
+    problems = Problems("geometry")
     for instance in plan["spec"]["instances"]:
         key = instance["id"]
         source, position = geometry[key], layout["instances"][key]
         master = masters[instance["master"]]
         if source["master_revision"] != master["revision"]:
-            raise CircuitSpecError("geometry master revision differs: " + key)
+            problems.add("geometry master revision differs", key)
+            continue
         if source["parameters_digest"] != digest(instance["parameters"]):
-            raise CircuitSpecError("geometry requested-parameter digest differs: " + key)
+            problems.add(
+                "geometry requested-parameter digest differs; parameters_digest = sha256("
+                "json.dumps(parameters, sort_keys=True, separators=(\",\", \":\"), "
+                "ensure_ascii=False, allow_nan=False).encode(\"utf-8\")); empty {} = "
+                "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+                key)
+            continue
         if not on_grid(position["xy"], layout["grid"]):
-            raise CircuitSpecError("instance origin is off grid: " + key)
+            problems.add("instance origin is off grid", key)
+            continue
         box = transform_box(source["occupied_bbox"], position["orientation"], position["xy"])
         placed[key] = {
             "id": key,
@@ -112,16 +121,18 @@ def _instances(plan, geometry, layout):
         }
         terminals = unique(source["terminals"], "name", "geometry.terminals")
         if set(terminals) != {t["name"] for t in master["terminals"]}:
-            raise CircuitSpecError("geometry terminals differ from selected master: " + key)
+            problems.add("geometry terminals differ from selected master", key)
+            continue
         choices = layout["anchor_choices"].get(key, {})
         if set(choices) - set(instance["connections"]):
-            raise CircuitSpecError("anchor_choices may only select connected terminals")
+            problems.add("anchor_choices may only select connected terminals", key)
         for name, term in terminals.items():
             unique(term["anchors"], "id", "terminal.anchors")
             endpoint = {"instance": key, "terminal": name}
             for candidate in term["anchors"]:
                 if not inside(candidate["xy"], source["occupied_bbox"]):
-                    raise CircuitSpecError("pin anchor is outside supplied occupied_bbox")
+                    problems.add("pin anchor is outside supplied occupied_bbox",
+                                 key + "/" + name + ":" + str(candidate["id"]))
                 pins.append(
                     {
                         "endpoint": endpoint,
@@ -131,15 +142,20 @@ def _instances(plan, geometry, layout):
                 )
             if name not in instance["connections"]:
                 continue
-            selected = _anchor(term, choices.get(name))
+            try:
+                selected = _anchor(term, choices.get(name))
+            except CircuitSpecError as exc:
+                problems.add(str(exc), key + "/" + name)
+                continue
             direction = VECTORS[selected["escape"]]
             # Require an outward ray from a boundary pin, never a guessed path through a body.
             beyond = [selected["xy"][k] + direction[k] * EPS * 4 for k in (0, 1)]
             if inside(beyond, source["occupied_bbox"]):
                 if routing_mode != "end_to_end":
-                    raise CircuitSpecError(
-                        "stub escape must lead out of occupied_bbox; explicit routing needed"
-                    )
+                    problems.add(
+                        "stub escape must lead out of occupied_bbox; explicit routing needed",
+                        key + "/" + name)
+                    continue
                 # Routed plans can start from an interior anchor (for example a
                 # PDK bulk pin drawn inside the body): the router owns the path,
                 # and the owner body stays exempt for the first segment.
@@ -160,16 +176,21 @@ def _instances(plan, geometry, layout):
                 )
             xy = transform(selected["xy"], position["orientation"], position["xy"])
             vector = transform(direction, position["orientation"])
-            wire = _wire(
-                endpoint,
-                instance["connections"][name],
-                xy,
-                vector,
-                layout["stub_length"],
-                layout["grid"],
-            )
+            try:
+                wire = _wire(
+                    endpoint,
+                    instance["connections"][name],
+                    xy,
+                    vector,
+                    layout["stub_length"],
+                    layout["grid"],
+                )
+            except CircuitSpecError as exc:
+                problems.add(str(exc), key + "/" + name)
+                continue
             wire["anchor_id"] = selected["id"]
             wires.append(wire)
+    problems.raise_if_any()
     return placed, pins, wires, interior
 
 
@@ -185,7 +206,9 @@ def preview_geometry(
         preview = attach_template(preview, template_use, workspace=workspace)
     if preview_digest != preview["preview_digest"]:
         raise CircuitSpecError(
-            "preview_digest differs; preview exact spec, bindings and template_use again"
+            "preview_digest differs; preview exact spec, bindings and template_use again, "
+            "then resubmit that payload unchanged: array order is part of the digest, so any "
+            "edit (including reordered terminals or parameters) needs a fresh preview"
         )
     plan = preview["plan"]
     sources = _matching(plan, geometry, layout)

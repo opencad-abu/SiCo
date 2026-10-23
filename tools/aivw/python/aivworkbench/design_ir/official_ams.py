@@ -12,7 +12,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from ..agent.context import ArtifactLocator
+from ..contract import ArtifactLocator
 from .assembler_io import payload_artifact, sha256_file
 from .config_binding import (
     ConfigBinding,

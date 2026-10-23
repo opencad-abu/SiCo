@@ -2,8 +2,7 @@ let((commonSkill)
   commonSkill=strcat("/" buildString(reverse(cdr(reverse(
     parseString(simplifyFilename(get_filename(piport) t) "/")))) "/")
     "/../common/skill/")
-  load(strcat(commonSkill "SICO_environment.il"))
-  load(strcat(commonSkill "SICO_installation.il")))
+  load(strcat(commonSkill "../../../scripts/sicoSource.il")))
 
 ;------------------------------------------------------------------------------
 ; TOML-driven SiCo menu registration for CIW, Layout Editor, and Schematic.
@@ -11,7 +10,7 @@ let((commonSkill)
 ;------------------------------------------------------------------------------
 
 unless(and(boundp('witMenuLoaderVersion)
-             witMenuLoaderVersion=="20260922.sico.menu.v4"
+             witMenuLoaderVersion=="20261020.sico.menu.v5"
              isCallable('witMenuLoadRelative)
              isCallable('witMenuInstallAgent)
              isCallable('witMenuReload))
@@ -100,14 +99,15 @@ procedure(witMenuLoadRelative(relativePath)
 )
 
 procedure(witMenuGenerateData()
-  let((python cadPython pythonRoot helper config output cmd status)
-    cadPython=SICO_envValue("SICO_PYTHON")
-    pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
-    python=cond(
-      (and(cadPython strlen(cadPython)>0) cadPython)
-      (and(pythonRoot strlen(pythonRoot)>0)
+  let((python installed cadPython pythonRoot helper config output cmd status)
+    installed=SICO_installedPython()
+    cadPython=when(not(installed) SICO_envValue("SICO_PYTHON"))
+    pythonRoot=when(and(not(installed) not(cadPython))
+      SICO_envValue("SICO_PYTHON_ROOT"))
+    python=or(installed cadPython
+      when(and(pythonRoot strlen(pythonRoot)>0)
         simplifyFilename(strcat(pythonRoot "/bin/python3") t))
-      (t "python3"))
+      "python3")
     when(and(boundp('witMenuRoot)
                witMenuRoot
                strlen(witMenuRoot)>0)
@@ -318,21 +318,21 @@ procedure(witMenuRegenerate()
   )
 )
 
-witMenuLoaderVersion="20260922.sico.menu.v4"
+witMenuLoaderVersion="20261020.sico.menu.v5"
 )
 
 witMenuRoot=SICO_installationPath(SICO_installationRoot() "tools/utility")
 
 if(witMenuRoot then
   unless(and(boundp('witMenuInitVersion)
-               witMenuInitVersion=="20260922.sico.menu.v4"
+               witMenuInitVersion=="20261020.sico.menu.v5"
                boundp('witMenuAgentInitVersion)
                witMenuAgentInitVersion=="20260909.menu.agent.v1"
                boundp('witMenuInitRoot)
                witMenuInitRoot==witMenuRoot)
     when(witMenuReload()
       witMenuInitRoot=witMenuRoot
-      witMenuInitVersion="20260922.sico.menu.v4"
+      witMenuInitVersion="20261020.sico.menu.v5"
     )
   )
 else

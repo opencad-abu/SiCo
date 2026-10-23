@@ -11,6 +11,7 @@ from .measurement_failures import failures
 from .measurement_recipe_fields import recipe_fields
 from .measurement_semantics import semantics
 from .result_contract import ResultError, digest
+from .schema_refs import expand
 from .waveform_measure import UNITS
 from .waveform_pair import MATCH_KEYS
 from .waveform_schema import (
@@ -68,15 +69,12 @@ MEASUREMENT_TOOLS = {t["name"]: t for t in WAVEFORM_TOOLS + AC_TOOLS + RESPONSE_
 CATALOG_TOOLS = [
     tool(
         "list_measurement_capabilities",
-        "Discover implemented generic waveform measurement capabilities offline, "
-        "without a workspace "
-        "or Virtuoso. Optional exact kind/operation/tool_name filters and literal case-insensitive "
-        "query over id/name/definition; all filters combine with AND. Results are stable id-sorted "
-        "summaries with catalog_revision; use get_measurement_capability for "
-        "authoritative schemas, "
-        "units, applicability, explicit parameters and failure rules. No recipe "
-        "defaults, simulation "
-        "or project/PDK discovery. An empty result does not authorize inventing an operation.",
+        "Discover implemented generic waveform measurement capabilities offline, without a "
+        "workspace or Virtuoso. Optional exact kind/operation/tool_name filters and a literal "
+        "case-insensitive query over id/name/definition combine with AND. Results are stable "
+        "id-sorted summaries with catalog_revision; use get_measurement_capability for "
+        "authoritative schemas. No recipe defaults or any project/PDK discovery; an empty "
+        "result does not authorize inventing an operation.",
         {
             "kind": enum(*BINDINGS),
             "operation": string_schema(96),
@@ -89,14 +87,12 @@ CATALOG_TOOLS = [
     ),
     tool(
         "get_measurement_capability",
-        "Read one generic measurement capability by exact id, e.g. ac_response.phase_margin. "
-        "Return the live tool input schema, operation-specific recipe schema, required quantities, "
-        "analysis/type/unit constraints, mathematical semantics, failure patterns, limits and "
-        "specification integration. Schema validation alone does not verify physical "
-        "compatibility; "
-        "also satisfy semantic rules. All task values remain explicit. Optional catalog_revision "
-        "guards a prior list selection against changed catalog content. Offline and read-only; "
-        "unknown ids or stale revisions are errors, never substitutions.",
+        "Read one generic measurement capability by id, e.g. ac_response.phase_margin. Returns "
+        "the live tool input schema, operation recipe schema, required quantities, analysis/"
+        "type/unit constraints, semantics, failure patterns, limits and specification "
+        "integration. Schema validation alone does not verify physical compatibility; satisfy "
+        "semantic rules too, and keep task values explicit. Optional catalog_revision guards a "
+        "prior list selection. Unknown ids or stale revisions are errors, never substitutions.",
         {
             "capability_id": string_schema(128),
             "catalog_revision": string_schema(64, pattern=r"^[0-9a-f]{64}$"),
@@ -119,8 +115,10 @@ def _quantity_paths(quantities):
 def _entry(kind, operation):
     name, capture, query, wave_schema, report_schema = BINDINGS[kind]
     definition = MEASUREMENT_TOOLS[name]
+    # The authoritative schema stays as authored (it may factor repeated
+    # structures into local $defs); a sliced projection expands them.
     tool_schema = deepcopy(definition["inputSchema"])
-    original = tool_schema["properties"]["recipes"]["items"]
+    original = expand(tool_schema["properties"]["recipes"]["items"], root=tool_schema)
     fields = recipe_fields(kind, operation)
     schema = obj(
         {k: deepcopy(v) for k, v in original["properties"].items() if k in fields}, sorted(fields)

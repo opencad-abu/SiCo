@@ -1,0 +1,124 @@
+; Source development only. Protected contexts retain their own init lifecycle.
+; Lexical state is private to this process; no business globals are reset.
+unless(isCallable('SICO_sourceRequire)
+  let((installation files groups initializers loading ready loadMember classesReady)
+    installation=strcat("/" buildString(reverse(cddr(reverse(
+      parseString(simplifyFilename(get_filename(piport)) "/")))) "/"))
+    files=makeTable("sicoSourceFiles" nil)
+    groups=makeTable("sicoSourceGroups" nil)
+    initializers=makeTable("sicoSourceInitializers" nil)
+    loading=nil
+
+    classesReady=lambda((spec)
+      forall(name nth(6 spec) findClass(name)))
+
+    ready=lambda((spec record)
+      and(record car(record)=='loaded cadr(record)==caddr(spec)
+          forall(pair caddr(record) eq(getd(car(pair)) cadr(pair)))
+          forall(name cadddr(spec) isCallable(name))
+          classesReady(spec)
+          forall(revision nth(4 spec)
+            equal(car(errset(apply(car(revision) nil) nil)) cadr(revision)))))
+
+    loadMember=lambda((spec)
+      prog((path record saved savedDefinitions result completed count)
+        path=strcat(car(spec) "/" cadr(spec))
+        record=files[path]
+        when(ready(spec record) return(t))
+        when(member(path loading)
+          error("SiCo source dependency cycle: %L -> %s\n" reverse(loading) path))
+        count=if(record then nth(3 record) else 0)
+        files[path]=list('loading caddr(spec) nil count nil)
+        loading=cons(path loading)
+        ; Legacy file guards are definition guards only. Temporarily clear the
+        ; guards this member reads, including split fragments sharing a marker.
+        saved=foreach(mapcar marker nth(5 spec)
+          list(marker boundp(marker) when(boundp(marker) symeval(marker))))
+        foreach(item saved set(car(item) nil))
+        savedDefinitions=foreach(mapcar name cadddr(spec)
+          list(name getd(name)))
+        unwindProtect(
+          progn(
+            ; A managed upgrade replaces only this member; clear its old
+            ; definitions first so SKILL does not report every export as redefined.
+            foreach(item savedDefinitions putd(car(item) nil))
+            result=errset(load(strcat(installation "/" path)) t)
+            unless(and(result car(result))
+              error("SiCo source load failed: %s\n" path))
+            unless(and(classesReady(spec) forall(name cadddr(spec) isCallable(name))
+                       forall(revision nth(4 spec)
+                         equal(car(errset(apply(car(revision) nil) nil)) cadr(revision))))
+              error("SiCo source contract failed: %s\n" path))
+            files[path]=list('loaded caddr(spec)
+              foreach(mapcar name cadddr(spec) list(name getd(name))) count+1 nil)
+            completed=t)
+          progn(
+            loading=cdr(loading)
+            foreach(item saved
+              when(null(symeval(car(item)))
+                set(car(item) caddr(item))))
+            unless(completed
+              foreach(item savedDefinitions putd(car(item) cadr(item)))
+              files[path]=list('failed caddr(spec) nil count "load or contract failed"))))
+        return(t)))
+
+    putd('SICO_sourceRoot lambda(()
+      SICO_installationRoot(installation)))
+
+    putd('SICO_sourceRequire lambda((group fingerprint members)
+      prog((completed)
+        groups[group]=list('loading fingerprint)
+        unwindProtect(
+          progn(
+            foreach(spec members loadMember(spec))
+            SICO_sourceRoot()
+            groups[group]=list('loaded fingerprint)
+            completed=t)
+          unless(completed groups[group]=list('failed fingerprint)))
+        return(t))))
+
+    putd('SICO_sourceInitialize lambda((group functions)
+      prog((key completed)
+        unless(and(groups[group] car(groups[group])=='loaded)
+          error("SiCo source group is incomplete: %s\n" group))
+        unwindProtect(
+          progn(
+            foreach(name functions
+              key=strcat(group ":" symbolToString(name))
+              unless(and(initializers[key] eq(initializers[key] getd(name)))
+                unless(and(isCallable(name) errset(apply(name nil) t))
+                  error("SiCo source initialization failed: %L\n" name))
+                initializers[key]=getd(name)))
+            completed=t)
+          unless(completed groups[group]=list('failed cadr(groups[group]))))
+        return(t))))
+
+    putd('SICO_sourceRevision lambda((group)
+      when(groups[group] cadr(groups[group]))))
+
+    putd('SICO_sourceStatus lambda((@optional group)
+      ; Fresh lists expose status, not tables, function handles or mutable state.
+      if(group then
+        when(groups[group] list(group car(groups[group]) cadr(groups[group])))
+      else
+        foreach(mapcar path sort(files~>? 'alphalessp)
+          list(path car(files[path]) cadr(files[path]) nth(3 files[path]) nth(4 files[path]))))))
+  )
+)
+
+; Reject mixed installations even when this singleton already exists.
+let((sourceInstallation configured canonical)
+  canonical=lambda((path)
+    let((value)
+      value=simplifyFilename(path)
+      while(and(strlen(value)>1 substring(value strlen(value) 1)=="/")
+        value=substring(value 1 strlen(value)-1))
+      value))
+  sourceInstallation=canonical(strcat("/" buildString(reverse(cddr(reverse(
+      parseString(simplifyFilename(get_filename(piport)) "/")))) "/")))
+  configured=getShellEnvVar("SICO_HOME")
+  when(and(configured canonical(configured)!=sourceInstallation)
+    error("SICO_HOME conflicts with the source loader installation\n"))
+  when(isCallable('SICO_installationRoot)
+    unless(canonical(SICO_sourceRoot())==sourceInstallation
+      error("SiCo cannot mix source installations in one process\n"))))

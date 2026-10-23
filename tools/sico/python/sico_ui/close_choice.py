@@ -9,6 +9,10 @@ from .si_prompt import CANCEL, SiConfirm
 
 WINDOW_ONLY = "关闭窗口"
 STOP_SERVICE = "结束服务"
+PLATFORM_CLOSE_NOTE = (
+    "关闭 SiCo 或结束服务都不会关闭通过 SiCo 启动的 CDNS-IC/Virtuoso；"
+    "Virtuoso 只能由用户自行退出。"
+)
 # 关闭对话框的三个选择从左到右：[结束服务] [关闭窗口] [取消]。强制停止只在「服务」菜单里，
 # 不再出现在这个对话框，避免误触。自绘对话框按注册顺序排版，这一排就是权威顺序。
 ROW = ((STOP_SERVICE, STOP_SERVICE), (WINDOW_ONLY, WINDOW_ONLY), (CANCEL, CANCEL))
@@ -38,7 +42,7 @@ class CloseChoice(QObject):
         self._attempt = 0
         self.errors = []
         self.force = ForceServiceStop(window, self._begin_force)
-        self.blocked = BlockedServiceStop(window, self.continue_stop)
+        self.blocked = BlockedServiceStop(window, self.continue_stop, self.force.confirm)
 
     @property
     def busy(self):
@@ -85,6 +89,7 @@ class CloseChoice(QObject):
     def _question(self, pending=None):
         text = (f"{WINDOW_ONLY}：项目服务与各会话继续运行，之后重新打开可以接着用。\n"
                 f"{STOP_SERVICE}：先结束本窗口打开过的会话；收尾完成后请求停止。\n"
+                f"{PLATFORM_CLOSE_NOTE}\n"
                 "项目中其他活动会话或资源尚未收尾时，服务会保留并说明原因。\n"
                 "已归档的中断记录会保留供核对，不阻止关闭服务。\n"
                 f"服务异常或收尾卡住时，可从「服务」菜单选择“{FORCE_STOP}”。")
@@ -156,7 +161,7 @@ class CloseChoice(QObject):
             details += "；" + "；".join(self.errors)
         self._busy = False
         self.window.statusBar().clearMessage()
-        self.blocked.open(details)
+        self.blocked.open(details, receipt.status.pending)
 
     def end_failed(self, token, error):
         self.errors.append(token.session_id + "：" + str(error))
@@ -165,6 +170,16 @@ class CloseChoice(QObject):
     def refused(self, error):
         self._busy = False
         self.window.statusBar().clearMessage()
+        from sico.service.service_errors import is_request_unsent
+
+        if is_request_unsent(error):
+            # 请求根本没发出：没有会话被改动，也不该套用"会话归档/收尾核对"的说明。
+            self.window.info_app.warning(
+                "结束服务未执行",
+                "项目服务当前不可达：结束服务请求没有发出，任何会话记录都没有变化。\n"
+                f"可再次选择“{WINDOW_ONLY}”（记录保留，之后可重新打开），"
+                f"或从服务菜单选择“{FORCE_STOP}”。")
+            return
         self.window.info_app.warning("结束服务未执行", str(error)
             + "\n\n活动会话可选择“结束并归档”；收尾未确认时请核对原结束请求。"
             f"已归档记录无需再次归档；也可选择{WINDOW_ONLY}。\n"

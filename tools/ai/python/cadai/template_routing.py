@@ -105,6 +105,9 @@ def route_template(plan, geometry, layout, stubs, placed, pins, *, workspace=Non
         by_net.setdefault(wire["net"], []).append(wire)
     planned, report, issues, pending = {}, [], [], {}
     try:
+        if (record.get("standard_capabilities") is not None
+                and record["standard_capabilities"]["routing-reference-v1"] != "passed"):
+            raise TemplateError("standard routing-reference-v1 is not qualified")
         source = compile_reference(record)
     except TemplateError as exc:
         source, source_error = None, str(exc)

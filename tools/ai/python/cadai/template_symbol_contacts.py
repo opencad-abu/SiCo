@@ -76,7 +76,7 @@ def side_of(anchor, box):
     )
 
 
-def attach_stubs(body, box, anchors, sides):
+def attach_stubs(body, box, anchors, sides, max_stub=MAX_STUB, contact=False):
     """Put grid pins outside the body and join them to its actual contour.
 
     All pins on a side share an outer grid line, preserving the existing
@@ -90,29 +90,29 @@ def attach_stubs(body, box, anchors, sides):
         side = sides[name]
         axis, sign = SIDES[side]
         other = 1 - axis
-        edge = box[int(sign > 0)][axis]
-        outer = (
-            math.ceil(edge / GRID - EPS) + 1 if sign > 0 else math.floor(edge / GRID + EPS) - 1
-        ) * GRID
         lanes = range(
             math.ceil(box[0][other] / GRID - EPS), math.floor(box[1][other] / GRID + EPS) + 1
         )
         lanes = sorted(lanes, key=lambda n: (abs(n * GRID - anchor[other]), n))
         for lane_index in lanes:
             lane = lane_index * GRID
+            hits = intersections(body, axis, lane)
+            if not hits:
+                continue
+            contact_point = max(hits, key=lambda p: sign * p[axis])
+            edge = contact_point[axis] if contact else box[int(sign > 0)][axis]
+            outer = (
+                math.ceil(edge / GRID - EPS) + 1 if sign > 0 else math.floor(edge / GRID + EPS) - 1
+            ) * GRID
             pin = [0.0, 0.0]
             pin[axis], pin[other] = outer, lane
             if tuple(pin) in used:
                 continue
-            hits = intersections(body, axis, lane)
-            if not hits:
-                continue
-            contact = max(hits, key=lambda p: sign * p[axis])
-            length = sign * (outer - contact[axis])
-            if EPS < length <= MAX_STUB - GRID / 2 + EPS:
+            length = sign * (outer - contact_point[axis])
+            if EPS < length <= max_stub - GRID / 2 + EPS:
                 anchors[name] = pin
                 used.add(tuple(pin))
-                result.append(["line", [pin, contact], None])
+                result.append(["line", [pin, contact_point], None])
                 break
         else:
             raise TemplateUnavailable(

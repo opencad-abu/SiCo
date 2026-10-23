@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from PyQt5.QtCore import QObject, QTimer
 from PyQt5.QtWidgets import QAbstractItemView, QHeaderView, QTreeWidget, QTreeWidgetItem
 
+from .force_service_stop import FORCE_STOP
 from .receipts import DataReceipt
 from .si_prompt import CANCEL, SiForm
 
@@ -29,10 +30,11 @@ class RemainingSession:
 
 
 class BlockedServiceStop(QObject):
-    def __init__(self, window, resume):
+    def __init__(self, window, resume, force=None):
         super().__init__(window)
-        self.window, self.resume = window, resume
+        self.window, self.resume, self.force = window, resume, force
         self.dialog = None
+        self.pending_work = None
         self.rows = []
         self.receipt = DataReceipt(self)
         self._epoch = 0
@@ -49,11 +51,12 @@ class BlockedServiceStop(QObject):
         if self.window.lifecycle.closing:
             self.close()
 
-    def open(self, details):
+    def open(self, details, pending=None):
         self.close()
         if self.window.lifecycle.closing:
             return
         self.details = details
+        self.pending_work = pending
         self.rows = []
         self.timer.start()
         dialog = self.dialog = SiForm("项目服务暂未停止", self.window)
@@ -67,6 +70,8 @@ class BlockedServiceStop(QObject):
             self.table.header().setSectionResizeMode(column, QHeaderView.ResizeToContents)
         dialog.add_field(self.table)
         dialog.add_choice("finish", CONFIRM_STOP, danger=True)
+        if pending is not None and pending.jobs:
+            dialog.add_choice("force", FORCE_STOP, danger=True)
         dialog.add_choice("refresh", "刷新")
         dialog.add_choice(CANCEL, CANCEL, default=True, escape=True)
         dialog.set_enabled("finish", False)
@@ -133,7 +138,11 @@ class BlockedServiceStop(QObject):
                "正在执行的任务会停止，未执行队列保留；已发出的操作仍可能需要核对。\n"
                if count else "当前没有可在此结束的遗留会话。\n")
             + "其他窗口正在使用、正在收尾或状态未确认的会话会保留。\n"
-            "确认前会重新核验；新出现的会话不会自动加入。")
+            "确认前会重新核验；新出现的会话不会自动加入。"
+            + ("\n后台作业不能通过结束会话清理；可使用“" + FORCE_STOP
+               + "”结束本机服务。若作业已提交到 LSF，强制停止不会取消远端作业；"
+               "请先在后台作业面板取消或使用 bkill 处理，结果仍需另行核对。"
+               if self.pending_work is not None and self.pending_work.jobs else ""))
         self.dialog.set_enabled("finish", bool(count))
         self.dialog.adjustSize()
 
@@ -148,6 +157,10 @@ class BlockedServiceStop(QObject):
             self.window.info_app.warning("遗留会话尚未结束", str(error))
 
     def _chosen(self, key):
+        if key == "force" and self.force is not None:
+            self.window.statusBar().clearMessage()
+            self.force()
+            return
         selected = tuple(row for row in self.rows if row.eligible)
         self.close()
         if self.window.lifecycle.closing:
@@ -183,6 +196,7 @@ class BlockedServiceStop(QObject):
         self._validating = False
         self.receipt.clear()
         self.timer.stop()
+        self.pending_work = None
         dialog, self.dialog = self.dialog, None
         if dialog is not None:
             dialog.chosen.disconnect(self._chosen)

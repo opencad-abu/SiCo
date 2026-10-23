@@ -19,7 +19,6 @@ from PyQt5.QtWidgets import (
     QLabel,
     QMenu,
     QProgressBar,
-    QStyle,
 )
 
 from .analysis_actions import AnalysisActionsMixin
@@ -100,13 +99,12 @@ class DspfMainWindow(AnalysisActionsMixin, OaBridgeMixin, SiMainWindow):
         self._set_busy(False)
 
     def _create_actions(self) -> None:
-        style = self.style()
-        self.open_action = QAction(style.standardIcon(QStyle.SP_DialogOpenButton), "Open", self)
+        self.open_action = QAction("Open", self)
         self.open_action.setShortcut(QKeySequence.Open)
-        self.rebuild_action = QAction(style.standardIcon(QStyle.SP_BrowserReload), "Rebuild", self)
-        self.cancel_action = QAction(style.standardIcon(QStyle.SP_DialogCancelButton), "Cancel", self)
-        self.highlight_action = QAction(style.standardIcon(QStyle.SP_ArrowRight), "Highlight in Layout", self)
-        self.oa_selection_action = QAction(style.standardIcon(QStyle.SP_ArrowLeft), "Use OA Selection", self)
+        self.rebuild_action = QAction("Rebuild", self)
+        self.cancel_action = QAction("Cancel", self)
+        self.highlight_action = QAction("Highlight in Layout", self)
+        self.oa_selection_action = QAction("Use OA Selection", self)
         for action in (
             self.open_action,
             self.rebuild_action,
@@ -117,7 +115,7 @@ class DspfMainWindow(AnalysisActionsMixin, OaBridgeMixin, SiMainWindow):
             action.setToolTip(action.text())
         toolbar = self.addToolBar("DSPF")
         toolbar.setMovable(False)
-        toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        toolbar.setToolButtonStyle(Qt.ToolButtonTextOnly)
         toolbar.addAction(self.open_action)
         toolbar.addAction(self.rebuild_action)
         toolbar.addAction(self.cancel_action)

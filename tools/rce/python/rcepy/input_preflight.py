@@ -49,7 +49,7 @@ def configured_input_paths(
         add("lvs", "runset_file")
         if cfg.flag("lvs", "hcell_enable"):
             add("lvs", "hcell_file")
-    if cfg.is_xrc:
+    if cfg.is_calibre_pex:
         for settings in build_xrc_plan(cfg, context).settings:
             for name in (
                 "lvs_rule_file",
@@ -72,7 +72,7 @@ def configured_input_paths(
             add("input", "cdl", "run_directory")
         for key in ("cellmap_file", "device_mapping_file", "layer_mapping_file"):
             add("extract", "view", key)
-        if cfg.is_xrc:
+        if cfg.is_calibre_pex:
             add("extract", "xrc", "cellmap_file")
     if cfg.ext_tool.upper() in {"STARRC", "STARXTRACT"}:
         for key in ("tcad_grd_file", "mapping_file"):

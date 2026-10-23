@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from PyQt5.QtCore import QSize, Qt, QTimer
-from PyQt5.QtGui import QBrush
+from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (
     QLabel,
+    QShortcut,
     QSplitter,
     QTreeWidget,
     QTreeWidgetItem,
@@ -14,18 +15,14 @@ from PyQt5.QtWidgets import (
 )
 
 from .navigation_actions import NavigationActions
+from .navigation_label_actions import LabelActions
+from .navigation_labels import KIND_LABEL, KIND_ROLE, KIND_UNCLASSIFIED, LabeledHistory
 from .passive_notices import PassiveNotices
 from .navigation_menu import SessionRowMenu
+from .navigation_rows import session_item
 from .navigation_status import ACTIVITY as ACTIVITY
-from .navigation_status import (
-    CHILD_ACTIVITY,
-    STATUS_DOT,
-    _session_time,
-    activity_icon,
-    activity_label,
-    session_activity,
-    unavailable_live_text,
-)
+from .navigation_status import STATUS_DOT, _session_time, session_activity, unavailable_live_text
+from .row_stripes import enable_row_stripes
 from .tasks import TaskPanel
 from .workspace import EvenTabWidget
 
@@ -40,7 +37,7 @@ def _deep_items(tree):
         stack.extend(item.child(index) for index in range(item.childCount()))
 
 
-class Navigation(SessionRowMenu, NavigationActions, EvenTabWidget):
+class Navigation(SessionRowMenu, NavigationActions, LabelActions, EvenTabWidget):
     def __init__(self, window):
         super().__init__()
         self.window = window
@@ -52,9 +49,10 @@ class Navigation(SessionRowMenu, NavigationActions, EvenTabWidget):
         self.selected_id = ""
         self._live_id = None
         self._catalog_blocked_runtime = None
+        self._label_dragging = False
         # 上块＝本窗口已打开的会话（绿/橙/蓝），下块＝未打开的历史记录（灰），只靠位置和圆点区分。
         self.current = self._session_tree("sessionCurrent")
-        self.list = self._session_tree("sessionHistory")
+        self.list = LabeledHistory(self)
         self.current_hint = self._hint("暂无已打开的会话")
         self.history_hint = self._hint("暂无历史会话")
         self.session_pane = self._session_pane()
@@ -73,6 +71,7 @@ class Navigation(SessionRowMenu, NavigationActions, EvenTabWidget):
 
         tree = QTreeWidget()
         tree.setObjectName(object_name)
+        enable_row_stripes(tree)
         tree.setHeaderHidden(True)
         tree.setIconSize(QSize(STATUS_DOT, STATUS_DOT))
         tree.setRootIsDecorated(True)
@@ -83,8 +82,15 @@ class Navigation(SessionRowMenu, NavigationActions, EvenTabWidget):
         )
         tree.setVerticalScrollMode(QTreeWidget.ScrollPerPixel)
         # 单击只选中；双击（或回车）才只读浏览，所以双击不再折叠/展开行。
+        # itemActivated 在部分桌面样式（单键激活）会由单击触发，这里不接它：
+        # 鼠标只走 itemDoubleClicked，回车用行范围内的快捷键补上。
         tree.setExpandsOnDoubleClick(False)
-        tree.itemActivated.connect(self.browse)
+        # 排队执行：先让本次双击事件里的其他槽（展开状态检查等）看到行现状。
+        tree.itemDoubleClicked.connect(self.browse, Qt.QueuedConnection)
+        for key in (Qt.Key_Return, Qt.Key_Enter):
+            shortcut = QShortcut(QKeySequence(key), tree)
+            shortcut.setContext(Qt.WidgetWithChildrenShortcut)
+            shortcut.activated.connect(lambda tree=tree: self.browse(tree.currentItem()))
         tree.currentItemChanged.connect(self.select)
         return tree
 
@@ -138,6 +144,8 @@ class Navigation(SessionRowMenu, NavigationActions, EvenTabWidget):
 
     def refresh(self):
         """Refresh the passive history tree without letting Qt slot errors escape."""
+        if self._label_dragging:
+            return
         try:
             self._apply_default_split()
             self._refresh()
@@ -246,7 +254,7 @@ class Navigation(SessionRowMenu, NavigationActions, EvenTabWidget):
                     and not window.api.is_closing(window.page.session) and not window.binding.failed
                     and window.presentation.state and not window.presentation.state["fault"]):
                 window.input.setEnabled(True)
-                window.update_session(window.presentation.state)
+                window.renderer.update_session(window.presentation.state)
         if browsing:
             reason = by_id.get(browsing, {}).get("unavailable", "")
             if (not reason and browsing not in by_id
@@ -261,13 +269,18 @@ class Navigation(SessionRowMenu, NavigationActions, EvenTabWidget):
                 "正在浏览的会话" + reason + "，已返回当前会话。",
                 "浏览结束",
             )
-            self.window.return_from_preview()
+            self.window.page.return_from_preview()
             browsing = self.window.page.reviewing
             selected = self.selected_id or browsing or live
         activities = {
             key: session_activity(sessions.activity(controller))
             for key, controller in opened.items()
         }
+        label_state = self.catalog_snapshot.get("labels") or {}
+        label_rows = [dict(row) for row in self.catalog_snapshot.get("label_rows", ())]
+        known = {row["id"] for row in rows}
+        label_rows = [row for row in label_rows if row["id"] not in known]
+        all_rows = rows + label_rows
 
         def child_signature(children):
             return tuple(
@@ -276,98 +289,66 @@ class Navigation(SessionRowMenu, NavigationActions, EvenTabWidget):
                 for c in children
             )
 
+        def row_signature(row):
+            return (
+                row["id"],
+                row.get("name", ""),
+                row.get("title", ""),
+                _session_time(row.get("modified")),
+                row.get("unavailable", ""),
+                row.get("damaged", False),
+                child_signature(row.get("children", [])),
+            )
+
         signature = (
             selected,
             live,
             browsing,
             activities,
             ended,
-            [
-                (
-                    r["id"],
-                    r.get("name", ""),
-                    r.get("title", ""),
-                    _session_time(r.get("modified")),
-                    r.get("unavailable", ""),
-                    r.get("damaged", False),
-                    child_signature(r.get("children", [])),
-                )
-                for r in rows
-            ],
+            [row_signature(r) for r in rows],
+            [row_signature(r) for r in label_rows],
+            label_state.get("revision"),
+            label_state.get("error", ""),
+            tuple(
+                (label["id"], label["name"], tuple(label.get("sessions", ())))
+                for label in label_state.get("labels", ())
+            ),
+            tuple(label_state.get("loose_order", ())),
         )
         if signature == self.catalog_state:
             return
         current_position = self.current.verticalScrollBar().value()
         position = self.list.verticalScrollBar().value()
-        blocked = [(tree, tree.blockSignals(True)) for tree in (self.current, self.list)]
+        blocked = [(self.current, self.current.blockSignals(True))]
         try:
             for tree, _state in blocked:
                 tree.clear()
-            for row in rows:
+            history_rows = []
+            for row in all_rows:
                 key = row["id"]
                 reason = row.get("unavailable", "")
                 if reason == "已删除" and (key not in opened or
                         getattr(self.window, "service_connection", None) is not None):
                     # 记录已不存在：直接从导航移除，而不是留给用户点击。
                     continue
-                stamp = _session_time(row.get("modified"))
                 # 已结束的会话不再是本窗口“打开”的会话：它归档到下块，只留只读记录。
                 # 上块＝本窗口打开过且未结束；其余（记录、已结束、上次运行遗留的活会话）留在下块。
                 opened_here = key in mine and (key not in ended or bool(reason))
-                title = (
-                    "当前会话\n" + key[:12]
-                    if key == live and opened_here
-                    else stamp + "\n" + key[:12]
+                if not opened_here:
+                    history_rows.append(row)
+                    continue
+                item = session_item(
+                    row, live=live, browsing=browsing, opened_here=opened_here,
+                    ended=ended, activity=activities.get(key, "idle"),
+                    line_spacing=self.fontMetrics().lineSpacing(),
+                    item_factory=QTreeWidgetItem,
                 )
-                name = row.get("name") or row.get("title") or title
-                if key == browsing:
-                    name = name + "\n（浏览中 · 只读）"
-                status = reason or ("已结束" if key in ended else "")
-                if status:
-                    name = name + "\n（" + status + "）"
-                item = QTreeWidgetItem([name])
-                lines = max(2, name.count("\n") + 1)
-                item.setSizeHint(0, QSize(140, self.fontMetrics().height() * lines + 12))
-                activity = activities.get(key, "idle")
-                if reason or not opened_here:
-                    # 下块是记录视图（历史/已结束/上次运行遗留）：圆点一律静默，不显示服务侧活动。
-                    activity = "idle"
-                item.setIcon(0, activity_icon(activity))
-                item.setData(0, Qt.UserRole, key)
-                item.setData(0, Qt.UserRole + 3, bool(row.get("damaged")))
-                tooltip = activity_label(activity) + ("\n" + status if status else "") + "\n" + key
-                if not reason:
-                    tooltip += "\n双击浏览（只读）；右键“继续”切换或恢复该会话"
-                item.setToolTip(0, tooltip)
-                if reason:
-                    item.setData(0, Qt.UserRole + 2, reason)
-                    item.setForeground(0, QBrush(Qt.gray))
-                    # 双保险：不可用的会话灰掉且不可选中，点击不再触发任何操作。
-                    if row.get("damaged"):
-                        item.setToolTip(0, tooltip + "\n内容不完整，右键仅可删除残留记录")
-                    else:
-                        item.setFlags(item.flags() & ~(Qt.ItemIsSelectable | Qt.ItemIsEnabled))
-                tree = self.current if opened_here else self.list
-                tree.addTopLevelItem(item)
-
-                def add_child(parent_item, child):
-                    child_id = child.get("thread_id", "")
-                    if not child_id:
-                        return
-                    child_name = child.get("name") or "子任务"
-                    child_item = QTreeWidgetItem([child_name + "\n" + child_id[:12]])
-                    child_activity = CHILD_ACTIVITY.get(child.get("status", ""), "free")
-                    child_item.setIcon(0, activity_icon(child_activity))
-                    child_item.setToolTip(0, activity_label(child_activity) + "\n" + child_id)
-                    child_item.setData(0, Qt.UserRole, child_id)
-                    child_item.setData(0, Qt.UserRole + 1, key)
-                    parent_item.addChild(child_item)
-                    for nested in child.get("children", []):
-                        add_child(child_item, nested)
-
-                for child in row.get("children", []):
-                    add_child(item, child)
-                item.setExpanded(bool(row.get("children")))
+                self.current.addTopLevelItem(item)
+            self.list.update_snapshot(
+                history_rows, label_state, browsing=browsing, selected=selected,
+                ended=ended,
+            )
             if not self._mark_selected(selected) and self.selected_id:
                 # 选中的行已消失（删除或记录退出目录）：落回现场会话。
                 self.selected_id = ""
@@ -387,22 +368,38 @@ class Navigation(SessionRowMenu, NavigationActions, EvenTabWidget):
         for row in self.catalog_snapshot["rows"]:
             if row["id"] == session_id:
                 return row
+        for row in self.catalog_snapshot.get("label_rows", ()):
+            if row["id"] == session_id:
+                return row
         return self.catalog_snapshot["retained"].get(session_id, {})
 
 
     def _session_items(self):
-        """Every session row in both panes, current pane first."""
+        """Every session row once, current/list first and label children last."""
 
+        seen = set()
         for tree in (self.current, self.list):
             for index in range(tree.topLevelItemCount()):
-                yield tree.topLevelItem(index)
+                item = tree.topLevelItem(index)
+                key = item.data(0, Qt.UserRole)
+                if key and key not in seen:
+                    seen.add(key)
+                    yield item
+        for item in self.list.session_items():
+            key = item.data(0, Qt.UserRole)
+            if key and key not in seen:
+                seen.add(key)
+                yield item
+
+    def _navigation_trees(self):
+        return (self.current, self.list)
 
     def _mark_selected(self, key):
         """Highlight the row that owns ``key`` (a session or child thread)."""
 
         if not key:
             return False
-        for tree in (self.current, self.list):
+        for tree in self._navigation_trees():
             for item in _deep_items(tree):
                 if item.data(0, Qt.UserRole) == key:
                     tree.setCurrentItem(item)
@@ -415,13 +412,15 @@ class Navigation(SessionRowMenu, NavigationActions, EvenTabWidget):
 
         if item is None:
             return
-        # 两棵树共享单选：另一棵树上的高亮先清掉，避免出现两个选中。
-        for tree in (self.current, self.list):
+        # 两块共享单选：另一块上的高亮先清掉，避免出现两个选中。
+        for tree in self._navigation_trees():
             if tree.currentItem() is not None and tree.currentItem() is not item:
                 blocked = tree.blockSignals(True)
                 tree.setCurrentItem(None)
                 tree.blockSignals(blocked)
         try:
+            if item.data(0, KIND_ROLE) in {KIND_LABEL, KIND_UNCLASSIFIED}:
+                return
             key = item.data(0, Qt.UserRole)
             unavailable = item.data(0, Qt.UserRole + 2)
             if unavailable:
@@ -452,7 +451,7 @@ class Navigation(SessionRowMenu, NavigationActions, EvenTabWidget):
             self._clear_alert("browse")
             self.selected_id = session_id
             self._sync_input_scope()
-            window.preview_session(session_id)
+            window.page.preview_session(session_id)
             self.catalog_state = None
             self.refresh()
         except Exception as exc:  # A Qt signal/slot must never abort the worker.

@@ -12,7 +12,7 @@ from ..executor import ExecutorContext, ExecutorResult
 from ..profiles import product_root
 from ..cdns_ipc import McpToolCall, McpToolResult, call_read_only_tools
 from ..workspace import write_json_once
-from ..agent.runtime_info import production_python
+from ..runtime_info import production_python
 
 _MAX_ITEMS = 100
 

@@ -1,91 +1,158 @@
-"""Portable, tool-owned metadata for the two standard Cadence device libraries."""
+"""Portable, tool-owned standard data for the two standard Cadence device libraries.
+
+The bundled data at ``tools/ai/share/pdk-data`` is a standard root
+(``index.json`` + one published package per library).  The legacy compressed
+capture format is retired: the catalogs below are projected from the standard
+documents so that selection and search keep serving the two base libraries
+without a live device scan, and ``install`` copies the published baseline into
+a workspace when the generation flow is asked to prepare one of them.
+"""
 from __future__ import annotations
 
-from copy import deepcopy
-from functools import lru_cache
-import gzip
 import json
+from copy import deepcopy
 from pathlib import Path
 
-from . import pdk_enrich
-from .pdk_normalize import detail, digest
-from .pdk_schema import MAX_CACHE_BYTES, SECTIONS, PdkUnavailable
+from .pdk_normalize import digest
+from .pdk_schema import PdkUnavailable
 
 LIBRARIES = frozenset({"analogLib", "basic"})
-FORMAT = "cad.pdk.builtin.v1"
 ROOT = Path(__file__).resolve().parents[2] / "share" / "pdk-data"
-LIBRARY_PATH = "@library@"
-RAW_FIELDS = frozenset({"identity", "cdf", "database", "project_models"})
+INDEX = "index.json"
+SCHEMA = "sico.pdk.package"
 
 
-def relocate(value, library_path):
-    """Expand only the recorded library placeholder, including nested raw metadata."""
-    if isinstance(value, str):
-        return value.replace(LIBRARY_PATH, library_path)
-    if isinstance(value, list):
-        return [relocate(item, library_path) for item in value]
-    if isinstance(value, dict):
-        return {key: relocate(item, library_path) for key, item in value.items()}
-    return value
+def _missing(detail):
+    return PdkUnavailable("builtin_pdk_unavailable", "Invalid built-in PDK data: " + detail)
 
 
-@lru_cache(maxsize=2)
-def _read(path, stamp):
-    try:
-        with gzip.open(path, "rb") as stream:
-            raw = stream.read(MAX_CACHE_BYTES + 1)
-        if len(raw) > MAX_CACHE_BYTES:
-            raise ValueError("builtin data exceeds its size limit")
-        value = json.loads(raw)
-        payload = value["payload"]
-        library = payload["library"]
-        if (value["format"] != FORMAT or library not in LIBRARIES
-                or Path(path).name != library + ".json.gz" or payload["view"] != "symbol"
-                or value["digest"] != digest(payload)):
-            raise ValueError("builtin identity/digest mismatch")
-        from .pdk_data import checked_directory
-        checked_directory(payload["directory"], library, "symbol")
-        targets = {row["identity"]["target"]["cell"]: row["identity"]["target"]
-                   for row in payload["directory"]["items"]}
-        if not targets or set(targets) != set(payload["devices"]):
-            raise ValueError("builtin device coverage mismatch")
-        for cell, device in payload["devices"].items():
-            if set(device) != RAW_FIELDS or device["identity"]["target"] != targets[cell]:
-                raise ValueError("invalid builtin device")
-        return value
-    except (OSError, EOFError, KeyError, TypeError, ValueError) as exc:
-        raise PdkUnavailable("builtin_pdk_unavailable", "Invalid built-in PDK data: " + str(path)) from exc
+def _absent(path):
+    return PdkUnavailable("builtin_pdk_unavailable", "Built-in PDK data is missing: " + path)
 
 
 class BuiltinPdk:
     def __init__(self):
-        self.catalogs = {}
+        self._index = None
 
-    def bundle(self, library):
-        path = ROOT / (library + ".json.gz")
+    def index(self):
+        """The bundled standard packages, keyed by library, cached by file stamp."""
+        path = ROOT / INDEX
         try:
             stat = path.stat()
-            stamp = (stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
-            return _read(str(path), stamp)
-        except OSError as exc:
-            raise PdkUnavailable("builtin_pdk_unavailable", "Built-in PDK data is missing: " + str(path)) from exc
+            stamp = (stat.st_size, stat.st_mtime_ns)
+        except OSError:
+            raise _absent(str(path)) from None
+        if self._index is None or self._index[0] != stamp:
+            try:
+                value = json.loads(path.read_text())
+                packages = value["packages"]
+                if value.get("format") != "sico.pdk.index" or not isinstance(packages, dict):
+                    raise ValueError("index format")
+                entries = {}
+                for library, row in packages.items():
+                    if library not in LIBRARIES:
+                        continue
+                    target = ROOT / row["path"]
+                    if not (target / "package.json").is_file():
+                        raise ValueError("package missing: " + str(target))
+                    entries[library] = {"path": row["path"],
+                                        "roots": dict(row.get("roots") or {})}
+                if not entries:
+                    raise ValueError("no standard libraries")
+            except (OSError, KeyError, TypeError, ValueError) as exc:
+                raise _missing(str(path)) from exc
+            self._index = (stamp, entries)
+        return deepcopy(self._index[1])
+
+    def package(self, library):
+        from .pdk_standard.package import Package
+
+        entry = self.index().get(library)
+        if entry is None:
+            raise _missing("no bundled package for " + str(library))
+        return Package(ROOT / entry["path"])
+
+    def symbol(self, library, cell):
+        """The published symbol facts (bbox/anchors) of one bundled device."""
+        package = self.package(library)
+        row = package.document("device.json")["items"].get(cell) or {}
+        if not row.get("dir") or not package.available(row["dir"] + "/symbol.json"):
+            raise _missing("device not published: " + str(cell))
+        return package.document(row["dir"] + "/symbol.json")
+
+    def install(self, root, library, roots):
+        """Install the bundled published baseline into a workspace generation root."""
+        from .pdk_standard.package import install as package_install
+
+        return package_install(root, library, ROOT / self.index()[library]["path"], roots)
+
+    def rebind(self, root, library, roots):
+        """Re-point the installed baseline at the live site path; same content only."""
+        from .pdk_standard.package import rebind as package_rebind
+
+        package = self.package(library)
+        return package_rebind(root, library, package.manifest_digest, roots)
+
+    def catalog(self, library):
+        """The legacy catalog entry for one library, projected from the standard package."""
+        from .pdk_standard.readiness import issues as device_issues
+
+        package = self.package(library)
+        devices = package.document("device.json")["items"]
+        grouped = {}
+        for issue in device_issues(package):
+            grouped.setdefault(issue["device"], set()).add(issue["file"])
+        directory, rows = [], {}
+        for cell, row in sorted(devices.items()):
+            name = row["dir"]
+            cdf = package.document(name + "/cdf.json")
+            names = sorted(cdf["parameters"])
+            directory.append({"identity": {"target": {"library": library, "cell": cell,
+                                                      "view": "symbol"}},
+                              "cdf_summary": {"status": "complete", "presence": cdf["presence"],
+                                              "names": names}})
+            allowed = any(row["use"][purpose] == "allow"
+                          for purpose in ("circuit", "testbench"))
+            sections = sorted({part.split("/")[-1].split(".")[0]
+                               for part in grouped.get(cell, set())}) if allowed else ["usage"]
+            model = (cdf["parameters"].get("model") or {}).get("default")
+            rows[cell] = {
+                "digest": digest([library, cell, names, row["categories"], sections]),
+                "revision": digest([library, cell, names, row["categories"], sections]),
+                "incomplete_sections": sections,
+                "categories": list(row["categories"]),
+                "enriched": True,
+                "tiers": {"interface": sorted(cdf.get("interface_parameters") or []),
+                          "derived": [], "auxiliary": []},
+                "ranges": [],
+                "readiness": ("incomplete" if sections else "ready") if allowed else "unpublished",
+                "model": model if isinstance(model, str) else None,
+                "model_status": self._model_status(package, row),
+                "model_decks": 0, "limits": False,
+            }
+        from .pdk_data import PdkData
+
+        payload = {"library": library, "view": "symbol",
+                   "directory": {"status": "complete", "truncated": False, "issues": [],
+                                 "items": directory},
+                   "devices": rows, "excluded": {},
+                   "coverage": PdkData.coverage(rows)}
+        return {"source": "builtin", "complete": True,
+                "path": str(ROOT / self.index()[library]["path"]),
+                "schema": SCHEMA, "digest": digest(payload), "payload": payload}
 
     @staticmethod
-    def _device(bundle, ctx, target):
-        lib = next(row for row in ctx["libraries"] if row["name"] == target["library"])
-        payload = bundle["payload"]
-        raw = relocate(payload["devices"][target["cell"]], lib["resolved_path"])
-        value = detail(raw, ctx)
-        # Timestamps describe the bundled observation, not a live device capture.
-        value["captured_at"] = payload["captured_at"]
-        categories = pdk_enrich.device_categories(payload["categories"], target["cell"])
-        model = next((p["default"]["value"] for p in value["parameters"]["items"]
-                      if p["name"] == "model"), None)
-        resolution = {"status": "decks_unavailable", "queried": model}
-        return pdk_enrich.enrich(value, resolution, categories, {"available": False})
+    def _model_status(package, row):
+        name = row["dir"] + "/simulation.json"
+        if not package.available(name):
+            return "missing"
+        interfaces = package.document(name)["interfaces"]
+        if not interfaces:
+            return "none"
+        return ("builtin" if all(i["model_source"] == "builtin" for i in interfaces.values())
+                else "external")
 
     def discover(self, ctx, view):
-        from .pdk_data import PdkData, device_fingerprint
         found = {}
         if view != "symbol":
             return found
@@ -94,42 +161,5 @@ class BuiltinPdk:
             if (library not in LIBRARIES or lib.get("status") != "complete"
                     or not lib.get("resolved_path")):
                 continue
-            bundle = self.bundle(library)
-            key = (library, digest(lib), bundle["digest"])
-            if key not in self.catalogs:
-                directory = relocate(bundle["payload"]["directory"], lib["resolved_path"])
-                devices = {}
-                for record in directory["items"]:
-                    target = record["identity"]["target"]
-                    value = self._device(bundle, ctx, target)
-                    devices[target["cell"]] = {
-                        "digest": device_fingerprint(value), "revision": value["revision"],
-                        "incomplete_sections": [part for part in SECTIONS if value[part]["status"] != "complete"],
-                        "categories": value["categories"]["all"], "enriched": True,
-                        "tiers": {tier: sorted(p["name"] for p in value["parameters"]["items"]
-                                               if p.get("tier") == tier)
-                                  for tier in ("interface", "derived", "auxiliary")},
-                        "ranges": [], "readiness": value["readiness"]["overall"],
-                        "model": value["model_resolution"].get("queried"),
-                        "model_status": "decks_unavailable", "model_decks": 0, "limits": False,
-                    }
-                payload = {"library": library, "view": view, "directory": directory,
-                           "devices": devices, "excluded": {}, "coverage": PdkData.coverage(devices),
-                           "captured_at": bundle["payload"]["captured_at"]}
-                if len(self.catalogs) >= 8:
-                    self.catalogs.clear()
-                self.catalogs[key] = {"source": "builtin", "complete": True,
-                                      "path": str(ROOT / (library + ".json.gz")),
-                                      "schema": FORMAT, "digest": digest(payload), "payload": payload}
-            found[library] = self.catalogs[key]
+            found[library] = self.catalog(library)
         return found
-
-    def device(self, ctx, target, expected_digest):
-        from .pdk_data import device_fingerprint
-        try:
-            value = self._device(self.bundle(target["library"]), ctx, target)
-        except (KeyError, StopIteration) as exc:
-            raise PdkUnavailable("builtin_pdk_unavailable", "Built-in device is unavailable") from exc
-        if device_fingerprint(value) != expected_digest:
-            raise PdkUnavailable("snapshot_changed", "Built-in PDK data changed; start a new search")
-        return deepcopy(value)

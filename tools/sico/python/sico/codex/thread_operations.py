@@ -4,7 +4,7 @@ from ..core.contracts import json_copy
 from .goals import Goals, GoalStopped
 from .review import InlineReview
 from .rpc import RpcError
-from .thread_revert import revert_history
+from .thread_revert import revert_history, revert_to_turn
 from .thread_memory import ThreadMemory, validate_memory
 
 
@@ -24,6 +24,7 @@ def validate_action(value):
         "goal_start": {"kind", "objective", "token_budget"},
         "goal_clear": {"kind"}, "goal_pause": {"kind"}, "fork": {"kind"},
         "rollback": {"kind", "num_turns", "history_only"},
+        "rollback_to": {"kind", "before_turn_id"},
         "review": {"kind", "target"}, "compact": {"kind"},
         "memory": {"kind", "settings"},
     }
@@ -38,6 +39,11 @@ def validate_action(value):
         if (type(action["num_turns"]) is not int or not 1 <= action["num_turns"] <= 1000
                 or action["history_only"] is not True):
             raise ValueError("Confirm history-only rollback and its turn count")
+    elif kind == "rollback_to":
+        boundary = action["before_turn_id"]
+        if (not isinstance(boundary, str) or not boundary or len(boundary) > 200
+                or boundary.strip() != boundary):
+            raise ValueError("Invalid history boundary")
     elif kind == "memory":
         action["settings"] = validate_memory(action["settings"])
     elif kind == "review":
@@ -79,9 +85,9 @@ class ThreadOperations:
     def status(self):
         if self.backend.thread_id is None:
             return self.snapshot()
-        self.backend._ensure_runtime()
-        self.goals.read(self.backend.runtime.rpc)
-        self.memory.inspect()
+        with self.backend._runtime_rpc() as rpc:
+            self.goals.read(rpc)
+            self.memory.inspect(rpc)
         return self.snapshot()
 
     def available(self, action):
@@ -152,6 +158,9 @@ class ThreadOperations:
         elif kind == "rollback":
             revert_history(backend, action["num_turns"])
             turn = None
+        elif kind == "rollback_to":
+            revert_to_turn(backend, action["before_turn_id"])
+            turn = None
         elif kind == "review":
             turn = self.review.start(action["target"])
         else:
@@ -196,4 +205,5 @@ class ThreadOperations:
             self.review.interrupt(turn_id)
         else:
             self.backend.runtime.rpc.request("turn/interrupt", {
-                "threadId": self.backend.thread_id, "turnId": turn_id})
+                "threadId": self.backend.thread_id, "turnId": turn_id},
+                timeout=5, cancelled=lambda: False)

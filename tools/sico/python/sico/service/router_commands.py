@@ -1,6 +1,8 @@
 """Session-scoped router queries with independently owned status publication."""
 from ..core.contracts import NeedsReconcile
 from .router_receipt import latest_router_request, router_receipt_view, validate_router_receipt
+
+ROUTER_TAIL_ROWS = 2048
 from .router_status import router_status
 
 
@@ -62,7 +64,17 @@ class SessionRouter:
         read = getattr(broker, "request_receipt", None)
         if not callable(read):
             raise ValueError("当前连接不支持查询路由回执")
-        request = latest_router_request(self.journal.events(), context, self.execution().session_id)
+        # 当前来源的回执就在尾部窗口里：只解析「全部任务起点 + 尾部行」，
+        # 未命中才回退整篇扫描（旧语义）。
+        journal = self.journal
+        tail = max(0, len(journal.records) - ROUTER_TAIL_ROWS)
+        try:
+            request = latest_router_request(
+                journal.task_rows() + journal.records[tail:], context,
+                self.execution().session_id)
+        except ValueError:
+            request = latest_router_request(iter(journal.records), context,
+                                            self.execution().session_id)
         try:
             receipt = read(context, request["request_id"], session_id=self.execution().session_id)
         except NeedsReconcile:

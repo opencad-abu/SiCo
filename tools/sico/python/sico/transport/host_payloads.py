@@ -5,7 +5,8 @@ import time
 import uuid
 
 from ..core.contracts import json_copy
-from ..service.host_contract import capture_payload, digest
+from ..core.host_contracts import digest
+from .host_payload_contract import capture_payload
 
 
 class HostPayloads:

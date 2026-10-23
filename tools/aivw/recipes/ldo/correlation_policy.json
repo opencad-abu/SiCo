@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "name": "aivw-ldo-deterministic-correlation-v1",
+  "status": "controlled_fixture_only",
+  "metrics": [
+    {"name": "vout", "kind": "numeric", "unit": "V", "absolute_tolerance": 0.01},
+    {"name": "supply_current", "kind": "numeric", "unit": "A", "absolute_tolerance": 0.000001},
+    {"name": "enable_state", "kind": "categorical", "unit": "enum"},
+    {"name": "settling_time", "kind": "timing", "unit": "s", "absolute_tolerance": 0.000001},
+    {"name": "vout_waveform", "kind": "waveform", "unit": "V", "absolute_tolerance": 0.02}
+  ],
+  "verdict_policy": {
+    "missing_evidence": "BLOCKED_EVIDENCE",
+    "non_finite_evidence": "BLOCKED_EVIDENCE",
+    "metric_mismatch": "FAIL_CORRELATION",
+    "all_required_metrics": "PASS"
+  },
+  "reference_only": true
+}

@@ -16,7 +16,14 @@ from ..transport.circuit import WRITES, literal_call
 from .project import RECONCILE_STATES, ProjectReadClient, operation_status, register_project
 from .results import NAMES as RESULT_NAMES
 from .circuit_reads import EVIDENCE_READS, evidence_dependencies
-from .circuit_decisions import settled_target_decision, target_decision
+from .circuit_decisions import (
+    prepare_target_use,
+    remember_created_target,
+    settled_target_decision,
+    target_decision,
+)
+from .circuit_summary import circuit_summary
+from .destructive_reviews import circuit_gate
 from .results import register_results
 
 # Generic planning and finite lifecycle only. No sample-circuit recipes or arbitrary eval.
@@ -57,6 +64,7 @@ NAMES = frozenset(
         "import_pdk_facts",
         "collect_pdk_parameter_facts",
         "get_pdk_fact_report",
+        "get_pdk_source_impact",
         "prepare_pdk_cdf_validation",
         "advance_pdk_cdf_validation",
         "get_pdk_cdf_validation",
@@ -68,10 +76,12 @@ NAMES = frozenset(
         "cancel_pdk_parameter_draft",
         "prepare_pdk_data_update",
         "apply_pdk_data_update",
+        "prepare_pdk_baseline_update",
+        "apply_pdk_baseline_update",
         "revalidate_pdk_bindings",
         "bind_pdk_device",
         "list_project_extensions",
-        "prepare_circuit_library",
+        "prepare_library",
     }
 )
 
@@ -86,6 +96,7 @@ class CircuitClient(ProjectReadClient):
         super().__init__(broker, context)
         self.workspace, self.requirements = Path(workspace), None
         self.target_observations = {}
+        self.created_targets = {}
 
     def send(self, function, values, claim=None, expected=None):
         reply = self.broker.circuit_call(
@@ -99,7 +110,30 @@ class CircuitClient(ProjectReadClient):
         )
         data = reply.get("circuit")
         if not isinstance(data, dict):
-            raise NeedsReconcile("Missing shared circuit reply; query original operation")
+            diagnostic = reply.get("diagnostic") if isinstance(reply, dict) else None
+            diagnostic = diagnostic if isinstance(diagnostic, dict) else {}
+            code = diagnostic.get("code") or (
+                reply.get("code") if isinstance(reply, dict) else None
+            )
+            message = diagnostic.get("raw_error") or (
+                reply.get("error") if isinstance(reply, dict) else None
+            ) or "Shared circuit reply is missing"
+            detail = {
+                **diagnostic,
+                "function": function,
+                "request_id": reply.get("id") if isinstance(reply, dict) else None,
+                "automatic_resume_allowed": diagnostic.get(
+                    "automatic_resume_allowed", False
+                ),
+            }
+            if not code or diagnostic.get("operation_dispatched") is True or code in {
+                "circuit_context_stale",
+                "circuit_binding_changed",
+                "circuit_requires_reconcile",
+                "circuit_outcome_unknown",
+            }:
+                raise NeedsReconcile(message, data=detail)
+            raise CircuitCallError(code, message, data=detail)
         from cadai.skill_diagnostics import carry_output
 
         data = carry_output(data, reply)
@@ -151,6 +185,10 @@ class CircuitClient(ProjectReadClient):
         if operation == "create_circuit_library":
             from cadai.project_tools import session_identity
 
+            if not parameters.get("prepare_ref"):
+                from cadai.circuit_library import prepare_library_operation
+                _, prepared = prepare_library_operation(self, parameters, self.workspace)
+                parameters["prepare_ref"] = prepared["prepare_ref"]
             description = self.send("aiCopilotDescribe", [operation, parameters["prepare_ref"],
                                                          None, None])
             expected = description.get("binding")
@@ -240,7 +278,7 @@ class CircuitClient(ProjectReadClient):
         }
 
 
-def register_circuit(registry, broker, workspace):
+def register_circuit(registry, broker, workspace, journal=None):
     from cadai.mcp import _TOOLS_BY_NAME, McpServer
 
     clients, servers = {}, {}
@@ -289,26 +327,65 @@ def register_circuit(registry, broker, workspace):
 
     def handler(name):
         def execute(arguments, context):
+            blocked = circuit_gate(registry, name, arguments, context)
+            if blocked is not None:
+                return blocked
             client, server = client_for(context)
             try:
-                if name == "prepare_circuit_creation" and arguments.get("target_action") in {"continue", "replace"}:
+                workflow_selection, record_workflow = (None, None)
+                if name == "begin_circuit_task":
+                    from .session_workflow import begin_task
+                    workflow_selection, record_workflow = begin_task(journal, arguments.get("workflow"), registry.mcp_schemas(), context)
+                    if workflow_selection and not workflow_selection["ok"]:
+                        suggestion = workflow_selection.get("suggestion")
+                        summary = ("Unknown or unavailable workflow; did you mean " + suggestion
+                                   if suggestion else "Unknown or unavailable workflow")
+                        return ToolResult("invalid_arguments", summary, data=workflow_selection)
+                auto_target = False
+                if name == "prepare_circuit_creation" and "target_action" not in arguments:
+                    current_task = (
+                        journal.state.task["id"]
+                        if journal.state is not None and journal.state.task else None
+                    )
+
+                    def inspect_target(target):
+                        return client.send("aiCrInspectTarget", [
+                            arguments["task_ref"],
+                            arguments["request_id"] + "-target",
+                            target,
+                        ])
+
+                    arguments, decision, auto_target = prepare_target_use(
+                        client, arguments, current_task=current_task,
+                        inspect=inspect_target,
+                    )
+                    if decision is not None:
+                        return ToolResult(data=decision)
+                if (
+                    name == "prepare_circuit_creation"
+                    and not auto_target
+                    and arguments.get("target_action") in {"continue", "replace"}
+                ):
                     observed = client.target_observations.get(arguments.get("target_ref"))
                     validator = getattr(registry, "target_choice_validator", None)
                     if observed is None:
                         return ToolResult("preflight_failed", "先检查目标原理图的当前内容。")
                     if not validator or not validator(arguments["target_action"], observed, context):
-                        return ToolResult(data=observed)
+                        return ToolResult(data=target_decision(observed))
                 validator = getattr(registry, "pdk_choice_validator", None)
                 if validator and (name in PDK_NAMES or server._pdk_session is not None):
                     server.pdk_session().preparation.choice_validator = (
                         lambda library, info: validator(library, info, context)
                     )
                 if name in {"prepare_pdk_data_update", "apply_pdk_data_update",
-                             "submit_pdk_parameter_batch"}:
+                             "submit_pdk_parameter_batch", "prepare_pdk_baseline_update",
+                             "apply_pdk_baseline_update"}:
                     update_validator = getattr(registry, "pdk_update_validator", None)
-                    updates = server.pdk_session().standard.updates
-                    if updates:
-                        updates.confirmation = (lambda info: update_validator(info, context)) if update_validator else None
+                    standard = server.pdk_session().standard
+                    confirmation = (lambda info: update_validator(info, context)) if update_validator else None
+                    for owner in (standard.updates, standard.baseline):
+                        if owner:
+                            owner.confirmation = confirmation
                 if name == "execute_circuit_operation":
                     selection = (None if arguments.get("operation") == "apply_cdf_update"
                                  else server.pdk_selection_guard(name))
@@ -337,6 +414,11 @@ def register_circuit(registry, broker, workspace):
                                       data=reply["error"].get("data"))
                 result = reply["result"]
                 data = json.loads(result["content"][0]["text"])
+                if record_workflow:
+                    from .session_workflow import record_task
+                    data, workflow_error = record_task(data, record_workflow)
+                    if workflow_error:
+                        return ToolResult("tool_error", "Workflow selection was not recorded", data=workflow_error)
                 if isinstance(data, dict) and data.get("code") == "circuit_requires_target":
                     return ToolResult(data=target_decision(data))
                 if isinstance(data, dict) and data.get("decision_required"):
@@ -346,8 +428,14 @@ def register_circuit(registry, broker, workspace):
                         # The answer is on record for these exact contents: hand
                         # the model the settled action instead of asking again.
                         data = settled_target_decision(data, action)
+                remember_created_target(client, data)
                 if name == "inspect_circuit_target" and data.get("ok") and data.get("target_ref"):
                     client.target_observations[data["target_ref"]] = deepcopy(data)
+                    if data.get("content_state") == "nonempty":
+                        lookup = getattr(registry, "settled_target_action", None)
+                        action = lookup(data, context) if lookup else None
+                        if action:
+                            data = settled_target_decision(data, action)
                 if data.get("state") in RECONCILE_STATES or (
                     name == "stop_simulation_recipe" and result.get("isError")
                 ):
@@ -399,79 +487,3 @@ def register_circuit(registry, broker, workspace):
                 input_dependencies=evidence_dependencies(subject) if subject is not None else None,
             )
         )
-
-
-
-def circuit_summary(name, data):
-    """Keep continuation information available even when the full plan is an artifact."""
-    from .project import operation_summary
-
-    if name in {"execute_circuit_operation", "get_circuit_operation"}:
-        return operation_summary(data)
-    if data.get("code") == "task_source_mismatch":
-        return "该任务属于其他逻辑会话或已失效的绑定代次；请沿用已确认的执行模式建立新任务，再只读检查目标。原任务和写请求不会重放。"
-    if name == "bind_pdk_device" and data.get("ok"):
-        # Keep the binding token in structured tool data for the agent, but do
-        # not repeat this implementation detail in user-facing summaries.
-        return "器件完整参数已保存在后端，后续步骤会自动继续；无需用户提供内部信息。"
-    if data.get("code", "").startswith("device_support_"):
-        target = data.get("target", {})
-        return ("器件 " + "/".join(target.get(k, "") for k in ("library", "cell"))
-                + " 的自动参数处理尚未通过检查。请读取具体 CDF 和内置回调执行器诊断，"
-                + "区分回调语法、过程未加载、参数约束和上下文变化；无需用户注册适配器。")
-    if name in {"preview_circuit_spec", "preview_circuit_geometry"}:
-        summary = {k: data[k] for k in (
-            "next_action", "geometry_preview_ready", "preview_digest",
-            "geometry_plan_digest", "user_input_required",
-        ) if k in data}
-        # The full plan usually travels as an artifact, so echo the acceptance
-        # numbers that reviewers ask for (and that the model must quote).
-        routing = (data.get("plan") or {}).get("routing")
-        if isinstance(routing, dict):
-            summary["routing"] = {
-                "mode": routing.get("mode"),
-                "engine": routing.get("engine"),
-                "edges": routing.get("edges"),
-                "pg_style": routing.get("pg_style"),
-                "pg_stub_terminals": routing.get("pg_stub_terminals"),
-                "metrics": routing.get("metrics"),
-                "fallbacks": len(routing.get("fallbacks") or []),
-                "junctions": len(routing.get("junctions") or []),
-                "interior_escapes": len(routing.get("interior_escapes") or []),
-            }
-        review = (data.get("plan") or {}).get("layout_review")
-        if review:
-            summary["layout_review"] = [row.get("code") for row in review]
-        return json.dumps(summary, ensure_ascii=False)
-    if name in {"prepare_circuit_edit", "execute_circuit_edit"}:
-        review = data.get("review") or {}
-        summary = {k: data[k] for k in (
-            "ok", "stage", "next_action", "user_input_required", "prepare_ref",
-            "circuit_ref", "geometry_plan_digest", "review_digest", "target",
-            "saved", "readback_verified", "check", "user_approved", "edited", "error",
-        ) if k in data}
-        if review:
-            summary["review"] = {
-                "mode": review.get("mode"),
-                "instances": len(review.get("instances") or []),
-                "ports": len(review.get("ports") or []),
-                "wires": review.get("wires"),
-            }
-        if data.get("selection_question"):
-            summary["selection_question"] = data["selection_question"]
-        return json.dumps(summary, ensure_ascii=False)
-    if name == "preview_template_placement":
-        report = data.get("report") or {}
-        return json.dumps({
-            "rows": [row.get("members") for row in report.get("rows") or []],
-            "mirrored_pairs": [
-                [pair.get("a"), pair.get("b")] for pair in report.get("mirrored_pairs") or []
-            ],
-            "spacing": report.get("spacing"),
-            "ports": report.get("ports"),
-            "port_rows": report.get("port_rows"),
-            "gaps": [gap.get("code") for gap in report.get("gaps") or []],
-            "geometry_review": report.get("geometry_review"),
-            "placement_digest": data.get("placement_digest"),
-        }, ensure_ascii=False)
-    return ""

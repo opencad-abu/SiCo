@@ -18,19 +18,23 @@ def unknowns(value, path=''):
 
 
 def gaps(package, device=None, category=None):
-    def issue(file, path, reason, key=None):
+    def issue(file, path, reason, key=None, action='collect_source_facts'):
         return {'file': file, 'path': path, 'reason': reason, 'device': key,
-                'scope': 'fact_collection', 'action': 'collect_source_facts'}
+                'scope': 'fact_collection', 'action': action}
 
     if not device:
         for field in ('pdk_version', 'options'):
             for path, reason in unknowns(package.manifest[field], pointer(field)):
                 yield issue('package.json', path, reason)
         for key, resource in sorted(package.document('file.json')['items'].items()):
-            if resource['kind'] in {'document', 'model'} and not resource.get('dependency'):
-                yield issue('file.json', pointer('items', key, 'dependency'), 'Resource bytes not fingerprinted')
-        if not package.available('model.json') and any(r['kind'] == 'model' for r in package.document('file.json')['items'].values()):
-            yield issue('model.json', '', 'Discovered model resources have no collected configuration')
+            if resource['kind'] == 'model' and not resource.get('dependency'):
+                yield issue('file.json', pointer('items', key, 'dependency'),
+                            'Model resource bytes not fingerprinted', action='collect_pdk_data')
+        if (not package.available('model.json')
+                and any(r['kind'] == 'model'
+                        for r in package.document('file.json')['items'].values())):
+            yield issue('model.json', '', 'Model configuration has not been collected',
+                        action='collect_pdk_data')
     for key, row in sorted(package.document('device.json')['items'].items()):
         if device and key != device:
             continue
@@ -45,7 +49,11 @@ def gaps(package, device=None, category=None):
         for suffix in ('cdf', 'symbol', 'simulation'):
             name = row['dir'] + '/' + suffix + '.json'
             if not package.available(name):
-                yield issue(name, '', 'Device facts not collected', key)
+                reason = ('Simulation interface has not been collected'
+                          if suffix == 'simulation' else 'Device facts not collected')
+                yield issue(name, '', reason, key,
+                            action=('collect_pdk_data' if suffix == 'simulation'
+                                    else 'collect_source_facts'))
                 continue
             value = package.document(name)
             if suffix == 'cdf':

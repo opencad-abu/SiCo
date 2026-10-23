@@ -1,0 +1,17 @@
+{
+  "cell": "LDO_MASTER",
+  "block": { "type": "ldo", "cell": "LDO_MASTER" },
+  "behavior": {
+    "description": "Master linear regulator. Output regulates to half the input supply while the supply is inside its valid window; collapses to zero otherwise. No enable pin.",
+    "equation": "VOUT = (VDD_MIN <= VDD && VDD <= VDD_MAX) ? VDD/2.0 : 0.0"
+  },
+  "metrics": {
+    "VDD_MIN": 4.5,
+    "VDD_MAX": 5.5
+  },
+  "ports": {
+    "VDD":  { "kind": "power",  "direction": "inout",  "range": [4.5, 5.5] },
+    "VSS":  { "kind": "ground", "direction": "inout" },
+    "VOUT": { "kind": "power",  "direction": "output", "nominal": 2.5 }
+  }
+}

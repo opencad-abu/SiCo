@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QTextDocument
+from PyQt5.QtGui import QBrush, QColor, QTextCursor
 from PyQt5.QtWidgets import (
     QButtonGroup,
     QHBoxLayout,
@@ -20,17 +20,39 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from sico.core.review_classes import SUPPLEMENTARY, review_class
+from sico.service.chat_audit import approval_command, audit_status_label, fence_block
 
 from .input import SendOnReturnEdit, SendOnReturnRadioButton
 from .presentation import (
     DocumentView,
     data_html,
     event_time,
+    insert_markdown_segments,
     is_recommended,
     plain_recommendation,
     recommended_label,
-    style_tables,
+    style_document,
 )
+from .theme import active_palette
+
+
+def audit_title(row):
+    """Keep the review class visible in the shared audit list."""
+    suffix = " · 补充" if review_class(row.get("review_class")) == SUPPLEMENTARY else ""
+    context = row.get("context") if isinstance(row.get("context"), dict) else {}
+    snapshot = context.get("snapshot") if isinstance(context.get("snapshot"), dict) else {}
+    cellview = snapshot.get("cellview") if isinstance(snapshot.get("cellview"), dict) else {}
+    source = "/".join(str(cellview.get(key) or "") for key in ("lib", "cell", "view"))
+    source = source.strip("/") or str(snapshot.get("entry") or context.get("target_id") or "")
+    title = "审阅事项 · " + row["title"] + (" · " + source if source else "") + suffix
+    if row.get("status") in {"invalid", "unconfirmed", "withdrawn"}:
+        title += " · " + audit_status_label(
+            row["status"], has_reply=row.get("reply") is not None,
+            review_class=row.get("review_class", "blocking"),
+            automatic=(row.get("reply") or {}).get("automatic") is True,
+        )
+    return title
 
 
 class RecordPanel(QSplitter):
@@ -84,15 +106,12 @@ class RecordPanel(QSplitter):
         data = item.data(0, Qt.UserRole)
         record = data["record"]
         if data["markdown"] is not None:
-            self.detail.document().setMarkdown(
-                data["markdown"][:100000],
-                QTextDocument.MarkdownFeatures(
-                    QTextDocument.MarkdownDialectGitHub | QTextDocument.MarkdownNoHTML
-                ),
-            )
+            self.detail.clear()
+            cursor = QTextCursor(self.detail.document())
+            insert_markdown_segments(cursor, data["markdown"][:100000])
         else:
             self.detail.setHtml(data_html(record))
-        style_tables(self.detail.document())
+        style_document(self.detail.document())
         self.detail.setToolTip(
             f"会话：{record.get('session_id', '')}\n任务：{record.get('task_id', '')}"
         )
@@ -197,7 +216,7 @@ class AuditPanel(RecordPanel):
                     continue
                 record = entry["record"]
                 data = {"record": record, "markdown": self.markdown(row), "audit_id": row["id"]}
-                title = "审阅事项 · " + row["title"]
+                title = audit_title(row)
                 item = items.pop(record["sequence"], None)
                 if item is None:
                     item = QTreeWidgetItem()
@@ -208,6 +227,7 @@ class AuditPanel(RecordPanel):
                 item.setText(1, title[:200])
                 item.setToolTip(1, title)
                 item.setData(0, Qt.UserRole, data)
+                self._mark_pending(item, row)
             for item in items.values():
                 self.list.takeTopLevelItem(self.list.indexOfTopLevelItem(item))
         finally:
@@ -231,25 +251,47 @@ class AuditPanel(RecordPanel):
     def add_audit(self, row, event=None):
         self.audit_rows[row["id"]] = row
         item = self.add(
-            "审阅事项 · " + row["title"],
+            audit_title(row),
             event or row,
             markdown=self.markdown(row),
         )
         item.setData(0, Qt.UserRole, {"record": event or row, "markdown": self.markdown(row),
                                       "audit_id": row["id"]})
+        self._mark_pending(item, row)
         if self.list.currentItem() is item:
             self.select(item)
         return item
 
     @staticmethod
+    def _mark_pending(item, row):
+        """待答复的审阅记录用红棕色字体标出；答复后恢复默认色。"""
+        pending = (row.get("status") == "pending"
+                   and review_class(row.get("review_class")) != SUPPLEMENTARY)
+        brush = QBrush(QColor(active_palette().accent)) if pending else QBrush()
+        item.setForeground(1, brush)
+
+    @staticmethod
     def markdown(row):
         text = "## " + row["title"] + "\n\n"
+        if review_class(row.get("review_class")) == SUPPLEMENTARY:
+            text += "**补充事项**：模型可按建议自行决定，不等待答复。\n\n"
+        if "elicitation" not in row:
+            text += "**状态**：" + audit_status_label(
+                row.get("status", ""), has_reply=row.get("reply") is not None,
+                review_class=row.get("review_class", "blocking"),
+                automatic=(row.get("reply") or {}).get("automatic") is True,
+            ) + "\n\n"
         if "elicitation" in row:
             from sico.codex.elicitation_schema import status_text
 
             text += status_text(row) + "\n\n"
             if row["elicitation"]["mode"] == "url":
                 text += row["elicitation"]["url"] + "\n\n"
+        approval = approval_command(row)
+        if approval:
+            meta, command = approval
+            text += ("**命令**（" + meta + "）：" if meta else "**命令**：") + "\n\n"
+            text += fence_block(command) + "\n\n"
         if row.get("recommendation"):
             text += "**建议**：" + row["recommendation"] + "\n\n"
         if row.get("rationale"):
@@ -260,6 +302,8 @@ class AuditPanel(RecordPanel):
         if row.get("reason"):
             text += "\n\n" + row["reason"]
         if row.get("reply"):
+            if row["reply"].get("automatic"):
+                return text + "\n\n**处理**：未等待用户；模型按公开建议自行决定"
             if "elicitation" in row:
                 from sico.codex.elicitation_schema import reply_text
 
@@ -380,10 +424,16 @@ class AuditPanel(RecordPanel):
         """Qt calls clicked(bool); the shipped Cython build forwards it."""
         item = self.list.currentItem()
         if item is None:
+            self.show_error("请先在左侧选择要答复的事项")
             return
         audit_id = item.data(0, Qt.UserRole).get("audit_id")
         row = self.audit_rows.get(audit_id)
-        if not row or row.get("status") != "pending" or self.read_only:
+        if self.read_only:
+            self.show_error("当前为历史浏览（只读）；点击“继续”回到当前会话后再答复")
+            return
+        if not row or row.get("status") != "pending":
+            self.show_error("该事项已结束或已答复，答复不再发送；"
+                            "若任务显示已中断，请按会话中的核对卡片处理")
             return
         answers = {}
         missing = []
@@ -417,8 +467,9 @@ class AuditPanel(RecordPanel):
         for n in range(self.list.topLevelItemCount()):
             item = self.list.topLevelItem(n)
             if item.data(0, Qt.UserRole).get("audit_id") == audit_id:
-                item.setText(1, "审阅事项 · " + row["title"])
-                item.setToolTip(1, "审阅事项 · " + row["title"])
+                item.setText(1, audit_title(row))
+                item.setToolTip(1, audit_title(row))
+                self._mark_pending(item, row)
                 old = item.data(0, Qt.UserRole)
                 item.setData(
                     0,
@@ -434,3 +485,15 @@ class AuditPanel(RecordPanel):
                 else:
                     self.list.setCurrentItem(item)
                 return
+
+    def select_audit(self, audit_id):
+        """Select the exact review record a conversation link named."""
+        for n in range(self.list.topLevelItemCount()):
+            item = self.list.topLevelItem(n)
+            if (item.data(0, Qt.UserRole) or {}).get("audit_id") == audit_id:
+                if self.list.currentItem() is item:
+                    self.select(item)
+                else:
+                    self.list.setCurrentItem(item)
+                return True
+        return False

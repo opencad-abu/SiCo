@@ -24,7 +24,7 @@ from .workspace import (
     stable_digest,
     write_json_once,
 )
-from .agent.runtime_info import production_python
+from .runtime_info import production_python
 
 
 def _now() -> str:

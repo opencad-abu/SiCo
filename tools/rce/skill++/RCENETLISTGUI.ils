@@ -1,7 +1,7 @@
 ; RCE output format and netlist customization controls.
 
 unless(and(boundp('RCENETLISTGUIVersion)
-             RCENETLISTGUIVersion=="20260919.gui.modules.v1")
+             symeval('RCENETLISTGUIVersion)=="20261019.floating.net.include.all.v1")
 defmethod(makeExtOutType ((inst EXTOPTGUI))
   inst->outType=hiCreateRadioField(
     ?name     'outType
@@ -116,5 +116,5 @@ defmethod(makeNlOpt ((inst EXTOPTGUI))
   inst->nlOpt=makevbl('nlOpt list(inst->nlBasic inst->nlMore inst->nlMoreInfo))
 )
 
-RCENETLISTGUIVersion="20260919.gui.modules.v1"
+set('RCENETLISTGUIVersion "20261019.floating.net.include.all.v1")
 )

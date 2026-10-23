@@ -30,11 +30,15 @@ def _observation(row, inventory):
         validate(observation["annotation_bbox"], BOX)
     validate(observation["occupied_bbox"], BOX)
     box = observation["occupied_bbox"]
-    if any(box[0][i] >= box[1][i] for i in (0, 1)):
-        raise TemplateError("empty master occupied bbox")
+    # A zero-size body is an observed fact for marker-like masters; only an
+    # inverted box is malformed.
+    if any(box[0][i] > box[1][i] for i in (0, 1)):
+        raise TemplateError("inverted master occupied bbox")
     validate(observation["signature"], {"type": "string", "minLength": 1, "maxLength": 48000})
     centers = observation["pin_centers"]
-    if not isinstance(centers, list) or not 1 <= len(centers) <= 64:
+    # The 64-device/64-terminal budgets bound qualification profiles, not the
+    # capture of reference facts; large training blocks keep their pin evidence.
+    if not isinstance(centers, list) or not 1 <= len(centers) <= 512:
         raise TemplateError("invalid master pin inventory")
     found = set()
     for item in centers:
@@ -62,8 +66,8 @@ def validate_geometry_capture(header, rows):
             raise TemplateError("capture v2 requires source/master dependency evidence")
         if not guards[0]["before"] or guards[0]["before"] != guards[0].get("after"):
             raise TemplateError("source/master changed during capture")
-        if len(guards[0]["before"].encode()) > 2 * 1024 * 1024:
-            raise TemplateError("dependency evidence exceeds 2 MiB")
+        if len(guards[0]["before"].encode()) > 8 * 1024 * 1024:
+            raise TemplateError("dependency evidence exceeds 8 MiB")
         instances = {r["name"]: r for r in rows if r["kind"] == "instance"}
         observations = unique(
             [r for r in rows if r["kind"] == "instance_geometry"], "instance", "captured geometry"

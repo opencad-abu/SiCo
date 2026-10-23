@@ -23,16 +23,8 @@ if [[ -z "$install_prefix" || "$install_prefix" == / ]]; then
     exit 2
 fi
 
-qtermwidget_repo=${SICO_AI_QTERMWIDGET_REPO-}
-lxqt_repo=${SICO_AI_LXQT_BUILD_TOOLS_REPO-}
-if [[ -z "$qtermwidget_repo" ]]; then
-    echo "SICO_AI_QTERMWIDGET_REPO must point to the qtermwidget 1.4.0 source clone" >&2
-    exit 2
-fi
-if [[ -z "$lxqt_repo" ]]; then
-    echo "SICO_AI_LXQT_BUILD_TOOLS_REPO must point to the lxqt-build-tools 0.13.0 source clone" >&2
-    exit 2
-fi
+qtermwidget_repo=${SICO_AI_QTERMWIDGET_REPO-/zone.disk/ssd1/path/to/workspace/qtermwidget}
+lxqt_repo=${SICO_AI_LXQT_BUILD_TOOLS_REPO-/zone.disk/ssd1/path/to/xh/qt/lxqt-build-tools}
 qt5_dir=${SICO_AI_QT5_DIR-/usr/lib64/cmake/Qt5}
 qt5_cmake_root=$(dirname -- "$qt5_dir")
 qt5_core_dir="$qt5_cmake_root/Qt5Core"

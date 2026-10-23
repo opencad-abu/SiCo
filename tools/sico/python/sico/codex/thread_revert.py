@@ -52,7 +52,28 @@ def revert_history(backend, count):
     before = turn_ids(rpc, identity)
     if type(count) is not int or not 1 <= count <= len(before):
         raise RpcRejected("回退回合数超过现有历史；历史未修改。")
-    kept, removed = before[:-count], before[-count:]
+    _revert_before(backend, rpc, identity, before[:-count], before[-count:])
+
+
+def revert_to_turn(backend, before_turn_id):
+    """Revert every turn from one exact native turn boundary."""
+    if backend.history_mode != "paginated":
+        raise RpcRejected("旧格式会话不支持历史回退；历史保留，可继续会话。")
+    if (not isinstance(before_turn_id, str) or not before_turn_id
+            or len(before_turn_id) > 200 or before_turn_id.strip() != before_turn_id):
+        raise RpcRejected("回退边界无效；历史未修改。")
+    rpc, identity = backend.runtime.rpc, backend.thread_id
+    checked_thread(rpc, identity)
+    before = turn_ids(rpc, identity)
+    try:
+        boundary = before.index(before_turn_id)
+    except ValueError:
+        raise RpcRejected("回退边界不在当前会话历史中；历史未修改。") from None
+    _revert_before(backend, rpc, identity, before[:boundary], before[boundary:])
+
+
+def _revert_before(backend, rpc, identity, kept, removed):
+    """Execute one frozen suffix removal and verify the exact readback."""
     if backend.thread_id != identity or backend.cancelled() or backend.stale:
         raise GoalStopped("History operation stopped before dispatch")
     # The journal retains audit evidence even when Codex truncates model context.

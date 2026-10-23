@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import json
 import queue
 import sys
 import uuid
@@ -11,9 +12,10 @@ from pathlib import Path
 
 from ..storage.journal import open_private
 from ..transport.framing import strict_json
-from ..transport.quick_codec import encode_text
+from ..transport.quick_codec import decode_submission, encode_text
 from ..transport.relay import StdioLines
 from .launch import desktop_environment
+from .termination import TerminationSignal
 
 
 def send_text(send, text):
@@ -46,12 +48,17 @@ def _run_composer(args):
     from PyQt5.QtWidgets import QApplication
 
     from sico_ui.branding import install_logo
+    from sico_ui.appearance_runtime import apply_project_appearance
     from sico_ui.composer import QuickComposer
+    from sico_ui.qt_translation import install_chinese_qt_translations
 
     reader = StdioLines(sys.stdin.buffer, decode=strict_json)
     output = ThreadPoolExecutor(max_workers=1, thread_name_prefix="copilot-composer")
     app = QApplication.instance() or QApplication([])
     install_logo(app)
+    install_chinese_qt_translations(app)
+    apply_project_appearance(args.launch_dir, application=app)
+    termination = TerminationSignal().install()
 
     def send(line):
         sys.stdout.write(line)
@@ -63,7 +70,17 @@ def _run_composer(args):
             not isinstance(initial.get(key), str) for key in ("source", "destination")
         ):
             raise ValueError("Invalid quick composer initialization")
-        window = QuickComposer(initial, lambda text: output.submit(send_text, send, text))
+        if initial.get("request") is not None:
+            original = decode_submission(json.dumps(initial["request"]).encode("utf-8"))
+            initial = dict(initial, draft_text=original["text"], unconfirmed=True)
+        def send_objects(request):
+            send("@objects " + request + "\n")
+
+        window = QuickComposer(
+            initial, lambda text: output.submit(send_text, send, text),
+            lambda: output.submit(send, "@query\n"),
+            object_request=send_objects,
+        )
         timer = QTimer(window)
 
         def closed():
@@ -76,6 +93,14 @@ def _run_composer(args):
 
         def poll():
             try:
+                if termination.received.is_set() and not window.finished:
+                    timer.stop()
+                    # The owning Virtuoso is going away. Save before the parent
+                    # IPC grace expires, then exit without submitting.
+                    save_draft(os.environ["TMPDIR"], window.input.toPlainText())
+                    window.finished = True
+                    window.reject()
+                    return
                 for _ in range(16):
                     try:
                         message = reader.lines.get_nowait()
@@ -101,5 +126,6 @@ def _run_composer(args):
         timer.stop()
         return result
     finally:
+        termination.restore()
         reader.close()
         output.shutdown(wait=True)

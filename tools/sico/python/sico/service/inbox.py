@@ -8,13 +8,16 @@ import time
 from collections import deque
 
 from ..core.contracts import BoundContext, identifier, json_copy
+from ..core.ask_queue import PENDING_LIMIT, QueueFull, ask_sequence, pending_order
 from ..storage.inbox_records import read_input
 from ..storage.journal import open_private, private_dir, sync_directory
 from ..transport.targets import submission
+from .ask_diagnostics import queue_event
 
 
 class SessionInbox:
     def __init__(self, journal, initial):
+        self.journal = journal
         self.directory = journal.directory / "inbox"
         private_dir(self.directory)
         self.initial = initial
@@ -35,8 +38,15 @@ class SessionInbox:
         os.replace(temporary, target)
         sync_directory(self.directory)
 
-    def accept(self, message, *, turn_options=None, service_address=None):
+    def accept(self, message, *, turn_options=None, service_address=None,
+               attachment_text=None, submission_digest=None):
         context = submission(message)
+        # ServiceInputs verifies durable identity before creating attachment assets.
+        message = dict(message)
+        if attachment_text is not None:
+            message["attachments"] = [self.journal.text_attachment(attachment_text)]
+        if submission_digest is not None:
+            message["submission_digest"] = submission_digest
         return self.enqueue(message, context, "quick", turn_options=turn_options,
                             service_address=service_address)
 
@@ -52,8 +62,15 @@ class SessionInbox:
             if old["message"] != message or old.get("service_address") != service_address:
                 raise ValueError("Input ID conflicts with an earlier request")
             return False
-        if len(self.pending) >= 16:
-            raise ValueError("The session already has 16 waiting requests")
+        sequence = message.get("ask_sequence")
+        if sequence is not None:
+            ask_sequence(sequence)
+            for path in self.directory.glob("*.json"):
+                prior = read_input(self.directory, path.stem)
+                if prior["message"].get("ask_sequence") == sequence:
+                    raise ValueError("Ask sequence belongs to an earlier input ID")
+        if len(self.pending) >= PENDING_LIMIT:
+            raise QueueFull("The session already has 16 waiting requests")
         record = {
             "id": message["id"],
             "status": "queued",
@@ -68,6 +85,10 @@ class SessionInbox:
             record["service_address"] = json_copy(service_address)
         self._save(record)
         self.pending.append(record)
+        self.pending = deque(sorted(self.pending, key=pending_order))
+        for status in ("accepted", "queued"):
+            queue_event(status, message["id"], sequence,
+                        session_id=self.journal.session_id, pending=len(self.pending))
         return True
 
     def take(self):
@@ -75,8 +96,11 @@ class SessionInbox:
             return None
         self.active = self.pending.popleft()
         self.active["status"] = "executing"
+        self.active["started_at"] = time.time()
         self._save(self.active)
         message = self.active["message"]
+        queue_event("started", message["id"], message.get("ask_sequence"),
+                    session_id=self.journal.session_id, pending=len(self.pending))
         return message["text"], BoundContext.from_record(message["context"]), message["id"]
 
     def finish(self, task):
@@ -101,7 +125,8 @@ class SessionInbox:
             raise ValueError("该输入已执行或需要先核对原操作")
         if any(item["id"] == input_id for item in self.pending):
             return False
-        if self.active is not None or len(self.pending) >= 16:
+        if self.active is not None or len(self.pending) >= PENDING_LIMIT:
             raise ValueError("当前会话队列不可恢复")
         self.pending.append(record)
+        self.pending = deque(sorted(self.pending, key=pending_order))
         return True

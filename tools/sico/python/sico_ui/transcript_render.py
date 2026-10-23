@@ -8,6 +8,7 @@ from html import escape
 from PyQt5.QtCore import QPoint, QPointF, Qt, QTimer, QUrl
 from PyQt5.QtGui import (
     QColor,
+    QFont,
     QImage,
     QPainter,
     QPolygonF,
@@ -21,10 +22,10 @@ from PyQt5.QtGui import (
     QTextTableFormat,
 )
 
-from .code_highlight import table_safe_markdown
-from .presentation import style_tables
-from .reconcile_card import actions_html
-from .theme import ACCENT, COPILOT, ERROR, MUTED, TEXT
+from .glyphs import hammer_wrench_image, rewind_image
+from .presentation import (event_clock, markdown_document, secondary_point_size,
+                           style_tables, transcript_link_format)
+from .theme import ACCENT, active_palette
 from .tool_results import result_html
 
 
@@ -63,6 +64,52 @@ def triangle_image(direction, color=ACCENT):
     return image
 
 
+# 计数器开头的“工具”二字换成本窗口自绘的锤子扳手图标：终端的字体既没有
+# emoji 也没有符号字体，图标只能画出来，并和折叠三角共用图片资源机制。
+COUNTER_ICON = "si-counter:hammer-wrench"
+COUNTER_ICON_SIZE = (13, 13)
+COUNTER_ICON_SCALE = 4
+_counter_icons = {}
+
+
+def counter_image(color=ACCENT):
+    """Hammer-and-wrench mark of the tool counter, cached per colour."""
+    key = (color, COUNTER_ICON_SIZE)
+    image = _counter_icons.get(key)
+    if image is None:
+        image = hammer_wrench_image(COUNTER_ICON_SIZE[0] * COUNTER_ICON_SCALE, color)
+        _counter_icons[key] = image
+    return image
+
+
+REWIND_ICON = "si-rewind:anticlockwise"
+REWIND_ICON_SIZE = (16, 16)
+_rewind_icons = {}
+
+
+def rewind_icon(color=None, background=None):
+    """Circular counterclockwise rewind mark, cached per colour."""
+    palette = active_palette()
+    color, background = color or palette.accent, background or palette.selection
+    key = (color, background, REWIND_ICON_SIZE)
+    image = _rewind_icons.get(key)
+    if image is None:
+        image = rewind_image(REWIND_ICON_SIZE[0], color=color, background=background)
+        _rewind_icons[key] = image
+    return image
+
+
+def icon_mark(name, size, href):
+    """Inline document icon that answers a click with the same link as its line."""
+    mark = QTextImageFormat()
+    mark.setName(name)
+    mark.setWidth(size[0])
+    mark.setHeight(size[1])
+    mark.setAnchor(True)
+    mark.setAnchorHref(href)
+    return mark
+
+
 class TranscriptRenderer:
     RENDER_ITEMS = 8
     RENDER_BUDGET = 0.008
@@ -74,7 +121,7 @@ class TranscriptRenderer:
             # Context results render bounded inline tables rather than links.
             size += 24000
         elif message["role"] == "native":
-            size += len(message["result"]["status"])
+            size += len(message["result"].get("status", ""))
         elif message["role"] == "tools" and message.get("expanded"):
             size = len(self._tools_head(message)) + sum(
                 len(line["text"]) for line in self._tool_lines(message, expanded=True))
@@ -185,6 +232,10 @@ class TranscriptRenderer:
             common, count = self._render_frame(cursor, visible, signatures, base_point)
         finally:
             cursor.endEditBlock()
+        # Style after the edit transaction closes: Qt does not expose the last
+        # nested table frame until then, so styling inside the block leaves the
+        # final message's table with Qt's default border and spacing.
+        style_tables(document, nested=True)
         if follow:
             bar.setValue(bar.maximum())
         else:
@@ -212,7 +263,6 @@ class TranscriptRenderer:
                     break
                 common += 1
             if self._replace_changed(cursor, visible, signatures, common, base_point):
-                style_tables(document, nested=True)
                 return len(signatures), 0
         if not common:
             # Keep the edit transaction (QTextDocument.clear() would reset it).
@@ -243,8 +293,6 @@ class TranscriptRenderer:
             count += 1
             if count >= self.RENDER_ITEMS or time.monotonic() >= deadline:
                 break
-        # 气泡里的内容表格（markdown/工具结果）统一灰边；气泡本身保留自己的边框。
-        style_tables(document, nested=True)
         return common, count
 
     def _replace_changed(self, cursor, visible, signatures, common, base_point):
@@ -275,12 +323,15 @@ class TranscriptRenderer:
 
     def _insert(self, cursor, message, username="你", *, read_only=False, base_point=10):
         role = message["role"]
-        user = role == "user"
+        palette, user = active_palette(), role == "user"
         if role == "native":
             result = message["result"]
-            cursor.insertHtml("<a style='color: " + ACCENT + "' href='"
-                              + escape(result["url"], quote=True) + "'>"
-                              + escape(message["text"]) + "</a> · " + escape(result["status"]))
+            size = (secondary_point_size(base_point)
+                    if result["url"].startswith("event-detail:") else None)
+            cursor.insertText(message["text"],
+                              transcript_link_format(result["url"], point_size=size))
+            if result.get("status"):
+                cursor.insertText(" · " + result["status"], QTextCharFormat())
             cursor.insertBlock(QTextBlockFormat(), QTextCharFormat())
             cursor.insertBlock(QTextBlockFormat(), QTextCharFormat())
             return
@@ -297,7 +348,7 @@ class TranscriptRenderer:
         table_format.setAlignment(Qt.AlignRight if user else Qt.AlignLeft)
         table_format.setBorder(1)
         table_format.setBorderStyle(QTextTableFormat.BorderStyle_Solid)
-        table_format.setBorderBrush(QColor(ACCENT if user else COPILOT))
+        table_format.setBorderBrush(QColor(palette.accent if user else palette.copilot))
         table_format.setCellPadding(8)
         table_format.setCellSpacing(0)
         table = cursor.insertTable(1, 1, table_format)
@@ -308,10 +359,10 @@ class TranscriptRenderer:
         cell_block.setBottomMargin(0)
         cell_cursor.setBlockFormat(cell_block)
         label = QTextCharFormat()
-        label.setForeground(QColor(ACCENT if user else TEXT))
+        label.setForeground(QColor(palette.accent if user else palette.text))
         if role in {"assistant", "activity", "result", "audit"}:
-            label.setForeground(QColor(COPILOT))
-        label.setFontWeight(600)
+            label.setForeground(QColor(palette.copilot))
+        label.setFontWeight(QFont.DemiBold)
         cell_cursor.insertText(
             {"user": username, "context": "当前设计上下文", "notice": "任务状态",
              "activity": "Silicon Copilot", "result": "Silicon Copilot",
@@ -320,12 +371,21 @@ class TranscriptRenderer:
             ),
             label,
         )
+        clock = event_clock(message.get("timestamp"))
+        if clock:
+            # 名字加粗，右侧时间用常规字重；没有时间就不留空档。
+            stamp = QTextCharFormat(label)
+            stamp.setFontWeight(QFont.Normal)
+            cell_cursor.insertText(" " + clock, stamp)
         cell_cursor.insertBlock(cell_block, QTextCharFormat())
         if user or role in {"notice", "result", "audit", "reconcile"}:
             cell_cursor.insertText(message["text"])
+            if user and not read_only and message.get("turn_id") and message.get("rewindable"):
+                self._insert_rewind(cell_cursor, message)
             if role == "reconcile":
                 cell_cursor.insertBlock()
-                cell_cursor.insertHtml(actions_html(message["result"], read_only=read_only))
+                cell_cursor.insertText("核对记录（只读）" if read_only or not message["result"].get("active")
+                                       else "请使用消息区下方的“待核对”按钮；查询后根据证据确认结论。")
             if role == "audit" and message["result"].get("pending"):
                 cell_cursor.insertBlock()
                 cell_cursor.insertHtml("<a href='" + escape(message["result"]["url"], quote=True)
@@ -338,14 +398,8 @@ class TranscriptRenderer:
             cell_cursor.insertHtml("<a href='" + escape(result["url"], quote=True) + "'>"
                                    + escape(message["text"]) + f" · v{result['version']}</a>")
         else:
-            fragment = SafeDocument()
-            fragment.setMarkdown(
-                table_safe_markdown(message["text"]),
-                QTextDocument.MarkdownFeatures(
-                    QTextDocument.MarkdownDialectGitHub | QTextDocument.MarkdownNoHTML
-                ),
-            )
-            cell_cursor.insertFragment(QTextDocumentFragment(fragment))
+            cell_cursor.insertFragment(QTextDocumentFragment(
+                markdown_document(message["text"])))
         # Keep the next message outside this table with two character-line heights of gap.
         cursor.setPosition(table.lastPosition() + 1)
         spacer = QTextBlockFormat()
@@ -353,18 +407,36 @@ class TranscriptRenderer:
         cursor.insertBlock(spacer, QTextCharFormat())
         cursor.insertBlock(spacer, QTextCharFormat())
 
+    def _insert_rewind(self, cursor, message):
+        """Right-aligned counterclockwise rewind mark at the bubble's lower edge."""
+        block = QTextBlockFormat()
+        block.setAlignment(Qt.AlignRight)
+        block.setTopMargin(5)
+        block.setBottomMargin(0)
+        cursor.insertBlock(block, QTextCharFormat())
+        document = cursor.document()
+        document.addResource(QTextDocument.ImageResource, QUrl(REWIND_ICON), rewind_icon())
+        mark = QTextImageFormat()
+        mark.setName(REWIND_ICON)
+        mark.setWidth(REWIND_ICON_SIZE[0])
+        mark.setHeight(REWIND_ICON_SIZE[1])
+        mark.setAnchor(True)
+        mark.setAnchorHref("rewind:" + str(message["message_id"]))
+        mark.setToolTip("回退到这条消息")
+        cursor.insertImage(mark)
+
     def _insert_tools(self, cursor, message, *, base_point=10):
         """Halved-font counter, red failures, and double-click data references."""
-        size = max(7, base_point // 2)
+        palette, size = active_palette(), secondary_point_size(base_point)
         prefix = QTextCharFormat()
-        prefix.setForeground(QColor(ACCENT))
-        prefix.setFontWeight(600)
+        prefix.setForeground(QColor(palette.accent))
+        prefix.setFontWeight(QFont.DemiBold)
         prefix.setFontPointSize(size)
         body = QTextCharFormat()
-        body.setForeground(QColor(MUTED))
+        body.setForeground(QColor(palette.muted))
         body.setFontPointSize(size)
         issue = QTextCharFormat(body)
-        issue.setForeground(QColor(ERROR))
+        issue.setForeground(QColor(palette.error))
 
         def reference(base, href):
             """Plain-looking link: an underline would shout in a quiet counter."""
@@ -382,12 +454,11 @@ class TranscriptRenderer:
         for name, direction in ((TRIANGLE_COLLAPSED, "right"), (TRIANGLE_EXPANDED, "down")):
             document.addResource(QTextDocument.ImageResource, QUrl(name),
                                  triangle_image(direction))
-        toggle = QTextImageFormat()
-        toggle.setName(TRIANGLE_EXPANDED if expanded else TRIANGLE_COLLAPSED)
-        toggle.setWidth(TRIANGLE_SIZE[0])
-        toggle.setHeight(TRIANGLE_SIZE[1])
-        toggle.setAnchor(True)
-        toggle.setAnchorHref("tools:" + message_id)
+        document.addResource(QTextDocument.ImageResource, QUrl(COUNTER_ICON),
+                             counter_image())
+        toggle = icon_mark(TRIANGLE_EXPANDED if expanded else TRIANGLE_COLLAPSED,
+                           TRIANGLE_SIZE, "tools:" + message_id)
+        counter = icon_mark(COUNTER_ICON, COUNTER_ICON_SIZE, "tools-head:" + message_id)
         block = QTextBlockFormat()
         block.setAlignment(Qt.AlignLeft)
         block.setTopMargin(0)
@@ -401,10 +472,14 @@ class TranscriptRenderer:
         for index, (segment, is_issue) in enumerate(self._tools_head_parts(message)):
             if index:
                 cursor.insertText(" · ", head)
-            if is_issue:
+            if not index:
+                # “工具”二字由自绘图标承担，紧跟其后的计数徽记仍是半号字。
+                cursor.insertImage(counter)
+                cursor.insertText(segment, summary)
+            elif is_issue:
                 cursor.insertText(segment, reference(issue, head.anchorHref()))
             else:
-                cursor.insertText(segment, summary if index == 0 else head)
+                cursor.insertText(segment, head)
         # 执行中显示逐个出现的小三角形；结束后只留最后一个作展开/收拢。
         marks = max(1, int(message.get("marks") or 0))
         cursor.insertText("  ", body)

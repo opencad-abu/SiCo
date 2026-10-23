@@ -15,6 +15,7 @@ class ProjectWorkspace:
     def __init__(self, owner):
         self.owner = owner
         self.root = agent_root(owner.project)
+        self.labels = owner.labels
         with ExitStack() as pending:
             def own(service):
                 pending.callback(self._stop, service)
@@ -24,9 +25,13 @@ class ProjectWorkspace:
             self.data = own(WorkbenchService())
             # Site settings belong to captured session dependencies, never this facade.
             self.background = own(BackgroundService(self.root / "background", config_path=""))
-            self.catalog = own(CatalogService(self.root, lambda: tuple(owner.controllers.values())))
+            self.catalog = own(CatalogService(
+                self.root, lambda: tuple(owner.controllers.values()),
+                labels=self.labels.snapshot,
+            ))
             self.worker = WorkerApi(self)
             pending.pop_all()
+        self.labels.observe(self.catalog.publish_labels)
         self._cleanup = CleanupTask(self._release, "copilot-workspace-close")
 
     @staticmethod

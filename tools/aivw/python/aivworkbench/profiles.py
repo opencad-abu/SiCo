@@ -98,15 +98,15 @@ def _absolute_path(value: object, label: str) -> Path:
     path = Path(str(value)).expanduser()
     if not path.is_absolute():
         raise ProfileError(f"{label} must be an absolute path: {path}")
-    if "xxxx28" in str(path).lower():
-        raise ProfileError(f"{label} must not use the excluded workspace")
+    if "smic28" in str(path).lower():
+        raise ProfileError(f"{label} must not use the excluded smic28 workspace")
     return path
 
 
 def _contains_symlink_below(base: Path, target: Path) -> bool:
     """Reject symlink components introduced below an approved base.
 
-    Deployment aliases (stable mount points) may themselves be symlinks.  The
+    Deployment aliases such as ``/workarea`` may themselves be symlinks.  The
     profile stores the operator-facing path, so only components at or below
     the canonical workspace root are treated as untrusted substitutions.
     """

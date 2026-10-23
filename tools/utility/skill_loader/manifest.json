@@ -1,0 +1,300 @@
+{
+  "schema_version": 1,
+  "groups": {
+    "core": {
+      "output": "scripts/sicoSource.il",
+      "requires": [],
+      "sources": [
+        "tools/common/skill/SICO_environment.il",
+        "tools/common/skill/SICO_installation.il",
+        "tools/common/skill/SICO_state.il",
+        "tools/common/skill/SICO_commands.il",
+        "tools/common/skill/SICO_guiProtocol.il",
+        "tools/common/skill/SICO_toml.il",
+        "scripts/sicoLoaderApi.il"
+      ]
+    },
+    "ai_shared": {
+      "output": "tools/ai/skill++/AI_shared.ils",
+      "requires": [
+        "core"
+      ],
+      "sources": [],
+      "source_manifest": "tools/utility/ai_shared_sources.json",
+      "source_directory": "tools/ai/skill"
+    },
+    "assistant": {
+      "output": "tools/ai/skill++/AI.ils",
+      "requires": [
+        "ai_shared"
+      ],
+      "sources": [
+        "tools/ai/skill/AI_ipc.il",
+        "tools/ai/skill/AI_live_model.il",
+        "tools/ai/skill/AI_launcher.il",
+        "tools/ai/skill/AI_flow_command.il",
+        "tools/ai/skill/AI_flows.il",
+        "tools/ai/skill/AI_maestro.il",
+        "tools/ai/skill/AI_maestro_validate.il",
+        "tools/ai/skill/AI_circuit_rc.il",
+        "tools/ai/skill/AI_circuit_rc_maestro.il",
+        "tools/ai/skill/AI_circuit_rc_run.il",
+        "tools/ai/skill/AI_circuit_gate_devices.il",
+        "tools/ai/skill/AI_circuit_gate_verify.il",
+        "tools/ai/skill/AI_circuit_gate.il",
+        "tools/ai/skill/AI_circuit_opamp_contract.il",
+        "tools/ai/skill/AI_circuit_opamp.il",
+        "tools/ai/skill/AI_circuit_opamp_run.il",
+        "tools/ai/skill/AI_circuit_opamp_results.il",
+        "tools/ai/skill/AI_circuit_rebuild_source.il",
+        "tools/ai/skill/AI_circuit_rebuild_devices.il",
+        "tools/ai/skill/AI_circuit_rebuild.il",
+        "tools/ai/skill/AI_circuit_rebuild_maestro.il",
+        "tools/ai/skill/AI_circuit_matrix.il",
+        "tools/ai/skill/AI_circuit_matrix_results.il"
+      ]
+    },
+    "sico": {
+      "output": "tools/sico/skill++/SICO.ils",
+      "requires": [
+        "ai_shared"
+      ],
+      "sources": [
+        "tools/ai/skill/AI_entry_project.il",
+        "tools/ai/skill/AI_copilot_literals.il",
+        "tools/ai/skill/AI_copilot_results.il",
+        "tools/ai/skill/AI_copilot_targets.il",
+        "tools/ai/skill/AI_copilot_circuit.il",
+        "tools/sico/skill/SICO_entry.il",
+        "tools/sico/skill/SICO_diagnostics.il",
+        "tools/sico/skill/SICO_binding.il",
+        "tools/sico/skill/SICO_context.il",
+        "tools/sico/skill/SICO_source.il",
+        "tools/sico/skill/SICO_ade.il",
+        "tools/sico/skill/SICO_sessions.il",
+        "tools/sico/skill/SICO_launcher.il",
+        "tools/sico/skill/SICO_registration.il",
+        "tools/sico/skill/SICO_menus.il",
+        "tools/sico/skill/SICO_desktop.il",
+        "tools/sico/skill/SICO_ask_queue.il",
+        "tools/sico/skill/SICO_quick.il",
+        "tools/sico/skill/SICO_rmb.il"
+      ],
+      "initialize": [
+        "sicoInstallAdeMenus",
+        "sicoInstallEditorMenus",
+        "sicoInstallNativeBindings",
+        "sicoSchedulePlatformRegistration",
+        "sicoPlaceLaunchedCiw"
+      ]
+    },
+    "common_gui": {
+      "output": "scripts/skill/common_gui.ils",
+      "requires": [
+        "core"
+      ],
+      "sources": [],
+      "source_manifest": "deploy/common_gui_sources.json"
+    },
+    "lsf": {
+      "output": "tools/common/skill++/LSF.ils",
+      "requires": [
+        "core"
+      ],
+      "sources": [
+        "tools/common/skill/SICO_lsfMonitor.il"
+      ],
+      "source_manifest": "deploy/common_lsf_sources.json"
+    },
+    "flow": {
+      "output": "scripts/skill/flow.ils",
+      "requires": [
+        "lsf",
+        "common_gui"
+      ],
+      "sources": [
+        "tools/common/skill/SICO_profile.il",
+        "tools/common/skill/SICO_envOptions.il",
+        "tools/common/skill/SICO_batchAdapter.il",
+        "tools/common/skill/SICO_batchGui.il",
+        "tools/common/skill/SICO_batchRows.il",
+        "tools/common/skill/SICO_batchCore.il",
+        "tools/common/skill/SICO_batchMonitor.il",
+        "tools/common/skill++/BATCHGUI.ils",
+        "tools/common/skill++/PROFILEGUI.ils",
+        "tools/utility/skill/UI_messageApp.il",
+        "tools/utility/skill/UI_askApp.il",
+        "tools/utility/skill/UI_windowIcon.il",
+        "tools/utility/skill/UI_flowLog.il"
+      ]
+    },
+    "drc": {
+      "output": "tools/drc/skill++/DRC.ils",
+      "requires": [
+        "flow"
+      ],
+      "sources": [
+        "tools/drc/skill++/DRCCFG.ils",
+        "tools/drc/skill++/DRCRULESEL.ils",
+        "tools/drc/skill++/DRCCB.ils",
+        "tools/drc/skill++/DRCRUN.ils",
+        "tools/drc/skill++/DRCPROFILE.ils",
+        "tools/drc/skill++/DRCGUI.ils"
+      ]
+    },
+    "lvs": {
+      "output": "tools/lvs/skill++/LVS.ils",
+      "requires": [
+        "flow"
+      ],
+      "sources": [
+        "tools/lvs/skill++/LVSCFG.ils",
+        "tools/lvs/skill++/STAGECFG.ils",
+        "tools/lvs/skill++/LVSCB.ils",
+        "tools/lvs/skill++/LVSRUN.ils",
+        "tools/lvs/skill++/STAGECB.ils",
+        "tools/lvs/skill++/LVSPROFILE.ils",
+        "tools/lvs/skill++/LVSGUI.ils",
+        "tools/lvs/skill++/STAGEGUI.ils"
+      ]
+    },
+    "rce": {
+      "output": "tools/rce/skill++/RCE.ils",
+      "requires": [
+        "flow"
+      ],
+      "sources": [
+        "tools/rce/skill++/RCEBASEGUI.ils",
+        "tools/rce/skill++/RCECORNERGUI.ils",
+        "tools/rce/skill++/RCESELECTIONGUI.ils",
+        "tools/rce/skill++/RCENETLISTGUI.ils",
+        "tools/rce/skill++/RCEEXTRACTGUI.ils",
+        "tools/rce/skill/RCE_toml.il",
+        "tools/rce/skill/RCE_envOptions.il",
+        "tools/utility/skill/DM_textCellView.il",
+        "tools/rce/skill/RCE_termOrder.il",
+        "tools/rce/skill/RCE_dspfRegionCodec.il",
+        "tools/rce/skill/RCE_dspfProtocol.il",
+        "tools/rce/skill/RCE_dspfGeometry.il",
+        "tools/rce/skill/RCE_dspfLauncher.il",
+        "tools/rce/skill/RCE_dspfAnalyzer.il",
+        "tools/rce/skill/RCE_summaryValues.il",
+        "tools/rce/skill/RCE_summaryRun.il",
+        "tools/rce/skill/RCE_summaryHtml.il",
+        "tools/rce/skill/RCE_summaryResults.il",
+        "tools/rce/skill/RCE_summaryActions.il",
+        "tools/rce/skill/UI_rceSummary.il",
+        "tools/rce/skill/CMD_rceSelectNetAddDone.il",
+        "tools/rce/skill/UI_rceSelectCellForm.il",
+        "tools/rce/skill/UI_rceCleanSelectCell.il",
+        "tools/rce/skill/UI_rceFinishSelectCell.il",
+        "tools/rce/skill/UI_rceSelectCell.il",
+        "tools/rce/skill/UI_rceSelectNetFromView.il",
+        "tools/rce/skill/UI_rceUpdateSelectCell.il",
+        "tools/rce/skill++/RCECFG.ils",
+        "tools/rce/skill++/RCEREDUCTION.ils",
+        "tools/rce/skill++/RCEVIEWTARGET.ils",
+        "tools/rce/skill++/RCEVIEWSYNC.ils",
+        "tools/rce/skill++/RCEINPUTCB.ils",
+        "tools/rce/skill++/RCEPINORDER.ils",
+        "tools/rce/skill++/RCENETLISTCB.ils",
+        "tools/rce/skill++/RCEVIEWREQUEST.ils",
+        "tools/rce/skill++/RCEOPTIONCB.ils",
+        "tools/rce/skill++/RCECORNERPATH.ils",
+        "tools/rce/skill++/RCECORNERCB.ils",
+        "tools/rce/skill++/RCEVIEWIMPORT.ils",
+        "tools/rce/skill++/RCEIPCCB.ils",
+        "tools/rce/skill++/RCERUNLOCK.ils",
+        "tools/rce/skill++/RCERUN.ils",
+        "tools/rce/skill++/RCETOMLWRITE.ils",
+        "tools/rce/skill++/RCECONFIGWRITE.ils",
+        "tools/rce/skill++/RCECB.ils",
+        "tools/rce/skill++/RCEBATCH.ils",
+        "tools/rce/skill++/RCEPROFILE.ils",
+        "tools/rce/skill++/RCEGUI.ils"
+      ]
+    },
+    "lef": {
+      "output": "tools/lef/skill++/LEF.ils",
+      "requires": [
+        "flow"
+      ],
+      "sources": [
+        "tools/lef/skill/UI_lefSummary.il",
+        "tools/lef/skill++/LEFCFG.ils",
+        "tools/lef/skill++/LEFOPT.ils",
+        "tools/lef/skill++/LEFCB.ils",
+        "tools/lef/skill++/LEFRUN.ils",
+        "tools/lef/skill++/LEFLOAD.ils",
+        "tools/lef/skill++/LEFPROFILE.ils",
+        "tools/lef/skill++/LEFGUI.ils"
+      ]
+    },
+    "mts": {
+      "output": "tools/mtsnl/skill++/MTS.ils",
+      "requires": [
+        "core"
+      ],
+      "sources": [
+        "tools/mtsnl/skill/MTS_netlistor.il"
+      ]
+    },
+    "nl2view": {
+      "output": "tools/utility/skill++/NL2VIEW.ils",
+      "requires": [
+        "core"
+      ],
+      "sources": [
+        "tools/utility/skill/nl2view.il"
+      ]
+    },
+    "techlib": {
+      "output": "tools/utility/skill++/TECHLIB.ils",
+      "requires": [
+        "core"
+      ],
+      "sources": [
+        "tools/utility/skill/cadChangeTechLibVia.il",
+        "tools/utility/skill/cadChangeTechLib.il",
+        "tools/utility/skill/cadChangeTechLibViaGui.il",
+        "tools/utility/skill/cadChangeTechLibGui.il",
+        "tools/utility/skill/cadChangeTechLibForm.il"
+      ]
+    }
+  },
+  "source_directories": [
+    "tools/ai/skill",
+    "tools/ai/skill++",
+    "tools/sico/skill",
+    "tools/sico/skill++",
+    "tools/common/skill",
+    "tools/common/skill++",
+    "tools/drc/skill",
+    "tools/drc/skill++",
+    "tools/lvs/skill",
+    "tools/lvs/skill++",
+    "tools/rce/skill",
+    "tools/rce/skill++",
+    "tools/lef/skill",
+    "tools/lef/skill++",
+    "tools/mtsnl/skill",
+    "tools/mtsnl/skill++",
+    "tools/utility/skill",
+    "tools/utility/skill++"
+  ],
+  "excluded": {
+    "tools/ai/skill/AI_background_probe.il": "Isolated worker/context lifecycle; see skill_load_ownership.json.",
+    "tools/ai/skill/AI_background_worker.il": "Isolated worker/context lifecycle; see skill_load_ownership.json.",
+    "tools/ai/skill/AI_pdk_worker.il": "Isolated worker/context lifecycle; see skill_load_ownership.json.",
+    "tools/ai/skill/AI_runtime_init.il": "Isolated worker/context lifecycle; see skill_load_ownership.json.",
+    "tools/common/skill/SICO_catalogWorker.il": "Isolated worker/context lifecycle; see skill_load_ownership.json.",
+    "tools/common/skill/SICO_toolsMenu.il": "Isolated worker/context lifecycle; see skill_load_ownership.json.",
+    "tools/common/skill/SICO_toolsRuntime.il": "Isolated worker/context lifecycle; see skill_load_ownership.json.",
+    "tools/common/skill/sicoToolRegister.il": "Source bootstrap owns menu and project initialization, not an implementation group.",
+    "tools/mtsnl/skill/MTS_bindingWorker.il": "Isolated worker/context lifecycle; see skill_load_ownership.json.",
+    "tools/mtsnl/skill/MTS_defaultsWorker.il": "Isolated worker/context lifecycle; see skill_load_ownership.json.",
+    "tools/mtsnl/skill/MTS_probeWorker.il": "Isolated worker/context lifecycle; see skill_load_ownership.json.",
+    "tools/mtsnl/skill/MTS_projectWorker.il": "Isolated worker/context lifecycle; see skill_load_ownership.json.",
+    "tools/mtsnl/skill/MTS_symbolWorker.il": "Isolated worker/context lifecycle; see skill_load_ownership.json."
+  }
+}

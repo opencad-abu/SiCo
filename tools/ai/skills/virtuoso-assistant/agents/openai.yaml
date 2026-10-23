@@ -1,0 +1,4 @@
+interface:
+  display_name: "Virtuoso Assistant"
+  short_description: "Use the authenticated Virtuoso MCP safely"
+  default_prompt: "Use $virtuoso-assistant to inspect the current Virtuoso context and propose a safe next step."

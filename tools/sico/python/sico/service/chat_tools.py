@@ -4,6 +4,9 @@ from datetime import datetime
 
 
 class TranscriptTools:
+    # “工具 ×N”的措辞属于纯文本投影；聊天界面把“工具”画成锤子扳手图标。
+    COUNTER_LABEL = "工具"
+
     def _open_tools(self, event):
         """Open (or reuse) the counter for the tool batch of the current turn."""
         group = self.tools
@@ -109,9 +112,13 @@ class TranscriptTools:
 
     @staticmethod
     def _tools_head_parts(group):
-        """Head segments as (text, is_issue) so failures can be called out."""
+        """Head segments as (text, is_issue) so failures can be called out.
+
+        第一段只是计数徽记（“×2”）：渲染器在它前面画工具图标，
+        纯文本投影在 ``_tools_head`` 里补上“工具”二字。
+        """
         counts = group["counts"]
-        parts = [("工具 ×" + str(counts["total"]), False)]
+        parts = [("×" + str(counts["total"]), False)]
         if group.get("state") == "running" and group.get("current"):
             parts.append(("正在执行 " + str(group["current"]), False))
         else:
@@ -126,7 +133,9 @@ class TranscriptTools:
 
     def _tools_head(self, group):
         """One-line summary of the batch; the counter itself is not a bubble."""
-        return " · ".join(text for text, _ in self._tools_head_parts(group))
+        parts = self._tools_head_parts(group)
+        return " · ".join([self.COUNTER_LABEL + " " + parts[0][0]]
+                          + [text for text, _ in parts[1:]])
 
     def _tools_text(self, group):
         lines = [self._tools_head(group)]

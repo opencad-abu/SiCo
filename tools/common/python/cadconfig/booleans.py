@@ -17,6 +17,7 @@ FLOW_BOOLEAN_PATHS = MappingProxyType({
     "LVS": _LVS,
     "RCE": _LVS | frozenset("""
         extract.start_rve reduction.enabled reduction.reduce_negative
+        extract.remove_floating_nets
         selection.net_enable selection.cell_enable filter.cap_percentage_enable
         filter.cap_value_enable filter.res_value_enable netlist.create_view
         netlist.pin_order_enable netlist.brackets_replace
@@ -28,8 +29,9 @@ FLOW_BOOLEAN_PATHS = MappingProxyType({
     """.split()),
 })
 BOOLEAN_DEFAULTS = MappingProxyType({
-    path: path in {"lvs.case_sensitive", "steps.pins", "steps.extract",
-                   "steps.abstract", "output.geometry"}
+    path: path in {"extract.remove_floating_nets", "lvs.case_sensitive",
+                   "steps.pins", "steps.extract", "steps.abstract",
+                   "output.geometry"}
     for paths in FLOW_BOOLEAN_PATHS.values() for path in paths
 })
 REQUEST_BOOLEAN_PATHS = frozenset(BOOLEAN_DEFAULTS) | frozenset({

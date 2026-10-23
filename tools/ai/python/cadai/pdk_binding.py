@@ -28,8 +28,29 @@ class PdkBindings:
         self.extension_reader = extension_reader or (lambda d: discover_extensions(client, d))
         self.records = {}
 
+    def _preflight(self, args):
+        """Reject wrong standard confirmations before the live detail read.
+
+        The writable set and callback order are published facts; a design
+        session must not pay minutes of bridge capture only to be told it
+        echoed them wrong. Identity comes from the snapshot's light index;
+        the full read after this stays authoritative.
+        """
+        standard = getattr(self.session, "standard", None)
+        if not (standard and standard.workspace):
+            return
+        target = self.session.device_target(args["snapshot_ref"], args["device_ref"])
+        if target is None:
+            return  # the full read owns the identity error
+        rule = standard_gate.obtain(
+            standard, {"target": target}, args.get("use", "circuit"),
+            live=False, verify_content=False,
+        )
+        standard_gate.contract(rule, args)
+
     def bind(self, args):
         validate(args, BINDING_TOOLS[0]["inputSchema"])
+        self._preflight(args)
         device, context = read_device(self.session, args)
         args = deepcopy(args)
         standard = getattr(self.session, "standard", None)
@@ -47,11 +68,11 @@ class PdkBindings:
                 self.extension_reader(device), device["target"], args.get("extension_ref")
             )
         params, callbacks, omitted = parameter_rows(device, args)
-        terms, bbox, pins = geometry_rows(device, args)
+        terms, bbox, pins = geometry_rows(device, args, rule)
         crosscheck = device.get("port_crosscheck") or {}
         deck = [name for name in (crosscheck.get("deck") or []) if isinstance(name, str)]
         if rule:
-            interface = next(i for i in rule['simulation']['interfaces'].values() if i['simulator'] == 'spectre')
+            interface = standard_gate.spectre(rule)
             args['netlist_terminal_map'] = interface['terminal_map']
             deck = interface['term_order']
         mapping, mapping_status = terminal_map(device, args)
@@ -164,10 +185,19 @@ class PdkBindings:
                         "device_refs": wanted,
                     },
                 )
-                require(
-                    check["status"] == "valid",
-                    "live dependencies " + check["status"] + ": " + str(check["items"]),
-                )
+                if check["status"] != "valid":
+                    changed = []
+                    for item in check["items"]:
+                        if item.get("status") == "valid":
+                            continue
+                        names = ",".join(item.get("changes") or [])
+                        changed.append(item["device_ref"]
+                                       + (" [" + names + "]" if names else ""))
+                    require(
+                        False,
+                        "live dependencies changed: " + "; ".join(changed[:3])
+                        + "; revalidate or refresh the PDK baseline before binding",
+                    )
                 require(
                     {i["device_ref"] for i in check["items"]} == set(wanted),
                     "missing validation rows",
@@ -251,7 +281,11 @@ class PdkBindings:
         snapshot = "binding-set:" + digest(refs)
         spec = deepcopy(args["spec"])
         for key, value in (("project_ref", project), ("binding_snapshot", snapshot)):
-            require(key not in spec or spec[key] == value, "selected " + key + " differs")
+            require(
+                key not in spec or spec[key] == value,
+                "selected " + key + " differs; binding_refs derive " + key + "=" + value
+                + "; remove " + key + " from spec when binding_refs supply it",
+            )
             spec[key] = value
         bindings = dict(schema=BINDING_VERSION, project_ref=project, snapshot_ref=snapshot,
                         source_ref=records[0]["context"]["session_ref"],

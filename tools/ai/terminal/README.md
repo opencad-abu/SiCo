@@ -1,5 +1,7 @@
 # CAD AI Assistant Terminal
 
+当前版本、状态根和文档边界见[现行文档索引](../../../docs/SICO_CURRENT_DOCUMENTATION.md)。
+
 The maintained terminal is a separate PyQt5/QTermWidget process launched from
 Virtuoso. Keeping it out of the Virtuoso address space avoids mixing Cadence's
 Qt libraries with the production Python GUI runtime. The frontend is
@@ -10,11 +12,11 @@ CLI and Claude Code.
 
 The production environment owns:
 
-- `CAD_PYTHON`, or `CAD_PYTHON_ROOT/bin/python3` as its fallback;
+- `SICO_PYTHON`, or `SICO_PYTHON_ROOT/bin/python3` as its fallback;
 - PyQt5 and `PyQt5.sip` installed in that Python tree;
 - the Qt 5 libraries, platform/input-context plugins, and ICU used by PyQt5.
 
-The CAD release owns the QTermWidget payload and a native Codex CLI:
+The SiCo release owns the QTermWidget payload and a native Codex CLI:
 
 - `QTermWidget.abi3.so`;
 - `libqtermwidget5.so.1`;
@@ -31,13 +33,13 @@ plugins. This keeps the universal package small and makes the production Python
 installation the single Qt runtime contract for CAD Python GUIs.
 
 At startup `tools/ai/bin/sico-ai-terminal` selects the RHEL 7 or RHEL 8 QTermWidget
-pair, exports `CAD_AI_QTERMWIDGET_RUNTIME` and
-`CAD_AI_QTERMWIDGET_DATA_PATH`, and executes the common
+pair, exports `SICO_AI_QTERMWIDGET_RUNTIME` and
+`SICO_AI_QTERMWIDGET_DATA_PATH`, and executes the common
 `sico-ai-terminal-pyqt` launcher. The launcher disables user-site packages and
 places only the selected QTermWidget `python/` and `lib/` directories ahead of
 inherited EDA paths. PyQt5 and Qt continue to load from the production Python.
 The common launcher loads `cad_ai_terminal` only from the same release's
-`tools/ai/python` directory. An explicit absolute `CAD_AI_PYQT_ROOT` is strict: an
+`tools/ai/python` directory. An explicit absolute `SICO_AI_PYQT_ROOT` is strict: an
 incomplete override fails startup instead of falling back to the release copy.
 The build helpers and QTermWidget patches remain in the private source tree.
 
@@ -47,15 +49,15 @@ Set and verify the shared Python before starting Virtuoso or validating a
 release:
 
 ```bash
-export CAD_PYTHON_ROOT=/software/pkgs/python/3.9.13
-export CAD_PYTHON="$CAD_PYTHON_ROOT/bin/python3"
-export CAD_SYSTEM_LD_LIBRARY_PATH="$CAD_PYTHON_ROOT/lib"
-export CAD_AI_PYTHON_LIBRARY_PATH="$CAD_SYSTEM_LD_LIBRARY_PATH"
+export SICO_PYTHON_ROOT=/software/pkgs/python/3.9.13
+export SICO_PYTHON="$SICO_PYTHON_ROOT/bin/python3"
+export SICO_SYSTEM_LD_LIBRARY_PATH="$SICO_PYTHON_ROOT/lib"
+export SICO_AI_PYTHON_LIBRARY_PATH="$SICO_SYSTEM_LD_LIBRARY_PATH"
 
 env -u PYTHONPATH -u QT_PLUGIN_PATH -u QT_QPA_PLATFORM_PLUGIN_PATH \
-  PYTHONNOUSERSITE=1 LD_LIBRARY_PATH="$CAD_AI_PYTHON_LIBRARY_PATH" \
+  PYTHONNOUSERSITE=1 LD_LIBRARY_PATH="$SICO_AI_PYTHON_LIBRARY_PATH" \
   QT_QPA_PLATFORM=offscreen \
-  "$CAD_PYTHON" -s -c \
+  "$SICO_PYTHON" -s -c \
   'from PyQt5.QtCore import qVersion; from PyQt5.QtWidgets import QApplication; app=QApplication([]); print(qVersion())'
 ```
 
@@ -87,7 +89,7 @@ The source archives and build SDKs are build inputs only. None of Python,
 PyQt5, Qt, ICU, qmake, compilers, headers, or sysroots is copied into the
 release. Build files must remain below the launch directory's `.cad` tree.
 
-The release also carries the pinned native Codex CLI `0.156.1`. It is a
+The release also carries the pinned native Codex CLI `0.162.1`. It is a
 static-PIE `x86_64-unknown-linux-musl` ELF with no `PT_INTERP`, `DT_NEEDED`,
 glibc, libstdc++, or Node.js dependency. The same executable is therefore
 shared by the RHEL 7 and RHEL 8 packages; only QTermWidget's binding/library
@@ -100,8 +102,8 @@ older executable. `0` forces native mode; unset preserves existing
 after switching. Compatibility mode requires explicit `CAD_CODEX_API_BASE_URL`
 and `CAD_CODEX_API_KEY`; the controller owns the wrapper and real key, while the
 terminal receives its loopback URL and local token. Normal exit and startup
-failure close the wrapper. Core, home and history remain 0.156.1 in both modes.
-See [Codex compatibility and checksums](../docs/codex-0.156-compatibility.md).
+failure close the wrapper. Core, home and history remain 0.162.1 in both modes.
+See [Codex compatibility and checksums](../docs/codex-0.162-compatibility.md).
 
 The pinned runtime lives in the source tree at
 `tools/ai/runtime/codex/x86_64-unknown-linux-musl` — the same layout as
@@ -117,14 +119,14 @@ tools/ai/terminal/scripts/import_codex_runtime.sh \
 
 Both RHEL stages use
 `runtime/codex/x86_64-unknown-linux-musl/bin/codex` and its adjacent
-`codex-code-mode-host`; `-DCAD_AI_CODEX_EXECUTABLE` installs a different
+`codex-code-mode-host`; `-DSICO_AI_CODEX_EXECUTABLE` installs a different
 qualified copy. Omitted importer inputs are downloaded from the exact pinned
 release and verified; offline import requires both inputs. The native release is
 static PIE and has no interpreter or dynamic library dependency, so it is
 independent of the RHEL 7 versus RHEL 8 glibc baseline. Node.js/npm are not
 part of the Codex runtime. CMake verifies both pinned checksums and the CLI
 version, then stages the binaries and manifest. Run
-`tools/ai/terminal/scripts/strip_codex_runtime.sh "$CAD_AI_STAGE"` after
+`tools/ai/terminal/scripts/strip_codex_runtime.sh "$SICO_AI_STAGE"` after
 `cmake --install` and before verification: the shipped release carries the
 stripped copies recorded as `release_*` in the lock, and `verify_release_abi.sh`
 checks that identity. The step is idempotent and rejects a binary that is
@@ -146,8 +148,8 @@ Python dependencies exclusively from the bundled runtime.
 After producing a patched QTermWidget prefix, build the binding:
 
 ```bash
-export CAD_AI_PYQT_QMAKE=/path/to/qt-5.15-sdk/bin/qmake
-export CAD_AI_PYQT_QT_ROOT=/path/to/qt-5.15-sdk
+export SICO_AI_PYQT_QMAKE=/path/to/qt-5.15-sdk/bin/qmake
+export SICO_AI_PYQT_QT_ROOT=/path/to/qt-5.15-sdk
 
 mkdir -p "$PWD/.cad/rhel8-runtime/ai/python" \
   "$PWD/.cad/rhel8-runtime/ai/lib"
@@ -160,8 +162,8 @@ tools/ai/terminal/scripts/build_qtermwidget5_pyqt.sh \
   "$PWD/.cad/rhel8-binding-build"
 ```
 
-Use `CAD_AI_PYQT_CC`, `CAD_AI_PYQT_CXX`, and
-`CAD_AI_PYQT_COMPILER_LIBRARY_PATH` for qualified target compiler wrappers.
+Use `SICO_AI_PYQT_CC`, `SICO_AI_PYQT_CXX`, and
+`SICO_AI_PYQT_COMPILER_LIBRARY_PATH` for qualified target compiler wrappers.
 Build and validate separate RHEL 7 and RHEL 8 pairs. The verifier enforces:
 
 | Target | GLIBC | GLIBCXX | CXXABI |
@@ -181,12 +183,12 @@ contract.
 Install one platform stage by providing its binding and QTermWidget prefix:
 
 ```bash
-export CAD_AI_STAGE="$PWD/.cad/rhel8-stage/ai"
+export SICO_AI_STAGE="$PWD/.cad/rhel8-stage/ai"
 
 cmake -S tools/ai/terminal -B "$PWD/.cad/rhel8-install-build" \
-  -DCMAKE_INSTALL_PREFIX="$CAD_AI_STAGE" \
-  -DCAD_AI_QTERMWIDGET_ROOT=/path/to/qtermwidget-prefix \
-  -DCAD_AI_QTERMWIDGET_PYTHON_MODULE=\
+  -DCMAKE_INSTALL_PREFIX="$SICO_AI_STAGE" \
+  -DSICO_AI_QTERMWIDGET_ROOT=/path/to/qtermwidget-prefix \
+  -DSICO_AI_QTERMWIDGET_PYTHON_MODULE=\
 "$PWD/.cad/rhel8-runtime/ai/python/QTermWidget.abi3.so"
 cmake --install "$PWD/.cad/rhel8-install-build"
 
@@ -195,7 +197,7 @@ cmake --install "$PWD/.cad/rhel8-install-build"
 The default CMake stage contains only native dependencies and minimal UI resources.
 It is not a runnable application release. Internal source-based ABI verification
 requires a separate development stage configured with
-`-DCAD_AI_DEVELOPMENT_STAGE=ON`; that stage is never distributable.
+`-DSICO_AI_DEVELOPMENT_STAGE=ON`; that stage is never distributable.
 Use `verify_rhel7_abi.sh` or `verify_rhel8_abi.sh` for the corresponding internal
 terminal contract, including offscreen `QApplication`/QTermWidget import.
 
@@ -238,18 +240,18 @@ use the same implementation. Other GUI commands can use
 See [Pinyin input](../docs/PINYIN_INPUT.md) for runtime dependencies, cleanup and
 source-hidden binary acceptance.
 
-Right-click exposes New Session, Copy, Paste, Select All, and Find. New Session
+Right-click exposes `新建会话`, `复制`, `粘贴`, `全选`, and `查找`. `新建会话`
 opens an independent agent tab against the same Virtuoso controller and
 workspace; `Ctrl+Shift+T` provides the same command. The window supports at
-most eight sessions. Select All includes the visible screen and retained
+most eight sessions. `全选` includes the visible screen and retained
 scrollback. Typing, committed input-method text, or pasting returns a terminal
 that was reading history to the live bottom; output alone does not force that
 move.
 
 Closing a running tab asks before terminating only that session. Closing the
-window offers `Exit Sessions`, `Minimize`, and `Cancel`; Cancel is the default
-and Escape action. Minimize preserves all tabs, the controller, and their
-agents. Exit Sessions releases every QTermWidget and its patched PTY session.
+window offers `结束全部会话`, `最小化`, and `取消`; `取消` is the default
+and Escape action. `最小化` preserves all tabs, the controller, and their
+agents. `结束全部会话` releases every QTermWidget and its patched PTY session.
 Controller shutdown, control-channel EOF, or Virtuoso exit closes the window
 without a second prompt.
 

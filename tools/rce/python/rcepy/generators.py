@@ -56,6 +56,6 @@ def _generate_extract(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults)
         return generate_qrc(cfg, ctx, defaults=defaults)
     if tool in {"STARRC", "STARXTRACT"}:
         return generate_starrc(cfg, ctx, defaults=defaults)
-    if tool in {"CALXRC", "XRC", "CALIBRE-XRC", "CALIBRE_XRC"}:
+    if cfg.is_calibre_pex:
         return generate_xrc(cfg, ctx, defaults=defaults)
     raise ValueError(f"Unsupported extraction tool: {cfg.ext_tool}")

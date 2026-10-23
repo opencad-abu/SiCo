@@ -205,7 +205,7 @@ class BridgeClient:
     def platform_environment(self, *, cancelled=None):
         if "platform_environment.v1" not in self.descriptor.get("capabilities", []):
             raise ValueError("此 CDNS-IC 实例的接入组件较旧，请更新 SiCo 集成并重启 Virtuoso")
-        from ..service.background_environment import validate_environment
+        from .platform_environment import validate_environment
 
         return validate_environment(self._call("platform_environment",
             _deadline=time.monotonic() + 3, _cancelled=cancelled))

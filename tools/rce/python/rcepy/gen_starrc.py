@@ -129,6 +129,12 @@ def generate_starrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | 
         parasitic_requirements.update(
             {"SPICE_SUBCKT_FILE": pin_order_file, "NETLIST_FORMAT": netlist_format}
         )
+    # Every output mode states the GUI floating-net choice, so a corner
+    # common.opt must not silently override it.
+    floating_nets = (
+        "YES" if cfg.flag("extract", "remove_floating_nets") else "NO"
+    )
+    parasitic_requirements["REMOVE_FLOATING_NETS"] = floating_nets
     common_options, common_opt = starrc_common_options(
         cfg, cfg.corners[0] if cfg.is_multi_corner else None
     )
@@ -213,6 +219,7 @@ def generate_starrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | 
         "",
         "*** Database processing",
         *baseline.lines("database"),
+        f"REMOVE_FLOATING_NETS: {floating_nets}",
         *selection_lines,
         *baseline.lines("after_selection"),
         "",

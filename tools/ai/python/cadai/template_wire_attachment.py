@@ -9,6 +9,7 @@ from .template_schema import TemplateError, digest
 from .template_wire_contacts import (
     LEGACY_VERSION,
     VERSION,
+    WireBudgetExceeded,
     capture_contact_evidence,
     has_contact_evidence,
     source_contacts,
@@ -252,7 +253,14 @@ def compile_reference(record):
             if observed and (a == b or (a[0] != b[0] and a[1] != b[1])):
                 global_gaps.add("non_orthogonal_source_wire")
             lines[net].append({"shape": index, "segment": segment, "points": [a, b]})
-    contacts, isolated = source_contacts(lines, endpoints, observed=observed, markers=markers)
+    contacts, isolated = defaultdict(set), defaultdict(list)
+    try:
+        contacts, isolated = source_contacts(lines, endpoints, observed=observed, markers=markers)
+    except WireBudgetExceeded:
+        # Wire evidence over the contact-analysis budget stays a capture fact:
+        # every net keeps its recorded shapes and endpoints with an explicit
+        # gap, so routing stays unknown instead of failing the whole template.
+        global_gaps.add("source_wire_evidence_over_budget")
     result = {}
     for net in sorted(set(endpoints) | set(lines) | set(gaps)):
         connected = connect_net(lines[net], endpoints[net], shared_terminals=observed)

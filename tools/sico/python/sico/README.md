@@ -1,21 +1,29 @@
 # Silicon Copilot Agent and Python Host
 
-Silicon Copilot uses the original Codex CLI 0.156.1 `app-server` as its Agent
+当前版本、状态根和文档边界见[现行文档索引](../../../../docs/SICO_CURRENT_DOCUMENTATION.md)。
+本 README 描述当前源码行为；带日期的验收记录只作为历史证据。
+
+新增 SKILL/SKILL++ 文件必须同步对应 JSON 清单、生成入口并核对编译输入；
+必做流程见[项目 README](../../../../README.md#skill-文件与-json-清单维护必做)。
+
+Silicon Copilot uses the original Codex CLI 0.162.1 `app-server` as its Agent
 core, with Python/PyQt5 for the desktop, CAD session control and cdns-ipc.
 Environment configuration defaults to `SICO_BACKEND=codex` and
 `SICO_PROVIDER=responses`. The optional `SICO_TOOL_FORMAT=flat` wrapper
 adapts namespace tool identities for compatible Responses gateways; it does not
 translate Anthropic or Chat APIs. The existing Python backend remains available
 for those protocols with explicit `SICO_BACKEND=python` or a provider JSON.
+The supported backend capabilities, shared lifecycle guarantees and Python retirement
+conditions are defined in [backend support](../../../../docs/SICO_BACKEND_SUPPORT.md).
 An existing environment that selects `openai`/`anthropic` must explicitly select
-Python or migrate to Responses. See the [architecture](../../../../README.md).
+Python or migrate to Responses. See the [architecture](../../../ai/docs/COPILOT_STUDIO_ARCHITECTURE.md).
 
-Both frontends use the original Codex 0.156.1 runtime. `SICO_LEGACY_0114=1`
+Both frontends use the original Codex 0.162.1 runtime. `SICO_LEGACY_0114=1`
 enables the shared namespace-to-flat Responses wrapper, never a 0.114 executable.
 `0` forces native mode; unset/empty preserves existing tool_format configuration,
 which defaults to native. An explicit switch overrides the older tool_format
 setting and takes effect only for a new session. The wrapper shares the same
-0.156.1 history and tool engine; historical 0.114 state is not modified or reused.
+0.162.1 history and tool engine; historical 0.114 state is not modified or reused.
 
 The desktop and fixed-target SKILL bridge are available through
 **SiCo → Silicon Copilot**. Production GUI, `demo --gui`, `connect --gui` and
@@ -23,7 +31,7 @@ The desktop and fixed-target SKILL bridge are available through
 execution and persistence; closing or quitting a GUI detaches it while accepted
 work continues. **结束当前会话** explicitly ends one runtime; **停止项目服务**
 refuses while work or reconciliation remains. See the
-[service operations guide](../../../../README.md).
+[service operations guide](../../../ai/docs/COPILOT_STUDIO_AGENT_SERVICE_OPERATIONS.md).
 
 **Ask Silicon Copilot...** opens a standalone PyQt5 quick-input composer via SKILL IPC,
 with Chinese input-method support, multiline text, Enter to send and Shift+Enter for a
@@ -50,7 +58,7 @@ evidence-backed Audit center: Copilot records the question, waits without holdin
 bridge, validates the target and evidence again, and delivers the reply to the same model
 turn. Duplicate reply IDs are idempotent; cancelled, disconnected or invalidated tasks do
 not replay a reply. Waveform plots and export remain later work.
-See the [workbench contract](../../../../README.md).
+See the [workbench contract](../../../ai/docs/COPILOT_STUDIO_WORKBENCH_PLAN.md).
 New session is a session action;
 the quick composer remains a separate PyQt dialog. SessionController owns model
 execution outside Qt, including both main-editor and RMB input queues. Cancelling
@@ -62,6 +70,13 @@ replaying old inputs. Continue automatically connects future tools to the curren
 Virtuoso host, or the newest reachable host in the same local project. A durable host
 transition preserves historical task targets and the original Codex thread. If no host
 is available, chat remains usable and design tools report the missing connection.
+
+A session that never receives a user turn is not retained as history. When the
+project service closes, complete records containing only system initialization
+(`startup`) or thread-maintenance activity and no accepted `chat`/`quick` input
+are removed with their native rollouts and attachments. Unreadable records are
+preserved for the existing damaged-record review, and imported history keeps its
+own retention policy.
 
 The Qt event loop starts before `service/frontend_startup.py` discovers and attaches
 to the project service. `StartupLifecycle` owns cancellable waiting and credential
@@ -90,7 +105,7 @@ command worker cannot construct a local GUI. Bridge callers import `bridge_clien
 `ServiceChannel.exchange` are the single lifecycle transport contract.
 
 Independent-service scope and evidence are maintained in the
-[Agent Service plan](../../../../README.md).
+[Agent Service plan](../../../ai/docs/COPILOT_STUDIO_AGENT_SERVICE_PLAN.md).
 The service accepts current-turn text steering and independent queued tasks with
 attachments and frozen turn settings. Steering preserves the captured task/thread/turn;
 attachments or changed settings must be submitted as a separate queued task.
@@ -114,10 +129,10 @@ or a tool call ID. The controller supplies the owning session, and the broker
 checks the registered target and instance generation. Backend callers observe the
 Future; GUI code cannot use this example to bypass the project-service client.
 
-Backend-only compatibility accepts an exact registered `SessionController` in
-`SessionTokens.internal_token`; the frontend rejects that input. Remove this
-adapter when the backend setup and test callers have migrated to tokens. No UI
-caller depends on controller input, including startup and quick-input attachment.
+Worker commands, quick input and replay require an exact `SessionToken`.
+Backend setup and test callers use the same identity contract as the frontend;
+the old Controller-input conversion was retired in EQ-08 C5. Runtime identity is
+checked at admission and again when queued work executes.
 
 | Receipt | Meaning |
 | --- | --- |
@@ -172,19 +187,20 @@ and serves the project service's captured session targets. The independent
 multi-session Agent Service, durable input recovery and explicit crash reconciliation
 are complete under AS-01–AS-07; their evidence and limits are in the service plan.
 
-See the [quick start](../../../../docs/html/environment.html) for CIW loading,
+See the [quick start](../../../ai/docs/AI_ASSISTANT_AGENT_QUICKSTART.md) for CIW loading,
 API URL/model/Key configuration, and ADE menu coverage. The independent SKILL
 entry is `tools/sico/skill++/SICO.ils`; `sicoShow()` captures the current target.
 
 Menu and CLI launches accept centrally supplied `SICO_API_URL` and
-`SICO_MODEL`. Codex uses `SICO_PROVIDER=responses` with an exact 0.156.1
+`SICO_MODEL`. Codex uses `SICO_PROVIDER=responses` with an exact 0.162.1
 executable optionally selected by `SICO_CODEX_CLI`; otherwise it resolves the
-shared installed 0.156.1 runtime before the site/PATH candidates. The Python backend implements
+shared installed 0.162.1 runtime before the site/PATH candidates. The Python backend implements
 `SICO_PROVIDER=anthropic` (legacy default) or `openai` function tools.
 Keys come from `SICO_API_KEY`; menu startup asks for a missing key in
 a password dialog and keeps it in memory. A partial URL/model pair is an error.
 Selection order is explicit `--provider-config`, `SICO_PROVIDER_CONFIG`,
-the environment pair, then `<launch directory>/.cad/ai/agent-provider.json`.
+the environment pair, then `<launch directory>/.sico/ai/agent-provider.json`
+(legacy `.cad` is read-only until explicit migration).
 JSON contains `provider`, `base_url`, `model`, and `api_key_env`, without inline
 secrets. No configuration means an explicitly labelled simulated provider.
 
@@ -198,7 +214,7 @@ context loaded. A declared missing context is an error; it does not fall back.
 The context must be qualified for that Virtuoso version. Native relay startup
 requires the installed ELF `bin/sico` and cannot fall back to `python -m`.
 For source development, use `"$SICO_HOME/bin/sico" demo --gui`
-after setting `CAD_PYTHON` to the selected interpreter's absolute path.
+after setting `SICO_PYTHON` to the selected interpreter's absolute path.
 `history --session <id>` reads
 public events after the session writer exits. CLI `demo`/`connect` use the same
 configuration order and require their credential in the environment.
@@ -207,16 +223,16 @@ The interaction tests use `list_windows`, `inspect_window`, `get_entry_context`,
 `get_context`, `read_ade_setup`, `read_ade_history`, and `read_artifact`.
 The first three share their schemas, native readers and guidance with AI Assistant.
 Shared circuit/project tools use the existing adapters and authorization contracts;
-their scope is documented in the [MCP workflow](../../../../README.md).
+their scope is documented in the [MCP workflow](../../../ai/docs/CIRCUIT_MCP_WORKFLOW.md).
 Startup and each subsequent task refresh the captured source through
 `get_entry_context`; older hosts without this capability retain legacy startup.
-See the [shared context contract](../../../../README.md).
+See the [shared context contract](../../../ai/docs/SHARED_ENTRY_CONTEXT_V1.md).
 Context replies travel inline over IPC/TCP without spool files. Each task freezes
 its own source; new tasks can use other windows while keeping the conversation.
 The running target never follows later GUI focus; stale targets enter
 `needs_reconcile`. Accepted input and source snapshots are stored in each session's
 `inbox/` without automatic crash replay. Data and runtime
-directories are below `.cad/ai/agent`, preserving NAS aliases. The current broker
+directories are below `.sico/ai/agent`, preserving NAS aliases. The current broker
 is loopback-only. Current development focuses on Agent core/GUI and Virtuoso
 interactive context/desktop lifecycle. Business tools already reuse the existing
 AI Assistant MCP ecosystem; ADE mutations, simulation, analysis and LSF handlers
@@ -232,5 +248,5 @@ selected session to the bottom without changing sessions. Launch clears inherite
 EDA XI2 switches.
 
 Source provenance and adaptation boundaries are recorded in the
-[source map](../../../../README.md); test evidence and limits
-are in the [implementation status](../../../../README.md).
+[source map](../../../ai/docs/AI_ASSISTANT_AGENT_SOURCE_MAP.md); test evidence and limits
+are in the [implementation status](../../../ai/docs/AI_ASSISTANT_AGENT_IMPLEMENTATION_STATUS.md).

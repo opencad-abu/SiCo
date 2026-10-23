@@ -44,16 +44,10 @@ TOOLS = [
     tool(
         TOOL_NAME,
         "Compute a deterministic target layout from one stored template's relative placement "
-        "relations plus the selected target master geometry: shared rows, columns and evidenced "
-        "terminal axes keep their alignment and order across rows, "
-        "left-right mirrored pairs keep their mirrored orientation. Ports keep template "
-        "sides and relative positions; missing positions use the default bands "
-        "(power, bidirectional, input, ground; output right). Port connections default "
-        "to labelled stubs independently of internal routing. Spacing is "
-        "recomputed from target body and annotation bounds on the target grid. Source pitch "
-        "is a lower bound; missing terminal evidence is reported. Returns layout, a "
-        "relations report and explicit gaps; pass the layout to preview_circuit_geometry / "
-        "prepare_circuit_creation unchanged. Read-only; no OA writes.",
+        "and target geometry; preserve rows, mirroring and port sides. Missing terminal evidence "
+        "is reported and source pitch is a lower bound. Returns layout, relations and gaps; pass "
+        "layout unchanged to preview_circuit_geometry or prepare_circuit_creation. Read-only; "
+        "no OA writes.",
         {
             "template_ref": REF,
             "spec": SELECTED_SPEC,

@@ -17,6 +17,7 @@ from concurrent.futures import Future
 from dataclasses import dataclass
 from pathlib import Path
 
+from ..configuration.background import BackgroundSettings
 from ..core.contracts import BoundContext, NeedsReconcile, identifier
 from ..interpreter import agent_command
 from ..storage.journal import open_private, private_dir, sync_directory
@@ -25,6 +26,7 @@ from ..transport.framing import strict_json
 from ..transport.methods import QueryUnavailable
 from ..transport.router_journal import RouterJournal
 from .background_capability import MAX_PROBE_BYTES, assess_background_probe, build_background_probe
+from .background_evidence import custody_proof, same_identity, watchdog_record
 from .background_environment import capture_environment, validate_environment, worker_environment
 from .background_watchdog import boot_id, process_alive, process_identity, resume_owned_guardian
 
@@ -57,18 +59,8 @@ def _read(path, limit=MAX_PROBE_BYTES * 2):
 
 
 @dataclass(frozen=True)
-class BackgroundRuntime:
-    virtuoso: Path
-    context: Path
-    context_sha256: str
-    version: str
-    libraries: dict
-    xvfb: Path = Path('/usr/bin/Xvfb')
-
-    def __post_init__(self):
-        for field in ('virtuoso', 'context', 'xvfb'):
-            object.__setattr__(self, field, Path(getattr(self, field)))
-        object.__setattr__(self, 'libraries', dict(self.libraries))
+class BackgroundRuntime(BackgroundSettings):
+    """Captured settings with explicit execution-time availability checks."""
 
     def validate(self):
         for name in ('virtuoso', 'xvfb'):
@@ -125,6 +117,7 @@ class BackgroundWorker:
         self._call_thread = None
         self.progress = progress
         self.process = self.broker = self.journal = self.guardian = None
+        self.guardian_identity = self.watcher_identity = None
         self.process_session = ""
         self.process_record = None
         self.receipt = dict(protocol=PROTOCOL, worker_id=self.worker_id, job_id=self.job_id,
@@ -204,7 +197,7 @@ class BackgroundWorker:
                            error_type=type(exc).__name__)
         finally:
             cleanup = self._cleanup()
-        report = self._watchdog_report()
+        report = watchdog_record(self.directory, self.receipt)
         if report and report['reason'] in {'execution_timeout', 'startup_timeout'}:
             outcome = 'worker_timeout' if self._dispatched else 'background_unavailable'
             payload = dict(ok=False, code=outcome, reason=report['reason'])
@@ -280,6 +273,7 @@ class BackgroundWorker:
                 env=guardian_environment(self.directory, self.environment),
                 stdin=subprocess.DEVNULL,
                 stdout=log, stderr=subprocess.STDOUT, start_new_session=True, umask=0o077)
+            self.guardian_identity = process_identity(self.guardian.pid)
         deadline = time.monotonic() + self.startup_timeout
         launched = False
         while True:
@@ -294,10 +288,12 @@ class BackgroundWorker:
                 time.sleep(.02)
                 continue
             if (watcher.get('job_id') != self.job_id or watcher.get('worker_id') != self.worker_id
-                    or watcher.get('custodian', watcher['guardian'])['pid'] != self.guardian.pid):
+                    or not same_identity(watcher.get('custodian', watcher['guardian']),
+                                         self.guardian_identity)):
                 raise Unavailable('guardian_identity')
             if watcher['phase'] == 'started':
                 self.process = watcher['launcher']
+                self.watcher_identity = watcher['guardian']
                 from cadai import process_monitor
 
                 self.process_record = process_monitor.track(
@@ -402,12 +398,30 @@ class BackgroundWorker:
                 cleanup['guardian_reaped'] = False
                 # A local subreaper retains escaped children until confirmed dead.
                 # Killing it would discard the sole descendant ownership evidence.
-            report = self._watchdog_report()
-            cleanup['process_reaped'] = bool(report and report.get('process_stopped'))
+            if cleanup['guardian_reaped'] and (self.process or
+                                               (self.directory / 'launch').exists()):
+                deadline = time.monotonic() + max(2, 3 * self.shutdown_timeout + 1)
+                while time.monotonic() < deadline:
+                    if (watchdog_record(self.directory, self.receipt)
+                            or custody_proof(self.directory, self.receipt,
+                                             self.guardian_identity, self.watcher_identity)):
+                        break
+                    time.sleep(.02)
+            report = watchdog_record(self.directory, self.receipt)
+            custody = custody_proof(self.directory, self.receipt,
+                                    self.guardian_identity, self.watcher_identity)
+            cleanup['process_reaped'] = bool(
+                (report and report.get('process_stopped'))
+                or (custody and custody.get('process_stopped')
+                    and custody.get('children_remaining') == 0))
+            if self.process and process_alive(self.process):
+                cleanup['process_reaped'] = False
             if not self.process and not (self.directory / 'launch').exists():
                 cleanup['process_reaped'] = True
             if report:
                 self.receipt['exit_code'] = report.get('exit_code')
+            elif custody:
+                self.receipt['exit_code'] = custody.get('exit_code')
         if self.broker:
             try:
                 self.broker.close()
@@ -436,16 +450,6 @@ class BackgroundWorker:
         except OSError:
             cleanup['temporary_removed'] = False
         return cleanup
-
-    def _watchdog_report(self):
-        try:
-            report = strict_json(_read(self.directory / 'watchdog.json'))
-            if any(report.get(k) != self.receipt[k] for k in ('job_id', 'worker_id', 'instance_id', 'generation')):
-                return None
-            return report
-        except (OSError, ValueError):
-            return None
-
 
 def read_background_artifact(directory):
     """Read retained evidence only; this path never starts or resumes a worker."""

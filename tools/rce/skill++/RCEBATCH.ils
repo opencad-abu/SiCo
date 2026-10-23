@@ -9,7 +9,7 @@ procedure(rceBatchViewRequest(form runDir outputPaths finalOutputPaths
       (rceNativeViewOutputP(outputType)
         viewTarget=rceReductionViewTarget(form rceNativeViewTarget(form))
         when(viewTarget
-          setupPath=if(member(form~>extTool~>value '("CalXRC" "XRC")) then
+          setupPath=if(RCE_calibrePexToolP(form~>extTool~>value) then
             strcat(runDir "/log/calibreview.setup")
           else
             nil)
@@ -299,7 +299,7 @@ cadBatchRegisterFlowAdapter(
   'rceBatchOpenResult 'RCE_pythonExe)
 
 procedure(rceBatchAdapterRevision()
-  "20260924.flow.environment.v3"
+  "20261011.calibre.pex.tool.v1"
 )
 
 procedure(rceCdlIncludeBatchRevision()

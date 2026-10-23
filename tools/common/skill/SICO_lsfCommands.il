@@ -1,15 +1,21 @@
 ; Construct discovery and batch execution commands.
 
 unless(and(boundp('sicoCADlsfCommandsModulesVersion)
-             sicoCADlsfCommandsModulesVersion=="20260924.flow.environment.v3")
+             sicoCADlsfCommandsModulesVersion=="20261020.flow.environment.v5")
+
+procedure(SICO_lsfInstalledPython()
+  SICO_installedPython())
+
 procedure(SICO_lsfPythonExe()
   let((pythonRoot)
-    pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
     or(SICO_envValue("SICO_LSF_PYTHON")
-       SICO_envValue("SICO_PYTHON")
-       when(pythonRoot
-         simplifyFilename(strcat(pythonRoot "/bin/python3") t))
-       "python3")
+       SICO_lsfInstalledPython()
+       progn(
+         pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
+         or(SICO_envValue("SICO_PYTHON")
+            when(pythonRoot
+              simplifyFilename(strcat(pythonRoot "/bin/python3") t))
+            "python3")))
   )
 )
 
@@ -144,5 +150,5 @@ procedure(SICO_lsfCancelCommand(runType jobName)
   )
 )
 
-sicoCADlsfCommandsModulesVersion="20260924.flow.environment.v3"
+sicoCADlsfCommandsModulesVersion="20261020.flow.environment.v5"
 )

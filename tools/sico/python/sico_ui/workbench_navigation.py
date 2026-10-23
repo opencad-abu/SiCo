@@ -6,11 +6,30 @@ from PyQt5.QtGui import QDesktopServices
 from sico.core.links import parse_link
 from sico.service.workbench_data import DetailLinkError
 
+from .local_links import local_file_path, open_local_file
+from .preview_catalog import open_preview_link, preview_link
+
 
 class DetailNavigation:
     def open_url(self, url):
+        cad_objects = getattr(self, "cad_objects", None)
+        if cad_objects is not None and url.startswith(("copilot://cad/", "studio://cad/")):
+            cad_objects.open_link(url)
+            return True
         if url in self.external_urls:
             return QDesktopServices.openUrl(QUrl(url))
+        path = local_file_path(url)
+        if path is not None:
+            opened = open_local_file(path)
+            if not opened:
+                self.show_notice("文件不存在或系统无法打开：" + str(path))
+            return opened
+        name = preview_link(url)
+        if name:  # A report that prints a preview path opens it in the viewer.
+            opened = open_preview_link(self.window(), getattr(self.index, "source", None), name)
+            if not opened:
+                self.show_notice("预览产物目录暂不可读；文件保留在预览目录。")
+            return opened
         try:
             kind, key = parse_link(url, self.index.session_id)
         except (ValueError, AttributeError):
@@ -36,6 +55,12 @@ class DetailNavigation:
         self.current = (kind, key)
         self.external_urls.clear()
         self.image_sizes.clear()
+        if hasattr(self, "review"):
+            self.review = None
+        if hasattr(self, "review_bar"):
+            self.review_bar.hide()
+        if getattr(self, "images_gallery", None) is not None:
+            self.images_gallery.clear()
         self.show_notice("")
         self._detail_generation += 1
         generation = self._detail_generation
@@ -88,4 +113,3 @@ class DetailNavigation:
             ready,
             failed,
         )
-

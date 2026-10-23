@@ -18,7 +18,7 @@ def credential_environment(key_name):
     env = dict(os.environ)
     if not env.get(key_name):
         key, accepted = ask_text(
-            None, PRODUCT_NAME + " API Key",
+            None, PRODUCT_NAME + " API 密钥",
             f"请输入 {key_name}（仅保存在本次会话内存中）：", password=True)
         if not accepted or not key.strip():
             raise CredentialCancelled()

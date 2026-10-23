@@ -9,6 +9,7 @@ from threading import Event, RLock
 from . import pdk_capture, pdk_collection, pdk_quality, pdk_selection
 from .pdk_builtin import LIBRARIES as BUILTIN_LIBRARIES
 from .pdk_data import PdkData, binding
+from .pdk_init import PdkInit, guard, with_init
 from .pdk_normalize import context, now
 from .pdk_schema import PdkUnavailable
 
@@ -23,12 +24,14 @@ class PdkPreparation:
 
     def __init__(self, bridge, *, workspace=None, environment=None, entry=None, pool_factory=None):
         self.bridge = bridge
+        self.init = PdkInit(bridge)
         self.data = PdkData(workspace, environment)
         self.entry = entry
         self.ready, self.jobs = {}, {}
         self.selected = self.raw_context = None
         self.catalogs = {}
         self.selected_scope = self.choice_validator = None
+        self.selection_info = None
         self.selection_view = "symbol"
         self.file_layers = {}
         self.target_library = None
@@ -49,16 +52,11 @@ class PdkPreparation:
         return pdk_selection.require_selection(info, self._selection_prompt)
 
     def guard(self, name):
-        if name in DESIGN_TOOLS and self.raw_context is not None:
-            info = self.inspect({"view": self.selection_view})
-            if info["selection_required"]:
-                return info
-        return None
+        return guard(self, name)
 
     def _file_layer(self, ctx, library):
         """Lazily index the install directory once per (root, library) for this service."""
         return pdk_quality.file_layer(self.file_layers, ctx, library)
-
     def _categories(self, job, ctx):
         return pdk_quality.categories(self.bridge.capture, job["library"], ctx)
 
@@ -81,7 +79,7 @@ class PdkPreparation:
             try:
                 cached = catalogs.get(key[0])
                 matches = prepared["binding"] == binding(ctx, key[0]) and (
-                    prepared["source"] == "session"
+                    prepared["source"] in {"session", "published_standard"}
                     or bool(
                         cached and cached["complete"] and cached["digest"] == prepared["digest"]
                     )
@@ -92,11 +90,7 @@ class PdkPreparation:
                 del self.ready[key]
                 if not (cached and cached["complete"]):
                     issues.append({"library": key[0], "code": "stale_pdk_data"})
-        recommended = None
-        if self.entry:
-            facts = self.entry()
-            if facts and facts.get("ok") is True and facts.get("valid") is True:
-                recommended = (facts.get("design") or {}).get("technology_library")
+        recommended = pdk_selection.entry_recommendation(self.entry)
         result = pdk_selection.describe(
             ctx,
             catalogs,
@@ -106,6 +100,8 @@ class PdkPreparation:
             recommended,
             self._data_summary,
         )
+        from .pdk_standard.catalog import annotate_candidates
+        result = annotate_candidates(result, self.data.workspace, self.data.environment)
         self.raw_context, self.catalogs = raw, catalogs
         scope = result["selection_ref"]
         candidates, bound_library = result["candidates"], result["bound_library"]
@@ -119,6 +115,8 @@ class PdkPreparation:
                 selected_library=bound_library,
                 selection_source="technology_binding",
             )
+            result = with_init(self, result)
+            self.selection_info = deepcopy(result)
             return result
         if self.choice_validator:
             authorized = [
@@ -128,13 +126,33 @@ class PdkPreparation:
             ]
             if len(authorized) == 1:
                 self.selected, self.selected_scope = authorized[0], scope
+                result["selection_source"] = "confirmed_choice"
+        if len(candidates) == 1 and self.selected is None:
+            # A single session process is unambiguous; do not create a review
+            # event merely to repeat the only available choice.
+            self.selected, self.selected_scope = candidates[0]["library"], scope
+            result["selection_source"] = "single_candidate"
         result.update(choice_confirmed=self.selected is not None, selected_library=self.selected)
         if len(candidates) != 1 and (
             not self.selected
             or (self.choice_validator and not self.choice_validator(self.selected, result))
         ):
+            self.selection_info = deepcopy(result)
             return self.require_selection(result)
+        result = with_init(self, result)
+        self.selection_info = deepcopy(result)
         return result
+
+    def current_selection(self, library):
+        """Return the pending selection response without a live directory scan."""
+        info = self.selection_info
+        if info is None:
+            return None
+        if self.choice_validator and not self.choice_validator(library, info):
+            return self.require_selection(info)
+        if self.selected != library:
+            return self.require_selection(info)
+        return None
 
     @staticmethod
     def _data_summary(catalog):
@@ -183,10 +201,18 @@ class PdkPreparation:
         if not support:
             self.selected = library
             self.selected_scope = info["selection_ref"]
-        if not args.get('refresh'):
+        if not args.get('refresh') or pdk_selection.standard_reuse_allowed(self.data.environment):
             from .pdk_standard.catalog import prepared
-            standard = prepared(self.data, library, self.raw_context)
-            if standard:
+            try:
+                standard = prepared(self.data, library, self.raw_context)
+            except PdkUnavailable as exc:
+                # A bundled base-library baseline may be re-pointed at a moved
+                # installation; any other source change stays a hard error.
+                if exc.code != 'pdk_source_changed' or library not in BUILTIN_LIBRARIES:
+                    raise
+                standard = None
+            if standard and (
+                not args.get('refresh') or (standard.get('standard') or {}).get('design_ready') is True):
                 self.ready[key] = standard
                 return self._ready_result(key)
         builtin = self.catalogs.get(library, {}).get("source") == "builtin"
@@ -436,42 +462,11 @@ class PdkPreparation:
                     self.data.progress(job)
 
     def _captures(self, job, items):
-        """Yield device captures from the session or the configured worker pool."""
-        pending = [
-            row
-            for row in items
-            if job["tasks"][row["identity"]["target"]["cell"]]["state"] != "done"
-        ]
-        if not self.pool_factory:
-            for row in pending[:4]:
-                task = job["tasks"][row["identity"]["target"]["cell"]]
-                task.update(state="running", attempts=task["attempts"] + 1)
-                yield row, self.bridge.capture("device", row["identity"]["target"])
-            return
-        if not pending:
-            return
-        ref = job["collection_ref"]
-        pool = self._pools.get(ref)
-        if pool is None:
-            probe = self.bridge.capture("device", pending[0]["identity"]["target"])
-            pool = pdk_capture.create_pool(
-                self.pool_factory,
-                self.data.root / "workers" / ref.split(":")[1],
-                self.data.environment,
-                job,
-                pending,
-                probe,
-            )
-            config = pool.configuration
-            if job.get("worker_configuration", config) != config:
-                pool.close()
-                raise PdkUnavailable(
-                    "collection_changed", "PDK worker configuration changed; refresh the collection"
-                )
-            job["worker_configuration"] = config
-            self._pools[ref] = pool
-            pool.start()
-        yield from pdk_capture.pool_captures(pool, job, items)
+        """Preparation hook; capture strategy shares the owned job/pool state."""
+        yield from pdk_capture.captures(
+            job, items, capture=self.bridge.capture, pool_factory=self.pool_factory,
+            pools=self._pools, root=self.data.root, environment=self.data.environment,
+        )
 
     def directory(self, args):
         # Refresh the cheap library/technology view before every unqualified

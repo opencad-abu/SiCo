@@ -160,8 +160,12 @@ def report(record, client=None):
             require(isinstance(library, list) and len(library) == 3,
                     "library observation missing")
             result["library_observation"] = library
-            if receipt["saved"] and library != [receipt["library"], receipt["library_path"],
-                                                receipt["technology_path"]]:
+            expected = [receipt["library"], receipt["library_path"],
+                        receipt["technology_path"]]
+            actual = library
+            if receipt.get("technology_library") is None:
+                expected, actual = expected[:2], library[:2]
+            if receipt["saved"] and actual != expected:
                 result.update(state="target_changed", next_action="inspect_current_library")
         if target and (target[6] or (receipt.get("saved") and not target[1])):
             result["target_modified"] = target[6]
@@ -220,7 +224,27 @@ def execute(args, client, workspace, definitions, pdk_bindings):
         identity = session_identity(client)
         binding = None
         if hasattr(client, "prepare_operation"):
-            binding = client.prepare_operation(operation, parameters, identity)
+            try:
+                binding = client.prepare_operation(operation, parameters, identity)
+            except CircuitSpecError as exc:
+                if operation != "create_circuit_library":
+                    raise
+                data = getattr(exc, "data", None)
+                data = data if isinstance(data, dict) else {}
+                conflict = data.get("reattach_required") is True
+                return {
+                    "ok": False,
+                    "code": "library_conflict" if conflict else "library_preparation_failed",
+                    "operation": operation,
+                    "request_id": parameters["request_id"],
+                    "operation_dispatched": False,
+                    "automatic_resume_allowed": False,
+                    "prepared": data,
+                    "next_action": (
+                        "ask_user_new_library_or_reattach" if conflict
+                        else "fix_library_inputs_and_retry"),
+                    "message": str(exc),
+                }
         summary = {
             k: parameters[k]
             for k in (

@@ -3,12 +3,14 @@
 import errno
 import hashlib
 import json
-from cadenv import VIRTUOSO_MARKERS, captured_virtuoso_environment
+from cadenv import VIRTUOSO_MARKERS, captured_virtuoso_provenance
 from sicoenv import RETIRED_NAMES, promote
 
 from ..core.contracts import BoundContext, identifier
-from ..providers.config import validate_config
-from ..transport.framing import ProtocolError
+from ..configuration.background import BackgroundSettings
+from ..configuration.lsf import lsf_settings
+from ..configuration.provider import validate_config
+from cadai.json_values import ProtocolError
 from .history import owned_directory
 from .project_files import RegistryError, read_record, write_record
 
@@ -18,6 +20,7 @@ NAME = "session.snapshot.json"
 ENVIRONMENT = frozenset({
     "PATH", "HOME", "LD_LIBRARY_PATH", "PYTHONPATH", "CAD_PYTHON", "CAD_AI_CONTEXT",
     "SICO_PYTHON", "SICO_AI_CONTEXT",
+    "SICO_PDK_DATA", "SICO_CIRCUIT_TEMPLATES_DIR",
     "MODULEPATH", "LOADEDMODULES", "_LMFILES_", "MODULESHOME", "LMOD_CMD",
     *VIRTUOSO_MARKERS,
     "SICO_MCP_TIMEOUT", "SICO_MODEL_IDLE_TIMEOUT", "NO_PROXY", "no_proxy",
@@ -42,8 +45,7 @@ def capture(session_id, context, config, environment, descriptor, project_id=Non
         else:
             promote(saved, current)
     # New snapshots have one provenance family; historical validation accepts both.
-    saved.update({"SICO_VIRTUOSO_" + key: value for key, value in
-                  captured_virtuoso_environment(environment, credential=credential).items()})
+    saved.update(captured_virtuoso_provenance(environment, credential=credential))
     # In-memory credentials and bridge tokens are deliberately absent.
     source = {key: descriptor[key] for key in ("bridge_id", "router_id") if key in descriptor}
     value = dict(contract=CONTRACT, session_id=session_id, project_id=project_id,
@@ -62,13 +64,10 @@ def validate(row, session_id):
                 or row["session_id"] != identifier(session_id)):
             raise ValueError()
         if row.get('background') is not None:
-            from ..service.background_config import runtime_settings
-            from ..service.lsf_config import lsf_settings
-
             background = row['background']
             if not isinstance(background, dict) or set(background) != {'runtime', 'lsf'}:
                 raise ValueError()
-            runtime_settings(background['runtime'])
+            BackgroundSettings.from_record(background['runtime'])
             if background['lsf'] is not None:
                 lsf_settings(background['lsf'])
         BoundContext.from_record(row["context"])

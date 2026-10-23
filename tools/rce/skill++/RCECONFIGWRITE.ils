@@ -158,7 +158,8 @@ procedure(rcePrintReserved(form)
     cmdFile=strcat(runDir "/rce.toml")
     nativeView=rceNativeViewOutputP(form~>outType~>value)
     when(and(nativeView length(processCorners)>1
-               member(form~>extTool~>value '("StarRC" "CalXRC" "XRC")))
+               or(form~>extTool~>value=="StarRC"
+                  RCE_calibrePexToolP(form~>extTool~>value)))
       GUI_messageApp('e "RCE" extmsgStruc->multiCornerView)
       return(nil)
     )
@@ -168,7 +169,7 @@ procedure(rcePrintReserved(form)
         GUI_messageApp('e "RCE" extmsgStruc->nativeViewTarget)
         return(nil)
       )
-      when(form~>extTool~>value=="CalXRC"
+      when(RCE_calibrePexToolP(form~>extTool~>value)
         unless(isCallable('mgc_rve_load_setup_file)
           GUI_messageApp('e "RCE" extmsgStruc->nativeViewImporter)
           return(nil)

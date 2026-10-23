@@ -37,6 +37,23 @@ class StdioLines:
             self._enqueue(self.decode(line))
         elif self.control and line in (b"@show\n", b"@shutdown\n"):
             self.control(line[1:-1].decode("ascii"))
+        elif self.control and line.startswith(b"@attach "):
+            if len(line) > 256 or not line.endswith(b"\n"):
+                raise ValueError("Desktop attach command is too large or incomplete")
+            fields = line[8:-1].decode("ascii").split(" ")
+            if len(fields) not in {1, 3}:
+                raise ValueError("Invalid desktop attach fields")
+            session_id = fields[0]
+            if (len(session_id) != 32
+                    or any(char not in "0123456789abcdef" for char in session_id)):
+                raise ValueError("Desktop attach session identity is invalid")
+            message = {"kind": "attach", "session_id": session_id}
+            if len(fields) == 3:
+                from ..core.ask_queue import ask_sequence
+                from ..core.contracts import identifier
+
+                message.update(input_id=identifier(fields[1]), ask_sequence=ask_sequence(int(fields[2])))
+            self.control(message)
         elif self.control and line.startswith((b"@submit ", b"@submit64 ")):
             if len(line) > 262_144:
                 raise ValueError("Quick input envelope too large")

@@ -6,33 +6,15 @@
 # SiCo 安装根：二进制测试选 latest-bin；源码测试可改为 /software/sico/latest。
 setenv SICO_HOME "/software/sico/latest-bin"
 
-if ( -f "$SICO_HOME/scripts/sicoAutoLoad.il" ) then
-    # 源码树使用站点 Python；按实际安装路径修改，需包含 SiCo 所需的 Qt 等依赖。
-    setenv SICO_PYTHON_ROOT "/software/pkgs/python/3.9.13"
-    # 源码树的终端 Python 实现目录。
-    setenv SICO_AI_PYQT_ROOT "$SICO_HOME/tools/ai/terminal/pyqt"
-else
-    # 二进制包使用本安装自带的 Python runtime。
-    setenv SICO_PYTHON_ROOT "$SICO_HOME/runtime/python"
-    # 清除上一份源码安装的终端目录覆盖。
-    unsetenv SICO_AI_PYQT_ROOT
-endif
-
-# EDA 兼容库只使用本安装的 lib；Python/Qt 的库目录仍由下方独立变量传递。
+# Python、运行时库和终端实现由 SICO_HOME 推导。源码测试树提供
+# $SICO_HOME/etc/config/dev-runtime；发布包提供 $SICO_HOME/runtime/python。
+# EDA 兼容库只使用本安装的 lib；Python/Qt 的库目录由启动器推导。
 if ( $?LD_LIBRARY_PATH ) then
     setenv LD_LIBRARY_PATH "${SICO_HOME}/lib:${LD_LIBRARY_PATH}"
 else
     setenv LD_LIBRARY_PATH "$SICO_HOME/lib"
 endif
 
-# Python 可执行文件，供 SiCo 及其子进程使用。
-setenv SICO_PYTHON "$SICO_PYTHON_ROOT/bin/python3"
-# SiCo Python/Qt 的动态库目录；不直接改 LD_LIBRARY_PATH，以免影响 Virtuoso。
-setenv SICO_SYSTEM_LD_LIBRARY_PATH "${SICO_PYTHON_ROOT}/lib:${SICO_HOME}/lib"
-# AI 窗口和终端使用同一组 Python 动态库。
-setenv SICO_AI_PYTHON_LIBRARY_PATH "$SICO_SYSTEM_LD_LIBRARY_PATH"
-# SKILL/runtime 查找工具实现的目录，与 SICO_HOME 保持一致。
-setenv SICO_RUNTIME_TOOLS "$SICO_HOME/tools"
 # 公共命令目录，提供 sico、sico-ai-terminal、lsfmonitor 等命令。
 setenv PATH "${SICO_HOME}/bin:${PATH}"
 
@@ -54,14 +36,13 @@ unsetenv SICO_AI_QT_PLUGIN_PATH
 
 # 以下为可选配置：已有 modulefile/项目配置时可保留现有值，按需取消注释。
 
-# Agent 后端；当前使用 Codex。
-# setenv SICO_BACKEND "codex"
-# 模型 API 协议；Codex 使用 responses。
-# setenv SICO_PROVIDER "responses"
+# Agent 后端默认 codex、模型协议默认 responses，通常无需设置；需要切换时再显式设置。
 # 模型网关基础地址；与 SICO_MODEL 一起设置，替换为站点实际地址。
 # setenv SICO_API_BASE_URL "https://api.example.com/v1"
 # 网关提供的模型名称；替换为实际可用模型。
 # setenv SICO_MODEL "your-model-name"
+# 网关未声明推理强度时的回退档位；留空或 none 关闭（默认 low,medium,high,max）。
+# setenv SICO_REASONING_EFFORTS "low,medium,high,max"
 # API 密钥；通过站点私有配置注入，示例文件中不填写真实密钥。
 # setenv SICO_API_KEY "replace-in-private-config"
 # Codex 单次工具调用超时，单位为秒，允许 1–3600，默认 1800。
@@ -69,21 +50,23 @@ unsetenv SICO_AI_QT_PLUGIN_PATH
 # 上游模型仅在 AI 队列可访问时启用；只调度 HTTP worker，须在 Service 启动前设置。
 # setenv SICO_CODEX_LSF_EXE "bsub"
 # setenv SICO_CODEX_LSF_ARGS "-Is -q ai"
+# 会话内复用常驻 LSF worker；默认 1，设为 0 恢复每请求提交。
+# setenv SICO_CODEX_LSF_REUSE "1"
+# 常驻 worker 静默释放时间，单位为秒，默认 600。
+# setenv SICO_CODEX_LSF_SESSION_IDLE "600"
+# 常驻 worker 最大存活时间，单位为秒，默认 1209600（14 天）。
+# setenv SICO_CODEX_LSF_MAX_AGE "1209600"
 # 模型无新输出的等待上限，单位为秒，默认 900。
 # setenv SICO_MODEL_IDLE_TIMEOUT "900"
 # 可选 PDK 数据索引；可用相对当前工程的路径，调用 PDK 工具时才校验。
 # setenv SICO_PDK_DATA "/path/to/pdk-data/index.json"
 # 可选项目模板库；相对路径按当前工程解析，缺失不阻止 agent 启动。
 # setenv SICO_CIRCUIT_TEMPLATES_DIR "config/circuit-templates"
-# PDK 工作模式；普通设计用 design，专门的采集/维护进程才用 generation。
-# setenv SICO_PDK_WORKFLOW "design"
 # 多人共用此配置：各自在自己的工程目录启动，SiCo 自动使用 <启动目录>/.sico。
 # 通常不设置；状态目录含持久会话记录，不能当缓存清空。
-# 清除历史错误配置可用：unsetenv SICO_TEMP_DIR; unsetenv CAD_TEMP_DIR（启动 Virtuoso 前）。
+# 清除历史错误配置可用：unsetenv SICO_TEMP_DIR（启动 Virtuoso 前）。
 # 新版也接受空值或相对路径；相对路径按启动目录解析，子进程继承固定的绝对路径。
-# 旧二进制包请保持两个变量 unset；非空 CAD_TEMP_DIR 已淘汰，不会自动迁移。
 # 无需把 XDG_RUNTIME_DIR 指向家目录；GUI 自动准备权限为 0700 的运行目录。
-# setenv SICO_TEMP_DIR ".sico"
 
 # CAD flow 使用新变量名；旧安装的环境需配套迁移，见 docs/SICO_FLOW_ENV_MIGRATION.md。
 # CAD flow：工程与 OA 输入（以下路径均为占位；按需启用，并先设置被引用的根目录）
@@ -192,7 +175,7 @@ unsetenv SICO_AI_QT_PLUGIN_PATH
 
 # 队列/主机由 LSF 动态发现，无需设置静态候选；许可证由站点 modulefile 管理。
 # si、strmout、calibre、qrc、StarXtract、abstract、cdsTextTo5x 按使用的流程加入 PATH。
-# 各 flow 默认共用 SICO_PYTHON，无需另配解释器。
+# 各 flow 默认共用安装内 Python，无需另配解释器。
 # 工具默认命令统一维护在 $SICO_HOME/etc/flow-defaults/，详见 docs/SICO_FLOW_DEFAULTS_MAINTENANCE.md。
 
 # LSF 拼音由 SiCo 自动建立私有 IBus 会话；无需在此覆盖 QT_IM_MODULE 或 IBUS_ADDRESS。

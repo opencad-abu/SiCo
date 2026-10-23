@@ -29,21 +29,4 @@ class SessionTokens:
 
     def session(self, session_id):
         owner = self._sessions.controllers.get(session_id)
-        return self.internal_token(owner) if owner is not None else None
-
-    def internal_token(self, value):
-        """Legacy backend controller input; remove when backend callers use tokens.
-
-        FrontendPort never invokes this compatibility branch with UI input.
-        Only the exact registered controller can enter it.
-        """
-        if type(value) is SessionToken:
-            self.resolve(value)
-            return value
-        from .controller import SessionController
-
-        if not isinstance(value, SessionController):
-            raise TypeError("Expected a registered backend controller")
-        if self._sessions.controllers.get(value.session_id) is not value:
-            raise ValueError("Session runtime is no longer current")
-        return SessionToken(value.session_id, value.runtime_id)
+        return SessionToken(owner.session_id, owner.runtime_id) if owner is not None else None

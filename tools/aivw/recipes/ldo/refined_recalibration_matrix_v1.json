@@ -1,0 +1,19 @@
+{
+  "kind": "full-refined-public-matrix-correlation",
+  "targets": {
+    "MASTER": {
+      "reference": "20260908T080129.259791Z-recipe-run-4178cd65898d",
+      "crosscheck": "20260908T080212.970816Z-recipe-run-fd54d4ee35e5",
+      "candidate": "20260908T090908.052018Z-transition-response-3007d9977a29",
+      "old_public": "20260908T001838.659739Z-recipe-run-d98265d71c14"
+    },
+    "AON": {
+      "reference": "20260908T090208.849566Z-recipe-run-2726e7c56c41",
+      "crosscheck": "20260908T090209.846295Z-recipe-run-e3e0aa785302",
+      "candidate": "20260908T091132.614788Z-transition-response-98b572ab6c5d",
+      "old_public": "20260908T002018.129961Z-recipe-run-658ff7e7d809"
+    }
+  },
+  "qualification": "NOT_ESTABLISHED",
+  "holdout_evaluated": false
+}

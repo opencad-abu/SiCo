@@ -7,10 +7,12 @@ import math
 import os
 import sys
 from pathlib import Path
-from sicoenv import read
 
-from .controller import DEFAULT_REQUEST_TIMEOUT, run_session
+from sicoenv import read
+from sicoruntime import validate as validate_runtime
+
 from .agent_profile import INTERACTIVE_PROFILE, SUPPORTED_PROFILES
+from .controller import DEFAULT_REQUEST_TIMEOUT, run_session
 from .launch import production_python
 from .lsf import exec_lsf_session
 
@@ -28,7 +30,9 @@ def run_mcp_from_environment(timeout: float) -> int:
 def _add_session_arguments(session: argparse.ArgumentParser) -> None:
     session.add_argument("--workspace", type=Path, required=True)
     session.add_argument("--agent", choices=("codex", "claude"), default="codex")
-    session.add_argument("--profile", choices=sorted(SUPPORTED_PROFILES), default=INTERACTIVE_PROFILE)
+    session.add_argument(
+        "--profile", choices=sorted(SUPPORTED_PROFILES), default=INTERACTIVE_PROFILE
+    )
     session.add_argument("--terminal")
     session.add_argument(
         "--codex",
@@ -117,6 +121,7 @@ def _remote_session_command(args: argparse.Namespace) -> list[str]:
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     try:
+        validate_runtime(os.environ)
         if args.command in {"session", "lsf-session"}:
             if not math.isfinite(args.request_timeout) or args.request_timeout <= 0:
                 raise ValueError("request timeout must be a positive finite number")

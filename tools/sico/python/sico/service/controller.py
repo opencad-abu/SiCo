@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from ..core.ask_queue import PENDING_LIMIT, QueueFull
+
 import threading
 import uuid
 
 from ..core.contracts import BoundContext
-from ..core.startup import INITIAL_PROMPT, initial_context
+from ..core.startup import INITIAL_PROMPT
+from .python_startup import initial_context
 from ..transport.targets import submission
 from .backend_commands import SessionBackendCommands
 from .binding_commands import SessionBindings
@@ -17,13 +20,16 @@ from .router_commands import SessionRouter
 from .reconcile_commands import SessionReconciliation
 from .service_lifecycle import PendingWork
 from .session_updates import SessionUpdates
+from .task_publication import refresh as refresh_published_task
 from .task_history import TaskHistory
+from .task_tree import SessionTaskTree
 from .thread_commands import SessionThreadCommands
 
 
 class SessionController:
-    def __init__(self, loop):
+    def __init__(self, loop, *, terminal=None):
         self.loop, self.journal = loop, loop.journal
+        self.terminal = terminal
         self.session_id = self.journal.session_id
         self.runtime_id = uuid.uuid4().hex
         self.label = getattr(loop.provider, "label", "开发 provider")
@@ -32,7 +38,12 @@ class SessionController:
         self.current = BoundContext.from_record(loop.state.context.record())
         self.inbox = SessionInbox(self.journal, self.current)
         self.history = TaskHistory(self.journal, self.inbox)
+        self.task_tree = SessionTaskTree(self.history, getattr(loop, "workbench", None))
         self._lock = threading.RLock()
+        from .recap import SessionRecap
+
+        self.recap = SessionRecap(loop, lock=self._lock, execution=self.execution_view,
+                                 history=self.history)
         self._thread = None
         self._running = False
         self._cancel = threading.Event()
@@ -45,7 +56,7 @@ class SessionController:
         self.version = 0
         self._service_pending = PendingWork(sessions=1)
         # Replay earlier connections as history; new events must match this connection.
-        self.history_sequence = len(self.journal.events())
+        self.history_sequence = len(self.journal.records)
         self.bindings = SessionBindings(
             self.journal, self.current, lock=self._lock, execution=self.execution_view,
             changed=self._changed, failed=self._failed, replace_current=self._replace_current,
@@ -63,6 +74,7 @@ class SessionController:
             changed=self._changed, launch=self._launch_operation,
         )
         self.reconciliation = SessionReconciliation(self)
+        self.reconciliation.auto_acknowledge_empty()
         self.router = SessionRouter(
             self.journal, lock=self._lock, execution=self.execution_view,
             broker=lambda: self.bindings.broker, changed=self._changed,
@@ -70,26 +82,10 @@ class SessionController:
         self.updates = SessionUpdates(
             self.journal, lock=self._lock, execution=self.execution_view, bindings=self.bindings,
             history=self.history, steering_scope=self.backend_commands.steering_scope,
-            steering_supported=getattr(loop, "steering", None) is not None,
-            router_snapshot=self.router.snapshot,
+            steering_supported=loop.support.supports("steering"),
+            router_snapshot=self.router.snapshot, task_tree=self.task_tree,
+            refresh_task=lambda: refresh_published_task(self),
         )
-        # Legacy command aliases only, with no writable state forwarding.
-        # Retire per owner when worker._command, startup, event_stream and quick
-        # routing use component commands; inventory: tools/ai/docs/T07_STATE_OWNERSHIP.md.
-        for component, names in (
-            (self.bindings, ("reserve_submission", "release_submission", "attach_targets",
-                "poll_binding_events", "propose_binding", "resolve_binding",
-                "select_binding_target", "configure_bindings", "release_binding",
-                "release_binding_resource", "reconcile_binding_operation", "released_targets")),
-            (self.backend_commands, ("turn_input_status", "resource_status", "steer",
-                "steering_scope", "check_target_request", "answer_audit", "elicitation")),
-            (self.thread_commands, ("thread_scope", "thread_status", "thread_operation")),
-            (self.reconciliation, ("query_interrupted", "resolve_interrupted")),
-            (self.router, ("poll_router_status", "cancel_router_request", "router_receipt")),
-            (self.updates, ("read_updates", "_state_snapshot")),
-        ):
-            for name in names:
-                setattr(self, name, getattr(component, name))
         from .frontend_session import publish_session
 
         publish_session(self)
@@ -113,7 +109,9 @@ class SessionController:
                     sessions=1, queued=len(self.inbox.pending),
                     approvals=(len(self.bindings.events.pending_targets())
                                + len(self._task.get("waiting_audits", ()))),
-                    jobs=int(self.busy) + len(getattr(self.loop, "_inflight", ())),
+                    jobs=(int(self.busy) + int(self.recap.busy)
+                          + len(getattr(self.loop, "_inflight", ()))
+                          + (self.terminal.pending() if self.terminal is not None else 0)),
                     reconcile=int(self._task.get("status") == "needs_reconcile"
                                   or self.paused or bool(self.fault)))
             finally:
@@ -148,7 +146,7 @@ class SessionController:
                 "context": self.current.record(),
             }
             self.inbox.enqueue(message, self.current, "startup")
-            self._accepted()
+            self._accepted(message["id"])
             return True
 
     @property
@@ -210,11 +208,11 @@ class SessionController:
                                 self.bindings.events.default_context)
                     and reserved != context):
                 raise ValueError("显示的来源已过期，请核对当前目标后重新提交")
-            if len(self.inbox.pending) >= 16:
-                raise ValueError("The session already has 16 waiting requests")
+            if len(self.inbox.pending) >= PENDING_LIMIT:
+                raise QueueFull("The session already has 16 waiting requests")
             controls = getattr(self.loop, "turn_options", None)
-            if (inputs or turn_options is not None) and controls is None:
-                raise ValueError("当前后端不支持多模态输入与回合设置")
+            if inputs or turn_options is not None:
+                self.loop.support.require("turn_options")
             frozen = controls.freeze(turn_options) if controls is not None else None
             if controls is not None:
                 controls.check_inputs(inputs or [], frozen)
@@ -248,10 +246,10 @@ class SessionController:
             if context.target_id in (self.bindings.events.state or {}).get("invalidated", {}):
                 raise ValueError("输入来源已失效，草稿保留")
             if self.inbox.enqueue(message, context, service_address=service_address):
-                self._accepted()
+                self._accepted(request_id)
             return request_id
 
-    def accept(self, message, *, service_address=None):
+    def accept(self, message, *, service_address=None, attachment_text=None, submission_digest=None):
         context = submission(message)
         with self._lock:
             self._check_input(message["text"])
@@ -260,18 +258,21 @@ class SessionController:
             self.bindings.retain(context)
             try:
                 accepted = self.inbox.accept(message, turn_options=frozen,
-                                             service_address=service_address)
+                                             service_address=service_address,
+                                             attachment_text=attachment_text,
+                                             submission_digest=submission_digest)
             except Exception:
                 self.bindings.release_unused()
                 raise
             if accepted:
-                self._accepted()
+                self._accepted(message["id"])
             else:
                 self.bindings.release_unused()
             return accepted
 
-    def _accepted(self):
-        self.history.record(self.inbox.pending[-1])
+    def _accepted(self, input_id):
+        self.recap.close()
+        self.history.record(next(row for row in self.inbox.pending if row["id"] == input_id))
         if (not self._running and len(self.inbox.pending) == 1
                 and self._task.get("status") in {"completed", "failed", "cancelled"}):
             self.paused = False
@@ -350,6 +351,7 @@ class SessionController:
                         self._task = freeze(self.loop.state.task)
                         self.version += 1
                 with self._lock:
+                    self.reconciliation.auto_acknowledge_empty()
                     self.inbox.finish(self._task)
                     if self._task.get("status") in {"needs_reconcile", "failed"}:
                         self.paused = True
@@ -374,6 +376,7 @@ class SessionController:
             self.version += 1
 
     def _launch_operation(self, controls, action, request_id):
+        self.recap.close()
         self._cancel.clear()
         self._running = True
         self._thread = threading.Thread(target=self._run_operation,
@@ -414,6 +417,7 @@ class SessionController:
         self._cancel.set()
 
     def request_close(self):
+        self.recap.close()
         self._shutdown.set()
         self.interrupt()
 
@@ -435,12 +439,14 @@ class SessionController:
         with self._lock:
             if self._running:
                 raise ValueError("请等待当前任务结束")
+            self.reconciliation.authorize_completion()
             event = self.loop.acknowledge_interrupted()
             self.history.event(event)
             self._task = freeze(self.loop.state.task)
             self.version += 1
 
     def close(self):
+        self.recap.close()
         with self._lock:
             if not self.closing:
                 self.closing = True
@@ -452,6 +458,13 @@ class SessionController:
                 except OSError:
                     self.fault = "未能保存队列结束状态；已接收的原始输入保留，不会自动重放"
                 self.version += 1
+            terminal = self.terminal
+            if terminal is not None:
+                try:
+                    terminal.close()
+                except Exception:
+                    self.fault = "终端命令清理未确认；请核对后再重开会话"
+                    raise
             self.bindings.close()
 
     def rename(self, name):
@@ -483,4 +496,4 @@ class SessionController:
             close = getattr(self.loop, "close", None)
             if close:
                 close()
-        return not self.busy
+        return self.recap.wait(timeout) and not self.busy

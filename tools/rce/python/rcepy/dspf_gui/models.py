@@ -11,6 +11,8 @@ from typing import Any
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, pyqtSignal
 from PyQt5.QtGui import QColor
 
+from cadgui.palette import active
+
 
 @dataclass(frozen=True)
 class Column:
@@ -204,9 +206,9 @@ class PagedRepositoryModel(QAbstractTableModel):
         if role == Qt.ForegroundRole and column.key == "severity":
             severity = str(value).casefold()
             if severity == "error":
-                return QColor("#b42318")
+                return QColor(active().error)
             if severity in {"warning", "warn"}:
-                return QColor("#9a6700")
+                return QColor(active().state_warn)
         return None
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):

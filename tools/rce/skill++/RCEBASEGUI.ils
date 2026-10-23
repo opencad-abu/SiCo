@@ -1,7 +1,7 @@
 ; RCE extraction form fields and constructor defaults.
 
 unless(and(boundp('RCEBASEGUIVersion)
-             RCEBASEGUIVersion=="20260919.gui.modules.v1")
+             symeval('RCEBASEGUIVersion)=="20261019.floating.net.include.all.v1")
 defclass(EXTOPTGUI ()
   (;slot start
     (cornerChoices        @initform list("")
@@ -127,6 +127,8 @@ defclass(EXTOPTGUI ()
     (absFilterResBtn      @initform nil)
     (absFilterResValue    @initform nil)
     (filter               @initform nil)
+    (rmFloatNetsBtn       @initform nil)
+    (rmFloatNets          @initform nil)
     (moreOpt              @initform nil)
     (extOpt               @initform nil)
     (outType              @initform nil)
@@ -150,5 +152,5 @@ defclass(EXTOPTGUI ()
   );slot end
 )
 
-RCEBASEGUIVersion="20260919.gui.modules.v1"
+set('RCEBASEGUIVersion "20261019.floating.net.include.all.v1")
 )

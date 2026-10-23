@@ -8,9 +8,19 @@ import socket
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from cadai.response_http_error import (MAX_ERROR, body as error_body, fields, safe_id, summary)
+from cadai.response_http_error import summary
 from .gateway_job import GatewayJob, launcher
-from .gateway_wire import Frames, MAX_BODY, chunk, decode_data, encode, send
+from .gateway_relay import UpstreamError, relay
+from .gateway_session import (
+    Busy,
+    SessionWorker,
+    TemporaryWorker,
+    WorkerError,
+    max_age,
+    reuse_enabled,
+    session_idle,
+)
+from .gateway_wire import MAX_BODY
 
 
 class _Server(ThreadingHTTPServer):
@@ -38,12 +48,11 @@ class _Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):  # noqa: N802
         gateway = self.server.gateway
-        job = None
-        started = False
-        upstream_status = None
-        phase = "queue submission"
         done = threading.Event()
         disconnected = threading.Event()
+        state = {"phase": "queue submission", "started": False, "resident": None,
+                 "temporary": None}
+        healthy = False
 
         def watch():
             while not done.wait(0.1):
@@ -53,8 +62,10 @@ class _Handler(BaseHTTPRequestHandler):
                         and not self.connection.recv(1, socket.MSG_PEEK)
                     ):
                         disconnected.set()
-                        if job and job.process:
-                            job.process.close()
+                        if state["resident"] is not None:
+                            state["resident"].cancel()
+                        elif state["temporary"] is not None:
+                            state["temporary"].close()
                         return
                 except (OSError, RuntimeError, ValueError):
                     disconnected.set()
@@ -91,99 +102,57 @@ class _Handler(BaseHTTPRequestHandler):
             gateway.diagnostic = ""
             gateway.http_status = None
             watcher.start()
-            job = gateway.job_factory(
-                gateway.environment, gateway.cwd, gateway.evidence
-            )
-            phase = "worker handshake"
-            reader = Frames(job.process.child.stdout)
-            if (
-                reader.next(gateway.start_timeout, disconnected.is_set).get("kind")
-                != "ready"
-            ):
-                raise ValueError("Worker did not become ready")
-            output = job.process.child.stdin
-            send(
-                output,
-                encode(
-                    "request",
-                    endpoint=gateway.endpoint,
-                    key=gateway.api_key,
-                    timeout=gateway.timeout,
-                    idle=gateway.idle_timeout,
-                ),
-            )
-            for start in range(0, len(body), 4096):
-                if disconnected.is_set():
-                    raise OSError("Client disconnected")
-                send(output, chunk(body[start : start + 4096]))
-            send(output, encode("end"))
-            phase = "upstream HTTP"
-            headers = reader.next(
-                gateway.timeout + gateway.idle_timeout, disconnected.is_set
-            )
-            if (
-                headers.get("kind") != "headers"
-                or type(headers.get("status")) is not int
-                or not 100 <= headers["status"] <= 599
-                or headers.get("content")
-                not in {"text/event-stream", "application/json"}
-            ):
-                raise ValueError("Worker upstream failed")
-            upstream_status = headers["status"]
-            if upstream_status != 200:
-                # Complete the bounded error exchange before publishing its
-                # status. The flat client may close as soon as it sees 4xx.
-                gateway.http_status = upstream_status
-                gateway.diagnostic = summary(upstream_status, {}, "Upstream returned")
-                raw = bytearray()
-                while True:
-                    row = reader.next(gateway.idle_timeout, disconnected.is_set)
-                    if row.get("kind") == "end":
-                        break
-                    if row.get("kind") != "data":
-                        raise ValueError("Incomplete worker error response")
-                    raw.extend(decode_data(row))
-                    if len(raw) > MAX_ERROR:
-                        raise ValueError("Worker error exceeds limit")
-                details = fields(raw, (gateway.api_key, gateway.token))
-                identity = safe_id(headers.get("request_id", ""), (gateway.api_key, gateway.token))
-                if identity:
-                    details["request_id"] = identity
-                gateway.diagnostic = summary(upstream_status, details, "Upstream returned")
-                self.reply(upstream_status, "", payload=error_body(upstream_status, details),
-                           request_id=identity)
-                return
-            phase = "response stream"
-            self.send_response(headers["status"])
-            self.send_header("Content-Type", headers["content"])
-            self.send_header("Connection", "close")
-            self.end_headers()
-            self.close_connection = True
-            started = True
-            while True:
-                row = reader.next(gateway.idle_timeout, disconnected.is_set)
-                if row.get("kind") == "end":
-                    break
-                if row.get("kind") != "data":
-                    raise ValueError("Remote upstream interrupted")
-                self.wfile.write(decode_data(row))
-                self.wfile.flush()
-        except (OSError, EOFError, ValueError, RuntimeError, KeyError):
-            if upstream_status is not None and upstream_status != 200:
-                gateway.diagnostic = summary(upstream_status, {}, "Upstream returned")
-            elif not disconnected.is_set():
-                gateway.diagnostic = "LSF AI gateway failed during " + phase
-            if not started and not disconnected.is_set():
+            connection = None
+            if gateway.worker is not None:
                 try:
-                    self.reply(upstream_status if upstream_status and upstream_status != 200 else 502,
-                               gateway.diagnostic)
+                    connection = gateway.worker.acquire()
+                    state["resident"] = gateway.worker
+                    gateway.worker.note_request()
+                except Busy:
+                    connection = None
+                except WorkerError:
+                    gateway.worker.stats["worker_failures"] += 1
+                    connection = None
+            if connection is None:
+                temporary = gateway.temporary_factory()
+                state["temporary"] = temporary
+                try:
+                    connection = temporary.acquire()
+                except WorkerError as exc:
+                    gateway.diagnostic = str(exc)
+                    raise
+            relay(gateway, connection, body, self, disconnected, state)
+            healthy = not disconnected.is_set()
+        except UpstreamError as exc:
+            gateway.diagnostic = str(exc)
+            healthy = not disconnected.is_set()
+            if not state["started"] and not disconnected.is_set():
+                try:
+                    self.reply(502, gateway.diagnostic)
+                except OSError:
+                    pass
+        except (OSError, EOFError, ValueError, RuntimeError, KeyError):
+            if gateway.http_status is not None and gateway.http_status != 200:
+                gateway.diagnostic = summary(gateway.http_status, {}, "Upstream returned")
+            elif not disconnected.is_set() and not gateway.diagnostic:
+                gateway.diagnostic = "LSF AI gateway failed during " + state["phase"]
+            if not state["started"] and not disconnected.is_set():
+                try:
+                    self.reply(
+                        gateway.http_status
+                        if gateway.http_status and gateway.http_status != 200
+                        else 502,
+                        gateway.diagnostic,
+                    )
                 except OSError:
                     pass
         finally:
             disconnected.set()
             try:
-                if job:
-                    job.close()
+                if state["resident"] is not None:
+                    state["resident"].release(healthy=healthy)
+                elif state["temporary"] is not None:
+                    state["temporary"].close()
             except (OSError, RuntimeError, TimeoutError):
                 gateway.diagnostic = (
                     "LSF AI job cleanup unconfirmed; inspect codex/lsf-gateway evidence"
@@ -198,7 +167,8 @@ class _Handler(BaseHTTPRequestHandler):
 
 
 class LsfGateway:
-    def __init__(self, settings, cwd, evidence, *, job_factory=GatewayJob):
+    def __init__(self, settings, cwd, evidence, *, job_factory=GatewayJob,
+                 auxiliary=False):
         launcher(settings.environment)
         self.endpoint, self.api_key = settings.endpoint, settings.api_key
         self.timeout, self.idle_timeout = settings.timeout, settings.idle_timeout
@@ -213,11 +183,26 @@ class LsfGateway:
         self.diagnostic = ""
         self.http_status = None
         self.cleanup_failed = False
+        self.auxiliary = auxiliary
+        self.reuse = reuse_enabled(self.environment, auxiliary)
+        self.worker = None
+        self.stats = {}
+        if self.reuse:
+            self.worker = SessionWorker(
+                self,
+                job_factory,
+                idle_timeout=session_idle(self.environment),
+                max_age=max_age(self.environment),
+            )
+            self.stats = self.worker.stats
+        self.temporary_factory = lambda: TemporaryWorker(self, job_factory)
         self.server = _Server(("127.0.0.1", 0), _Handler)
         self.server.gateway = self
         self.base_url = "http://127.0.0.1:%d/v1" % self.server.server_address[1]
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
+        if self.worker is not None:
+            self.worker.prewarm()
 
     def close(self):
         self.stopped.set()
@@ -229,5 +214,7 @@ class LsfGateway:
         for done in active:
             if not done.wait(15):
                 self.cleanup_failed = True
+        if self.worker is not None:
+            self.worker.close()
         if self.cleanup_failed:
             raise RuntimeError("LSF gateway cleanup requires reconciliation")

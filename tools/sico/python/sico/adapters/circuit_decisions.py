@@ -1,9 +1,76 @@
 """Project target observations and answered choices into host decisions."""
 
+from copy import deepcopy
 import uuid
 
-from ..service.audit import NEW_WINDOW_OPTION
+from ..core.audit_questions import NEW_WINDOW_OPTION
 from ..service.target_identity import KEY_FIELD, decision_key
+
+
+def remember_created_target(client, data):
+    """Record the task that wrote a target, including retained partial writes."""
+    if not isinstance(data, dict):
+        return
+    receipt = data.get("receipt") if isinstance(data.get("receipt"), dict) else {}
+    target = _target_list(data.get("target") or receipt.get("target"))
+    task = data.get("task_ref") or receipt.get("task_ref")
+    circuit = data.get("circuit_ref") or receipt.get("circuit_ref")
+    if (
+        target is not None and isinstance(task, str) and task
+        and isinstance(circuit, str) and circuit
+    ):
+        client.created_targets[tuple(target)] = task
+
+
+def _target_list(value):
+    if isinstance(value, dict) and all(key in value for key in ("library", "cell", "view")):
+        return [value["library"], value["cell"], value["view"]]
+    if isinstance(value, (list, tuple)) and len(value) == 3:
+        return list(value)
+    return None
+
+
+def prepare_target_use(client, arguments, *, current_task, inspect):
+    """Resolve target reuse at the write boundary, not during read-only inspection."""
+    if "target_action" in arguments:
+        return arguments, None, False
+    target = _target_list((arguments.get("spec") or {}).get("target"))
+    if target is None:
+        return arguments, None, False
+    observation = next(
+        (
+            deepcopy(row)
+            for row in reversed(list(client.target_observations.values()))
+            if _target_list(row.get("target")) == target
+        ),
+        None,
+    )
+    if observation is None:
+        observation = inspect(target)
+        if isinstance(observation, dict) and observation.get("target_ref"):
+            client.target_observations[observation["target_ref"]] = deepcopy(observation)
+    if not isinstance(observation, dict) or not observation.get("target_ref"):
+        return arguments, None, False
+    resolved = dict(arguments)
+    if observation.get("content_state") == "empty":
+        resolved.update(
+            target_ref=observation["target_ref"], target_action="reuse_empty"
+        )
+        return resolved, None, True
+    if (
+        current_task
+        and client.created_targets.get(tuple(target)) == current_task
+        and observation.get("content_state") == "nonempty"
+    ):
+        resolved.update(
+            target_ref=observation["target_ref"], target_action="continue"
+        )
+        return resolved, None, True
+    if observation.get("content_state") == "nonempty":
+        from cadai.circuit_create import target_decision
+
+        return arguments, target_decision(observation), False
+    return arguments, None, False
 
 
 def settled_target_decision(data, action):

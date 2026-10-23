@@ -7,7 +7,6 @@ from sicoresources import icon as resource_icon
 import sys
 
 from cadgui.branding import logo_text
-from cadgui.chrome import apply_family_style
 from cadgui.environment import check_xcb_runtime, prepare_qt_environment
 from cadgui.lifecycle import finalize_gui_exit, install_parent_monitor
 from cadgui.prompts import notice
@@ -34,6 +33,28 @@ def _logo_path(environ=None) -> Path | None:
     return resource_icon("brand", "logo.png", environ)
 
 
+def apply_application_style(application) -> None:
+    """Apply the family look and the project's saved appearance."""
+    from cadgui.appearance import apply_saved_appearance
+
+    application.setStyle("Fusion")
+    apply_saved_appearance(application)
+
+
+def apply_family_style(application) -> None:
+    """Compatibility facade for the historical app-level export."""
+    from cadgui.chrome import apply_family_style as apply
+
+    apply(application)
+
+
+def apply_saved_appearance(application):
+    """Compatibility facade for the project appearance loader."""
+    from cadgui.appearance import apply_saved_appearance as apply
+
+    return apply(application)
+
+
 def run_gui(
     *,
     session: SessionDescriptor | None = None,
@@ -51,8 +72,7 @@ def run_gui(
     application = QApplication.instance() or QApplication(sys.argv[:1])
     application.setApplicationName(f"{logo_text()}::MTS Netlistor")
     application.setOrganizationName(logo_text())
-    application.setStyle("Fusion")
-    apply_family_style(application)
+    apply_application_style(application)
     logo = _logo_path()
     icon = None
     if logo is not None:
@@ -91,4 +111,4 @@ def run_gui(
     return finalize_gui_exit(status, parent_identity)
 
 
-__all__ = ["apply_family_style", "run_gui"]
+__all__ = ["apply_application_style", "apply_family_style", "apply_saved_appearance", "run_gui"]

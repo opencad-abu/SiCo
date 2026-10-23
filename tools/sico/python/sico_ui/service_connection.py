@@ -1,11 +1,10 @@
 """Present project-service connection state and keep this window attached to it."""
 
-import time
-
 from PyQt5.QtCore import QObject, Qt, QTimer
 from PyQt5.QtWidgets import QLabel
 
 from .receipts import DataReceipt
+from .service_retry import ServiceRetry
 
 RETRY_SECONDS = 3.0
 RETRY_LIMIT = 10
@@ -74,10 +73,10 @@ class ServiceConnection(QObject):
         # 断线自动重连；只有反复失败才留一个手动入口，不让用户先点菜单。
         self.retry_action = window.session_action("重试连接…", self.reconnect)
         self.retry_action.setVisible(False)
-        self._failures = 0
-        self._due = None
+        self._retry = ServiceRetry(limit=RETRY_LIMIT, delay=RETRY_SECONDS, immediate=False)
         self._attempt = None
         self._automatic = False
+        self._startup = None
         self.receipt = DataReceipt(self)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.refresh)
@@ -93,43 +92,47 @@ class ServiceConnection(QObject):
     def refresh(self):
         window = self.window
         if window.lifecycle.closing:
+            self._cancel_startup()
             self.receipt.clear()
             self.timer.stop()
             return
         if getattr(self.window.close_choice, "busy", False):
             # 关闭流程正在结束会话：不重连、不改连接提示，避免和收尾抢状态。
-            self.label.setText("正在强制停止 Agent Service…" if window.close_choice.force.pending
+            self.label.setText("正在强制停止智能体服务…" if window.close_choice.force.pending
                                else "正在结束会话并停止项目服务…")
             return
         if window.api.is_closing(window.page.session):
-            self._due = self._attempt = None
-            window.session_notices.clear("connection")
-            self.retry_action.setVisible(False)
-            self.label.setText("会话已结束或正在收尾")
-            return
-        if self.attached():
-            window.session_notices.clear("connection")
-            self._failures, self._due = 0, None
+            self._cancel_startup()
             self._attempt = None
+            window.session_notices.clear("connection")
             self.retry_action.setVisible(False)
+            # 会话结束状态由主状态行与结束面板表达；这里只报连接本身，
+            # 不再和状态行重复一条“已结束”文案。
             self.label.setText(self.LABELS["connected"])
             return
-        now = time.monotonic()
+        if self.attached():
+            self._cancel_startup()
+            window.session_notices.clear("connection")
+            self._retry.healthy()
+            self._attempt = None
+            self.retry_action.setVisible(self.control.exhausted)
+            self.label.setText(self.LABELS["connected"])
+            return
+        self._retry.unhealthy()
+        if self._poll_startup():
+            return
         if self._attempt is not None and self._attempt != window.page.activation:
             self._attempt = None
         if window.page.opening:
             self.label.setText(self.LABELS["reconnecting"])
             return
-        if self._failures >= RETRY_LIMIT:
+        if self._retry.exhausted:
             self.label.setText(GONE)
             self.retry_action.setVisible(True)
             return
-        if self._due is None:
-            self._due = now + RETRY_SECONDS
-        elif now >= self._due:
-            self.reconnect(automatic=True)
-        self.retry_action.setVisible(self._failures > 2)
-        if self._failures >= RETRY_LIMIT:
+        self.reconnect(automatic=True)
+        self.retry_action.setVisible(self._retry.attempts > 2 or self.control.exhausted)
+        if self._retry.exhausted:
             self.label.setText(GONE)
         elif window.api.connection_state == "connected":
             self.label.setText("会话显示已断开，正在自动重连…")
@@ -144,13 +147,72 @@ class ServiceConnection(QObject):
         except (ValueError, RuntimeError) as exc:
             failed(exc)
 
+    def _cancel_startup(self):
+        if self._startup is not None:
+            self._startup.close()
+            self._startup = None
+
+    def _poll_startup(self):
+        startup = self._startup
+        if startup is None:
+            return False
+        if not startup.ready.done():
+            self.label.setText("正在启动项目服务…")
+            return True
+        self._startup = None
+        try:
+            descriptor = startup.take_descriptor()
+        except Exception as exc:
+            startup.close()
+            self._retry.unhealthy()
+            self._failure_notice("项目服务启动失败：" + str(exc))
+            return True
+        startup.close()
+        if not self.window.api._rebind_service(descriptor):
+            self._activate_current()
+        else:
+            self.label.setText("项目服务已重新连接，正在恢复会话…")
+            self.window.page.continue_session(self.window.page.session.session_id)
+        return True
+
+    def _activate_current(self):
+        """Reconnect the page to a service that is still the same instance."""
+        window = self.window
+        try:
+            if window.binding.delivery is not None:
+                window.api.reconnect_session(window.page.session, window.binding.delivery.stream)
+            self._attempt = window.page.activation + 1
+            window.page.activate()
+        except (ValueError, OSError, RuntimeError, EOFError) as exc:
+            self._attempt = None
+            self.label.setText("会话连接未恢复")
+            self._failure_notice(exc)
+
     def replay_failed(self, message):
         """Route automatic replay failures in place; explicit retries use InfoApp."""
         if self._attempt != self.window.page.activation:
             return False
         self._attempt = None
-        self._due = time.monotonic() + RETRY_SECONDS
+        self._retry.unhealthy()
         self._failure_notice(message)
+        return True
+
+    def recover_stream(self):
+        """Replace a broken event subscription from its captured window start.
+
+        服务窗口的任务不因事件流中断而暂停：窗口会被原样重放，重复 sequence
+        在客户端丢弃。恢复按有上限的退避重试，耗尽后保留手动重试入口。
+        """
+
+        window = self.window
+        if (self._retry.exhausted
+                or window.lifecycle.closing or window.close_choice.busy
+                or window.api.is_closing(window.page.session)
+                or window.binding.delivery is None):
+            return False
+        self._retry.unhealthy()
+        window.session_notices.set("connection", "会话事件流已中断", "正在自动恢复…")
+        self.reconnect(automatic=True)
         return True
 
     def _failure_notice(self, message):
@@ -166,17 +228,16 @@ class ServiceConnection(QObject):
                 or window.api.is_closing(window.page.session)):
             return
         if not automatic:
-            self._failures = 0
+            self._retry.reset()
+            self.control.retry()
+            if self.attached():
+                return
+        if self._startup is not None or not self._retry.start():
+            return
         self._automatic = automatic
-        self._failures += 1
-        self._due = time.monotonic() + RETRY_SECONDS
         self.label.setText(self.LABELS["reconnecting"])
-        try:
-            if window.binding.delivery is not None:
-                window.api.reconnect_session(window.page.session, window.binding.delivery.stream)
-            self._attempt = window.page.activation + 1
-            window.page.activate()
-        except (ValueError, OSError, RuntimeError, EOFError) as exc:
-            self._attempt = None
-            self.label.setText("会话连接未恢复")
-            self._failure_notice(exc)
+        if self._startup is None:
+            from sico.service.service_startup import ServiceStartup
+
+            self._startup = ServiceStartup(self.window.api.launch_directory)
+        return

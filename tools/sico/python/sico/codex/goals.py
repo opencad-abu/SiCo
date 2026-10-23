@@ -7,6 +7,7 @@ import time
 
 from ..core.contracts import json_copy
 from .rpc import RpcError
+from .input_delivery import send_controls
 
 STATUSES = {"active", "paused", "blocked", "usageLimited", "budgetLimited", "complete"}
 METHODS = {"thread/goal/updated", "thread/goal/cleared"}
@@ -103,7 +104,7 @@ class Goals:
             })
             result = rpc.request("thread/goal/set", {
                 "threadId": self.backend.thread_id, "status": "paused",
-            })
+            }, timeout=5, cancelled=lambda: False)
             self.capture(result["goal"], source=reason)
             if self.value and self.value["status"] == "active":
                 raise RpcError("Goal pause was not confirmed; no replay")
@@ -149,8 +150,8 @@ class Goals:
                 return turn_id
             if "id" in event and event.get("method"):
                 # No input or approval receives ownership before turn/started.
-                backend.runtime.rpc.send({"id": event["id"], "error": {
-                    "code": -32602, "message": "No bound operation turn"}})
+                send_controls([(backend.runtime.rpc, {"id": event["id"], "error": {
+                    "code": -32602, "message": "No bound operation turn"}})])
             elif self.notification(event, consuming=True):
                 continue
             elif not backend._notification(event):

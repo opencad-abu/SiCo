@@ -373,6 +373,8 @@ def relay(
                 try:
                     reply_deadline = time.monotonic() + skill_timeout
                     while True:
+                        if stopped.is_set():
+                            raise EOFError("Relay stopped by the owning process")
                         remaining = max(0, reply_deadline - time.monotonic())
                         try:
                             raw = reader.next(timeout=min(.2, remaining) if router else remaining)

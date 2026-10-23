@@ -7,7 +7,6 @@ from sicoenv import publish as publish_environment
 import json
 import os
 import queue
-import stat
 import subprocess
 import sys
 import threading
@@ -20,13 +19,15 @@ from cadenv import preserve_eda_temp_environment
 from ..core.contracts import BoundContext
 from ..interpreter import agent_command, cad_python
 from ..storage.journal import open_private, private_dir
-from ..storage.roots import agent_root, export_state_environment, state_root
+from ..storage.roots import agent_root, export_state_environment, state_root, startup_root
 from ..transport.bridge_client import BridgeClient
 from ..transport.framing import strict_json
 from ..transport.instance_bridge import InstanceBridge
 from ..transport.relay import StdioLines, diagnostic_sink_from_environment, relay
 from ..transport.skill_diagnostics import SkillDiagnostics
 from ..transport.targets import TargetRegistry, submission
+from .termination import TerminationSignal
+from .window_lease import CIW_MESSAGE as WINDOW_ALREADY_OPEN
 
 
 class DesktopPipe:
@@ -131,11 +132,18 @@ def desktop_environment(launch_dir, session_id, environment=None):
 def launch_desktop(args):
     control = DesktopPipe()
     reader = StdioLines(sys.stdin.buffer, control=control)
+    termination = TerminationSignal().install()
     try:
-        return _launch_desktop(args, reader, control)
+        return _launch_desktop(args, reader, control, termination.received)
     finally:
+        termination.restore()
         control.close()
         reader.close()
+
+
+def prepare_project_state(launch_dir):
+    """Create the selected root before a CLI or GUI reads project settings."""
+    return startup_root(launch_dir)
 
 
 def bridge_control(reader, bridge):
@@ -158,6 +166,7 @@ def launch_bridge(args):
 
     reader = StdioLines(sys.stdin.buffer)
     write_lock = threading.Lock()
+    termination = TerminationSignal().install()
 
     class LockedSink:
         def write(self, text):
@@ -191,16 +200,18 @@ def launch_bridge(args):
                     targets=bridge.targets,
                     sink=sink,
                     router=bridge.router,
+                    stopped=termination.received,
                     diagnostic=diagnostic_sink_from_environment(
                         {"SICO_AI_DIAGNOSTIC_LOG": str(bridge.path.with_suffix(".relay.jsonl"))}
                     ),
                 )
         return 0
     finally:
+        termination.restore()
         reader.close()
 
 
-def _launch_desktop(args, reader, control):
+def _launch_desktop(args, reader, control, stopping):
     write_lock = threading.Lock()
     stopped = threading.Event()
 
@@ -225,13 +236,15 @@ def _launch_desktop(args, reader, control):
             launch_dir,
             write_lock,
             stopped,
+            stopping,
         )
     finally:
         client.close()
 
 
 def _run_desktop_child(
-    args, reader, control, registration, context, session_id, launch_dir, write_lock, stopped
+    args, reader, control, registration, context, session_id, launch_dir, write_lock, stopped,
+    stopping,
 ):
     command = agent_command(
         "desktop-worker",
@@ -242,6 +255,10 @@ def _run_desktop_child(
     )
     if args.provider_config:
         command += ["--provider-config", args.provider_config]
+    for name in ("service_id", "runtime_id"):
+        value = getattr(args, name, None)
+        if value:
+            command += ["--" + name.replace("_", "-"), value]
     environment = desktop_environment(launch_dir, session_id)
     # Keep Python/thread/Qt diagnostics off the host control pipes and available
     # after an unexpected session shutdown. This is private runtime evidence.
@@ -265,7 +282,27 @@ def _run_desktop_child(
         except EOFError:
             if control.stopping or reader.closed.is_set():
                 return 0  # Host cancelled while desktop bootstrap was still pending.
-            raise
+            try:
+                status = child.wait(timeout=1.5)
+            except subprocess.TimeoutExpired:
+                raise
+            if status == 0:
+                return 0  # The user cancelled the startup before it became ready.
+            raise RuntimeError(
+                "Desktop exited before the startup handshake (status %d); see %s"
+                % (status, log_path)
+            ) from None
+        if ready.get("kind") == "startup_failed":
+            # The desktop presented (or the launcher will present) the refusal.
+            # Keep its window lifetime until the user dismisses it; a second
+            # shutdown here would close that dialog before it can be read.
+            if ready.get("phase") == "window":
+                sys.stderr.write(WINDOW_ALREADY_OPEN + "\n")
+                sys.stderr.flush()
+            while (not control.stopping and not reader.closed.is_set()
+                   and not stopping.is_set() and child.poll() is None):
+                time.sleep(0.05)
+            return 0
         if ready.get("kind") != "ready":
             raise ValueError("Invalid desktop startup response")
         expected = {
@@ -275,6 +312,8 @@ def _run_desktop_child(
         expected.update(session_id=session_id, target_id=context.target_id)
         if any(ready.get(key) != value for key, value in expected.items()):
             raise ValueError("Desktop bridge or session identity mismatch")
+
+        startup_failed = threading.Event()
 
         def monitor():
             try:
@@ -286,9 +325,12 @@ def _run_desktop_child(
                             return
                         continue
                     kind = notice.get("kind")
-                    if kind in {"shown", "hidden"}:
+                    if kind == "startup_failed":
+                        startup_failed.set()
+                    elif kind in {"shown", "hidden"}:
+                        value = notice["session_id"] if kind == "shown" else session_id
                         with write_lock:
-                            sys.stdout.write("@" + notice["kind"] + " " + session_id + "\n")
+                            sys.stdout.write("@" + notice["kind"] + " " + value + "\n")
                             sys.stdout.flush()
                     elif kind in {"accepted", "rejected", "released", "new_session", "reconnect"}:
                         from ..core.contracts import identifier
@@ -315,8 +357,10 @@ def _run_desktop_child(
         monitor_thread = threading.Thread(target=monitor, daemon=True)
         monitor_thread.start()
         while (not stopped.is_set() and not reader.closed.is_set() and not control.stopping
-               and child.poll() is None):
+               and not stopping.is_set() and child.poll() is None):
             time.sleep(0.05)
+        if startup_failed.is_set():
+            return 0
     finally:
         control.close()
         reader.close()

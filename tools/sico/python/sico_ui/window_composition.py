@@ -1,14 +1,18 @@
 """Construct the workspace's explicit presentation and command collaborators."""
 
 from .chat_scroll import ChatScroll
+from .cad_objects import CADObjectActions
 from .close_choice import CloseChoice
 from .commands import CommandReceipts
 from .conversation_widgets import ConversationWidgets
 from .detail_navigation import DetailNavigation
 from .page_presentation import PagePresentation
 from .pending_commands import PendingCommands
+from .object_mentions import ObjectMentionController
 from .receipt_scope import ReceiptScope
 from .reconcile_actions import ReconcileActions
+from .reconcile_panel import ReconcilePanel
+from .rewind_actions import RewindActions
 from .router_actions import RouterActions
 from .session_binding import SessionBinding
 from .steering import SteeringInput
@@ -44,9 +48,13 @@ def compose(window):
         receipts=window.commands, drafts=window.drafts, submissions=window.submissions,
         centers=window.centers,
         poll=lambda: window.binding.poll(), stream_failed=lambda: window.binding.failed,
-        steering=lambda: window.steering_input, update=window.update_session,
+        steering=lambda: window.steering_input,
+        update=lambda state: window.renderer.update_session(state),
         show_panel=window.show_panel,
     )
+    window.object_mentions = ObjectMentionController(window)
+    window.cad_objects = CADObjectActions(window)
+    window.detail.cad_objects = window.cad_objects
     window.router_actions = RouterActions(
         ui, page=page, presentation=presentation, lifecycle=lifecycle,
         stream_failed=lambda: window.binding.failed, run_command=window.actions.run_command,
@@ -57,7 +65,12 @@ def compose(window):
         receipts=window.commands, submissions=window.submissions, drafts=window.drafts,
         queue_input=window.actions.queue_input, stream_failed=lambda: window.binding.failed,
         open_audits=window.actions.open_audit_ids, run_command=window.actions.run_command,
-        update=window.update_session, poll=lambda: window.binding.poll(),
+        update=lambda state: window.renderer.update_session(state),
+        poll=lambda: window.binding.poll(),
+    )
+    window.rewind_actions = RewindActions(
+        ui, api=api, page=page, presentation=presentation, lifecycle=lifecycle,
+        run_command=window.actions.run_command,
     )
     window.renderer = WindowPresentation(
         ui, page=page, presentation=presentation, receipts=window.commands,
@@ -66,6 +79,7 @@ def compose(window):
         refresh_receipt=window.router_actions.refresh_router_receipt,
         refresh_tasks=window.router_actions.refresh_task_panel,
         run_command=window.actions.run_command, poll=lambda: window.binding.poll(),
+        rewind_actions=window.rewind_actions,
     )
     from .event_detail import show_event_detail
     from .turn_input_detail import show_input_detail
@@ -73,12 +87,15 @@ def compose(window):
     window.reconcile_actions = ReconcileActions(
         ui, page=page, presentation=presentation, command=window.actions.run_command,
         poll=lambda: window.binding.poll(),
+        token_for=lambda session_id: api.session(session_id),
+        page_scope=window.actions.capture,
     )
     window.details = DetailNavigation(
         ui, detail=window.detail, centers=window.centers, page=page, presentation=presentation,
         show_panel=window.show_panel, input_detail=lambda value: show_input_detail(window, value),
         event_detail=lambda value: show_event_detail(window, value),
-        reconcile=window.reconcile_actions.open,
+        reconcile=window.reconcile_actions.open, rewind=window.rewind_actions.open,
+        cad_objects=window.cad_objects,
     )
     window.page_presentation = PagePresentation(
         ui, api=api, page=page, presentation=presentation, drafts=window.drafts,
@@ -91,11 +108,19 @@ def compose(window):
     )
     window.binding = bind_events(window)
     window.chat_scroll = ChatScroll(window)
+    window.reconcile_panel = ReconcilePanel(window)
+    layout = window.display.parentWidget().layout()
+    layout.insertWidget(layout.indexOf(window.display) + 1, window.reconcile_panel)
+    from .recap import RecapPanel
+
+    window.recap_panel = RecapPanel(window)
+    layout.insertWidget(layout.indexOf(window.input), window.recap_panel)
     window.close_choice = CloseChoice(window)
-    page.initializeRequested.connect(window.initialize_context)
+    connect_signals(window)
+    page.initializeRequested.connect(window.actions.initialize_context)
     window.destroyed.connect(lambda *_args: page.dispose())
     window.renderer._update_token_usage({})
-    window.update_latest()
+    window.details.update_latest()
     page.activate()
 
 
@@ -110,6 +135,9 @@ def bind_events(window, prepared=None):
         if (window.api.is_closing(window.page.session)
                 or ending is not None and ending.state in {"closing", "ended", "needs_reconcile"}):
             return  # The captured end operation owns its result, including stream retirement.
+        # 服务窗口先就地恢复事件流：任务不暂停，窗口按捕获的起点重放。
+        if connection is not None and connection.recover_stream():
+            return
         window.info_app.error("会话事件无法同步",
             "事件身份或顺序不匹配，已暂停当前任务；请切换会话或重新打开核对")
         for control in (window.send, window.stop, window.resume, window.resume_action):
@@ -130,36 +158,23 @@ def bind_events(window, prepared=None):
     )
 
 
-def command_slot(component, name):
-    """Qt command compatibility only; component state has no window aliases.
-
-    Legacy slots retire per component once window signal wiring, navigation,
-    binding/dialog actions and host notices connect to that component directly.
-    The migration inventory is in tools/ai/docs/T07_STATE_OWNERSHIP.md.
-    """
-    def call(window, *args, **kwargs):
-        return getattr(getattr(window, component), name)(*args, **kwargs)
-    return call
-
-
-def connect_commands(window_type):
-    for component, names in (
-        ("router_actions", ("router_receipt_scope", "refresh_router_receipt",
-            "query_router_receipt",
-            "router_cancel_scope", "refresh_task_panel", "cancel_router_request")),
-        ("actions", ("reconnect_instance", "update_host_notices", "run_command", "rename_session",
-            "delete_session", "initialize_context", "queue_input", "submit", "_attachment_pasted",
-            "show_pending_audit", "open_audit_ids", "target_family", "target_picker_provider",
-            "pick_design_target", "resolve_target_choice", "answer_audit")),
-        ("renderer", ("receive", "update_session", "_update_token_usage", "_fit_token_usage",
-            "refresh_status", "refresh_busy_cursor", "cancel_task", "resume_queue",
-            "abandon_interrupted", "_resume_after_reconcile", "queue_hold_reason", "_tick_activity",
-            "sync_activity_animation", "flush", "replay_caught_up")),
-        ("details", ("open_object", "open_object_link", "toggle_tool_details", "current_transcript",
-            "open_tool_reference", "return_from_detail", "update_latest", "scroll_to_bottom",
-            "show_latest")),
-        ("page", ("activate_session", "preview_session", "return_from_preview")),
-    ):
-        for name in names:
-            setattr(window_type, name, command_slot(component, name))
-    return window_type
+def connect_signals(window):
+    """Wire widget signals only after their command owners have been constructed."""
+    actions, renderer, details = window.actions, window.renderer, window.details
+    window.activity_timer.timeout.connect(renderer._tick_activity)
+    window.input.attachmentPasted.connect(actions._attachment_pasted)
+    window.input.submitted.connect(actions.submit)
+    window.send.clicked.connect(actions.submit)
+    window.stop.clicked.connect(renderer.cancel_task)
+    window.resume.clicked.connect(renderer.resume_queue)
+    window.abandon.clicked.connect(renderer.abandon_interrupted)
+    window.latest.clicked.connect(details.scroll_to_bottom)
+    window.display.verticalScrollBar().valueChanged.connect(details.update_latest)
+    window.display.verticalScrollBar().rangeChanged.connect(details.update_latest)
+    window.detail.returnRequested.connect(details.return_from_detail)
+    window.centers.objectRequested.connect(details.open_object)
+    window.centers.answerRequested.connect(actions.answer_audit)
+    window.display.anchorClicked.connect(details.open_object_link)
+    window.display.linkDoubleClicked.connect(details.open_tool_reference)
+    window.task_panel.cancelRequested.connect(window.router_actions.cancel_router_request)
+    window.task_panel.nodeActivated.connect(details.open_task_node)

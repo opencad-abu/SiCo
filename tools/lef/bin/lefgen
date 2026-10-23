@@ -17,13 +17,8 @@ fi
 
 python=${LEF_PYTHON-}
 if [ -z "$python" ]; then
-    python=${SICO_PYTHON-}
-fi
-if [ -z "$python" ] && [ -n "${SICO_PYTHON_ROOT-}" ]; then
-    python=${SICO_PYTHON_ROOT%/}/bin/python3
-fi
-if [ -z "$python" ]; then
-    python=python3
+    sico_runtime_python || exit 2
+    python=$sico_runtime_python_value
 fi
 
 case $python in
@@ -37,7 +32,8 @@ esac || {
 if [ -z "${LEF_ORIG_LD_LIBRARY_PATH+x}" ]; then
     export LEF_ORIG_LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}
 fi
-export LD_LIBRARY_PATH=${SICO_SYSTEM_LD_LIBRARY_PATH-}
+sico_runtime_library_path flow
+export LD_LIBRARY_PATH=$sico_runtime_library_path_value
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONNOUSERSITE=1
 unset PYTHONHOME PYTHONPATH LD_PRELOAD LD_AUDIT

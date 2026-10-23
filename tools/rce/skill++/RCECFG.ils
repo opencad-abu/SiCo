@@ -83,12 +83,12 @@ procedure(rceInitializeConfig()
   ?cpuChoices           or(parseString(or(SICO_envValue("SICO_FLOW_CPU_ALLOW") "") ",") '("1" "2" "4" "8"))
   ?lvsToolChoices       '("Calibre")
   ?lvsToolDefValue      or(getShellEnvVar("LVS_DEF_TOOL") "Calibre")
-  ?extToolChoices       '("StarRC" "QRC" "CalXRC")
-  ?extToolDefValue      or(SICO_envValue("RCE_DEF_TOOL") "StarRC")
+  ?extToolChoices       RCE_extToolChoices()
+  ?extToolDefValue      RCE_extToolValue(or(SICO_envValue("RCE_DEF_TOOL") "StarRC"))
   ?extToolCB            '("(rceExtToolCB hiGetCurrentForm())")
   ?cornerChoices        '("")
   ?cornerTypeChoices    '("Single Corner" "Multiple Corners")
-  ?rcTechDirChoices     RCE_extTechNames(or(SICO_envValue("RCE_DEF_TOOL") "StarRC"))
+  ?rcTechDirChoices     RCE_extTechNames(RCE_extToolValue(or(SICO_envValue("RCE_DEF_TOOL") "StarRC")))
   ?rcTechDirCB          "(rceRcTechDirCB hiGetCurrentForm())"
   ?rcTechDirPathCB      "(rceRcTechDirPathCB hiGetCurrentForm())"
   ?tempChoices          or(parseString(or(SICO_envValue("RCE_TEMP_LIST") "") ",") '("125" "85" "25"))
@@ -156,7 +156,7 @@ unless(getShellEnvVar("VIRTUOSO_CONTEXT_BUILD")=="1"
 )
 
 procedure(rceConfigRevision()
-  "20260909.pin.order.v1"
+  "20261019.floating.net.include.all.v1"
 )
 
 procedure(rceCdlIncludeConfigRevision()

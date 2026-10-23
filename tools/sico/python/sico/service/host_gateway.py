@@ -29,14 +29,18 @@ class HostServiceGateway:
             finally:
                 startup.close()
 
-    def submit(self, message):
+    def submit(self, message, *, attachment_text=None):
         self._prepare()
         config = resolve_provider_config(self.provider_config, launch_dir=self.project,
                                          environment=self.environment)
         with BridgeClient.discover(self.project, self.context, timeout=self.timeout) as bridge:
             bridge.register_target(self.context)
-            reference = bridge.stage_host_payload(dict(message=message,
-                provider_config=config, environment=self.environment))
+            payload = dict(message=message, provider_config=config, environment=self.environment)
+            if attachment_text is not None:
+                payload["attachment_text"] = attachment_text
+            reference = bridge.stage_host_payload(payload)
+            if "ask_sequence" in message:
+                reference["ask_sequence"] = message["ask_sequence"]
             request = ServiceRequest("host.submit", message["id"],
                                      dict(bridge=bridge.descriptor, **reference))
             return exchange_service(self.descriptor, request,

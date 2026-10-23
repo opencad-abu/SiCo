@@ -6,7 +6,8 @@ from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QPainterPath
 
 from .glyph_paint import TITLE_GLYPH_SIZE, filled_icon, stroked
-from .theme import ACCENT, STOP
+from .palette import active as active_palette
+from .theme import ACCENT
 
 
 def _cross_outline(size):
@@ -23,9 +24,9 @@ def cross_icon(size=TITLE_GLYPH_SIZE, color=ACCENT):
     return filled_icon(_cross_outline(size), size, color)
 
 
-def close_icon(size=TITLE_GLYPH_SIZE, color=STOP):
+def close_icon(size=TITLE_GLYPH_SIZE, color=None):
     """关闭图标：和停止同一支红色，退出动作一眼可见。"""
-    return cross_icon(size, color)
+    return cross_icon(size, active_palette().stop if color is None else color)
 
 
 def _minimize_outline(size):

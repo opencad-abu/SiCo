@@ -15,26 +15,14 @@ if [ ! -f "$entry" ]; then
     exit 2
 fi
 
-python=${SICO_PYTHON-}
-if [ -z "$python" ] && [ -n "${SICO_PYTHON_ROOT-}" ]; then
-    python=${SICO_PYTHON_ROOT%/}/bin/python3
-fi
-if [ -z "$python" ]; then
-    python=python3
-fi
-
-case $python in
-    */*) [ -f "$python" ] && [ -x "$python" ] ;;
-    *) command -v "$python" >/dev/null 2>&1 ;;
-esac || {
-    echo "$program: Python is not executable: $python" >&2
-    exit 2
-}
+sico_runtime_python || exit 2
+python=$sico_runtime_python_value
 
 if [ -z "${SICO_LSF_MONITOR_ORIG_LD_LIBRARY_PATH+x}" ]; then
     export SICO_LSF_MONITOR_ORIG_LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}
 fi
-export LD_LIBRARY_PATH=${SICO_SYSTEM_LD_LIBRARY_PATH-}
+sico_runtime_library_path flow
+export LD_LIBRARY_PATH=$sico_runtime_library_path_value
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONNOUSERSITE=1
 unset PYTHONHOME PYTHONPATH LD_PRELOAD LD_AUDIT

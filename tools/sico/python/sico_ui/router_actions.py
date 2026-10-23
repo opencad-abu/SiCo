@@ -121,11 +121,22 @@ class RouterActions:
                 if key[0] == runtime_id and receipt is not None and key[1] not in queued:
                     del self._router_cancellations[key]
             cancelling = [key[1] for key in self._router_cancellations if key[0] == runtime_id]
-        self.ui.task_panel.update_requests(
-            state.get("requests", []), router if self.page.reviewing is None else None,
-            cancel_scope=self.router_cancel_scope(),
-            cancelling=cancelling,
-        )
+        tree = state.get("task_tree") or {}
+        if tree.get("works"):
+            self.ui.task_panel.update_tree(
+                tree, router if self.page.reviewing is None else None,
+                cancel_scope=self.router_cancel_scope(),
+                cancelling=cancelling,
+                current_task_id=(state.get("task") or {}).get("id", ""),
+                session_id=self.page.session.session_id,
+            )
+        else:
+            self.ui.task_panel.update_requests(
+                state.get("requests", []), router if self.page.reviewing is None else None,
+                cancel_scope=self.router_cancel_scope(),
+                cancelling=cancelling,
+                session_id=self.page.session.session_id,
+            )
 
     def cancel_router_request(self, request_id, scope):
         if scope is None or scope != self.router_cancel_scope():

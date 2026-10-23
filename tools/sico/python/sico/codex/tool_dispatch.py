@@ -3,7 +3,7 @@
 
 from ..core.contracts import NeedsReconcile, ToolResult
 from ..core.tools import tool_message
-from ..transport.broker import skill_call_context
+from ..transport.broker_scope import skill_call_context
 
 
 def execute_call(call, context, task, stop, cancelled, *, internal, journal,
@@ -27,8 +27,8 @@ def execute_call(call, context, task, stop, cancelled, *, internal, journal,
                 task_id=task["id"], tool_call_id=call.id,
                 cancelled=lambda: stop.is_set() or cancelled(), progress=progress,
                 before_start=lambda: before_start(
-                    call, context, task, stop, cancelled, internal=internal)):
-            result = execute(call, context)
+                    call, context, task, stop, cancelled, internal=internal)) as execution:
+            result = execute(call, context, execution)
     except NeedsReconcile as exc:
         result = ToolResult("needs_reconcile", str(exc), exc.data)
     return result

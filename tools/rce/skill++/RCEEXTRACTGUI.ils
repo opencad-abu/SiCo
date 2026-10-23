@@ -1,7 +1,7 @@
 ; Compose RCE extraction option panels.
 
 unless(and(boundp('RCEEXTRACTGUIVersion)
-             RCEEXTRACTGUIVersion=="20260919.gui.modules.v1")
+             symeval('RCEEXTRACTGUIVersion)=="20261019.floating.net.include.all.v1")
 defmethod(makeExtopt ((inst EXTOPTGUI))
   makeExtRcTechDir(inst)
   makeExtBasicOpt(inst)
@@ -9,6 +9,7 @@ defmethod(makeExtopt ((inst EXTOPTGUI))
   makeExtNetSelOpt(inst)
   makeExtCellSelOpt(inst)
   makeExtFilterOpt(inst)
+  makeExtRemoveFloatingNets(inst)
   inst->extOpt=makevbl('extOpt list(inst->rcTechDir
                                       inst->basicOpt
                                       inst->moreOpt
@@ -18,7 +19,8 @@ defmethod(makeExtopt ((inst EXTOPTGUI))
                                            'horiz_align 'left)
                                       inst->netSel
                                       inst->cellSel
-                                      inst->filter)
+                                      inst->filter
+                                      inst->rmFloatNets)
                         ?f "Extract Options")
 
 )
@@ -28,8 +30,8 @@ procedure(rceBaseGuiRevision()
 )
 
 procedure(rceGuiModulesRevision()
-  "20260919.gui.modules.v1"
+  "20261019.floating.net.include.all.v1"
 )
 rceBaseGuiVersion="20260909.pin.order.v1"
-RCEEXTRACTGUIVersion="20260919.gui.modules.v1"
+set('RCEEXTRACTGUIVersion "20261019.floating.net.include.all.v1")
 )

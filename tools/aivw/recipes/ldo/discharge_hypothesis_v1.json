@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "kind": "public-discharge-hypothesis",
+  "parent_run": "20260908T002018.129961Z-recipe-run-658ff7e7d809",
+  "training_case": "enable_fall_rate_0",
+  "training_event": "edge",
+  "control": "EN",
+  "tail_duration_s": 0.00002,
+  "knots": 129,
+  "scope": "fixed_public_supply_load_control_zero_output_relaxation",
+  "qualification": "NOT_ESTABLISHED"
+}

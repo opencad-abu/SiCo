@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "recipe_id": "ldo.master_dynamic_model_v1",
+  "revision": 1,
+  "purpose": "Identify and diagnose dynamics using authenticated public source evidence; no qualification claim",
+  "target": {
+    "library": "amsLDO",
+    "cell": "LDO_MASTER",
+    "module": "LDO_MASTER",
+    "source_views": {
+      "schematic": "schematic",
+      "symbol": "symbol"
+    },
+    "output_view": {
+      "name": "rnm_candidate",
+      "view_type": "systemVerilogText",
+      "language": "systemverilog",
+      "primary_file": "verilog.sv"
+    }
+  },
+  "structure": {
+    "provider": "cadence_si",
+    "authoritative": true,
+    "required_artifacts": [
+      "netlist",
+      "map",
+      "globalmap",
+      "netlister_log"
+    ]
+  },
+  "inputs": {
+    "interface_contract": "recipe:source_interface_contract.json",
+    "behavior_spec": "recipe:source_behavior_spec.json",
+    "correlation_policy": "recipe:source_correlation_policy.json",
+    "characterization_source": "recipe:master_dynamic_source_v1.json",
+    "identification_options": "recipe:dynamic_identification_v1.json",
+    "dynamic_acceptance": "recipe:dynamic_acceptance_proposal_v1.json"
+  },
+  "model": {
+    "class": "electrical.sampled_state",
+    "generation": "registered_identification",
+    "template_policy": "registered_scaffold",
+    "provenance_required": [
+      "model",
+      "model_version",
+      "prompt_hash",
+      "template_hashes",
+      "context_hashes",
+      "revision_parent",
+      "feedback_hashes"
+    ]
+  },
+  "workflow": {
+    "gates": [
+      {
+        "id": "public_data",
+        "executor": "evidence.import_characterization",
+        "needs": []
+      },
+      {
+        "id": "measurements",
+        "executor": "electrical.trajectory_measurements",
+        "needs": [
+          "public_data"
+        ]
+      },
+      {
+        "id": "model",
+        "executor": "electrical.identify_dynamics",
+        "needs": [
+          "public_data",
+          "measurements"
+        ]
+      },
+      {
+        "id": "rnm",
+        "executor": "xcelium.trajectory_check",
+        "needs": [
+          "public_data",
+          "model"
+        ]
+      },
+      {
+        "id": "correlation",
+        "executor": "evidence.trajectory_correlation",
+        "needs": [
+          "public_data",
+          "model",
+          "rnm"
+        ]
+      }
+    ]
+  },
+  "verification": {
+    "corner": {
+      "process": "tt",
+      "vdd": 5.0,
+      "temperature_c": 27.0
+    },
+    "clock": {
+      "edge": "rising",
+      "sample_delay_seconds": 1e-06
+    },
+    "cases": [
+      {
+        "id": "exploratory",
+        "type": "characterization",
+        "inputs": {
+          "VDD": 5.0,
+          "VSS": 0.0
+        },
+        "expected": {},
+        "assertions": [
+          "behavior_contract_pending"
+        ]
+      }
+    ],
+    "metrics": [
+      {
+        "name": "vout",
+        "kind": "numeric",
+        "unit": "V"
+      }
+    ],
+    "l1": {
+      "protocol": "AIVW_L1_EVENT v1 JSONL",
+      "require_exact_case_set": true,
+      "require_exact_metric_set": true,
+      "require_assertion_pass": true,
+      "minimum_case_coverage": 1.0,
+      "required_metrics": [
+        "vout"
+      ],
+      "required_checks": [
+        "initial-state"
+      ],
+      "hold_case": "exploratory"
+    }
+  },
+  "live_update": {
+    "triggers": [
+      "manual"
+    ],
+    "formal_requires_saved": true,
+    "debounce_ms": 750,
+    "invalidation": {
+      "schematic": [
+        "public_data",
+        "measurements",
+        "model",
+        "rnm",
+        "correlation"
+      ],
+      "config": [
+        "public_data",
+        "measurements",
+        "model",
+        "rnm",
+        "correlation"
+      ],
+      "spec": [
+        "public_data",
+        "measurements",
+        "model",
+        "rnm",
+        "correlation"
+      ]
+    }
+  },
+  "publication": {
+    "mode": "ipc_text_view",
+    "allowed_languages": [
+      "systemverilog"
+    ],
+    "optimistic_concurrency": true,
+    "promotion": "human_approved",
+    "symbol_update": "forbidden",
+    "config_update": "forbidden",
+    "restore_on_failure": true
+  }
+}

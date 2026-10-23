@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "name": "aivw-ldo-interface-family-v1",
+  "status": "assumption_pending_spectre_correlation",
+  "provenance": {
+    "kind": "controlled-fixture-contract",
+    "purpose": "Canonical interface family for the offline M1 deterministic slice; it does not assert silicon or Spectre quality.",
+    "reference_only": true
+  },
+  "variants": {
+    "LDO_MASTER": {
+      "cell": "LDO_MASTER",
+      "port_order": ["VDD", "VSS", "VOUT"],
+      "ports": {
+        "VDD": {"direction": "inout", "kind": "power", "unit": "V"},
+        "VSS": {"direction": "inout", "kind": "ground", "unit": "V"},
+        "VOUT": {"direction": "output", "kind": "power", "unit": "V"}
+      }
+    },
+    "LDO_AON": {
+      "cell": "LDO_AON",
+      "port_order": ["VDD", "VSS", "EN", "VOUT"],
+      "ports": {
+        "VDD": {"direction": "inout", "kind": "power", "unit": "V"},
+        "VSS": {"direction": "inout", "kind": "ground", "unit": "V"},
+        "EN": {"direction": "input", "kind": "digital", "unit": "1"},
+        "VOUT": {"direction": "output", "kind": "power", "unit": "V"}
+      }
+    }
+  }
+}

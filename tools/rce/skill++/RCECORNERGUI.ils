@@ -1,7 +1,7 @@
 ; RCE process corner and technology controls.
 
 unless(and(boundp('RCECORNERGUIVersion)
-             RCECORNERGUIVersion=="20260919.gui.modules.v1")
+             symeval('RCECORNERGUIVersion)=="20261019.floating.net.include.all.v1")
 defmethod(makeExtBasicOpt ((inst EXTOPTGUI))
   let((index selectField nameField tempField rowLayout selectName
        selectItemName nameName tempName rowName)
@@ -143,5 +143,5 @@ procedure(cadBaseMultiCornerRevision()
   "20260803.multi.corner.align.v4"
 )
 
-RCECORNERGUIVersion="20260919.gui.modules.v1"
+set('RCECORNERGUIVersion "20261019.floating.net.include.all.v1")
 )

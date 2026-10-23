@@ -4,8 +4,9 @@ import hashlib
 import re
 import threading
 from collections import deque
-from dataclasses import dataclass
 
+from ..core.display_batch import DisplayBatch
+from ..core.session_events import SESSION_CONTRACT
 from .event_content import detail_page
 from .event_display import (
     BATCH_BYTES,
@@ -18,23 +19,7 @@ from .event_display import (
 from .published import freeze
 from .state_publication import StatePublication
 
-DISPLAY_CONTRACT = "agent_display.v1"
 RAW_BYTES = 262144
-
-
-@dataclass(frozen=True)
-class DisplayBatch:
-    identity: tuple
-    activation: int
-    start: int
-    end: int
-    committed: int
-    events: tuple
-    snapshot: object = None
-    size: int = 0
-    contract: str = DISPLAY_CONTRACT
-    error: str = ""
-
 
 class EventStream:
     def __init__(self, controller, cursor, activation, committed, *, reader=None, events=None,
@@ -133,7 +118,7 @@ class EventStream:
         self.validate_current()
         if not self._pending:
             if self.events is None:
-                batch = self.controller.read_updates(
+                batch = self.controller.updates.read_updates(
                     self.cursor.sequence, limit=RAW_EVENTS, max_bytes=RAW_BYTES,
                     since_version=self.version, publisher=self.publisher,
                 )
@@ -143,7 +128,7 @@ class EventStream:
                 )
                 batch = dict(zip(("session_id", "runtime_id", "instance_id", "generation"),
                                  self.identity))
-                batch.update(contract="agent_session.v1", snapshot=None,
+                batch.update(contract=SESSION_CONTRACT, snapshot=None,
                              events=events,
                              committed_sequence=self.committed)
             accepted = self.cursor.consume(batch)

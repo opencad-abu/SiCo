@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import (
     QFormLayout,
     QHBoxLayout,
@@ -14,7 +14,6 @@ from PyQt5.QtWidgets import (
     QPlainTextEdit,
     QProgressBar,
     QPushButton,
-    QStyle,
     QTableView,
     QToolButton,
     QVBoxLayout,
@@ -36,13 +35,19 @@ class PagedTablePane(QWidget):
         self.table.horizontalHeader().setStretchLastSection(True)
 
         self.previous = QToolButton(self)
-        self.previous.setIcon(self.style().standardIcon(QStyle.SP_ArrowBack))
+        self.previous.setText("\u25c0")
+        self.previous.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.previous.setToolTip("Previous page")
         self.previous.setFixedSize(28, 28)
         self.next = QToolButton(self)
-        self.next.setIcon(self.style().standardIcon(QStyle.SP_ArrowForward))
+        self.next.setText("\u25b6")
+        self.next.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.next.setToolTip("Next page")
         self.next.setFixedSize(28, 28)
+        for button in (self.previous, self.next):
+            font = button.font()
+            font.setPixelSize(12)
+            button.setFont(font)
         self.page_label = QLabel("Page 1 / 1 (0 rows)", self)
 
         controls = QHBoxLayout()

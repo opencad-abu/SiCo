@@ -1,7 +1,7 @@
 """Reuse credentials only from an already configured matching provider endpoint."""
 
 from .published import thaw
-from ..providers.config import validate_config
+from ..configuration.provider import validate_config
 from cadai.provider_settings import provider_endpoint
 
 

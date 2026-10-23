@@ -1,9 +1,14 @@
 """Qt renderer over the shared, Qt-independent chat projection."""
 
+from PyQt5.QtGui import QTextCursor
+
 from sico.service.chat_projection import ChatProjection
 from sico.service.chat_projection import system_user_name as system_user_name
 
 from .presentation import event_time, recommended_label
+from .transcript_render import (
+    COUNTER_ICON as COUNTER_ICON,
+)
 from .transcript_render import (
     TRIANGLE_COLLAPSED as TRIANGLE_COLLAPSED,
 )
@@ -28,6 +33,17 @@ class Transcript(ChatProjection, TranscriptRenderer):
         self._rendered = []
         self._positions = []
         self._last_render = float('-inf')
+
+    def scroll_to_message(self, view, message_id):
+        """Move the visible cursor to a rendered message; no history inference."""
+        for index, signature in enumerate(self._rendered):
+            if str(signature[0]) == str(message_id):
+                cursor = QTextCursor(view.document())
+                cursor.setPosition(self._positions[index])
+                view.setTextCursor(cursor)
+                view.ensureCursorVisible()
+                return True
+        return False
 
     # Preserve per-instance presentation hooks used by older callers.
     @staticmethod

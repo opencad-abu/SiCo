@@ -23,7 +23,19 @@ def identifier(value: object) -> str:
     return value
 
 
+def physical_projection(plan: Mapping[str, Any]) -> dict[str, Any]:
+    """Return the physical experiment identity; only solver knobs and the
+    experiment version may differ between refined references and the frozen
+    public plan."""
+
+    return {key: value for key, value in plan.items() if key not in ("analysis", "experiment_id")} | {
+        "analysis": {key: value for key, value in plan["analysis"].items()
+                     if key not in ("reltol", "vabstol_v", "iabstol_a", "errpreset", "transient_resolution")}}
+
+
 def validate_experiment(value: Mapping[str, Any]) -> dict[str, Any]:
+    """Validate one electrical dynamic experiment plan."""
+
     if isinstance(value, Mapping) and value.get("schema_version") == 2:
         from .dynamic_experiment import validate_dynamic_experiment
         return validate_dynamic_experiment(value)

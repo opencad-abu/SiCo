@@ -1,6 +1,9 @@
-"""Explicit per-session memory configuration; no personal-home import."""
+"""Project-scoped native memory with explicit per-thread controls."""
 
 from ..core.contracts import json_copy
+from ..storage.journal import BULK_KINDS
+
+DEFAULT_MEMORY = {"enabled": True, "generate": True, "use": True}
 
 
 def validate_memory(value):
@@ -13,15 +16,15 @@ def validate_memory(value):
 
 def configured_memory(journal):
     result = None
-    for event in journal.events():
-        if event["kind"] == "codex.memory.configured":
-            result = validate_memory(event["payload"]["settings"])
+    for row in journal.events(exclude=BULK_KINDS):
+        if row["kind"] == "codex.memory.configured":
+            result = validate_memory(row["payload"]["settings"])
     return result
 
 
 def runtime_options(journal, settings=None, *, model=None):
     settings = validate_memory(settings) if settings is not None else (
-        configured_memory(journal) or {"enabled": False, "generate": False, "use": False})
+        configured_memory(journal) or DEFAULT_MEMORY)
     options = {"features.memories": settings["enabled"],
                "memories.generate_memories": settings["generate"],
                "memories.use_memories": settings["use"]}
@@ -41,15 +44,16 @@ class ThreadMemory:
         self.connection_id = None
 
     def apply(self, rpc):
-        settings = self.pending if self.pending is not None else self.configured
-        if settings is not None:
-            rpc.request("thread/memoryMode/set", {
-                "threadId": self.backend.thread_id,
-                "mode": "enabled" if settings["generate"] else "disabled",
-            })
+        settings = self.pending if self.pending is not None else (
+            self.configured or DEFAULT_MEMORY)
+        rpc.request("thread/memoryMode/set", {
+            "threadId": self.backend.thread_id,
+            "mode": "enabled" if settings["generate"] else "disabled",
+        })
 
-    def inspect(self):
-        result = self.backend.runtime.rpc.request("config/read", {"includeLayers": False})
+    def inspect(self, rpc=None):
+        rpc = rpc or self.backend.runtime.rpc
+        result = rpc.request("config/read", {"includeLayers": False})
         config = result["config"]
         features, memories = config.get("features") or {}, config.get("memories") or {}
         effective = {
@@ -57,8 +61,9 @@ class ThreadMemory:
             "generate": memories.get("generate_memories"),
             "use": memories.get("use_memories"),
         }
-        settings = self.pending if self.pending is not None else self.configured
-        if settings is not None and effective != settings:
+        settings = self.pending if self.pending is not None else (
+            self.configured or DEFAULT_MEMORY)
+        if effective != settings:
             self.connection_id = None
             raise ValueError("Memory configuration did not match the runtime readback")
         if self.pending is not None:
@@ -72,7 +77,7 @@ class ThreadMemory:
             self.backend._event("codex.memory.observed", {
                 "thread_id": self.backend.thread_id, "settings": effective,
                 "connection_id": self.backend.connection_id,
-                "scope": "session", "home": str(self.backend.runtime.home),
+                "scope": self.scope(), "home": str(self.backend.runtime.home),
             })
         self.effective = effective
         self.connection_id = self.backend.connection_id
@@ -85,6 +90,10 @@ class ThreadMemory:
 
     def snapshot(self):
         return {"configured": json_copy(self.configured),
-                "effective": json_copy(self.effective), "scope": "session",
+                "effective": json_copy(self.effective), "scope": self.scope(),
                 "verified": bool(self.backend.runtime and self.connection_id
                                  and self.connection_id == self.backend.connection_id)}
+
+    def scope(self):
+        runtime = self.backend.runtime
+        return getattr(runtime, "home_scope", "project") if runtime else "project"

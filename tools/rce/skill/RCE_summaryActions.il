@@ -1,7 +1,7 @@
 ; Execute RCE summary analysis, open, copy and log actions.
 
 unless(and(boundp('RCEsummaryActionsVersion)
-             RCEsummaryActionsVersion=="20260919.gui.modules.v1")
+             RCEsummaryActionsVersion=="20261011.calibre.pex.tool.v1")
 procedure(rceSummaryAnalyzeCB(form)
   if(rceSummaryFormValidP(form) then
     let((meta path analyzable)
@@ -128,5 +128,5 @@ procedure(rceSummaryCopyCB(form)
   )
 )
 
-RCEsummaryActionsVersion="20260919.gui.modules.v1"
+RCEsummaryActionsVersion="20261011.calibre.pex.tool.v1"
 )

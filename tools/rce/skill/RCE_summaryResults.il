@@ -1,7 +1,7 @@
 ; Resolve summary result selection and action eligibility.
 
 unless(and(boundp('RCEsummaryResultsVersion)
-             RCEsummaryResultsVersion=="20260919.gui.modules.v1")
+             RCEsummaryResultsVersion=="20261011.calibre.pex.tool.v1")
 procedure(rceSummaryDspfOutputP(meta)
   member(lowerCase(rceSummaryString(meta['outputType])) '("dspf" "spf"))
 )
@@ -86,5 +86,5 @@ procedure(rceSummaryResultCB(form)
   )
 )
 
-RCEsummaryResultsVersion="20260919.gui.modules.v1"
+RCEsummaryResultsVersion="20261011.calibre.pex.tool.v1"
 )

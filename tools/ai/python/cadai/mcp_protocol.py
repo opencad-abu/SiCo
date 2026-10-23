@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any, BinaryIO
 
+from .mcp_call_errors import normalize_tool_result
+from .mcp_server import SERVER_ID
 from .protocol import MAX_LINE_BYTES, ProtocolError, decode_line, encode_line
 
 
@@ -13,8 +15,13 @@ def result(request_id: Any, value: dict[str, Any]) -> dict[str, Any]:
     return {"jsonrpc": "2.0", "id": request_id, "result": value}
 
 
-def error(request_id: Any, code: int, message: str) -> dict[str, Any]:
-    return {"jsonrpc": "2.0", "id": request_id, "error": {"code": code, "message": message}}
+def error(
+    request_id: Any, code: int, message: str, data: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    detail = {"code": code, "message": message}
+    if data is not None:
+        detail["data"] = data
+    return {"jsonrpc": "2.0", "id": request_id, "error": detail}
 
 
 def handle_message(
@@ -39,7 +46,7 @@ def handle_message(
         return result(request_id, {
             "protocolVersion": version,
             "capabilities": {"tools": {"listChanged": False}},
-            "serverInfo": {"name": "cad-virtuoso", "version": "0.1.0"},
+            "serverInfo": {"name": SERVER_ID, "version": "0.1.0"},
             "instructions": instructions(),
         })
     if method == "ping":
@@ -76,9 +83,17 @@ def serve(
 
 
 def tool_result(
-    request_id: Any, ok: bool, detail: dict[str, Any], *, compact: bool = False,
+    request_id: Any,
+    ok: bool,
+    detail: dict[str, Any],
+    *,
+    compact: bool = False,
+    tool_name: str | None = None,
+    input_schema: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Encode tool content and retain the existing oversized-response error."""
+    if not ok and tool_name is not None:
+        detail = normalize_tool_result(detail, tool_name, input_schema)
     text = json.dumps(detail, ensure_ascii=False, indent=None if compact else 2, sort_keys=True)
     response = result(request_id, {
         "content": [{"type": "text", "text": text}], "isError": not ok,
@@ -90,10 +105,13 @@ def tool_result(
 
         diagnostics = SkillDiagnostics()
         diagnostics.add(detail)
-        detail = diagnostics.attach({
+        failure = {
             "code": "response_too_large",
             "message": "MCP tool response exceeds the JSONL limit; request less content",
-        })
+        }
+        if tool_name is not None:
+            failure = normalize_tool_result(failure, tool_name, input_schema)
+        detail = diagnostics.attach(failure)
         return result(request_id, {
             "content": [{"type": "text", "text": json.dumps(detail, sort_keys=True)}],
             "isError": True,

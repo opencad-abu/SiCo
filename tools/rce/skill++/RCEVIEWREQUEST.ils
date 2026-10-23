@@ -97,7 +97,7 @@ procedure(rceSyncCreateNetlistView(form)
 procedure(rceSyncStartRve(form)
   let((visible)
     when(form~>startRve
-      visible=(form~>extTool~>value=="CalXRC")
+      visible=RCE_calibrePexToolP(form~>extTool~>value)
       form~>startRve~>invisible=!visible
       form~>startRve~>enabled=visible
       unless(visible

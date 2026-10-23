@@ -174,3 +174,8 @@ def validate(value):
                 fail('Anchor outside symbol bbox')
     for bounds in value.get('label_boxes', []):
         box(bounds)
+    if not unknown(value['grid']):
+        from .symbol_grid import off_grid
+        offenders = off_grid(value, value['grid'])
+        if offenders:
+            fail('Anchor is off the declared symbol grid: %s' % offenders[:3])

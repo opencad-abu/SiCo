@@ -1,35 +1,9 @@
-"""Capture finite EDA values once; materialize them without reinterpreting provenance."""
+"""Materialize worker environments with compatibility exports for bridge snapshots."""
 
-import os
-from cadenv import VIRTUOSO_ENV_NAMES, captured_virtuoso_environment
-
-from ..transport.framing import ProtocolError
-
-EDA_NAMES = frozenset({
-    "PATH", "HOME", "USER", "LOGNAME", "LANG", "LC_ALL", "TZ",
-    "CDS_LIC_FILE", "LM_LICENSE_FILE", "CDS_AUTO_64BIT", "OA_HOME",
-    "MODULEPATH", "LOADEDMODULES", "_LMFILES_", "MODULESHOME", "LMOD_CMD",
-})
-CAPTURED_NAMES = VIRTUOSO_ENV_NAMES
-SNAPSHOT_NAMES = EDA_NAMES | set(CAPTURED_NAMES)
-
-
-def validate_environment(environment):
-    if (not isinstance(environment, dict) or set(environment) - SNAPSHOT_NAMES
-            or any(not isinstance(v, str) or "\0" in v or len(v) > 8192
-                   for v in environment.values())):
-        raise ProtocolError("Invalid captured EDA environment")
-    return dict(environment)
-
-
-def capture_environment(environment=None, *, credential=None):
-    source = os.environ if environment is None else environment
-    result = {key: value for key, value in source.items() if key in EDA_NAMES}
-    result.update(captured_virtuoso_environment(source, credential=credential))
-    for key in tuple(result):
-        if credential in (key, "SICO_VIRTUOSO_" + key, "CAD_VIRTUOSO_" + key):
-            del result[key]
-    return validate_environment(result)
+# Compat: retire these exports after supported consumers use the transport contract.
+from ..transport.platform_environment import (
+    CAPTURED_NAMES, EDA_NAMES, SNAPSHOT_NAMES, capture_environment, validate_environment,
+)
 
 
 def worker_environment(directory, environment=None, *, captured=False):

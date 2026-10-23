@@ -1,6 +1,6 @@
 """Monitor status and bounded diagnostic presentation."""
 
-from cadgui import theme
+from cadgui.palette import active
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QStatusBar
 
 
@@ -21,16 +21,17 @@ class MonitorStatus(QStatusBar):
     def show_status(self, kind: str, label: str, diagnostic: str = "") -> None:
         self.kind = kind
         # 状态色和桌面状态点共用一套（就绪/进行中/注意/过期/故障）。
+        palette = active()
         colors = {
-            "ready": theme.STATE_READY,
-            "refreshing": theme.STATE_BUSY,
-            "partial": theme.STATE_WARN,
-            "stale": theme.STATE_STALE,
-            "error": theme.STATE_ERROR,
+            "ready": palette.state_ready,
+            "refreshing": palette.state_busy,
+            "partial": palette.state_warn,
+            "stale": palette.state_stale,
+            "error": palette.state_error,
         }
         self.state_label.setText(label)
         self.state_label.setStyleSheet(
-            f"color: {colors.get(kind, theme.TEXT)}; font-weight: 600;"
+            f"color: {colors.get(kind, palette.text)}; font-weight: 600;"
         )
         summary = diagnostic.strip()
         if len(summary) > 360:

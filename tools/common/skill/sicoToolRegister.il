@@ -4,7 +4,7 @@
 ;------------------------------------------------------------------------------
 
 unless(and(boundp('sicoToolRegisterVersion)
-             sicoToolRegisterVersion=="20260922.sico.register.v3"
+             sicoToolRegisterVersion=="20261020.sico.register.v4"
              isCallable('cadLoadRelative)
              isCallable('cadLoadToolScripts)
              isCallable('sicoToolRegister))
@@ -116,7 +116,7 @@ procedure(sicoToolRegister()
     loaded=cadLoadRelative("utility/menu.il")
     menuReady=and(loaded
                    boundp('witMenuInitVersion)
-                   witMenuInitVersion=="20260922.sico.menu.v4"
+                   witMenuInitVersion=="20261020.sico.menu.v5"
                    boundp('witMenuInitRoot)
                    witMenuInitRoot==menuRoot)
     scriptsReady=and(menuReady cadLoadToolScripts())
@@ -124,17 +124,17 @@ procedure(sicoToolRegister()
   )
 )
 
-sicoToolRegisterVersion="20260922.sico.register.v3"
+sicoToolRegisterVersion="20261020.sico.register.v4"
 )
 
 cadToolsRoot=cadResolveToolsRoot()
 when(and(cadToolsRoot
            or(not(boundp('sicoToolRegisterInitVersion))
-               sicoToolRegisterInitVersion!="20260922.sico.register.v3"
+               sicoToolRegisterInitVersion!="20261020.sico.register.v4"
                not(boundp('sicoToolRegisterInitRoot))
                sicoToolRegisterInitRoot!=cadToolsRoot))
   when(sicoToolRegister()
     sicoToolRegisterInitRoot=cadToolsRoot
-    sicoToolRegisterInitVersion="20260922.sico.register.v3"
+    sicoToolRegisterInitVersion="20261020.sico.register.v4"
   )
 )

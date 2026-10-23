@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import re
+from collections import defaultdict
+
 from .template_locations import TIER_ORDER
 from .template_schema import TemplateUnavailable, canonical
 from .template_storage import catalog_summary
@@ -9,6 +12,55 @@ from .template_storage import catalog_summary
 MAX_SUMMARY_BYTES = 32 * 1024 * 1024
 MAX_DUPLICATE_BYTES = 32 * 1024 * 1024
 MAX_REFERENCE_COPIES = 10000
+
+
+def _version_key(value):
+    """Sort dotted capture rule versions numerically, not lexicographically."""
+    numbers = re.findall(r"\d+", str(value or ""))
+    return tuple(int(number) for number in numbers) or (0,)
+
+
+def _logical_key(summary):
+    """Identity of one captured topology, independent of capture normalization rule."""
+    return (
+        summary.get("library"),
+        summary.get("cell"),
+        summary.get("category"),
+        summary.get("topology_fingerprint"),
+    )
+
+
+def _dedupe_rule_versions(found):
+    """Prefer the newest normalization rule for the same captured topology.
+
+    Different captures of one topology may be kept as variants when they share
+    the same rule version.  A newer rule version supersedes older rows for the
+    same topology; the older refs remain addressable by exact ``get``/``locate``
+    and are reported as ``superseded_refs`` on the primary row.
+    """
+    groups = defaultdict(list)
+    for ref, summary in found.items():
+        groups[_logical_key(summary)].append((ref, summary))
+
+    primary = {}
+    for items in groups.values():
+        versions = {summary.get("rule_version") for _, summary in items}
+        if len(versions) <= 1:
+            for ref, summary in items:
+                primary[ref] = summary
+            continue
+
+        newest = max(versions, key=_version_key)
+        lower_refs = sorted(ref for ref, summary in items if summary.get("rule_version") != newest)
+        available_versions = sorted(versions, key=_version_key, reverse=True)
+        for ref, summary in items:
+            if summary.get("rule_version") != newest:
+                continue
+            row = dict(summary)
+            row["available_versions"] = available_versions
+            row["superseded_refs"] = lower_refs
+            primary[ref] = row
+    return primary
 
 
 def _filters(args):
@@ -36,10 +88,7 @@ def _filters(args):
 def _selected(summary, args):
     return (
         (not args.get("rule_version") or summary.get("rule_version") == args["rule_version"])
-        and (
-            not args.get("detail_level")
-            or summary.get("detail_level") == args["detail_level"]
-        )
+        and (not args.get("detail_level") or summary.get("detail_level") == args["detail_level"])
         and (not args.get("required_asset") or args["required_asset"] in summary["assets"])
         and (
             not args.get("device_kind")
@@ -107,9 +156,15 @@ def query_rows(catalog, args, entries):
                         raise TemplateUnavailable("immutable template reference conflict: " + ref)
                     found[ref] = summary
 
+    found = _dedupe_rule_versions(found)
     copies = _copies(catalog, entries, sorted(found))
     compared_bytes, rows = 0, []
     for ref, summary in found.items():
+        summary_core = {
+            key: value
+            for key, value in summary.items()
+            if key not in {"available_versions", "superseded_refs"}
+        }
         first, origins, summary_differs = None, [], False
         if not copies[ref]:
             raise TemplateUnavailable("catalog changed during query; retry")
@@ -128,7 +183,7 @@ def query_rows(catalog, args, entries):
                 if first is not None and content != first:
                     raise TemplateUnavailable("immutable template reference conflict: " + ref)
                 first = content
-                summary_differs |= current["summary"] != summary
+                summary_differs |= current["summary"] != summary_core
         if summary_differs:
             raise TemplateUnavailable("catalog summary differs from stored record: " + ref)
         origins = catalog.order_origins(origins)

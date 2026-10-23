@@ -1,0 +1,18 @@
+{
+  "cell": "LDO_AON",
+  "block": { "type": "ldo", "cell": "LDO_AON" },
+  "behavior": {
+    "description": "Always-on domain LDO. While enabled and the supply is in range, output regulates to half the input supply; zero when disabled or out of range.",
+    "equation": "VOUT = (EN && VDD_MIN <= VDD && VDD <= VDD_MAX) ? VDD/2.0 : 0.0"
+  },
+  "metrics": {
+    "VDD_MIN": 1.9,
+    "VDD_MAX": 2.9
+  },
+  "ports": {
+    "VDD":  { "kind": "power",   "direction": "inout", "range": [1.9, 2.9] },
+    "VSS":  { "kind": "ground",  "direction": "inout" },
+    "EN":   { "kind": "digital", "direction": "input" },
+    "VOUT": { "kind": "power",   "direction": "output", "nominal": 1.25 }
+  }
+}

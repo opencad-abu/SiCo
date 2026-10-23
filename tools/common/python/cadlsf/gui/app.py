@@ -8,7 +8,6 @@ from sicoresources import icon as resource_icon
 import sys
 
 from cadgui.branding import logo_text
-from cadgui.chrome import apply_family_style
 from cadgui.environment import check_xcb_runtime, prepare_qt_environment
 from cadgui.lifecycle import (
     capture_parent_identity,
@@ -51,8 +50,10 @@ def _logo_path() -> Path | None:
 
 
 def apply_application_style(application, QColor, QPalette) -> None:
+    from cadgui.appearance import apply_saved_appearance
+
     application.setStyle("Fusion")
-    apply_family_style(application)
+    apply_saved_appearance(application)
 
 
 def run_gui(

@@ -88,6 +88,14 @@ def read_descriptor(directory):
     return ServiceDescriptor(**row)
 
 
+def _local_process_matches(descriptor):
+    try:
+        process = process_identity(descriptor.pid)
+    except (OSError, ValueError, IndexError):
+        return False
+    return process["start"] == descriptor.process_start and process["state"] not in {"Z", "X"}
+
+
 def occupied_discovery(directory, host):
     """Called only after observing a busy lock; the result is a hint, not ownership."""
     try:
@@ -96,23 +104,21 @@ def occupied_discovery(directory, host):
         if (directory / "discovery.json").exists():
             raise RegistryError("missing_identity", "Existing service lost its project identity")
         return Discovery("starting")
-    identity.verify(directory, host.host_id)
+    identity.verify(directory)
     try:
         descriptor = read_descriptor(directory)
     except FileNotFoundError:
         return Discovery("starting", identity.project_id)
     if descriptor.project_id != identity.project_id:
         raise RegistryError("identity_mismatch", "Service belongs to a different project")
-    if descriptor.host.host_id != host.host_id:
-        return Discovery("other_host", identity.project_id, descriptor)
     if descriptor.host.boot_id != host.boot_id:
+        state = ("other_host" if descriptor.host.host_id != host.host_id
+                 else "unverified")
+        return Discovery(state, identity.project_id, descriptor)
+    if not _local_process_matches(descriptor):
         return Discovery("unverified", identity.project_id)
-    try:
-        process = process_identity(descriptor.pid)
-    except (OSError, ValueError, IndexError):
-        return Discovery("unverified", identity.project_id)
-    if process["start"] != descriptor.process_start or process["state"] in {"Z", "X"}:
-        return Discovery("unverified", identity.project_id)
+    # A hostname or machine-id change can alter host_id during the same boot.
+    # PID start ticks and the local endpoint still authenticate the owner.
     return Discovery("local_candidate", identity.project_id, descriptor)
 
 
@@ -138,6 +144,6 @@ def discover_project(project):
                 raise RegistryError("missing_identity",
                                     "Existing service lost its project identity")
             return Discovery("absent")
-        identity.verify(directory, host.host_id)
+        identity.verify(directory)
         # A free lock invalidates any discovery file, even a live or reused PID.
         return Discovery("inactive", identity.project_id)

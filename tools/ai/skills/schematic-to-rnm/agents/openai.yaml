@@ -1,0 +1,4 @@
+interface:
+  display_name: "Schematic to RNM"
+  short_description: "Generate a behavioral SystemVerilog real-number model from a netlist and spec"
+  default_prompt: "Use $schematic-to-rnm to turn this analog block's netlist and spec into a wreal behavioral model, then check it."

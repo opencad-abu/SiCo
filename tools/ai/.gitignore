@@ -1,0 +1,12 @@
+# Local CMake install prefix used by the development setup.
+/bin/*
+!/bin/aiassistant
+/lib/
+/share/*
+!/share/attachment.png
+!/share/setting.png
+!/share/pdk-data/
+/share/pdk-data/*
+# The legacy analogLib/basic compressed snapshots were retired 2026-10-13; the
+# standard-format bundled packages now live here untracked until the runtime
+# release policy re-review re-pins the reviewed artifacts.

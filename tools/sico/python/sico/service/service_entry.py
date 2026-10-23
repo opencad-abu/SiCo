@@ -46,7 +46,14 @@ def _signals(stopped):
 
 def run_service(project, *, bootstrap_fd=None, idle_seconds=DEFAULT_IDLE_SECONDS):
     from .service_custody import run
-    return run(_run_service, project, bootstrap_fd=bootstrap_fd, idle_seconds=idle_seconds)
+
+    def report_ownership_failure(exc):
+        channel = None if bootstrap_fd is None else socket.socket(fileno=bootstrap_fd)
+        _report(channel, "failed", phase="ownership",
+                code=str(getattr(exc, "code", type(exc).__name__))[:128])
+
+    return run(_run_service, project, bootstrap_fd=bootstrap_fd,
+               idle_seconds=idle_seconds, bootstrap_failure=report_ownership_failure)
 
 
 def _run_service(project, *, bootstrap_fd=None, idle_seconds=DEFAULT_IDLE_SECONDS, custody=None):

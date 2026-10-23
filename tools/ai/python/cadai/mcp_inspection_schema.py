@@ -1,6 +1,6 @@
 """MCP schemas for inspection operations."""
 
-from .inspection import MAX_INSPECT_ITEMS
+from .inspection import MAX_INSPECT_ITEMS, MAX_MASTER_TARGETS
 
 INSPECT_SCHEMATIC = {
     "name": "inspect_schematic",
@@ -71,6 +71,46 @@ INSPECT_SYMBOL_PORTS = {
             "view_type": {"type": "string", "minLength": 1, "maxLength": 256},
             "max_items": {"type": "integer", "minimum": 1, "maximum": MAX_INSPECT_ITEMS},
         },
+        "additionalProperties": False,
+    },
+    "annotations": {
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False,
+    },
+}
+
+INSPECT_MASTER_EVIDENCE = {
+    "name": "inspect_master_evidence",
+    "title": "Inspect master evidence",
+    "description": (
+        "Read saved symbol body evidence for up to 8 library/cell/view targets: the view "
+        "list, occupied bbox (pins/labels/text excluded), annotation bbox, pin centers "
+        "with a suggested outward escape, and a bounded body-signature preview. Read-only; "
+        "the capture matches the PDK binding path."
+    ),
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "targets": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": MAX_MASTER_TARGETS,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "lib": {"type": "string", "minLength": 1, "maxLength": 256},
+                        "cell": {"type": "string", "minLength": 1, "maxLength": 256},
+                        "view": {"type": "string", "minLength": 1, "maxLength": 256},
+                    },
+                    "required": ["lib", "cell"],
+                    "additionalProperties": False,
+                },
+            },
+            "max_items": {"type": "integer", "minimum": 1, "maximum": MAX_INSPECT_ITEMS},
+        },
+        "required": ["targets"],
         "additionalProperties": False,
     },
     "annotations": {

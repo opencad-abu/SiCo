@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "rules": [
+    {
+      "id": "eq08-core-one-way",
+      "root": "tools/sico/python/sico/core",
+      "forbid_modules": [
+        "sico.storage",
+        "sico.transport",
+        "sico.codex",
+        "sico.service",
+        "sico.providers",
+        "sico.adapters",
+        "sico.orchestration",
+        "sico_ui",
+        "PyQt5",
+        "PySide6"
+      ],
+      "rationale": "Core owns values and the model/tool state machine; application construction belongs to service.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md",
+        "tools/utility/tests/test_eq08_layer_boundaries.py"
+      ]
+    },
+    {
+      "id": "eq08-storage-one-way",
+      "root": "tools/sico/python/sico/storage",
+      "forbid_modules": [
+        "sico.transport",
+        "sico.codex",
+        "sico.service",
+        "sico.providers",
+        "sico.adapters",
+        "sico.orchestration",
+        "sico_ui",
+        "PyQt5",
+        "PySide6"
+      ],
+      "rationale": "Persistence can consume core/configuration values, never runtime transports or application owners.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md",
+        "tools/utility/tests/test_eq08_layer_boundaries.py"
+      ]
+    },
+    {
+      "id": "eq08-codex-one-way",
+      "root": "tools/sico/python/sico/codex",
+      "forbid_modules": [
+        "sico.service",
+        "sico_ui",
+        "PyQt5",
+        "PySide6"
+      ],
+      "rationale": "The Codex backend is assembled by service; approval, identity and input values cannot import their service consumers.",
+      "evidence": [
+        "docs/SICO_EQ08_C5_REVIEW.md",
+        "tools/utility/tests/test_eq08_layer_boundaries.py"
+      ]
+    },
+    {
+      "id": "eq08-codex-json-owner",
+      "paths": [
+        "tools/sico/python/sico/codex/backend_source.py",
+        "tools/sico/python/sico/codex/model_catalog.py",
+        "tools/sico/python/sico/codex/native_history.py",
+        "tools/sico/python/sico/codex/resource_probe.py",
+        "tools/sico/python/sico/codex/rpc.py",
+        "tools/sico/python/sico/codex/turn_options.py"
+      ],
+      "forbid_modules": [
+        "sico.transport"
+      ],
+      "rationale": "JSON-only consumers use cadai.json_values, without acquiring socket transport. Actual MCP Connection use remains a transport consumer.",
+      "evidence": [
+        "tools/utility/tests/test_eq08_layer_boundaries.py"
+      ]
+    },
+    {
+      "id": "eq08-worker-token-only",
+      "paths": [
+        "tools/sico/python/sico/service/session_tokens.py",
+        "tools/sico/python/sico/service/worker.py"
+      ],
+      "forbid_definitions": [
+        "internal_token"
+      ],
+      "forbid_symbols": [
+        "internal_token"
+      ],
+      "forbid_modules": [
+        "sico.service.controller"
+      ],
+      "rationale": "Worker admission and execution resolve the exact SessionToken; Controller conversion is retired after fixture migration.",
+      "evidence": [
+        "tools/ai/python/tests/test_controller_command_owners.py"
+      ]
+    }
+  ]
+}

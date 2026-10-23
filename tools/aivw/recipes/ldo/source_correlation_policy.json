@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "name": "amsLDO-correlation-contract-pending-v1",
+  "status": "BLOCKED_CONTRACT",
+  "metrics": [
+    {
+      "name": "vout",
+      "kind": "numeric",
+      "unit": "V",
+      "absolute_tolerance": null
+    }
+  ],
+  "reason": "TEST_LDO ADE stores waveform saves and simulator tolerances; no behavioral acceptance thresholds found.",
+  "reference_only": false
+}

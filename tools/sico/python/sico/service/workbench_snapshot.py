@@ -10,7 +10,7 @@ ROW_FIELDS = ("id", "key", "category", "status", "sequence", "timestamp", "updat
               "task_id", "work_id", "stage_id", "data_type", "kind", "version", "outcome")
 AUDIT_FIELDS = ("id", "title", "questions", "recommendation", "rationale", "status",
                 "reason", "reply", "task_id", "stage_id", "work_id", "elicitation",
-                "binding", "context")
+                "binding", "context", "native_approval", "review_class")
 
 
 @dataclass(frozen=True)

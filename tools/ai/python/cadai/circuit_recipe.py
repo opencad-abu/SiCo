@@ -16,9 +16,12 @@ SPEC = {"library": NAME, "cell": NAME,
         "amplitude_v": {"type": "number", "minimum": 0.001, "maximum": 100, "default": 1.0}}
 RECIPE_TOOLS = [
     tool("begin_circuit_task", "Record the user's foreground/background choice made at task start. "
-         "Reuse task_id and task_ref for this task. Missing/unconfirmed/auto choices are rejected.",
+         "Reuse task_id and task_ref for this task. Missing/unconfirmed/auto choices are rejected. "
+         "Optional workflow selects the task group whose operations this task may dispatch.",
          {"task_id": REQUEST["request_id"], "presentation": PRESENTATION,
-          "choice_confirmed": {"type": "boolean"}}, ("task_id", "presentation", "choice_confirmed"), True),
+          "choice_confirmed": {"type": "boolean"},
+          "workflow": string_schema(96, pattern=r"^[A-Za-z][A-Za-z0-9_]*$")},
+         ("task_id", "presentation", "choice_confirmed"), True),
     tool("preview_rc_circuit", "Validate RC low-pass testbench v1 and return topology, placement and "
          "analytic DC/TRAN expectations in SI units. Read-only; not live master qualification.",
          SPEC, ("library", "cell")),

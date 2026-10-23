@@ -16,6 +16,16 @@ control/payload split storage。首份 `saradc.comparator_new` recipe 是通用�
 不是 CLI 或 kernel 中的专用分支。M0-E 与 M0-S 已各完成两次正式 PASS；M1 已产生首次真实
 配对 correlation 结果，新的 RNM/Xcelium run 也已迁移到 split storage。
 
+## Agent 归属（2026-10-11）
+
+AIVW 不提供自己的 agent host。外圈归 SiCo：Codex 基座、图形界面、会话/服务、
+MCP 工具面、审批与审计都在 SiCo（`tools/ai`），AIVW 以有界的 `aivw run-recipe`
+契约经 `run_aivw_recipe` 被调用。树内 agent 栈（runtime/broker/providers、
+M2 qualification、external provider CLI）已于 2026-10-11 退役删除；`qualify-provider`、
+`qualify-revision`、`qualify-external-provider` 命令不再存在。确定性模板渲染保留为
+核心 `aivworkbench.rule_template`，历史边界与证据映射见
+[docs/AGENT_RETIREMENT_PLAN.md](docs/AGENT_RETIREMENT_PLAN.md)。
+
 Agent foundation 的固定解释器与库政策见
 [实施计划中的“Python 库约束（固定安装前缀）”](docs/IMPLEMENTATION_PLAN_LDO_MVP.md)，
 实测版本、能力探测和 relocation/launcher 结果见
@@ -64,7 +74,7 @@ Xcelium、Spectre、AMS、OCEAN、网表、波形、worklib 和仿真数据库�
 $PROJ_AMS_DB_DIR/<lib>.<cell>.<view>/runs/<run_id>/
 ```
 
-当前 setup 静态导出 `PROJ_AMS_DB_DIR=/path/to/amsVerify/data/ams`。AIVW 不整体 source
+当前 setup 静态导出 `PROJ_AMS_DB_DIR=/path/to/xh/amsVerify/data/ams`。AIVW 不整体 source
 setup，只读取白名单 export，并检查绝对路径、安全边界和可写性。Control 与 payload 以同一
 run ID、request digest 和 manifest hash 绑定，所有 run 目录 exclusive-create。
 
@@ -80,76 +90,43 @@ EDA payload 写入项目启动目录的新正式运行。
 export SICO_PYTHON_ROOT="/software/pkgs/python/3.9.13"
 export SICO_PYTHON="$SICO_PYTHON_ROOT/bin/python3"
 
-tools/aivw/bin/aivw info
-tools/aivw/bin/aivw recipes
-tools/aivw/bin/aivw recipe saradc.comparator_new
-tools/aivw/bin/aivw run-recipe saradc.comparator_new --dry-run
-tools/aivw/bin/aivw run-recipe saradc.comparator_new --through structure
-tools/aivw/bin/aivw run-recipe saradc.comparator_new --through connectivity
-tools/aivw/bin/aivw check-connectivity \
+/path/to/sico-src/tools/aivw/bin/aivw info
+/path/to/sico-src/tools/aivw/bin/aivw recipes
+/path/to/sico-src/tools/aivw/bin/aivw recipe saradc.comparator_new
+/path/to/sico-src/tools/aivw/bin/aivw run-recipe saradc.comparator_new --dry-run
+/path/to/sico-src/tools/aivw/bin/aivw run-recipe saradc.comparator_new --through structure
+/path/to/sico-src/tools/aivw/bin/aivw run-recipe saradc.comparator_new --through connectivity
+/path/to/sico-src/tools/aivw/bin/aivw check-connectivity \
   --netlist /absolute/path/to/ihnl/cds5/netlist --map /absolute/path/to/map/current \
   --globalmap /absolute/path/to/ihnl/globalmap --candidate /absolute/path/to/structure.sv \
   --module comparator_new --port out --port outb --port cdsNet1 --port cdsNet0 --port clk
-tools/aivw/bin/aivw run-recipe saradc.comparator_new --through model_check
-tools/aivw/bin/aivw probe-text-view --profile amsverify
-tools/aivw/bin/aivw verify-run \
+/path/to/sico-src/tools/aivw/bin/aivw run-recipe saradc.comparator_new --through model_check
+/path/to/sico-src/tools/aivw/bin/aivw probe-text-view --profile amsverify
+/path/to/sico-src/tools/aivw/bin/aivw verify-run \
   --control-manifest /absolute/path/.aivw/runs/<run_id>/manifest.json \
   --payload-manifest /absolute/path/data/ams/<lib>.<cell>.<view>/runs/<run_id>/payload-manifest.json
-tools/aivw/bin/aivw pilot m0-e
-tools/aivw/bin/aivw pilot m0-s
-tools/aivw/bin/aivw doctor
-tools/aivw/bin/aivw run m0-e
-tools/aivw/bin/aivw run m0-s
-tools/aivw/bin/aivw qualify m1-ai
-tools/aivw/bin/aivw run m1-ai --gate golden-nominal
-tools/aivw/bin/aivw run m1-ai --gate golden-pvt
-tools/aivw/bin/aivw run m1-ai --gate rnm
-tools/aivw/bin/aivw run m1-ai --gate rnm-evidence --rnm-source-manifest /absolute/path/to/m1-ai-rnm/manifest.json
-tools/aivw/bin/aivw run m1-ai --gate spectre-evidence --spectre-source-manifest /absolute/path/to/m1-ai-golden/manifest.json
+# M0-E/M0-S 与 M1-AI 命令仍由核心执行器驱动；agent 外圈已于 2026-10-11 退役
+# （见 docs/AGENT_RETIREMENT_PLAN.md）。
+/path/to/sico-src/tools/aivw/bin/aivw pilot m0-e
+/path/to/sico-src/tools/aivw/bin/aivw pilot m0-s
+/path/to/sico-src/tools/aivw/bin/aivw doctor
+/path/to/sico-src/tools/aivw/bin/aivw run m0-e
+/path/to/sico-src/tools/aivw/bin/aivw run m0-s
+/path/to/sico-src/tools/aivw/bin/aivw qualify m1-ai
+/path/to/sico-src/tools/aivw/bin/aivw run m1-ai --gate golden-nominal
+/path/to/sico-src/tools/aivw/bin/aivw run m1-ai --gate golden-pvt
+/path/to/sico-src/tools/aivw/bin/aivw run m1-ai --gate rnm
+/path/to/sico-src/tools/aivw/bin/aivw run m1-ai --gate rnm-evidence --rnm-source-manifest /absolute/path/to/m1-ai-rnm/manifest.json
+/path/to/sico-src/tools/aivw/bin/aivw run m1-ai --gate spectre-evidence --spectre-source-manifest /absolute/path/to/m1-ai-golden/manifest.json
 ```
 
-外部模型 provider 的资格化命令默认只做离线配置校验，不会连接网络或本地 gateway：
+external provider 资格化（`qualify-provider`/`qualify-revision`/`qualify-external-provider`）
+已随 agent 外圈于 2026-10-11 退役删除（见
+[docs/AGENT_RETIREMENT_PLAN.md](docs/AGENT_RETIREMENT_PLAN.md)）；AI 侧统一经 SiCo 的
+`run_aivw_recipe` 调用。历史 provider 证据保留在
+[M2 External Provider Acceptance](docs/M2_EXTERNAL_PROVIDER_ACCEPTANCE.md)。
 
-```bash
-tools/aivw/bin/aivw qualify-external-provider \
-  --provider http \
-  --endpoint https://model.example.invalid/v1 \
-  --allowed-host model.example.invalid \
-  --api-key-env AIVW_MODEL_KEY \
-  --report /absolute/path/external-provider-config.json \
-  --json
-```
-
-只有项目批准的 live qualification 才能同时提供 `--live --approved`、非敏感
-`--approval-id`、严格 JSON/JSONL `--requests` fixture 和显式 `--source-generation`；HTTP
-还必须提供 `--allowed-host`，Unix provider 还必须提供私有 `0700` `--managed-root` 和
-`0600` 当前用户 socket。`--template-lock` 与 `--expected-action-kind` 仅用于 live
-qualification。config-only 模式明确拒绝 `--requests`、`--approval-id`、
-`--expected-action-kind`、`--source-generation` 和 `--template-lock`，不会把 live
-provenance 混入 `CONFIG_VALIDATED` 报告。`--approval-id` 只接受不超过 256 字符的 ASCII
-变更引用（字母、数字和 `._:/@+-`），拒绝空白、控制字符、Unicode 和 credential-like
-前缀；报告只保存 endpoint/socket digest 和 `SecretReference`，不会保存 endpoint 凭据或
-环境变量值：
-
-```bash
-tools/aivw/bin/aivw qualify-external-provider \
-  --provider unix \
-  --socket /absolute/path/to/managed/model.sock \
-  --managed-root /absolute/path/to/managed \
-  --requests /absolute/path/requests.jsonl \
-  --source-generation approved-source-generation \
-  --template-lock sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
-  --expected-action-kind FINISH \
-  --live --approved --approval-id change-2026-09-02 \
-  --report /absolute/path/external-provider-live.json \
-  --json
-```
-
-`CONFIG_VALIDATED` 只证明 provider 配置和安全边界通过离线预检，不是模型响应或 LDO
-质量的 `PASS`；真实外部 provider qualification 仍需项目批准的 endpoint/gateway 和
-独立证据。
-
-`doctor` 只读取 `/path/to/amsVerify/setup.bashrc` 中的 `module load` 声明和白名单
+`doctor` 只读取 `/path/to/xh/amsVerify/setup.bashrc` 中的 `module load` 声明和白名单
 `PROJ_AMS_DB_DIR` literal export，不会 source 或执行该文件的其他内容。然后在一次性子
 shell 中加载：
 

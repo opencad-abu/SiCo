@@ -5,21 +5,13 @@ from __future__ import annotations
 import re
 from html import unescape
 
-from PyQt5.QtCore import QBuffer, QByteArray, QIODevice, QSize, Qt, QTimer, QUrl, pyqtSignal
-from PyQt5.QtGui import (
-    QColor,
-    QFontDatabase,
-    QImageReader,
-    QTextBlockFormat,
-    QTextCharFormat,
-    QTextCursor,
-    QTextDocument,
-    QTextDocumentFragment,
-    QTextImageFormat,
-)
+from PyQt5.QtCore import QSize, Qt, QTimer, pyqtSignal
+from PyQt5.QtGui import QTextCursor
 from PyQt5.QtWidgets import (
+    QComboBox,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QPlainTextEdit,
     QSizePolicy,
     QSplitter,
@@ -28,18 +20,18 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from .code_highlight import (
-    code_block_html,
-    guess_language,
-    highlight,
-    split_fences,
-    table_safe_markdown,
-)
+from cadgui.fonts import mono_font
+
+from .code_highlight import code_block_html, guess_language
 from .glyphs import ACTION_GLYPH_SIZE, back_icon, refresh_icon
-from .presentation import DocumentView, style_tables
+from .presentation import (
+    DocumentView,
+    insert_code_block,
+    insert_markdown_segments,
+    style_document,
+)
+from .preview_gallery import DocumentImages, insert_images, preview_artifact_name
 from .receipts import DataReceipt
-from .theme import CODE_BLOCK_BACKGROUND
-from .transcript import SafeDocument
 from .workbench_list import ObjectList as ObjectList
 from .workbench_navigation import DetailNavigation
 
@@ -55,6 +47,7 @@ class WorkbenchDetail(DetailNavigation, QWidget):
         self.history = []
         self.external_urls = set()
         self.image_sizes = {}
+        self.review = None
         self._detail_receipt = DataReceipt(self)
         self._detail_generation = 0
         self._active = True
@@ -71,6 +64,8 @@ class WorkbenchDetail(DetailNavigation, QWidget):
         self.heading.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
         self.heading.setFixedHeight(self.fontMetrics().height() + 6)
         header.addWidget(self.heading, 1)
+        self.images_gallery = DocumentImages(self)
+        header.addWidget(self.images_gallery.button)
         self.refresh = QToolButton()
         self.refresh.setIcon(refresh_icon(ACTION_GLYPH_SIZE))
         self.refresh.setIconSize(QSize(ACTION_GLYPH_SIZE, ACTION_GLYPH_SIZE))
@@ -83,6 +78,30 @@ class WorkbenchDetail(DetailNavigation, QWidget):
         self.notice.setTextFormat(Qt.PlainText)
         self.notice.hide()
         layout.addWidget(self.notice)
+        self.review_bar = QWidget()
+        review_layout = QHBoxLayout(self.review_bar)
+        review_layout.setContentsMargins(0, 0, 0, 0)
+        review_layout.setSpacing(6)
+        review_layout.addWidget(QLabel("分页审阅"))
+        self.review_pages = QComboBox()
+        self.review_pages.setMinimumWidth(180)
+        review_layout.addWidget(self.review_pages)
+        self.review_search = QLineEdit()
+        self.review_search.setPlaceholderText("搜索文件、字段或内容")
+        review_layout.addWidget(self.review_search, 1)
+        self.review_prev = QToolButton()
+        self.review_prev.setText("上一页")
+        self.review_prev.setToolTip("上一页审阅")
+        review_layout.addWidget(self.review_prev)
+        self.review_next = QToolButton()
+        self.review_next.setText("下一页")
+        self.review_next.setToolTip("下一页审阅")
+        review_layout.addWidget(self.review_next)
+        self.review_status = QLabel()
+        self.review_status.setTextFormat(Qt.PlainText)
+        review_layout.addWidget(self.review_status)
+        self.review_bar.hide()
+        layout.addWidget(self.review_bar)
         self.document = DocumentView()
         self.document.setOpenLinks(False)
         self.document.setOpenExternalLinks(False)
@@ -95,7 +114,7 @@ class WorkbenchDetail(DetailNavigation, QWidget):
         self.output = QPlainTextEdit()
         self.output.setObjectName("detailOutput")
         self.output.setReadOnly(True)
-        self.output.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self.output.setFont(mono_font())
         self.output.setPlaceholderText("暂无输出")
         self.output_area = QWidget()
         area_layout = QVBoxLayout(self.output_area)
@@ -119,6 +138,12 @@ class WorkbenchDetail(DetailNavigation, QWidget):
         self.process_timer.timeout.connect(self.refresh_process)
         self.process_timer.start()
         self._process_html = None
+        self._review_result = None
+        self._review_index = 0
+        self.review_pages.currentIndexChanged.connect(self.show_review_index)
+        self.review_search.textChanged.connect(self.search_review)
+        self.review_prev.clicked.connect(lambda _checked=False: self.step_review(-1))
+        self.review_next.clicked.connect(lambda _checked=False: self.step_review(1))
 
     def refresh_process(self):
         if (not self._active or not self.isVisible() or not self.current
@@ -265,45 +290,7 @@ class WorkbenchDetail(DetailNavigation, QWidget):
     @staticmethod
     def _insert_script_block(cursor, script, language):
         cursor.insertHtml("<h3>启动命令</h3>")
-        WorkbenchDetail._insert_code_block(cursor, script, language)
-
-    @staticmethod
-    def _insert_code_block(cursor, code, language):
-        """程序化代码块：块底色 + 等宽 + 关键字着色。
-
-        `insertHtml` 会丢掉 `<pre>` 的块级样式（底色、边距），所以底色与等宽
-        用 QTextBlockFormat/QTextCharFormat 设置，只有 token 颜色走 span。
-        """
-        block = QTextBlockFormat()
-        block.setBackground(QColor(CODE_BLOCK_BACKGROUND))
-        block.setTopMargin(6)
-        block.setBottomMargin(6)
-        cursor.insertBlock(block, QTextCharFormat())
-        cursor.insertHtml('<span style="font-family: monospace">'
-                          + highlight(code, language) + "</span>")
-        # insertBlock() 会继承当前块格式，必须显式回到默认格式，
-        # 否则后续段落会带上代码块的浅底。
-        cursor.insertBlock(QTextBlockFormat(), QTextCharFormat())
-
-    @staticmethod
-    def _insert_markdown_segments(cursor, markdown):
-        """文本段交给 Qt 的 markdown 渲染，围栏代码段走高亮块。"""
-
-        first = True
-        for part in split_fences(markdown):
-            if part[0] == "code":
-                WorkbenchDetail._insert_code_block(cursor, part[2], part[1])
-                first = False
-                continue
-            if not part[1].strip():
-                continue
-            document = SafeDocument()
-            document.setMarkdown(table_safe_markdown(part[1]), QTextDocument.MarkdownFeatures(
-                QTextDocument.MarkdownDialectGitHub | QTextDocument.MarkdownNoHTML))
-            if not first:
-                cursor.insertBlock()
-            cursor.insertFragment(QTextDocumentFragment(document))
-            first = False
+        insert_code_block(cursor, script, language)
 
     def _set_output(self, text, *, position=None):
         """刷新输出区：仅有输出时显示，跟随滚动但尊重用户的上滚。"""
@@ -335,6 +322,9 @@ class WorkbenchDetail(DetailNavigation, QWidget):
             self.index, self.current, self.history = index, None, []
             self.external_urls.clear()
             self.image_sizes.clear()
+            self.review = None
+            self.review_bar.hide()
+            self.images_gallery.clear()
             self.document.set_busy(False)
             self.document.clear()
             self._set_output("")
@@ -351,6 +341,9 @@ class WorkbenchDetail(DetailNavigation, QWidget):
         self._process_html = (self._process_signature(result)
                               if self.current[0] == "process" else None)
         self.document.set_busy(False)
+        self._review_source = result
+        self._configure_review(result.get("review"))
+        self.review = result.get("review")
         self._set_output(output)
         self.heading.setToolTip(result.get("title", ""))
         self.fit_labels()
@@ -365,7 +358,7 @@ class WorkbenchDetail(DetailNavigation, QWidget):
             if script:
                 self._insert_script_block(cursor, script, language)
             cursor.insertBlock()
-            self._insert_markdown_segments(cursor, result.get("markdown", ""))
+            insert_markdown_segments(cursor, result.get("markdown", ""))
             cursor.insertBlock()
             cursor.insertHtml(result.get("suffix", ""))
         else:
@@ -379,43 +372,102 @@ class WorkbenchDetail(DetailNavigation, QWidget):
             if script:
                 self._insert_script_block(cursor, script, language)
         # 正文渲染完再统一表格边框：markdown 与 html 两个分支都覆盖。
-        style_tables(self.document.document())
+        style_document(self.document.document())
         self.image_sizes.clear()
-        for index, data in enumerate(result.get("images", [])[:1]):
-            buffer = QBuffer()
-            buffer.setData(QByteArray(data))
-            buffer.open(QIODevice.ReadOnly)
-            reader = QImageReader(buffer)
-            size = reader.size()
-            if (not size.isValid() or size.width() * size.height() > 32_000_000
-                    or size.width() > 16384 or size.height() > 16384):
-                self.show_notice("图像尺寸无效或超出显示限制，原始证据保留。")
-                continue
-            image = reader.read()
-            if image.isNull():
-                self.show_notice("图像无法解码，原始证据保留。")
-                continue
-            name = "copilot-image-" + str(generation) + "-" + str(index)
-            self.document.document().addResource(QTextDocument.ImageResource, QUrl(name), image)
-            self.image_sizes[name] = size
-            shown = self.image_size(size)
-            image_format = QTextImageFormat()
-            image_format.setName(name)
-            image_format.setWidth(shown.width())
-            image_format.setHeight(shown.height())
-            cursor = QTextCursor(self.document.document())
-            cursor.movePosition(QTextCursor.Start)
-            cursor.insertImage(image_format)
-            cursor.insertBlock()
+        images = result.get("images", [])
+        self.image_sizes, image_notice = insert_images(self.document.document(), images)
+        self.fit_images()
+        self.images_gallery.refresh(images, *preview_artifact_name(result))
+        if image_notice:
+            self.show_notice(image_notice)
         cursor = self.document.textCursor()
         cursor.movePosition(QTextCursor.Start)
         self.document.setTextCursor(cursor)
         self.document.verticalScrollBar().setValue(position)
 
+    def _configure_review(self, review):
+        if not isinstance(review, dict) or review.get("page_count", 0) <= 1:
+            self.review_bar.hide()
+            self._review_source = None
+            self._review_result = None
+            self._review_index = 0
+            return
+        self._review_result = review
+        self._review_index = 0
+        self.review_pages.blockSignals(True)
+        self.review_pages.clear()
+        for page in review.get("pages", []):
+            files = ", ".join(page.get("files", []))
+            self.review_pages.addItem(
+                f"第 {page['page']}/{review['page_count']} 页 · {files}"
+            )
+        self.review_pages.setCurrentIndex(0)
+        self.review_pages.blockSignals(False)
+        self.review_search.clear()
+        self.review_bar.show()
+        self._update_review_controls()
+
+    def _update_review_controls(self):
+        count = self.review_pages.count()
+        self.review_prev.setEnabled(self._review_index > 0)
+        self.review_next.setEnabled(self._review_index + 1 < count)
+        self.review_status.setText(
+            f"第 {self._review_index + 1}/{count} 页" if count else ""
+        )
+
+    def show_review_index(self, index):
+        review = self._review_result
+        if (not isinstance(review, dict) or not isinstance(self._review_source, dict)
+                or not 0 <= index < len(review.get("pages", []))):
+            return
+        self._review_index = index
+        page = review["pages"][index]
+        result = dict(self._review_source)
+        result["markdown"] = page["markdown"]
+        self._render_review_document(result)
+        self._update_review_controls()
+
+    def step_review(self, delta):
+        target = self._review_index + delta
+        if 0 <= target < self.review_pages.count():
+            self.review_pages.setCurrentIndex(target)
+
+    def search_review(self, text):
+        query = str(text).strip().lower()
+        if not query or not isinstance(self._review_result, dict):
+            return
+        for index, page in enumerate(self._review_result.get("pages", [])):
+            searchable = (page.get("markdown", "") + " "
+                          + " ".join(page.get("files", []))).lower()
+            if query in searchable:
+                self.review_pages.setCurrentIndex(index)
+                return
+        self.review_status.setText("无匹配审阅页")
+
+    def _render_review_document(self, result):
+        self.document.clear()
+        cursor = QTextCursor(self.document.document())
+        cursor.insertHtml(result.get("prefix", ""))
+        cursor.insertBlock()
+        insert_markdown_segments(cursor, result.get("markdown", ""))
+        cursor.insertBlock()
+        cursor.insertHtml(result.get("suffix", ""))
+        style_document(self.document.document())
+        cursor = self.document.textCursor()
+        cursor.movePosition(QTextCursor.Start)
+        self.document.setTextCursor(cursor)
+        self.document.verticalScrollBar().setValue(0)
+
     def reload(self):
         if self.current:
             position = self.document.verticalScrollBar().value()
             self.open(*self.current, remember=False, position=position)
+
+    def restyle(self):
+        """Re-fit labels and redraw the current detail in the active appearance."""
+        self.heading.setFixedHeight(self.fontMetrics().height() + 6)
+        self.fit_images()
+        self.reload()
 
     def go_back(self):
         if self.history:

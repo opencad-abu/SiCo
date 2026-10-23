@@ -110,8 +110,9 @@ def create_bindings(*, client, workspace, skill_reference, get_pdk_session,
     resource = partial(dispatch_resource, workspace=workspace, skill_reference=skill_reference)
     return bind_tools(TOOLS_BY_NAME, (
         ({"get_context", "eval_skill", "load_skill_file"}, bridge, (), False),
-        ({"Search", "tool_help"}, resource, (ResourceHandlerArgumentError,), True),
-        (RESOURCE_NAMES - {"Search", "tool_help"}, resource,
+        ({"Search", "cds_help", "mcp_help"}, resource,
+         (ResourceHandlerArgumentError,), True),
+        (RESOURCE_NAMES - {"Search", "cds_help", "mcp_help"}, resource,
          (ResourceHandlerArgumentError,), False),
         (ENTRY_NAMES, entry, (ValueError, OSError), False),
         (PROJECT_NAMES, project, (ProjectHandlerArgumentError,), False),

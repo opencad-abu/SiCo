@@ -3,9 +3,11 @@
 import json
 from copy import deepcopy
 
-from ..service.audit_questions import bounded, questions
-from ..service.audit_records import native_record
+from ..core.audit_questions import bounded, questions
+from ..core.review_classes import BLOCKING
+from .input_records import native_record
 from .access_policy import default_access
+from .input_delivery import send_controls
 
 METHODS = {"item/commandExecution/requestApproval", "item/fileChange/requestApproval",
            "item/permissions/requestApproval"}
@@ -18,19 +20,16 @@ def denied(method):
             else {"decision": "decline"})
 
 
-def details(loop, event):
+def details(runtime, event):
     params, method = event["params"], event["method"]
     value = {k: deepcopy(v) for k, v in params.items()
              if k not in {"threadId", "turnId", "startedAtMs", "availableDecisions"}}
     if method == "item/fileChange/requestApproval":
         key = (params["threadId"], params["turnId"], params["itemId"])
-        item = loop.native.pending.get(key, {}).get("input", {})
-        if item.get("truncated"):
-            asset = item["artifact"]
-            item = json.loads(loop.journal.artifact_text(asset["path"], asset["sha256"]))
-        if not item.get("changes"):
+        changes = runtime.approval_changes(key)
+        if not changes:
             raise ValueError("File approval requires the original change details")
-        value["changes"] = item["changes"]
+        value["changes"] = changes
     elif method == "item/commandExecution/requestApproval":
         network = params.get("networkApprovalContext")
         if network is not None:
@@ -44,56 +43,73 @@ def details(loop, event):
 
 
 def open_request(audit, event, turn_id, *, child=None):
-    loop, params, method = audit.loop, event["params"], event["method"]
-    with loop.lock:
-        audit.requests.connect()
-        binding = {k: bounded(params[k], 200) for k in ("threadId", "turnId", "itemId")}
-        binding.update(connection_id=audit.requests.connection_id, isBlocking=True,
-                       method=method, approvalId=params.get("approvalId"))
-        claim = audit.requests.check(event["id"], params["threadId"], [binding, params])
-        if claim is None:
-            return
-        access = (loop.state.task.get("turn_options") or loop.turn_options.selected).get(
-            "access", default_access())
-        if access["approval"] == "never" or loop.state.task.get("origin") == "startup":
-            loop.runtime.rpc.send({"id": event["id"], "result": denied(method)})
-            audit.requests.remember(claim)
-            return
-        if len(audit.pending) >= 4 or sum(r["task_id"] == loop.state.task["id"]
-                                        for r in audit.index.audits.values()) >= 32:
-            raise ValueError("Approval request budget exceeded")
-        description = details(loop, event)
-        choices = ["拒绝", "仅批准本次", "取消回合"]
-        if method == "item/permissions/requestApproval":
-            choices = ["拒绝", "批准本回合权限"]
-        available = params.get("availableDecisions")
-        if available is not None:
-            choices = [c for c in choices if CHOICES[c] in available]
-        if not choices:
-            raise ValueError("No supported one-shot approval decision")
-        incoming = questions([{"id": "codex_approval", "header": "Codex 执行审批",
-            "question": "请核对本事项的完整操作依据后选择；批准仅适用于当前请求。",
-            "options": [{"label": c, "description": {
-                "拒绝": "拒绝此操作，模型可继续寻找其他方案。",
-                "仅批准本次": "允许列出的操作或权限；不创建永久放行规则。",
-                "批准本回合权限": "将列出的权限授予当前回合；回合结束后失效。",
-                "取消回合": "拒绝此操作并中断当前回合。"}[c]} for c in choices]}])
-        current = audit.workbench.active()
-        row = native_record(incoming, loop.state.task["id"], loop.state.context.record(),
-                            current, audit.index.data[current["source"]]["digest"], child,
-                            params["turnId"], audit.index.audits.values(), len(audit.pending),
-                            loop.child_inputs.scope if child else None)
-        row.update(rationale="\n\n" + "\n".join("    " + line for line in description.splitlines()),
-                   native_approval={"method": method})
-        audit.emit("prepared", row)
-        audit.pending[row["id"]] = {"rpc_id": event["id"], "binding": binding,
-            "blocking": True, "source": "approval", "questions": incoming,
-            "approval": deepcopy(params), "child_thread_id": child.thread_id if child else "",
-            "child_turn_id": params["turnId"] if child else ""}
-        loop.state.task["waiting_audits"] = list(audit.pending)
-        audit.emit("opened", {"id": row["id"], **binding})
+    with audit.runtime.lock:
+        reply = _prepare(audit, event, turn_id, child=child)
+    if reply:
+        send_controls([reply])
+
+
+def _prepare(audit, event, turn_id, *, child=None):
+    scope, params, method = audit.runtime.snapshot(), event["params"], event["method"]
+    audit.requests.connect()
+    binding = {k: bounded(params[k], 200) for k in ("threadId", "turnId", "itemId")}
+    binding.update(connection_id=audit.requests.connection_id, isBlocking=True,
+                   method=method, approvalId=params.get("approvalId"))
+    claim = audit.requests.check(event["id"], params["threadId"], [binding, params])
+    if claim is None:
+        return
+    access = scope.access.get(
+        "access", default_access())
+    if access["approval"] == "never" or scope.origin == "startup":
         audit.requests.remember(claim)
-        loop._activity("waiting_user", "等待答复：" + row["title"])
+        return audit.requests.connection, {"id": event["id"], "result": denied(method)}
+    if len(audit.pending) >= 4 or sum(r["task_id"] == scope.task_id
+                                    for r in audit.index.audits.values()) >= 32:
+        raise ValueError("Approval request budget exceeded")
+    description = details(audit.runtime, event)
+    approval = {"method": method}
+    if method == "item/commandExecution/requestApproval":
+        # 审批卡片的命令片段：命令原文保留真实换行，界面按代码块呈现；
+        # rationale 里的 JSON 转义形式只作证据，不再承担可读性。
+        command = params.get("command")
+        if isinstance(command, str) and command.strip() and len(command) <= 16000:
+            approval["command"] = command
+        for source, target, limit in (("environmentId", "environment", 200),
+                                      ("cwd", "cwd", 1000)):
+            value = params.get(source)
+            if isinstance(value, str) and value.strip() and len(value) <= limit:
+                approval[target] = value
+    choices = ["拒绝", "仅批准本次", "取消回合"]
+    if method == "item/permissions/requestApproval":
+        choices = ["拒绝", "批准本回合权限"]
+    available = params.get("availableDecisions")
+    if available is not None:
+        choices = [c for c in choices if CHOICES[c] in available]
+    if not choices:
+        raise ValueError("No supported one-shot approval decision")
+    incoming = questions([{"id": "codex_approval", "header": "Codex 执行审批",
+        "question": "请核对本事项的完整操作依据后选择；批准仅适用于当前请求。",
+        "options": [{"label": c, "description": {
+            "拒绝": "拒绝此操作，模型可继续寻找其他方案。",
+            "仅批准本次": "允许列出的操作或权限；不创建永久放行规则。",
+            "批准本回合权限": "将列出的权限授予当前回合；回合结束后失效。",
+            "取消回合": "拒绝此操作并中断当前回合。"}[c]} for c in choices]}])
+    current = audit.active_work()
+    row = native_record(incoming, scope.task_id, scope.context,
+                        current, audit.index.data[current["source"]]["digest"], child,
+                        params["turnId"], audit.index.audits.values(), len(audit.pending),
+                        audit.runtime.child_scope if child else None,
+                        review_class_value=BLOCKING)
+    row.update(rationale="\n\n" + "\n".join("    " + line for line in description.splitlines()),
+               native_approval=approval)
+    audit.emit("prepared", row)
+    pending = {"rpc_id": event["id"], "binding": binding,
+        "blocking": True, "review_class": BLOCKING, "source": "approval", "questions": incoming,
+        "approval": deepcopy(params), "child_thread_id": child.thread_id if child else "",
+        "child_turn_id": params["turnId"] if child else ""}
+    audit.open_input(row["id"], pending, {"id": row["id"], **binding}, claim=claim)
+    if row["id"] in audit.pending:
+        audit.runtime.activity("waiting_user", "等待答复：" + row["title"])
 
 
 def validate_answer(row, answers):

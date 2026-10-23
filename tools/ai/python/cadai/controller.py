@@ -57,6 +57,7 @@ from .launch import (
     sanitized_terminal_environment,
 )
 from .live_model import LiveModelSession
+from .launch_environment import apply_pdk_workflow, model_settings
 from .protocol import ProtocolError
 from .runtime import (
     RuntimePaths,
@@ -377,6 +378,10 @@ def run_session(
         else:
             child_python = production_python(require_environment=True)
             mcp_environment = dict(os.environ, SICO_AI_WORKSPACE=str(workspace))
+            apply_pdk_workflow(mcp_environment, workspace)
+            mcp_environment["SICO_BACKEND"], mcp_environment["SICO_PROVIDER"] = (
+                model_settings(workspace, mcp_environment)
+            )
             export_environment(mcp_environment, temp_root.parent)
             config = build_claude_mcp_config(
                 child_python,

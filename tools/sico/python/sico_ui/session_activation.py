@@ -57,7 +57,10 @@ class NavigationState(QObject):
         return True
 
     def failure(self, scope, error):
-        if self.finish(scope):
+        # A replacement can fail after the old runtime has ended. The selected
+        # page still owns that error even though the service no longer owns it.
+        if self.current(scope, replacing=True):
+            self.opening = False
             self.failed.emit("会话未打开：" + str(error))
 
     def prepare(self, session, scope, *, initialize=False, replacing=False):
@@ -102,16 +105,19 @@ class NavigationState(QObject):
             return
         scope = self.begin()
         if session is not None:
-            self.prepare(session, scope)
+            # An explicit activation may replace an already ended/history page;
+            # that page is no longer owned by the service and must not block the
+            # new Ask session from becoming current.
+            self.prepare(session, scope, replacing=True)
             return
 
         def opened(session):
             session = self.api.handle(session)
-            if not self.current(scope):
+            if not self.current(scope, replacing=True):
                 return
             if session.session_id != session_id or not self.api.owns(session):
                 raise ValueError("打开的会话运行实例已失效")
-            self.prepare(session, scope)
+            self.prepare(session, scope, replacing=True)
 
         try:
             self.receipt.watch(self.api.open_session(session_id), opened,

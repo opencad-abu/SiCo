@@ -24,14 +24,13 @@ PROBE_TARGET = {**TARGET, "properties": {
 CDF_TOOLS = [
     tool(
         "inspect_cdf",
-        "Read effective cell CDF or a named direct instance's CDF without evaluating "
-        "callbacks or editable/display expressions. Supply target and optional instance "
-        "for instance CDF: target MUST be the containing schematic (not the device master "
-        "symbol), and instance is its direct instance name. No editor window or PDK "
-        "selection is required for this read. Omit instance to read the master cell CDF. "
-        "for a fresh capture; supply only cdf_ref for frozen pages. Parameters show default, "
-        "effective value and actual instance property separately. Does not discover PDKs. "
-        "Unsaved instance values may be inspected; modified source masters cannot be probed.",
+        "Read effective cell CDF or a direct instance's CDF without evaluating "
+        "callbacks or edit/display expressions. For instance CDF supply target (the "
+        "containing schematic, not the master symbol) and the direct instance name; "
+        "omit instance for the master CDF. "
+        "Live reads need a fresh ref; frozen pages take cdf_ref only. Parameters show "
+        "default, effective value and instance property separately. Unsaved instance "
+        "values may be inspected; modified masters cannot be probed.",
         {
             "target": TARGET,
             "instance": string_schema(128),
@@ -41,22 +40,19 @@ CDF_TOOLS = [
             "limit": {"type": "integer", "minimum": 1, "maximum": 64},
         },
         (),
+        help_text="This read does not discover PDKs.",
     ),
     tool(
         "probe_cdf_parameters",
-        "Create one diagnostic instance in an explicitly NEW SicoTest schematic. "
-        "Create/reuse SicoTest in the current Virtuoso workspace automatically. Always use "
-        "dbOpenCellViewByType in background, even for a foreground task; never open a probe window. "
-        "Use a fresh effective-cell cdf_ref and existing task_ref; do not ask again for probe presentation. Hooks/callbacks "
-        "use the built-in CDF executor; input cannot load code or choose "
-        "arbitrary callbacks. Report requested vs effective/raw values, extension checkpoints "
-        "when instrumented, and source-CDF restoration. Save/readback the diagnostic view, "
-        "but do not schCheck unconnected test pins or claim circuit/simulation qualification. "
-        "Retain request_id after unknown status; failures retain partial targets. "
-        "Returns bounded synchronous SKILL output, warnings and errors in output, "
-        "with output_truncated/output_capture; retained with the probe outcome. "
-        "Supply callback_order listing the changed parameters once each. GUI editable/display "
-        "conditions are not evaluated. Optional installed project overrides remain supported. No automatic cache reuse.",
+        "Create one diagnostic instance in an explicitly NEW SicoTest schematic (reuse the "
+        "workspace SicoTest). Always use dbOpenCellViewByType in the background, even for a "
+        "foreground task; never open a probe window. Use a fresh effective-cell cdf_ref and the "
+        "existing task_ref; do not ask again for probe presentation. Hooks/callbacks use the "
+        "built-in CDF executor; input cannot load code or choose arbitrary callbacks. Report "
+        "requested vs effective/raw values, extension checkpoints when instrumented, and "
+        "source-CDF restoration. Save and read back the diagnostic view, but do not schCheck "
+        "unconnected test pins or claim circuit/simulation qualification. Retain request_id after "
+        "unknown status; failures keep partial targets.",
         {
             "cdf_ref": REF,
             "task_ref": TASK,
@@ -68,6 +64,12 @@ CDF_TOOLS = [
         },
         ("cdf_ref", "task_ref", "request_id", "target", "parameters"),
         mutating=True,
+        help_text=(
+            "callback_order lists changed parameters once each and GUI editable/display conditions "
+            "are not evaluated. Output is bounded synchronous "
+            "SKILL text (warnings and errors included) with "
+            "output_truncated/output_capture markers, retained with the probe outcome. Optional "
+            "installed project overrides remain supported. No automatic cache reuse."),
     ),
     tool(
         "get_cdf_probe",
@@ -80,6 +82,60 @@ CDF_TOOLS = [
     ),
 ]
 CDF_NAMES = frozenset(t["name"] for t in CDF_TOOLS)
+
+# 单个模拟器接口表在内联结果里的上限；更大的表以名称索引呈现，完整表留在 artifact。
+SIMULATOR_INLINE_BYTES = 1024
+# 内联页目标字节数：工具结果的编码上限是 8,000 字符（sico tool_result_chars），
+# 超限即截断为预览并迫使智能体转读 artifact；这里留出封装余量。
+INLINE_RESULT_BYTES = 7600
+# 仅影响 ADE 显示/编辑上下文的字段：内联页只标记存在，完整内容在 artifact。
+PARAMETER_CONTEXT_FIELDS = ("display", "editable")
+
+
+def inline_parameters(rows):
+    """参数行内联投影：保留取值相关字段，显示/编辑上下文指向 artifact。"""
+    projected = []
+    for row in rows:
+        item = dict(row)
+        for field in PARAMETER_CONTEXT_FIELDS:
+            if field in item:
+                item[field] = {"status": "artifact_only", "reason": "edit_context"}
+        property_row = item.get("instance_property")
+        if (isinstance(property_row, dict) and property_row.get("status") == "present"
+                and property_row.get("value") == item.get("current")):
+            item["instance_property"] = {"status": "equals_current"}
+        projected.append(item)
+    return projected
+
+
+def encoded_size(value):
+    """与运行期截断口径一致的编码长度（sico tool_message 对 record 的 json 编码）。"""
+    return len(json.dumps(value, ensure_ascii=False))
+
+
+def probe_next_action(result):
+    """One corrective action for the two common probe preflight failures."""
+    if result.get("ok"):
+        return None
+    error = str(result.get("error") or "")
+    if "effective-cell symbol CDF capture" in error:
+        return ("Run inspect_cdf on the master symbol with no instance, then pass "
+                "that effective-cell cdf_ref to probe_cdf_parameters.")
+    if "does not accept requested" in error:
+        return ("Use the live CDF type reported by inspect_cdf for each parameter "
+                "instead of inferring it from the requested Python value.")
+    return None
+
+
+def inspection_next_action(result):
+    """Correct the frequent target/instance mix-up without another blind read."""
+    if result.get("ok"):
+        return None
+    error = str(result.get("error") or result.get("output") or "")
+    if "instance not found" in error:
+        return ("Pass the direct instance name in the containing schematic; omit "
+                "instance only for the master symbol's cell CDF.")
+    return None
 
 
 def build_call(name, args):
@@ -155,6 +211,14 @@ def call_cdf(name, args, client, workspace):
     if not native_ok and not reply.get("probe_ref"):
         return False, reply
     result = normalize(reply, name)
+    if name == "probe_cdf_parameters":
+        action = probe_next_action(result)
+        if action:
+            result["next_action"] = action
+    elif name == "inspect_cdf":
+        action = inspection_next_action(result)
+        if action:
+            result["next_action"] = action
     content = json.dumps(
         result, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False
     ).encode()
@@ -171,7 +235,45 @@ def call_cdf(name, args, client, workspace):
         if path.read_bytes() != content:
             raise CircuitSpecError("CDF evidence file content conflict")
     result["artifact"] = {"path": str(path), "sha256": sha, "bytes": len(content)}
-    if name != "inspect_cdf":
+    if name == "inspect_cdf":
+        # 证据文件保留完整归一化捕获；内联结果只放这一页真正要读的内容：
+        # 身份、请求的参数与模拟器索引。重复展开 simInfo 的 raw 与解析表会把
+        # 每次检查推到 8 KiB 预览上限之外，迫使智能体转去 shell 读 artifact
+        # （M4 成本构成：单次 inspect_cdf 59 KB，其中 95% 是同一 plist 的三份拷贝）。
+        result["sim_info"] = {"status": "artifact_only", "reason": "capture_is_in_artifact"}
+        sims = result.get("simulators") or {}
+        items = []
+        for item in sims.get("items", []):
+            attributes = item.get("attributes")
+            if attributes is None:
+                # 未解析时 raw 是唯一表示，保留原样（受限时仍走 artifact 截断）。
+                items.append({"name": item.get("name"), "raw": item.get("raw")})
+            elif len(json.dumps(attributes, ensure_ascii=False)) <= SIMULATOR_INLINE_BYTES:
+                items.append({"name": item.get("name"), "attributes": attributes})
+            else:
+                items.append({
+                    "name": item.get("name"),
+                    "attributes": "artifact_only",
+                    "attribute_count": len(attributes),
+                    "attribute_names": sorted(attributes)[:32],
+                })
+        result["simulators"] = {"status": sims.get("status"), "items": items}
+        result["parameters"] = inline_parameters(result.get("parameters") or [])
+        if encoded_size(result) > INLINE_RESULT_BYTES:
+            # 仍超预算时只留名称与当前值，其余明确指向 artifact。
+            result["parameters"] = [
+                {"name": row.get("name"), "current": row.get("current")}
+                for row in result["parameters"]
+            ]
+            result["parameters_detail"] = "artifact_only"
+        if encoded_size(result) > INLINE_RESULT_BYTES:
+            # 参数本身就超预算（大过滤集）：内联只报条目数，完整页在 artifact。
+            result["parameters"] = {
+                "status": "artifact_only",
+                "reason": "inline_response_limit",
+                "count": len(result["parameters"]),
+            }
+    else:
         # Keep the full bounded diagnostic data in evidence, report useful differences inline.
         result.pop("parameters", None)
         result.pop("raw_properties", None)
@@ -179,16 +281,13 @@ def call_cdf(name, args, client, workspace):
         for step in result.get("trace", []):
             step.pop("values", None)
 
-    def inline_size():
-        return len(json.dumps(json.dumps(result, ensure_ascii=False), ensure_ascii=False).encode())
-
-    if inline_size() > 800000 and name != "inspect_cdf":
+    if encoded_size(result) > 800000 and name != "inspect_cdf":
         # Complete details remain in the hash-checked artifact; truncation is explicit.
         result["trace"] = [
             dict(label=s["label"], change_count=len(s["changes"])) for s in result.get("trace", [])
         ]
         result["trace_inline_complete"] = False
-    if inline_size() > 800000:
+    if encoded_size(result) > 800000:
         result["inline_complete"] = False
         for field in (
             "parameters",

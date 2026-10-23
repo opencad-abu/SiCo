@@ -1,4 +1,4 @@
-"""Plan Calibre XRC stages and output publications."""
+"""Plan Calibre PEX stages and output publications."""
 
 from __future__ import annotations
 
@@ -6,12 +6,14 @@ import re
 from pathlib import Path
 
 from .config import DesignContext, RceConfig
+from .pex_engine import require_calibre_pex_engine
 
 # Compatibility: retain former public imports as the identical owner objects.
 # Remove when supported consumers have migrated, at the next breaking API version.
 from .xrc_cells import write_xrc_cell_lists as write_xrc_cell_lists
 from .xrc_models import XrcPlan, XrcSettings, XrcStageSpec
-from .xrc_options import xrc_mode_switches
+from .xrc_options import xrc_mode as xrc_mode
+from .xrc_options import xrc_mode as xrc_mode_switches  # former name, now a model
 from .xrc_options import xrc_netlist_options as xrc_netlist_options
 from .xrc_options import xrc_option_lines as xrc_option_lines
 from .xrc_paths import calibre_executable, xrc_corner_dir
@@ -23,13 +25,13 @@ def build_xrc_plan(cfg: RceConfig, ctx: DesignContext) -> XrcPlan:
         return XrcPlan((load_xrc_settings(cfg, ctx),), False)
     if cfg.is_view_output:
         raise ValueError(
-            "Calibre XRC multi-corner extraction currently requires a file netlist, "
-            "not a Calibre View"
+            f"{require_calibre_pex_engine(cfg.ext_tool).label} multi-corner "
+            "extraction currently requires a file netlist, not a Calibre View"
         )
 
     published = cfg.output_paths(ctx)
     temperatures = cfg.corner_temperatures()
-    simple_netlist = xrc_mode_switches(cfg)[0] is None
+    simple_netlist = xrc_mode(cfg).simple_netlist
     rule_raw = cfg.text("extract", "xrc", "rule_file") or cfg.text(
         "extract", "xrc", "deck_file"
     )
@@ -97,6 +99,7 @@ def build_xrc_plan(cfg: RceConfig, ctx: DesignContext) -> XrcPlan:
 def build_xrc_stage_specs(cfg: RceConfig, ctx: DesignContext) -> list[XrcStageSpec]:
     plan = build_xrc_plan(cfg, ctx)
     settings = plan.settings[0]
+    engine = require_calibre_pex_engine(cfg.ext_tool)
     calibre = calibre_executable()
     control = settings.control_file.name
     lvs_command = [calibre, "-lvs", "-hier", "-spice", str(settings.layout_netlist)]
@@ -121,12 +124,12 @@ def build_xrc_stage_specs(cfg: RceConfig, ctx: DesignContext) -> list[XrcStageSp
     for item in plan.settings:
         suffix = "" if len(plan.settings) == 1 else f"_{_safe_stage_component(item.corner_name)}"
         item_control = item.control_file.name
-        fmt_command = [calibre, "-xrc", "-fmt", *item.fmt_switches]
+        fmt_command = [calibre, *engine.formatter, *item.fmt_switches]
         if item.formatter_corners:
             fmt_command.extend(["-corner", ",".join(item.formatter_corners)])
         fmt_command.extend(["-nowait", item_control])
-        if item.pdb_switch is not None:
-            item_pdb = [calibre, "-xrc", "-pdb", item.pdb_switch]
+        if item.pdb_arguments is not None:
+            item_pdb = [calibre, *item.pdb_arguments]
             if item.xcell_file is not None:
                 item_pdb.extend(["-xcell", str(item.xcell_file)])
             if item.selection_switch:
@@ -139,7 +142,7 @@ def build_xrc_stage_specs(cfg: RceConfig, ctx: DesignContext) -> list[XrcStageSp
                     ctx.log_dir / f"xrc_pdb{suffix}.log",
                     item.control_file,
                     (svdb / "pex.db",),
-                    "xrc",
+                    engine.summary,
                 )
             )
         stages.append(
@@ -149,7 +152,7 @@ def build_xrc_stage_specs(cfg: RceConfig, ctx: DesignContext) -> list[XrcStageSp
                 ctx.log_dir / f"xrc_fmt{suffix}.log",
                 item.control_file,
                 item.expected_output_files,
-                "xrc",
+                engine.summary,
             )
         )
     return stages

@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import json
 import math
-import os
 from pathlib import Path
 import re
 import subprocess
@@ -18,7 +17,7 @@ from .workspace import LaunchPaths, allocate_run, sha256_file, stable_digest, wr
 
 
 EXPORTER_VERSION = "aivw-m1-spectre-evidence-3"
-LICENSE_ENDPOINT = os.environ.get("AIVW_SPECTRE_LICENSE_ENDPOINT", "").strip()
+LICENSE_ENDPOINT = "5280@127.0.0.1"
 _SOURCE_NETLIST = re.compile(
     r"(?:^|/)Interactive\.0/1/saradc:comparator_offset_TB_new:1/netlist/netlist$"
 )
@@ -250,10 +249,6 @@ def run_m1_ai_spectre_evidence(
     psf = spectre_dir / "psf"
     spectre_log = spectre_dir / "spectre.out"
     run_environment = dict(environment)
-    if not LICENSE_ENDPOINT:
-        raise EnvironmentError(
-            "set AIVW_SPECTRE_LICENSE_ENDPOINT to the Spectre license server (port@host)"
-        )
     run_environment["CDS_LIC_FILE"] = LICENSE_ENDPOINT
     run_environment["LM_LICENSE_FILE"] = LICENSE_ENDPOINT
     spectre_command = (

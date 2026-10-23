@@ -9,7 +9,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 
-from ..electrical_experiment import validate_experiment
+from ..electrical_experiment import physical_projection, validate_experiment
 from ..executors.trajectory_correlation import correlation_report
 from ..manifest import resolve_indexed_artifact, verify_split_manifests
 from ..plugins.sampled_state_sv import render_model
@@ -115,6 +115,83 @@ def inspect_public_candidate(control, acceptance_path, experiment_path):
             "failed_public_cases": [c["id"] for c in computed["cases"] if c["diagnostic_status"] != "PASS"]}
 
 
+def inspect_frozen_candidate(candidate_control, acceptance_path, experiment_path, *,
+                             reference_control, crosscheck_control, source_control):
+    """Recompute a frozen candidate's public correlation from matrix evidence.
+
+    The recalibrated candidate is a fitted artifact, not a rendered model, so
+    identity binds through hashes across the authenticated runs instead of a
+    re-render check.  Nothing private is opened and no run is modified.
+    """
+
+    reference = _run(candidate_control)
+    plan = validate_experiment(json.loads(_artifact(candidate_control, "experiment.json").read_text()))
+    experiment_path = Path(experiment_path)
+    experiment_bytes = experiment_path.read_bytes()
+    if stable_digest(physical_projection(validate_experiment(json.loads(experiment_bytes)))) != stable_digest(physical_projection(plan)):
+        raise ValueError("selected experiment differs from the frozen plan")
+    accepted = validate_waveform_policy(json.loads(Path(acceptance_path).read_bytes()))
+    policy = validate_waveform_policy(json.loads(_artifact(candidate_control, "acceptance-policy.json").read_text()))
+    if stable_digest(accepted) != stable_digest(policy):
+        raise ValueError("selected policy differs from the frozen correlation policy")
+    stored = json.loads(_artifact(candidate_control, "correlation.json").read_text())
+    candidate = _artifact(candidate_control, "xcelium/candidate.sv")
+    source_candidate = _artifact(source_control, "xcelium/candidate.sv")
+    model = json.loads(_artifact(source_control, "model.json").read_text())
+    candidate_sha = sha256_file(candidate)
+    if (sha256_file(source_candidate) != candidate_sha or candidate_sha != stored.get("candidate_sha256") or
+            model.get("dataset") != "public_calibration" or
+            model.get("module") not in (plan["target"].get("module"), plan["target"]["cell"])):
+        raise ValueError("frozen candidate/source identity mismatch")
+    cases = [c["id"] for c in plan["cases"]]
+    signals = {plan["roles"]["output"]: "V", "VPROBE:p": "A"}
+    actual = {cid: read_waveform(_artifact(candidate_control, f"xcelium/{cid}/waveforms.csv"), signals,
+                                 plan["analysis"]["stop_s"]) for cid in cases}
+    computed = None
+    for label, control, stored_report in (
+            ("reference", reference_control, stored),
+            ("crosscheck", crosscheck_control,
+             json.loads(_artifact(candidate_control, "crosscheck-correlation.json").read_text()))):
+        ref_plan = validate_experiment(json.loads(
+            _artifact(control, "checks/gates/characterization/experiment.json").read_text()))
+        if stable_digest(physical_projection(ref_plan)) != stable_digest(physical_projection(plan)):
+            raise ValueError(f"{label} characterization plan projection differs")
+        evidence = json.loads(_artifact(control, "checks/gates/characterization/characterization-evidence.json").read_text())
+        if (evidence.get("dataset") != "public_calibration" or evidence.get("source_recheck") != "PASS" or
+                evidence.get("target") != ref_plan["target"] or
+                [c["id"] for c in evidence["cases"]] != [c["id"] for c in ref_plan["cases"]] or
+                evidence.get("source_generation") != model.get("source_generation")):
+            raise ValueError(f"{label} characterization evidence mismatch")
+        golden = {}
+        for case, source in zip(ref_plan["cases"], evidence["cases"]):
+            if source["case_digest"] != stable_digest(case):
+                raise ValueError("public case binding differs")
+            csvs = [a for a in source["artifacts"] if a["path"].endswith("/waveforms.csv")]
+            if len(csvs) != 1:
+                raise ValueError("one public source waveform required")
+            golden[case["id"]] = read_waveform(
+                _artifact(control, csvs[0]["path"]),
+                {p: "V" for p in ref_plan["target"]["term_order"]} | {"VPROBE:p": "A"},
+                ref_plan["analysis"]["stop_s"])
+        recomputed = correlation_report(ref_plan, evidence, golden, actual, policy, candidate_sha)
+        if stable_digest(recomputed) != stable_digest(stored_report):
+            raise ValueError(f"stored {label} correlation differs from independently recomputed evidence")
+        if label == "reference":
+            computed = recomputed
+    if _run(candidate_control) != reference:
+        raise ValueError("candidate manifest changed during audit")
+    if experiment_path.read_bytes() != experiment_bytes:
+        raise ValueError("experiment changed during audit")
+    return {"reference": reference, "target": plan["target"], "source_generation": model.get("source_generation"),
+            "experiment_digest": stable_digest(plan), "plan_file_sha256": sha256_file(experiment_path),
+            "plan_artifact_sha256": sha256_file(_artifact(candidate_control, "experiment.json")),
+            "candidate_sha256": candidate_sha, "policy_sha256": sha256_file(Path(acceptance_path)),
+            "policy_artifact_sha256": sha256_file(_artifact(candidate_control, "acceptance-policy.json")),
+            "policy_status": policy["status"], "correlation_status": computed["status"],
+            "correlation_digest": stable_digest(computed), "case_count": len(computed["cases"]),
+            "failed_public_cases": [c["id"] for c in computed["cases"] if c["diagnostic_status"] != "PASS"]}
+
+
 def inspect_reservation(control):
     """Read only the indexed public commitment, never private paths or vectors."""
     reference = _run(control)
@@ -139,7 +216,7 @@ def inspect_reservation(control):
     return {"reference": reference, "commitment": commitment, "domain": summary["domain"]}
 
 
-def assess_public_prerequisites(candidate, reservations):
+def assess_public_prerequisites(candidate, reservations, freeze=None):
     """Assess authenticated records; report every applicable public blocker."""
     blockers = []
     def block(code, detail):
@@ -161,16 +238,20 @@ def assess_public_prerequisites(candidate, reservations):
             block("RESERVATION_POLICY_MISMATCH", kind)
         if _time(reserved["reference"]["run_id"]) >= _time(candidate["reference"]["run_id"]):
             block("RESERVATION_NOT_BEFORE_CANDIDATE_RUN", kind)
+    remaining = ["qualified_private_execution_boundary", "one_immutable_candidate_freeze",
+                 "current_source_recheck", "two_frozen_source_candidate_repeats"]
+    if freeze is not None:
+        remaining = [item for item in remaining if item != "one_immutable_candidate_freeze"]
     return {"schema_version": 1, "kind": "dynamic-holdout-public-prerequisites",
             "status": "BLOCKED_HOLDOUT_ADMISSION" if blockers else "PUBLIC_PREREQUISITES_MET",
             "candidate": candidate, "reservations": reservations, "blockers": blockers,
             "recommended_binding": "retain_original_analog_instance",
             "disposition": "ANALOG_ISLAND" if candidate["failed_public_cases"] else "UNQUALIFIED_CANDIDATE",
             "qualification": "NOT_ESTABLISHED", "private_access_authorized": False,
-            "candidate_freeze": "NOT_PERFORMED", "holdout_evaluated": False,
+            "candidate_freeze": "FROZEN" if freeze is not None else "NOT_PERFORMED",
+            "freeze": freeze, "holdout_evaluated": False,
             "chronology_scope": "local_recorded_run_order_not_independent_prefit_attestation",
-            "remaining_evaluator_requirements": ["qualified_private_execution_boundary",
-                "one_immutable_candidate_freeze", "current_source_recheck", "two_frozen_source_candidate_repeats"],
+            "remaining_evaluator_requirements": remaining,
             "system_substitution": "NOT_PERFORMED", "publication": "NOT_PERFORMED"}
 
 
@@ -179,3 +260,17 @@ def audit_admission(candidate_control, single_control, sequence_control, accepta
     reservations = {"single_event": inspect_reservation(single_control),
                     "sequence": inspect_reservation(sequence_control)}
     return assess_public_prerequisites(candidate, reservations)
+
+
+def audit_frozen_admission(candidate_control, reference_control, crosscheck_control, source_control,
+                           single_control, sequence_control, acceptance_path, experiment_path,
+                           freeze_control=None):
+    candidate = inspect_frozen_candidate(candidate_control, acceptance_path, experiment_path,
+        reference_control=reference_control, crosscheck_control=crosscheck_control, source_control=source_control)
+    reservations = {"single_event": inspect_reservation(single_control),
+                    "sequence": inspect_reservation(sequence_control)}
+    freeze = None
+    if freeze_control is not None:
+        from .candidate_freeze import inspect_freeze
+        freeze = inspect_freeze(freeze_control, candidate)
+    return assess_public_prerequisites(candidate, reservations, freeze)

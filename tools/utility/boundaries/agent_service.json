@@ -8,6 +8,7 @@
         "tools/sico/python/sico/service/startup_lifecycle.py",
         "tools/sico/python/sico/service/startup_result.py",
         "tools/sico/python/sico/service/remote_frontend.py",
+        "tools/sico/python/sico/service/remote_agent_settings.py",
         "tools/sico/python/sico/service/remote_sessions.py",
         "tools/sico/python/sico/service/remote_catalog.py",
         "tools/sico/python/sico/service/remote_control.py",
@@ -108,13 +109,28 @@
   ],
   "objects": [
     {
+      "id": "frontend-RemoteAgentSettings",
+      "source": "tools/sico/python/sico/service/remote_agent_settings.py:RemoteAgentSettings",
+      "public": ["read", "save", "save_mode", "save_model", "save_data_sources",
+                 "check", "cancel_check", "knowledge", "cancel_knowledge"],
+      "forbid_attributes": ["owner", "controller", "journal", "commands", "queries", "api"],
+      "rationale": "Settings expose asynchronous project reads, revision-checked saves (including structured data roots) and isolated resource checks with scoped cancellation.",
+      "evidence": [
+        "tools/ai/python/tests/test_agent_settings_service.py",
+        "tools/ai/python/tests/test_agent_settings_wire_gui.py"
+      ]
+    },
+    {
       "id": "frontend-RemoteFrontend",
       "source": "tools/sico/python/sico/service/remote_frontend.py:RemoteFrontend",
       "public": [
         "accept_quick",
+        "ask_head",
+        "agent_settings",
         "activity",
         "address",
         "background_request",
+        "feature_defaults",
         "can_control",
         "catalog",
         "catalog_snapshot",
@@ -142,6 +158,7 @@
         "is_closing",
         "launch_directory",
         "layout_path",
+        "navigation_labels",
         "open_initial",
         "open_session",
         "opened_sessions",
@@ -179,10 +196,12 @@
         "publish_session",
         "publish_history"
       ],
-      "rationale": "Reviewed remote client capability surface; publication contains one authoritative immutable set of session facts.",
+      "rationale": "Reviewed remote client capability surface; publication contains one authoritative immutable set of session facts. ask_head reads a durable input receipt with the live inbox head without acquiring control or replaying input.",
       "evidence": [
         "tools/ai/python/tests/test_agent_service_boundaries.py",
         "tools/ai/python/tests/test_agent_service_process_boundaries.py",
+        "tools/ai/python/tests/test_ask_queue_review.py",
+        "tools/ai/python/tests/test_ask_activation_gui.py",
         "tools/ai/python/tests/test_ic_platform_service.py"
       ]
     },

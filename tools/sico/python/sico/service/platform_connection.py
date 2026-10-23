@@ -19,15 +19,14 @@ def open_platform(attach, wire, params):
                                          cancelled=wire.closed.is_set)
         pending.enter_context(bridge)
         # Model credentials belong to the desktop; EDA tools inherit the selected host.
-        from cadenv import VIRTUOSO_ENV_NAMES
+        from cadenv import VIRTUOSO_MARKERS, preserve_virtuoso_environment
         from .background_environment import SNAPSHOT_NAMES
 
         environment = {key: value for key, value in params["environment"].items()
-                       if key not in SNAPSHOT_NAMES}
+                       if key not in SNAPSHOT_NAMES and key not in VIRTUOSO_MARKERS}
         eda = bridge.platform_environment(cancelled=wire.closed.is_set)
+        preserve_virtuoso_environment(eda)
         environment.update(eda)
-        for key in VIRTUOSO_ENV_NAMES:
-            environment["SICO_VIRTUOSO_" + key] = eda.get(key, "")
         with attach.owner._mutation:
             if wire.closed.is_set():
                 raise ValueError("连接等待已结束")

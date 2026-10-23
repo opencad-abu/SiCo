@@ -5,22 +5,30 @@ from __future__ import annotations
 import json
 import os
 import stat
+from bisect import bisect_left
 from dataclasses import dataclass
 from pathlib import Path
 
 from ..core.contracts import TASK_CONTRACT, BoundContext, identifier
-from ..transport.framing import strict_json
+from cadai.json_values import strict_json
 from .index import (
     CHAT_KINDS,
     CONTEXT_KINDS,
     FLAG_CONTEXT,
     FLAG_DELETED,
     FLAG_ORIGIN,
+    FLAG_TASK,
     JournalIndex,
     read_records,
 )
-from .journal import MAX_RECORD, SessionJournal, open_private
-from .native_origin import ORIGIN_EVENTS, NativeOrigins
+from .journal import (
+    MAX_RECORD,
+    SessionJournal,
+    open_private,
+    replay_window_rows,
+)
+from .journal_records import fingerprint, iter_raw_records as iter_journal_records
+from ..core.native_origin import ORIGIN_EVENTS, NativeOrigins
 from .history_policy import verify as verify_history
 
 
@@ -34,6 +42,7 @@ class TailWindow:
     context: dict
     deleted: bool
     scanned: int
+    seat: object = None
 
 def owned_directory(path):
     info = path.lstat()
@@ -84,31 +93,21 @@ class SessionReader:
         with os.fdopen(fd, "rb") as stream:
             yield from self.iter_events(stream, sequence=sequence)
 
-    def iter_raw_records(self, stream, *, sequence=0, validate=True):
-        """Envelope-checked ``(row, offset, length)`` records."""
+    def snapshot_events(self):
+        """Read a fixed snapshot only while the journal has no active writer."""
+        from .journal_snapshot import reader_snapshot
 
-        parse = strict_json if validate else json.loads
-        while True:
-            offset = stream.tell()
-            raw = stream.readline(MAX_RECORD + 1)
-            if len(raw) > MAX_RECORD:
-                raise ValueError("会话记录超过单条上限")
-            if not raw or not raw.endswith(b"\n"):
-                stream.seek(offset)
-                return
-            row = parse(raw)
-            sequence += 1
-            if (
-                row.get("contract") != TASK_CONTRACT
-                or row.get("session_id") != self.session_id
-                or row.get("sequence") != sequence
-                or not isinstance(row.get("kind"), str)
-                or not isinstance(row.get("payload"), dict)
-            ):
-                raise ValueError("会话日志身份或顺序不匹配")
-            if validate:
-                validate_event(row)
-            yield row, offset, len(raw)
+        return reader_snapshot(self)
+
+    def iter_raw_records(self, stream, *, sequence=0, validate=True):
+        """Envelope-checked ``(row, offset, length)`` records.
+
+        与写入端（SessionJournal）共用同一份信封迭代；只读阅读器额外做
+        逐行 payload 校验（``validate_event``）。
+        """
+
+        yield from iter_journal_records(stream, self.session_id, sequence=sequence,
+                                        validate=validate, checker=validate_event)
 
     def iter_raw(self, stream, *, sequence=0, validate=True):
         """Envelope-checked rows.
@@ -158,30 +157,17 @@ class SessionReader:
             end = start
 
     def journal_fingerprint(self, stream):
-        info = os.fstat(stream.fileno())
-        return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+        return fingerprint(stream.fileno())
 
     def journal_index(self):
-        """Load or rebuild the sidecar index; ``None`` keeps the scan fallback."""
+        """Rebuild damaged caches; complete journal corruption must reach callers."""
 
         fd = open_private(self.directory / "events.jsonl", os.O_RDONLY)
         with os.fdopen(fd, "rb") as stream:
-            fingerprint = self.journal_fingerprint(stream)
             try:
-                index, exact = JournalIndex.load(self.directory, fingerprint)
-            except (OSError, ValueError, TypeError):
-                index, exact = None, False
-            if index is not None and exact:
-                return index
-            if index is None:
-                index = JournalIndex(fingerprint)
-            try:
-                index.scan(self, stream)
-            except (OSError, ValueError, KeyError, TypeError):
+                return JournalIndex.read(self.directory, stream, self.session_id)
+            except OSError:
                 return None
-            index.fingerprint = fingerprint
-            index.save(self.directory)
-            return index
 
     def _index_window(self, index, start, offset):
         context = {}
@@ -191,8 +177,17 @@ class SessionReader:
             if isinstance(value, dict):
                 context = value
                 break
+        seat = None
+        position = bisect_left(index.sequences, start)
+        if (0 < position < len(index.sequences) and index.sequences[position] == start
+                and not index.flags[position] & FLAG_TASK):
+            # 行数截断：窗口从任务中途开始，播种行是它的前一行。
+            entry = (index.offsets[position - 1], index.lengths[position - 1])
+            row = read_records(self.directory / "events.jsonl", [entry])[0]
+            seat = (row.get("state") or {}).get("task") or {}
         return TailWindow(start=start, offset=offset, committed=index.committed,
-                          context=context, deleted=index.has(FLAG_DELETED), scanned=0)
+                          context=context, deleted=index.has(FLAG_DELETED), scanned=0,
+                          seat=seat)
 
     def _indexed_window(self, index, messages):
         start, offset = index.find_start(messages)
@@ -259,11 +254,17 @@ class SessionReader:
                           context=context, deleted=deleted, scanned=scanned)
 
     def _scanned_window(self, messages):
-        """Fallback locator: read the journal backwards from its end."""
+        """Fallback locator: read the journal backwards from its end.
+
+        Mirrors ``SessionJournal.replay_start`` with the same row bound; when
+        the bound cuts the walk it keeps reading one more line for the seat
+        row so a mid-task window can seed its cursor.
+        """
 
         boundaries, scanned = 0, 0
         start, offset, committed, deleted = 1, 0, 0, False
         context: dict = {}
+        seat, task_start, pending = None, None, None
         fd = open_private(self.directory / "events.jsonl", os.O_RDONLY)
         with os.fdopen(fd, "rb") as stream:
             for line, line_offset in self._reverse_lines(stream):
@@ -281,6 +282,17 @@ class SessionReader:
                     or sequence <= 0
                 ):
                     raise ValueError("会话日志身份或顺序不匹配")
+                if pending is not None:
+                    if sequence != pending[0] - 1:
+                        raise ValueError("会话日志身份或顺序不匹配")
+                    start, offset = pending[0], pending[1]
+                    if pending[2] != "task.started":
+                        seat = (row.get("state") or {}).get("task") or {}
+                    if not context:
+                        value = (row.get("state") or {}).get("context")
+                        if isinstance(value, dict):
+                            context = value
+                    break
                 if committed == 0:
                     committed = sequence
                 payload = row.get("payload")
@@ -295,11 +307,22 @@ class SessionReader:
                     deleted = True
                 if kind in CHAT_KINDS:
                     boundaries += 1
-                    if boundaries >= messages and kind == "task.started":
-                        start, offset = sequence, line_offset
+                    if (boundaries >= messages and kind == "task.started"
+                            and scanned <= replay_window_rows()):
+                        pending = (sequence, line_offset, kind)
+                        continue
+                if kind == "task.started" and task_start is None:
+                    task_start = (sequence, line_offset)
+                if scanned >= replay_window_rows() and sequence > 1:
+                    if task_start is not None:
+                        start, offset = task_start
                         break
+                    pending = (sequence, line_offset, kind)
+                    continue
+        if pending is not None and (start, offset) != (pending[0], pending[1]):
+            start, offset = pending[0], pending[1]
         return TailWindow(start=start, offset=offset, committed=committed,
-                          context=context, deleted=deleted, scanned=scanned)
+                          context=context, deleted=deleted, scanned=scanned, seat=seat)
 
     def origins_before(self, offset):
         """Native-origin index for the prefix ending at ``offset``.

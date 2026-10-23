@@ -16,23 +16,27 @@ else
 fi
 
 package_root=$product_root/python/aivworkbench
-if [ -z "${SICO_PYTHON_ROOT-}" ] || [ -z "${SICO_PYTHON-}" ]; then
-    echo "aivw: SICO_PYTHON_ROOT and SICO_PYTHON must be set" >&2
-    exit 2
+sico_runtime_python || exit 2
+python=$sico_runtime_python_value
+if [ -x "$SICO_HOME/runtime/python/bin/python3" ] \
+        || [ -f "$SICO_HOME/etc/config/dev-runtime" ]; then
+    case $python in
+        */*) ;;
+        *) python=$(command -v -- "$python") || {
+               echo "aivw: Python is unavailable: $python" >&2
+               exit 2
+           } ;;
+    esac
+    if [ "$python" = "$SICO_HOME/runtime/python/bin/python3" ]; then
+        python_root=$SICO_HOME/runtime/python
+    else
+        python_root=$(CDPATH='' cd -- "$(dirname -- "$python")/.." && pwd -P) || exit 2
+    fi
+    export SICO_PYTHON=$python
+    export SICO_PYTHON_ROOT=$python_root
 fi
-case $SICO_PYTHON_ROOT in
-    /*) ;;
-    *) echo "aivw: SICO_PYTHON_ROOT must be an absolute path" >&2; exit 2 ;;
-esac
-case $SICO_PYTHON in
-    /*) ;;
-    *) echo "aivw: SICO_PYTHON must be an absolute path" >&2; exit 2 ;;
-esac
-if [ ! -d "$SICO_PYTHON_ROOT" ] || [ ! -x "$SICO_PYTHON" ]; then
-    echo "aivw: configured production Python is unavailable" >&2
-    exit 2
-fi
-python=$SICO_PYTHON
+sico_runtime_library_path flow
+export LD_LIBRARY_PATH=$sico_runtime_library_path_value
 # Isolate imports before invoking the shared interpreter contract.
 export PYTHONNOUSERSITE=1
 export PYTHONDONTWRITEBYTECODE=1
@@ -47,7 +51,7 @@ export PYTHONPATH=$product_root/python:$product_root/../common/python
 exec "$python" -s -c '
 import sys
 sys.path = [path for path in sys.path if path]
-from aivworkbench.agent.runtime_info import validate_production_runtime
+from aivworkbench.runtime_info import validate_production_runtime
 try:
     validate_production_runtime()
 except RuntimeError as exc:

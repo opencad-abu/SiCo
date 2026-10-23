@@ -1,0 +1,45 @@
+; Bounded literal decoder. No readstring/eval/evalstring/load of request data.
+procedure(aiCopilotHex(ashText)
+  prog((ashOut ashDigits ashHigh ashLow)
+    unless(and(strlen(ashText)<=131072 mod(strlen(ashText) 2)==0
+      or(ashText=="" rexMatchp("^[0-9a-f]+$" ashText))) error("Invalid hex literal"))
+    ashDigits=list("0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "a" "b" "c" "d" "e" "f") ashOut=""
+    for(ashI 1 strlen(ashText)/2
+      ashHigh=member(substring(ashText 2*ashI-1 1) ashDigits)
+      ashLow=member(substring(ashText 2*ashI 1) ashDigits)
+      ashHigh=16-length(ashHigh) ashLow=16-length(ashLow)
+      when(ashHigh*16+ashLow==0 error("NUL literal forbidden"))
+      ashOut=strcat(ashOut symbolToString(intToChar(ashHigh*16+ashLow))))
+    return(ashOut)))
+procedure(aiCopilotLiteral(aslState aslDepth)
+  prog((aslToken aslKind aslText aslCount aslValues)
+    unless(and(aslDepth<=24 aslState['tokens]) error("Invalid literal tree"))
+    aslToken=car(aslState['tokens]) aslState['tokens]=cdr(aslState['tokens])
+    aslState['count]=aslState['count]+1
+    when(aslState['count]>20000 error("Literal node limit"))
+    aslKind=substring(aslToken 1 1)
+    aslText=if(strlen(aslToken)>1 substring(aslToken 2) "")
+    return(cond((aslToken=="n" nil) (aslToken=="t" t)
+      (aslKind=="s" aiCopilotHex(aslText))
+      (aslKind=="i"
+        unless(and(strlen(aslText)<=11 pcreMatchp("^-?[0-9]+$" aslText)) error("Invalid integer"))
+        aslCount=atoi(aslText t)
+        unless(and(fixp(aslCount) abs(aslCount)<=2147483647) error("Integer range"))
+        aslCount)
+      (aslKind=="f"
+        unless(and(strlen(aslText)<=32 pcreMatchp("^-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?$" aslText))
+          error("Invalid float"))
+        atof(aslText))
+      (aslKind=="l"
+        unless(and(strlen(aslText)<=4 rexMatchp("^[0-9]+$" aslText)) error("Invalid list length"))
+        aslCount=atoi(aslText) when(aslCount>4096 error("Literal list limit"))
+        for(aslI 1 aslCount aslValues=cons(aiCopilotLiteral(aslState aslDepth+1) aslValues))
+        reverse(aslValues))
+      (t error("Unsupported literal tag"))))))
+procedure(aiCopilotDecode(asdText)
+  prog((asdState asdValue)
+    unless(and(stringp(asdText) strlen(asdText)<=180000) error("Native payload limit"))
+    asdState=makeTable("aiCopilotDecoder" nil) asdState['tokens]=parseString(asdText ":" t)
+    asdState['count]=0 asdValue=aiCopilotLiteral(asdState 0)
+    when(asdState['tokens] error("Trailing literal data"))
+    return(asdValue)))

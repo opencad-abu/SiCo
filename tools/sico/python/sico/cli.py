@@ -32,13 +32,19 @@ def main(argv=None) -> int:
                  "background-watch", "background-node", "router-receipt",
                  "router-maintenance", "launch",
                  "desktop-worker", "quick-input", "project-service", "service-status",
-                 "service-stop", "host-submit", "host-input", "service-gui", "migration-audit"),
+                 "service-stop", "host-submit", "host-input", "host-query", "service-gui",
+                 "migration-audit", "reconcile"),
     )
     parser.add_argument("--launch-dir", default=os.getcwd())
     parser.add_argument("--project-dir", help="Explicit project directory for service commands")
     parser.add_argument("--bootstrap-fd", type=int, help=argparse.SUPPRESS)
     parser.add_argument("--idle-seconds", type=float, default=DEFAULT_IDLE_SECONDS)
     parser.add_argument("--session", default=None)
+    parser.add_argument("--task", help="Original interrupted task ID for reconcile")
+    parser.add_argument("--call", default="", help="Original dispatched call ID for reconcile")
+    parser.add_argument("--decision", default="inspect", choices=(
+        "inspect", "query", "completed", "not_executed", "no_calls", "uncertain"))
+    parser.add_argument("--evidence", default="", help="Read-only evidence supporting the decision")
     parser.add_argument("--service-id", help=argparse.SUPPRESS)
     parser.add_argument("--runtime-id", help=argparse.SUPPRESS)
     parser.add_argument("--message", default=None)
@@ -63,10 +69,18 @@ def main(argv=None) -> int:
         help="Explicit provider JSON; otherwise use SICO_* or project config",
     )
     args = parser.parse_args(argv)
+    if args.abandon_interrupted:
+        parser.error("请使用 reconcile 命令逐项核对；--abandon-interrupted 不再绕过核对")
     if args.command == "gateway-worker":
         from .codex.gateway_worker import main as gateway_main
 
         return gateway_main()
+    if args.command == "reconcile":
+        from .service.reconcile_cli import run
+
+        if not args.project_dir or not Path(args.project_dir).is_absolute() or not args.session:
+            parser.error("reconcile requires an absolute --project-dir and --session")
+        return run(args)
     if args.force and args.command != "service-stop":
         parser.error("--force 仅用于 service-stop")
     if args.command is None:
@@ -104,7 +118,7 @@ def main(argv=None) -> int:
             return run_admin(args)
         return run_service(args.project_dir, bootstrap_fd=args.bootstrap_fd,
                            idle_seconds=args.idle_seconds)
-    if args.command in {"host-submit", "host-input"}:
+    if args.command in {"host-submit", "host-input", "host-query"}:
         from .service.host_process import run_host_submit
 
         try:
@@ -227,8 +241,6 @@ def main(argv=None) -> int:
             print(f"session={session_id}  provider={provider.label}", flush=True)
             broker.register_session(session_id, context)
             loop = create_backend(provider, context_tools(broker, journal), journal, context)
-            if args.abandon_interrupted:
-                loop.acknowledge_interrupted()
             for event in loop.run(args.message or "请读取并说明当前绑定的设计上下文。"):
                 print(json.dumps(event, ensure_ascii=False), flush=True)
             return 0 if loop.state.task["status"] == "completed" else 1

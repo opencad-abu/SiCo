@@ -1,10 +1,14 @@
 """Durable host input destination, separate from the inbox acceptance fact."""
 
 import os
+import math
+import re
 
-from ..service.host_contract import digest, host_identity
-from ..service.service_session_dto import SessionAddress
-from ..transport.framing import ProtocolError
+from ..core.ask_queue import ask_sequence
+
+from ..core.contracts import identifier
+from ..core.host_contracts import digest, host_identity, session_address_record
+from cadai.json_values import ProtocolError
 from .journal import private_dir, sync_directory
 from .project_files import RegistryError, read_record, record_fd, registry_directory, write_record
 
@@ -33,18 +37,37 @@ class HostRoutes:
             raise ProtocolError("Invalid host route storage") from exc
         expected = dict(contract="sico_host_route.v1", project_id=self.project_id,
                         host=host_identity(host), input_id=input_id)
-        if (set(row) != set(expected) | {"service_id", "session_id", "payload_digest", "address"}
+        if (set(row) - {"ask_sequence", "received_at", "rejection"} != set(expected) | {"service_id", "session_id", "payload_digest", "address"}
                 or any(row[key] != value for key, value in expected.items())):
             raise ProtocolError("Invalid host route identity")
-        from ..service.service_values import name
-        name(row["service_id"])
-        name(row["session_id"])
+        try:
+            if "ask_sequence" in row:
+                ask_sequence(row["ask_sequence"])
+            if "received_at" in row and (type(row["received_at"]) not in (int, float)
+                                         or not math.isfinite(row["received_at"])):
+                raise ValueError("Invalid receipt time")
+            if (not isinstance(row["payload_digest"], str)
+                    or not re.fullmatch(r"[a-f0-9]{64}", row["payload_digest"])):
+                raise ValueError("Invalid host digest")
+            if "rejection" in row:
+                receipt = row["rejection"]
+                if (not isinstance(receipt, dict) or receipt.get("outcome") != "rejected"
+                        or receipt.get("input_id") != input_id
+                        or receipt.get("address") != row["address"]):
+                    raise ValueError("Invalid rejection receipt")
+            identifier(row["service_id"])
+            identifier(row["session_id"])
+        except (ValueError, TypeError) as exc:
+            raise ProtocolError("Invalid host route identity") from exc
         if row["address"] is not None:
-            address = SessionAddress.from_record(row["address"])
-            if (address.project_id != self.project_id or address.service_id != row["service_id"]
-                    or address.session.session_id != row["session_id"]
-                    or address.session.runtime_id is None):
-                raise ProtocolError("Invalid host route destination")
+            try:
+                session_address_record(
+                    row["address"], project_id=self.project_id,
+                    service_id=row["service_id"], session_id=row["session_id"],
+                    require_runtime=True,
+                )
+            except (ValueError, TypeError, KeyError) as exc:
+                raise ProtocolError("Invalid host route destination") from exc
         # A prior failed directory sync is still uncertain until confirmed here.
         try:
             fd = record_fd(path, os.O_RDONLY)

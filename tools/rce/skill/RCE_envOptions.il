@@ -3,7 +3,7 @@
 ;------------------------------------------------------------------------------
 
 unless(and(boundp('rceEnvOptionsVersion)
-             rceEnvOptionsVersion=="20260812.common.compat.v1")
+             rceEnvOptionsVersion=="20261011.calibre.pex.tool.v4")
 
 unless(and(boundp('cadContextBuilding) cadContextBuilding)
   let((commonSkill)
@@ -24,6 +24,9 @@ procedure(RCE_extTechEnvName(extTool)
     ("StarRC"  "STARRC_TECH_DIR")
     ("CalXRC"  "CALXRC_TECH_DIR")
     ("XRC"     "CALXRC_TECH_DIR")
+    ("CalXACT" if(SICO_envValue("CALXACT_TECH_DIR")
+                   then "CALXACT_TECH_DIR"
+                   else "CALXRC_TECH_DIR"))
     (t         "QUANTUS_TECH_DIR")
   )
 )
@@ -36,5 +39,59 @@ procedure(RCE_extTechValue(extTool selected)
   SICO_envPairValue(RCE_extTechEnvName(extTool) selected)
 )
 
-rceEnvOptionsVersion="20260812.common.compat.v1"
+;------------------------------------------------------------------------------
+; Calibre PEX tool vocabulary.  EXT Engine lists one radio entry per tool, so
+; the selected value is itself the tool name used by the form, TOML, profiles,
+; run directories and view requests.  "XRC" stays accepted for hand-written
+; TOML and older profiles.
+;------------------------------------------------------------------------------
+
+procedure(RCE_extToolChoices()  '("StarRC" "QRC" "CalXRC" "CalXACT"))
+
+procedure(RCE_calibrePexCanonical(tool)
+  case(tool
+    ("XRC" "CalXRC")
+    (t     tool)
+  )
+)
+
+procedure(RCE_calibrePexToolP(tool)
+  ; Keep the result boolean: callers assign it into t/nil form fields, and
+  ; member() would hand them the matching tail of the list instead.
+  if(member(RCE_calibrePexCanonical(tool) '("CalXRC" "CalXACT")) then
+    t
+  else
+    nil
+  )
+)
+
+; RCE_DEF_TOOL may spell the legacy alias; an unusable value falls back to the
+; first menu entry so the form still builds.
+procedure(RCE_extToolValue(name)
+  let((tool)
+    tool=RCE_calibrePexCanonical(or(name ""))
+    if(member(tool RCE_extToolChoices()) then
+      tool
+    else
+      car(RCE_extToolChoices())
+    )
+  )
+)
+
+; Restore a stored profile/TOML tool name.  Unknown names are rejected instead
+; of silently switching the extraction engine.
+procedure(RCE_setExtToolName(form name)
+  let((tool)
+    tool=RCE_calibrePexCanonical(or(name ""))
+    if(member(tool RCE_extToolChoices()) then
+      progn(
+        form~>extTool~>value=tool
+        t)
+    else
+      nil
+    )
+  )
+)
+
+rceEnvOptionsVersion="20261011.calibre.pex.tool.v4"
 )

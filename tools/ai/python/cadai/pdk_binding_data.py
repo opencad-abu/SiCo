@@ -25,38 +25,22 @@ def binding_ref(args, context, device, body):
 
 
 def read_device(session, args):
-    query = {k: args[k] for k in ("snapshot_ref", "device_ref")}
-    # The adapter always needs the complete effective CDF, not only the design interface tier.
-    query.update(sections=list(SECTIONS), page_size=100, tier="all")
-    device, ctx, seen = None, None, set()
-    for _ in range(256):
-        page = session.call("get_pdk_device", query)
-        current = page["device"]
-        require(current["revision"] == args["revision"],
-                "selected revision differs: received " + args["revision"]
-                + "; expected " + current["revision"]
-                + ". Use get_pdk_device.device.revision for " + args["device_ref"]
-                + " in " + args["snapshot_ref"] + ", not search summary_revision; select again")
-        if device is None:
-            ctx = page["context"]
-            device = {**current, **{s: {**current[s], "items": []} for s in SECTIONS}}
-        require(ctx == page["context"], "context changed between detail pages")
-        for section in SECTIONS:
-            require(current[section]["status"] == "complete", section + " metadata incomplete")
-            require(current[section]["count"] == device[section]["count"], "page counts differ")
-            device[section]["items"].extend(current[section]["items"])
-        cursor = page["page"]["next_cursor"]
-        if cursor is None:
-            for section in SECTIONS:
-                require(
-                    len(device[section]["items"]) == device[section]["count"],
-                    section + " detail pages incomplete",
-                )
-            return device, ctx
-        require(cursor not in seen, "repeated detail cursor")
-        seen.add(cursor)
-        query["cursor"] = cursor
-    raise CircuitSpecError("PDK detail pagination exceeds adapter budget")
+    # The adapter consumes the frozen snapshot in-process; MCP pagination is a
+    # presentation concern for get_pdk_device and would add a live selection
+    # refresh plus a full response serialization for every page.
+    device, ctx = session.complete_device(args["snapshot_ref"], args["device_ref"])
+    require(device["revision"] == args["revision"],
+            "selected revision differs: received " + args["revision"]
+            + "; expected " + device["revision"]
+            + ". Use get_pdk_device.device.revision for " + args["device_ref"]
+            + " in " + args["snapshot_ref"] + ", not search summary_revision; select again")
+    for section in SECTIONS:
+        require(device[section]["status"] == "complete", section + " metadata incomplete")
+        require(
+            len(device[section]["items"]) == device[section]["count"],
+            section + " detail incomplete",
+        )
+    return device, ctx
 
 
 def parameter_rows(device, args):
@@ -158,7 +142,7 @@ def deck_order(terms, mapping, deck):
     return sorted(terms, key=lambda row: order.get(mapping.get(row.get("name"), ""), len(order)))
 
 
-def geometry_rows(device, args):
+def geometry_rows(device, args, rule=None):
     source = device["geometry"]
     require(device["master_state"]["modified"] is False, "saved master required")
     require(device["identity"]["items"][0]["view_type"] == "schematicSymbol", "symbol required")
@@ -175,8 +159,27 @@ def geometry_rows(device, args):
     require(all(box[0][k] < box[1][k] for k in (0, 1)), "nonpositive master bounds")
     ports = unique(device["ports"]["items"], "name", "ports")
     figures = unique(source["items"], "figure_ref", "pin figures")
-    escapes = unique(args["pin_escapes"], "figure_ref", "pin escapes")
-    require(set(figures) == set(escapes), "explicit escape required for every pin figure")
+    supplied = args.get("pin_escapes") or []
+    if not supplied and rule:
+        symbols = (rule.get("symbol") or {}).get("terminals") or {}
+        supplied = []
+        for figure in figures.values():
+            anchors = (symbols.get(figure["terminal"]) or {}).get("anchors") or []
+            if figure["pin_index"] >= len(anchors):
+                require(False, "standard symbol lacks the escape for "
+                        + figure["terminal"] + "/" + str(figure["pin_index"]))
+            supplied.append({"figure_ref": figure["figure_ref"],
+                             "escape": anchors[figure["pin_index"]]["escape"]})
+    escapes = unique(supplied, "figure_ref", "pin escapes")
+    missing, unexpected = set(figures) - set(escapes), set(escapes) - set(figures)
+    require(
+        not missing and not unexpected,
+        "pin_escapes must use geometry.items[].figure_ref once per figure, not "
+        "ports.items[].port_ref; missing=" + str(len(missing))
+        + ", unexpected=" + str(len(unexpected))
+        + ("" if not missing else "; first missing=" + sorted(missing)[0])
+        + ("" if not unexpected else "; first unexpected=" + sorted(unexpected)[0]),
+    )
     require(all(f["terminal"] in ports for f in figures.values()), "orphan pin figure")
     terms, geometry = [], []
     for name, port in ports.items():

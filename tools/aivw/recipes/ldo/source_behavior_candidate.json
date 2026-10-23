@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "kind": "ldo-behavior-contract",
+  "contract_id": "amsLDO.LDO_MASTER.behavior-candidate.v1",
+  "status": "candidate_pending_approval",
+  "target": {
+    "cell": "LDO_MASTER",
+    "interface_contract_sha256": "ffbe024af0917ad8e91a922c71e075c9042ffb21bda4e000d2a70375c17d3873",
+    "exploratory_policy_sha256": "c5c4dab2d84f5578c5ec4edfde6d31142f05f639f28cea6a17334fe7b0e76b07"
+  },
+  "provenance": {
+    "source": "read-only-OA-CDF-TEST_LDO-ADE",
+    "source_generation": "7b67ef6da4a3172ca4339f2368982bf7e0f33c0b290e14889fc1573d47fec8a8",
+    "reference_run": "20260906T135258.116394Z-recipe-run-59cbbf4b298b",
+    "observation_status": "exploratory_only"
+  },
+  "behavior": {
+    "supply_window": {"candidate_probe_domain_v": {"min": 4.25, "max": 5.75}, "accepted_window_v": null},
+    "dc_vout": {"candidate_observations": ["exploratory run 20260907T000003.816042Z-recipe-run-58789411bf49 observed source-derived supply probes at 4.25/4.5/5.0/5.5/5.75 V and load probes at 5k/10k/20k ohm; VOUT samples and raw evidence are in checks/gates/exploratory/exploratory-observations.json; no formal relation or tolerance inferred"], "formal_relation": null, "accepted_error_v": null},
+    "load_dependence": {"candidate_resistances_ohm": [5000.0, 10000.0, 20000.0], "formal_dependence": null, "accepted_error_v": null},
+    "enable": {"candidate_voltage_points_v": null, "active_polarity": null, "threshold_v": null, "transition_policy": null},
+    "transient": {"candidate_cases": ["startup_ramp", "supply_step"], "settling_definition": null, "accepted_settling_error_s": null, "accepted_latency_s": null}
+  },
+  "metrics": {
+    "vout": {"unit": "V", "kind": "numeric", "accepted_absolute_tolerance": null, "accepted_relative_tolerance": null},
+    "supply_current": {"unit": "A", "kind": "numeric", "accepted_absolute_tolerance": null, "accepted_relative_tolerance": null},
+    "settling_time": {"unit": "s", "kind": "timing", "accepted_absolute_tolerance": null, "accepted_relative_tolerance": null}
+  },
+  "repeat": {"required_runs": 2, "policy": "repeat_after_contract_approval_only"},
+  "holdout": {"locked": true, "public_values_included": false, "partition_policy": "independent_hidden_holdout_required"},
+  "verdict_policy": {"behavior_verdict": "NOT_ESTABLISHED", "correlation_status": "BLOCKED_CONTRACT", "publication": "human_approval_required"}
+}

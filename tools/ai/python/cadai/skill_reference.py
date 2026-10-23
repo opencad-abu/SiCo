@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 from collections.abc import Mapping
 from pathlib import Path
@@ -18,6 +19,8 @@ from .skill_reference_tools import (
     default_reference_root,
     normalize_reference_root,
 )
+
+SEARCH_KINDS = frozenset({"function", "topic", "alias", "toc"})
 
 
 class SkillReferenceArgumentError(ValueError):
@@ -36,19 +39,35 @@ def _bounded_string(arguments: dict[str, Any], name: str) -> str:
     return value
 
 
-def _bounded_integer(
+def _clamped_integer(
     arguments: dict[str, Any], name: str, default: int, minimum: int, maximum: int
 ) -> int:
     value = arguments.get(name, default)
-    if isinstance(value, bool) or not isinstance(value, int) or not minimum <= value <= maximum:
-        raise SkillReferenceArgumentError(f"{name} must be an integer from {minimum} to {maximum}")
-    return value
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise SkillReferenceArgumentError(f"{name} must be an integer")
+    return max(minimum, min(value, maximum))
 
 
 def _reject_extra(arguments: dict[str, Any], allowed: set[str]) -> None:
     extra = sorted(set(arguments) - allowed)
     if extra:
         raise SkillReferenceArgumentError(f"unexpected arguments: {', '.join(extra)}")
+
+
+def _field(row: Mapping[str, str], name: str) -> str:
+    try:
+        value = row[name]
+    except (KeyError, IndexError):
+        return ""
+    return value if isinstance(value, str) else ""
+
+
+def _json_field(row: Mapping[str, str], name: str) -> list[Any]:
+    try:
+        value = json.loads(_field(row, name) or "[]")
+    except (TypeError, ValueError):
+        return []
+    return value if isinstance(value, list) else []
 
 
 def _summary(body: str, limit: int = 600) -> str:
@@ -138,11 +157,25 @@ class SkillReference:
         raise SkillReferenceArgumentError(f"unknown SKILL reference tool: {name}")
 
     def search(self, arguments: dict[str, Any]) -> dict[str, Any]:
-        _reject_extra(arguments, {"query", "limit"})
+        _reject_extra(arguments, {"query", "limit", "kind", "domain", "family"})
         query = _bounded_string(arguments, "query")
-        limit = _bounded_integer(arguments, "limit", 5, 1, MAX_SEARCH_RESULTS)
+        limit = _clamped_integer(arguments, "limit", 5, 1, MAX_SEARCH_RESULTS)
+        filters = {}
+        for field, maximum in (("kind", 16), ("domain", 64), ("family", 32)):
+            value = arguments.get(field)
+            if value is None:
+                continue
+            if not isinstance(value, str) or not value.strip() or len(value) > maximum:
+                raise SkillReferenceArgumentError(
+                    f"{field} must contain 1 to {maximum} characters"
+                )
+            filters[field] = value.strip()
+        if filters.get("kind") not in (None, *SEARCH_KINDS):
+            raise SkillReferenceArgumentError(
+                "kind must be function, topic or toc"
+            )
         tokens = [token for token in query.split() if token]
-        rows = self._store.search(tokens)
+        rows = self._store.search(tokens, filters)
         normalized = query.casefold()
         normalized_tokens = [token.casefold() for token in tokens]
         rows.sort(key=lambda row: _score(row, normalized, normalized_tokens))
@@ -156,16 +189,14 @@ class SkillReference:
     def get(self, arguments: dict[str, Any]) -> dict[str, Any]:
         _reject_extra(arguments, {"name", "max_chars"})
         name = _bounded_string(arguments, "name")
-        max_chars = _bounded_integer(
+        max_chars = _clamped_integer(
             arguments, "max_chars", MAX_DOCUMENT_CHARS, 1_024, MAX_DOCUMENT_CHARS
         )
         rows = self._store.exact_reference(name)
         if not rows:
             rows = self._store.exact_name(name)
         if not rows:
-            raise SkillReferenceArgumentError(
-                f"no exact SKILL API match for {name!r}; call search_skill_api first"
-            )
+            raise SkillReferenceArgumentError(self._no_match(name))
         normalized = name.casefold()
         rows.sort(key=lambda row: _score(row, normalized, [normalized]))
         total_matches = len(rows)
@@ -178,9 +209,18 @@ class SkillReference:
             "reference": self._store.metadata(),
         }
 
+    def _no_match(self, name: str):
+        normalized = name.casefold()
+        rows = sorted(
+            self._store.search([name]), key=lambda row: _score(row, normalized, [normalized])
+        )
+        names = list(dict.fromkeys(row["name"] for row in rows[:3]))
+        closest = "; closest: " + ", ".join(names) if names else ""
+        return f"no exact SKILL API match for {name!r}{closest}; call search_skill_api for details"
+
     @staticmethod
     def _search_result(row: Mapping[str, str]) -> dict[str, Any]:
-        return {
+        result = {
             "name": row["name"],
             "reference_id": row["reference_id"],
             "usage": row["usage"],
@@ -189,11 +229,19 @@ class SkillReference:
             "document": row["document"],
             "product_version": row["product_version"],
         }
+        for field in ("kind", "domain", "family"):
+            value = _field(row, field)
+            if value:
+                result[field] = value
+        description = _field(row, "description")
+        if description and _field(row, "kind"):
+            result["description"] = _summary(description)
+        return result
 
     @staticmethod
     def _document(row: Mapping[str, str], max_chars: int) -> dict[str, Any]:
         body = row["body"]
-        return {
+        result = {
             "name": row["name"],
             "reference_id": row["reference_id"],
             "usage": row["usage"],
@@ -204,6 +252,20 @@ class SkillReference:
             "doc_title": row["doc_title"],
             "product_version": row["product_version"],
         }
+        for field in ("kind", "domain", "family", "source_kind"):
+            value = _field(row, field)
+            if value:
+                result[field] = value
+        for field, output in (
+            ("arguments_json", "arguments"),
+            ("returns_json", "returns"),
+            ("examples_json", "examples"),
+            ("related_json", "related"),
+        ):
+            value = _json_field(row, field)
+            if value:
+                result[output] = value
+        return result
 
 
 __all__ = [

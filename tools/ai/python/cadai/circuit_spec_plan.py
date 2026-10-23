@@ -20,6 +20,16 @@ from .circuit_spec_schema import (
 
 
 def _validate_bindings(spec, bindings):
+    if isinstance(bindings, dict) and isinstance(bindings.get("masters"), list):
+        for index, master in enumerate(bindings["masters"]):
+            callbacks = master.get("callbacks") if isinstance(master, dict) else None
+            if isinstance(callbacks, dict) and callbacks.get("status") == "known":
+                raise CircuitSpecError(
+                    f"bindings.masters[{index}].callbacks.status 'known' is discovery "
+                    "metadata, not a circuit callback policy. Use binding_refs from "
+                    "bind_pdk_device; if supplying bindings directly, use status "
+                    "'required' with extension_ref/order or status 'none'."
+                )
     validate(bindings, BINDINGS, "bindings")
     if (
         bindings["project_ref"] != spec["project_ref"]
@@ -311,15 +321,23 @@ def preview_circuit(spec, bindings):
             "creation_backend",
         ],
     }
-    geometry_ready = all(issue["code"] == "callback_extension_not_validated"
-                         and issue.get("extension_ref") for issue in issues)
+    floating = [row for row in warnings if row["code"] == "single_endpoint_net"]
+    geometry_ready = (
+        all(issue["code"] == "callback_extension_not_validated"
+            and issue.get("extension_ref") for issue in issues)
+        and not floating
+    )
     return {
         "ok": True,
         "stage": "preview",
         "status": "binding_incomplete" if issues else "structural_preview",
         "geometry_preview_ready": geometry_ready,
-        "next_action": "preview_circuit_geometry" if geometry_ready else "resolve_device_bindings",
+        "next_action": (
+            "resolve_floating_nets" if floating else
+            "preview_circuit_geometry" if geometry_ready else "resolve_device_bindings"
+        ),
         "user_input_required": False,
         "preview_digest": digest(plan),
         "plan": plan,
+        "blocking_warnings": floating,
     }

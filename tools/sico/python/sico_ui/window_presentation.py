@@ -47,7 +47,7 @@ class UsageLabel(QLabel):
 class WindowPresentation:
     def __init__(self, widgets, *, page, presentation, receipts, centers, navigation,
                  bindings, steering, activity_timer, refresh_receipt, refresh_tasks,
-                 run_command, poll):
+                 run_command, poll, rewind_actions):
         self.ui = widgets
         self.page = page
         self.presentation = presentation
@@ -61,12 +61,18 @@ class WindowPresentation:
         self.refresh_task_panel = refresh_tasks
         self.run_command = run_command
         self.poll = poll
+        self.rewind_actions = rewind_actions
 
     def receive(self, event):
         if not self.presentation.receive(event):
             return
         if self.page.reviewing is None:
             self.centers.receive(event)
+            if event["kind"] == "codex.history.reverted":
+                scroll = getattr(self.ui.parent, "chat_scroll", None)
+                if scroll is not None:
+                    scroll.latest()
+                self.rewind_actions.reverted(event)
 
     def update_session(self, state, *, contexts=None):
         self.binding_panel.update_state(state)
@@ -169,10 +175,33 @@ class WindowPresentation:
         模型思考与工具执行不改光标：气泡里的工具结果始终看起来可点。只有
         打开会话/读取或继续历史记录这类把页面内容读进来的过程才显示 busy。
         """
+        self._refresh_loading_hint()
         self.ui.display.set_busy(bool(self.page.opening))
 
+    def _refresh_loading_hint(self):
+        """事件窗口重放期间给出进度；重放完成后由状态刷新接管文本。"""
+
+        binding = getattr(self.ui, "binding", None)
+        delivery = getattr(binding, "delivery", None) if binding is not None else None
+        if (binding is None or delivery is None or binding.failed
+                or binding.committed_sequence <= binding.initial_sequence):
+            return
+        span = binding.committed_sequence - binding.initial_sequence
+        if delivery.cursor.sequence >= binding.committed_sequence:
+            return
+        done = delivery.cursor.sequence - binding.initial_sequence
+        self.ui.status.setText("正在载入会话记录…（%d%%）" % max(0, min(99, 100 * done // span)))
+
     def cancel_task(self, _checked=False):
-        self.run_command("cancel")
+        self.ui.status.setText("正在暂停模型思考…")
+
+        def refused(error):
+            # Stop is a local pause action: a race or stale page must not open a
+            # modal notice that asks the user to make another decision.
+            self.ui.status.setText("停止请求未生效：" + str(error))
+            return False
+
+        self.run_command("cancel", failure=refused)
         self.poll()
 
     def resume_queue(self, _checked=False):

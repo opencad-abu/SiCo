@@ -16,13 +16,16 @@ from ..waveform_metrics import Waveform
 def schedule(model, plan, case):
     spec = model['transition_response']
     from .endpoint_sampling import parameters,augment
-    precision,_,_=parameters(spec)
+    precision,endpoint_step,_=parameters(spec)
     coarse = round(model['step_s']/precision)
     fine = round(spec['fine_step_s']/precision)
     stop = round(plan['analysis']['stop_s']/precision)
     if coarse <= 0 or fine <= 0 or coarse % fine:
         raise ValueError('transition steps must divide on simulator precision')
     ticks = set(range(0, stop+1, coarse)) | {stop}
+    endpoint_events=case['events']
+    if spec.get('endpoint_scope')=='startup':
+        endpoint_events=[e for e in endpoint_events if e['signal']==plan['roles']['supply'] and inputs_at(plan,case,0.)[0]<.1]
     for event in case['events']:
         if spec.get('fine_scope')=='startup_and_control':
             signal=event['signal']
@@ -31,9 +34,17 @@ def schedule(model, plan, case):
         lo = max(0, math.floor((event['start_s']-spec['pre_s'])/spec['fine_step_s']))
         hi = min(stop//fine, math.ceil((event['end_s']+spec['tail_s'])/spec['fine_step_s']))
         ticks.update(i*fine for i in range(lo, hi+1))
-    endpoint_events=case['events']
-    if spec.get('endpoint_scope')=='startup':
-        endpoint_events=[e for e in endpoint_events if e['signal']==plan['roles']['supply'] and inputs_at(plan,case,0.)[0]<.1]
+        # Anchor the event endpoints on the simulator tick grid: a floor at
+        # the onset makes the first rising difference cross the true onset,
+        # and a ceiling at the end makes the last rising difference reach the
+        # clamped plateau, so both finite-difference rates equal the
+        # prescribed slope instead of a grid-absorbed fraction.  Events that
+        # the endpoint augmentation already brackets (exact centre tick plus
+        # sub-picosecond steps) must not receive extra anchors: a lone sub-fs
+        # tick right after the plateau corrupts the tail-rate state machine.
+        if endpoint_step is None or event not in endpoint_events:
+            ticks.add(math.floor(event['start_s']/precision))
+            ticks.add(math.ceil(event['end_s']/precision))
     augment(ticks,spec,endpoint_events,stop)
     if len(ticks) > 200000:
         raise ValueError('transition schedule exceeds 200000 sample budget')

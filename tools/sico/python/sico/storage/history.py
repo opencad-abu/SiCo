@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 from ..core.contracts import identifier
-from ..transport.framing import strict_json
+from cadai.json_values import strict_json
 from .history_reader import (
     SessionReader as SessionReader,
 )

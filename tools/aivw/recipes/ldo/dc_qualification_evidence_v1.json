@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "kind": "dc_qualification_index",
+  "scope": "static_dc_only",
+  "runs": [
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T072336.041824Z-dc-qualification-4e75b9893f3f/manifest.json",
+      "control_sha256": "15ace9c44f1ed1ac06f5036d9b70f8638907d2e356e3f3d83b15b4a011431aea",
+      "audit": {
+        "status": "PASS",
+        "scope": "dc_slice_evidence_recomputed",
+        "run_id": "20260907T072336.041824Z-dc-qualification-4e75b9893f3f",
+        "case_count": 20,
+        "repeat_runs": 2,
+        "candidate_sha256": "b7de6285ea1a5282bf95f6a0b20648ab5d6c265ae3096b09236e7702eef420f6",
+        "max_relative_error": 7.981278912624488e-06,
+        "max_absolute_error_v": 2.0430711501e-05,
+        "full_behavior_qualification": "NOT_ESTABLISHED"
+      }
+    },
+    {
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T072733.697225Z-dc-qualification-4cbc6d500868/manifest.json",
+      "control_sha256": "db7db45c8dbad33b3c71fd754f4411788085e303253cd0d4fa03d32c69963b79",
+      "audit": {
+        "status": "PASS",
+        "scope": "dc_slice_evidence_recomputed",
+        "run_id": "20260907T072733.697225Z-dc-qualification-4cbc6d500868",
+        "case_count": 20,
+        "repeat_runs": 2,
+        "candidate_sha256": "e86777430c424714fb03ce09620094a3434dfc67b7c33f4c3bf3dcc9f6beabd7",
+        "max_relative_error": 2.869333521150496e-05,
+        "max_absolute_error_v": 3.59712456924e-05,
+        "full_behavior_qualification": "NOT_ESTABLISHED"
+      }
+    }
+  ]
+}

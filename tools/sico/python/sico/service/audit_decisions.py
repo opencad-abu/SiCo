@@ -1,9 +1,14 @@
 """Host decision records, answer normalization and confirmed-choice evidence checks."""
 
+import re
 import uuid
 
 from ..core.contracts import NeedsReconcile
+from ..core.review_classes import BLOCKING
+from .display import plain_recommendation
 from .target_identity import decision_key
+
+DESTRUCTIVE_KINDS = frozenset({"circuit_edit", "skill_deletion"})
 
 
 def pdk_record(data, evidence_id, evidence, context, task_id, current, *, normalize_questions):
@@ -12,6 +17,7 @@ def pdk_record(data, evidence_id, evidence, context, task_id, current, *, normal
         "questions": normalize_questions([data["selection_question"]]),
         "recommendation": data.get("recommended_library") or "",
         "rationale": "本次使用的工艺需要用户选择。",
+        "review_class": BLOCKING,
         "context": context.record(), "task_id": task_id,
         "work_id": current["work_id"], "stage_id": current["stage_id"],
         "evidence": [{"id": evidence_id, "digest": evidence["digest"]}],
@@ -26,12 +32,75 @@ def target_record(data, evidence_id, evidence, context, task_id, current, *, nor
         "questions": normalize_questions([data["selection_question"]]),
         "recommendation": "继续完善现有设计",
         "rationale": "当前原理图已有内容，需要确定本次设计范围。",
+        "review_class": BLOCKING,
         "context": context.record(), "task_id": task_id,
         "work_id": current["work_id"], "stage_id": current["stage_id"],
         "evidence": [{"id": evidence_id, "digest": evidence["digest"]}],
         "circuit_target_ref": data["target_ref"],
         "circuit_target_key": decision_key(data)}
     return record
+
+
+def destructive_record(data, evidence_id, evidence, context, task_id, current,
+                       *, normalize_questions):
+    """One blocking host decision for an exact deletion review."""
+    kind = data.get("review_kind")
+    review_digest = data.get("review_digest")
+    question = data.get("selection_question")
+    approval = data.get("approval_label")
+    rejection = data.get("rejection_label")
+    if (kind not in DESTRUCTIVE_KINDS
+            or not isinstance(review_digest, str)
+            or re.fullmatch(r"[a-f0-9]{64}", review_digest) is None
+            or not isinstance(question, dict)
+            or not isinstance(question.get("id"), str)
+            or not isinstance(approval, str) or not approval.strip()
+            or not isinstance(rejection, str) or not rejection.strip()
+            or approval == rejection):
+        raise ValueError("Invalid deletion review")
+    body = data.get("review") if isinstance(data.get("review"), dict) else {}
+    target = body.get("target")
+    return {
+        "id": "a_" + uuid.uuid4().hex,
+        "title": question.get("header") or "删除审阅",
+        "questions": normalize_questions([question]),
+        "recommendation": "",
+        "rationale": "这项操作会删除或重建 Virtuoso 内容，必须由用户明确批准。",
+        "review_class": BLOCKING,
+        "context": context.record(), "task_id": task_id,
+        "work_id": current["work_id"], "stage_id": current["stage_id"],
+        "evidence": [{"id": evidence_id, "digest": evidence["digest"]}],
+        "destructive_kind": kind,
+        "destructive_digest": review_digest,
+        "destructive_answer_id": question["id"],
+        "destructive_approval": approval,
+        "destructive_rejection": rejection,
+        "destructive_target": target if isinstance(target, str) else "",
+    }
+
+
+def confirmed_destructive(audits, task_id, context, kind, review_digest, verify_evidence):
+    """Return missing/pending/rejected/approved for one reviewed deletion."""
+    for row in audits.values():
+        if (row["task_id"] != task_id
+                or row["context"] != context.record()
+                or row.get("destructive_kind") != kind
+                or row.get("destructive_digest") != review_digest):
+            continue
+        if row["status"] in {"pending", "answer_received"}:
+            return "pending"
+        if row["status"] != "answered":
+            continue
+        try:
+            verify_evidence(row["evidence"])
+        except (ValueError, OSError, TypeError, KeyError) as exc:
+            raise NeedsReconcile(
+                "Deletion review evidence changed; no continuation") from exc
+        reply = row["reply"]["answers"][row["destructive_answer_id"]]
+        answer = reply["choice"] or reply["text"]
+        return ("approved" if answer == row["destructive_approval"]
+                else "rejected")
+    return "missing"
 
 
 def normalize_answers(answers, question_rows, pdk_candidates, *, bounded):
@@ -46,17 +115,24 @@ def normalize_answers(answers, question_rows, pdk_candidates, *, bounded):
         choice = bounded(answer["choice"], 200, empty=True)
         text = bounded(answer["text"], 4000, empty=True).strip()
         if choice and choice not in {o["label"] for o in q["options"]}:
-            raise ValueError("所选方案不属于此问题")
+            if (q["id"] != "pdk_library"
+                    or plain_recommendation(choice) not in {
+                        plain_recommendation(o["label"]) for o in q["options"]
+                    }):
+                raise ValueError("所选方案不属于此问题")
+            choice = plain_recommendation(choice)
         if not choice and not text:
             raise ValueError("请选择方案或填写答复")
         normalized[q["id"]] = {"choice": choice, "text": text}
     if pdk_candidates:
         reply = normalized["pdk_library"]
-        selected = reply["choice"] or reply["text"]
+        selected = plain_recommendation(reply["choice"] or reply["text"])
         if (selected not in pdk_candidates
                 or (reply["choice"] and reply["text"] in pdk_candidates
-                    and reply["choice"] != reply["text"])):
+                    and selected != plain_recommendation(reply["text"]))):
             raise ValueError("请选择一个候选 PDK，或填写候选工艺库的精确名称")
+        if reply["choice"]:
+            normalized["pdk_library"]["choice"] = selected
     return normalized
 
 

@@ -4,15 +4,20 @@ from ..core.contracts import identifier
 from ..transport.framing import ProtocolError
 from .service_protocol import exact_fields
 from .service_values import json_view
+from .reconcile_audit import reconcile_caller
+from . import terminal_frontend
 
 COMMANDS = {"resolve_interrupted", "cancel", "resume", "acknowledge_interrupted", "recover_input", "abandon_input",
-            "answer_audit", "elicitation", "steer"}
+            "answer_audit", "elicitation", "steer", "thread_operation", "feature_settings",
+            "configure_features", *terminal_frontend.COMMANDS}
 TASK_COMMANDS = {"cancel", "resume", "acknowledge_interrupted"}
 
 
 def session_command(workspace, control, address, wire, operation, args, kwargs):
-    if operation == "resolve_interrupted":
-        if len(args) != 2 or set(kwargs) != {"expected_task"}:
+    if operation in terminal_frontend.COMMANDS:
+        terminal_frontend.validate(operation, args, kwargs)
+    elif operation == "resolve_interrupted":
+        if len(args) != 2 or not {"expected_task"} <= set(kwargs) <= {"expected_task", "evidence"}:
             raise ProtocolError("Reconciliation requires the original task and call identity")
         if not all(isinstance(v, str) for v in (*args, kwargs["expected_task"])):
             raise ProtocolError("Invalid reconciliation identity")
@@ -48,12 +53,37 @@ def session_command(workspace, control, address, wire, operation, args, kwargs):
         # Preserve the immutable frontend request while normalizing its scope.
         kwargs = dict(kwargs)
         kwargs["scope"] = scope
+    elif operation == "thread_operation":
+        if len(args) != 1 or set(kwargs) != {"scope", "request_id"}:
+            raise ProtocolError("Invalid captured thread operation")
+        if not isinstance(args[0], dict):
+            raise ProtocolError("Thread operation action must be a JSON object")
+        try:
+            identifier(kwargs["request_id"])
+        except ValueError as exc:
+            raise ProtocolError("Invalid thread operation identity") from exc
+        scope = kwargs["scope"]
+        if not isinstance(scope, dict):
+            raise ProtocolError("Thread operation scope must be a JSON object")
+        scope = json_view(scope)
+        exact_fields(scope, {"session_id", "runtime_id", "thread_id", "connection_id",
+                             "task_id", "context"})
+        if not isinstance(scope["context"], dict):
+            raise ProtocolError("Thread operation scope context must be a JSON object")
+        kwargs = dict(kwargs)
+        kwargs["scope"] = scope
+    elif operation == "feature_settings":
+        if args or kwargs:
+            raise ProtocolError("Feature settings read takes no arguments")
+    elif operation == "configure_features":
+        if len(args) != 1 or kwargs or not isinstance(args[0], dict):
+            raise ProtocolError("Feature settings save requires one group map")
 
     def execute(lease):
         controller = workspace.controllers.get(address.session.session_id)
         if controller is None or controller.runtime_id != address.session.runtime_id:
             raise ValueError("会话运行实例已变化")
-        with controller._lock:
+        with controller._lock, reconcile_caller(wire.connection, wire.operation):
             control.require(lease, wire.connection, wire.control)
             if operation in {"recover_input", "abandon_input"}:
                 if controller.recovery is None:
@@ -66,7 +96,15 @@ def session_command(workspace, control, address, wire, operation, args, kwargs):
                 if operation == "resume" and controller.recovery is not None:
                     controller.recovery.release()
                 return getattr(controller, operation)()
-            return getattr(controller, operation)(*args, **kwargs)
+            if operation == "resolve_interrupted":
+                return controller.reconciliation.resolve_interrupted(*args, **kwargs)
+            if operation == "thread_operation":
+                return controller.thread_commands.thread_operation(
+                    args[0], scope=kwargs["scope"], request_id=kwargs["request_id"]
+                )
+            if operation in terminal_frontend.COMMANDS:
+                return terminal_frontend.execute(controller, operation, args, kwargs)
+            return getattr(controller.backend_commands, operation)(*args, **kwargs)
 
     if operation == "steer":
         # Admission is protected by the lease, but the native turn/steer receipt

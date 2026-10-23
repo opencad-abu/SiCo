@@ -12,13 +12,13 @@ from PyQt5.QtWidgets import (
     QHeaderView,
     QSpinBox,
     QSplitter,
-    QStyle,
     QToolButton,
     QVBoxLayout,
     QWidget,
 )
 from cadgui.wheel import install_wheel_forwarding, remove_wheel_forwarding
 from ..model import ClusterSnapshot, HostInfo
+from .glyphs import REFRESH_GLYPH, RELOAD_GLYPH
 from .models import (
     QueueTableModel,
     HostTableModel,
@@ -156,20 +156,24 @@ class ResourcesPanel(QWidget):
         controls.addWidget(self.interval_spin)
         self.refresh_button = QToolButton(host_panel)
         self.refresh_button.setObjectName("refreshButton")
-        self.refresh_button.setIcon(self.style().standardIcon(QStyle.SP_BrowserReload))
+        self.refresh_button.setText(REFRESH_GLYPH)
+        self.refresh_button.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.refresh_button.setToolTip("Refresh now")
         self.refresh_button.setAutoRaise(True)
         controls.addWidget(self.refresh_button)
         self.reload_topology_button = QToolButton(host_panel)
         self.reload_topology_button.setObjectName("reloadTopologyButton")
-        self.reload_topology_button.setIcon(
-            self.style().standardIcon(QStyle.SP_FileDialogDetailedView)
-        )
+        self.reload_topology_button.setText(RELOAD_GLYPH)
+        self.reload_topology_button.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.reload_topology_button.setToolTip(
             "Reload queue, host membership, and capacity topology"
         )
         self.reload_topology_button.setAutoRaise(True)
         controls.addWidget(self.reload_topology_button)
+        for button in (self.refresh_button, self.reload_topology_button):
+            font = button.font()
+            font.setPixelSize(16)
+            button.setFont(font)
         controls.addStretch(1)
         self.host_count_label = QLabel("0 hosts", host_panel)
         self.host_count_label.setObjectName("hostCountLabel")

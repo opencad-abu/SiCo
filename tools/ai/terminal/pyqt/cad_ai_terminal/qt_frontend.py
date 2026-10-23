@@ -74,6 +74,9 @@ def run_frontend(options: LaunchOptions) -> int:
     )
 
     application = QApplication(["sico-ai-terminal"])
+    from cadgui.fonts import install as install_fonts
+
+    install_fonts(application)
     application.setApplicationName("sico-ai-terminal")
     application.setOrganizationName(_logo_text())
     try:

@@ -6,7 +6,12 @@ from contextlib import ExitStack
 from dataclasses import fields
 
 from ..transport.framing import ProtocolError
-from .frontend_assets import detail_record, input_record
+from .frontend_assets import (
+    detail_record,
+    input_record,
+    preview_content_record,
+    preview_index_record,
+)
 from .frontend_session import SessionToken
 from .replay import connection, prepare_preview, prepare_replay
 from .service_protocol import exact_fields
@@ -114,6 +119,7 @@ class FrontendReplay:
     def query(self, wire, operation, params):
         schemas = {"pages": {"cursor", "query"},
                    "detail": {"cursor", "kind", "key", "compact", "parent"},
+                   "preview": {"cursor", "name"},
                    "processes": {"cursor", "keyword", "offset"},
                    "event_detail": {"cursor", "key", "offset"},
                    "chat_page": {"cursor", "before", "after", "end"},
@@ -137,6 +143,10 @@ class FrontendReplay:
             result = source.detail(params["kind"], params["key"], compact=params["compact"],
                                    parent=params["parent"]).result()
             result = detail_record(result)
+        elif operation == "preview":
+            result = source.preview_artifact(params["name"]).result()
+            result = (preview_index_record(result) if not params["name"]
+                      else preview_content_record(result))
         elif operation == "processes":
             result = source.processes(params["keyword"], params["offset"]).result()
         elif operation == "chat_page":

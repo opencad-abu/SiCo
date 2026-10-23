@@ -55,23 +55,23 @@ class TerminalContextMenu:
     ) -> None:
         terminal = self._terminal
         surface = terminal.focusProxy() or terminal
-        new_session = QAction(QIcon.fromTheme("tab-new"), "New Session", surface)
+        new_session = QAction(QIcon.fromTheme("tab-new"), "新建会话", surface)
         new_session.setObjectName("newSessionAction")
         new_session.setShortcut(QKeySequence("Ctrl+Shift+T"))
         new_session.setShortcutContext(Qt.WidgetWithChildrenShortcut)
         first_separator = QAction(surface)
         first_separator.setSeparator(True)
-        copy = QAction(QIcon.fromTheme("edit-copy"), "Copy", surface)
+        copy = QAction(QIcon.fromTheme("edit-copy"), "复制", surface)
         copy.setObjectName("contextCopyAction")
-        paste = QAction(QIcon.fromTheme("edit-paste"), "Paste", surface)
+        paste = QAction(QIcon.fromTheme("edit-paste"), "粘贴", surface)
         paste.setObjectName("contextPasteAction")
-        select_all = QAction(QIcon.fromTheme("edit-select-all"), "Select All", surface)
+        select_all = QAction(QIcon.fromTheme("edit-select-all"), "全选", surface)
         select_all.setObjectName("selectAllAction")
         select_all.setShortcut(QKeySequence("Ctrl+Shift+A"))
         select_all.setShortcutContext(Qt.WidgetWithChildrenShortcut)
         second_separator = QAction(surface)
         second_separator.setSeparator(True)
-        find = QAction(QIcon.fromTheme("edit-find"), "Find", surface)
+        find = QAction(QIcon.fromTheme("edit-find"), "查找", surface)
         find.setObjectName("contextFindAction")
         actions = (
             new_session,

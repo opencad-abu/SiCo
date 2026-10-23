@@ -27,7 +27,9 @@ let((sicoHome sicoSourceEntry sicoContextEntry)
       error("SiCo bootstrap context is missing: %s\n" sicoContextEntry))
     ; 先准备 CIW 基础菜单，供工具的菜单注册回调使用。
     ciwMenuInit()
-    unless(loadContext(sicoContextEntry t)
-      error("SiCo bootstrap context did not load: %s\n" sicoContextEntry))
-    unless(callInitProc("sicoBoot")
+    unless(isContextLoaded("sicoBoot")
+      unless(loadContext(sicoContextEntry t)
+        error("SiCo bootstrap context did not load: %s\n" sicoContextEntry)))
+    ; 统一入口会保留成功的 context，并允许失败初始化重试。
+    unless(SICO_loadRuntime()
       error("SiCo bootstrap initialization failed\n"))))

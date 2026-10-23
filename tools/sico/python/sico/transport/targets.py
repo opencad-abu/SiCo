@@ -50,10 +50,14 @@ def submission(message):
 
     if (
         not isinstance(message, dict)
-        or set(message) != {"kind", "id", "text", "context"}
+        or set(message) - {"ask_sequence"} != {"kind", "id", "text", "context"}
         or message["kind"] != "submit"
     ):
         raise ValueError("Invalid quick input envelope")
+    if "ask_sequence" in message:
+        from ..core.ask_queue import ask_sequence
+
+        ask_sequence(message["ask_sequence"])
     identifier(message["id"])
     text = message["text"]
     if not isinstance(text, str) or not text.strip() or len(text) > 16000 or "\0" in text:

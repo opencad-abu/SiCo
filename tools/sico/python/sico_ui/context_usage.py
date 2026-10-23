@@ -6,7 +6,7 @@ from PyQt5.QtCore import QRectF, Qt
 from PyQt5.QtGui import QColor, QFont, QPainter, QPen
 from PyQt5.QtWidgets import QWidget
 
-from .theme import ACCENT, BACKGROUND, ERROR, MUTED, SELECTION
+from .theme import active_palette
 
 
 class ContextUsage(QWidget):
@@ -35,19 +35,20 @@ class ContextUsage(QWidget):
             self.update()
 
     def paintEvent(self, event):
+        palette = active_palette()
         painter = QPainter(self)
-        painter.fillRect(self.rect(), QColor(BACKGROUND))
-        painter.setPen(QPen(QColor(ACCENT), 1))
+        painter.fillRect(self.rect(), QColor(palette.background))
+        painter.setPen(QPen(QColor(palette.accent), 1))
         painter.drawRect(self.rect().adjusted(0, 0, -1, -1))
         painter.setRenderHint(QPainter.Antialiasing)
         ring = QRectF(self.rect()).adjusted(4.5, 4.5, -4.5, -4.5)
-        painter.setPen(QPen(QColor(SELECTION), 2.5))
+        painter.setPen(QPen(QColor(palette.selection), 2.5))
         painter.drawEllipse(ring)
-        label, color = "—", MUTED
+        label, color = "—", palette.muted
         if self._usage is not None:
             used, capacity = self._usage
             ratio = min(1.0, used / capacity)
-            color = ERROR if ratio >= 0.9 else ACCENT
+            color = palette.error if ratio >= 0.9 else palette.accent
             painter.setPen(QPen(QColor(color), 2.5, Qt.SolidLine, Qt.RoundCap))
             painter.drawArc(ring, 90 * 16, -round(ratio * 360 * 16))
             label = str(round(ratio * 100)) + "%"

@@ -18,6 +18,7 @@ if __package__:
     from .check_private_import_boundaries import check as check_private
     from .skill_load_audit import check_load_ownership
     from .skill_style import analyze as skill_style_findings
+    from .skill_loader import MANIFEST as SOURCE_MANIFEST, check as check_source_loader
 else:
     from a_philosophy_baseline import check_baseline
     from a_philosophy_compat import check_compatibility, compatibility_candidates, load_compatibility
@@ -28,6 +29,7 @@ else:
     from check_private_import_boundaries import check as check_private
     from skill_load_audit import check_load_ownership
     from skill_style import analyze as skill_style_findings
+    from skill_loader import MANIFEST as SOURCE_MANIFEST, check as check_source_loader
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -62,9 +64,9 @@ def run(root=ROOT, *, base_ref="HEAD"):
         for row in rows if row.path.endswith((".il", ".ils", ".il.src"))
         for finding in skill_style_findings(root / row.path)
     ]
-    load_errors, load_ownership = check_load_ownership(
-        root, [row.path for row in rows], load("skill_load_ownership.json")
-    )
+    loaders = load("skill_load_ownership.json")
+    load_errors, load_ownership = check_load_ownership(root, [row.path for row in rows], loaders)
+    shared_errors = check_source_loader(root) if loaders.get("source_contract") else []
     errors += (
         compat_errors
         + size_errors
@@ -74,6 +76,7 @@ def run(root=ROOT, *, base_ref="HEAD"):
         + vendor_errors
         + style_errors
         + load_errors
+        + shared_errors
     )
     candidates = compatibility_candidates(root, rows, compatibility["compatibility"])
     review_errors, review_warnings, candidates = review_candidates(
@@ -121,6 +124,7 @@ def run(root=ROOT, *, base_ref="HEAD"):
             "vendor": vendor_errors,
             "skill_style": style_errors,
             "skill_load": load_errors,
+            "source_loader_contract": shared_errors,
         },
     }
 

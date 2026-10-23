@@ -32,42 +32,48 @@ _SEARCH["readiness"] = _enum("ready_for_design", "partial")
 TIERS = ("interface", "all")
 
 
-def _tool(name, description, properties, required=()):
-    return {
+def _tool(name, description, properties, required=(), *, help_text=None, mutating=False):
+    """One definition; ``help_text`` is on-demand detail and stays off the wire."""
+    row = {
         "name": name, "description": description,
         "inputSchema": {"type": "object", "properties": properties,
                         "required": list(required), "additionalProperties": False},
-        "annotations": {"readOnlyHint": True, "destructiveHint": False,
-                        "idempotentHint": False, "openWorldHint": False},
+        "annotations": {"readOnlyHint": not mutating, "destructiveHint": False,
+                        "idempotentHint": mutating, "openWorldHint": False},
     }
+    if help_text:
+        row["help"] = help_text
+    return row
 
 
 PDK_TOOLS = [
-    _tool("get_pdk_preparation", "Inspect PDK data availability before circuit design. Read library "
-          "bindings without scanning devices. analogLib/basic use built-in data without configuration. "
-          "For process libraries prefer SICO_PDK_DATA, then the tool-managed private "
-          "workspace data. Supply target_library for an explicit existing design library. "
-          "Report pdk_path_changed notices and reuse intact relocated data without asking permission or collecting. "
-          "Use its live technology binding directly; ask only for an unbound/new design whose "
-          "process is undetermined. Existing instance/CDF queries do not require this tool.",
+    _tool("init_pdk", "Initialize the selected or named PDK library in this Virtuoso "
+          "session (loads libInit.il once; idempotent). Call after choosing the process or "
+          "before design/simulation work. Failures block design tools; paths are never guessed.",
+          {"library": _text()},
+          mutating=True),
+    _tool("get_pdk_preparation", "Inspect PDK data availability before circuit design without scanning "
+          "devices. analogLib/basic use built-in data. Prefer SICO_PDK_DATA, then workspace data. "
+          "Supply target_library to bind an existing design library; a relocated path reuses data "
+          "with a pdk_path_changed notice. Technology binding wins; ask only when undetermined.",
           {"view": _SEARCH["view"], "target_library": _text(),
            "include_base_libraries": {"type": "boolean", "default": False}}),
-    _tool("prepare_pdk_data", "Prepare a separate PDK collection subtask before device search/design. "
-          "analogLib/basic always use the built-in database, including refresh. "
-          "Reuse qualified standard publications without collection. A capture-ready result is not design readiness. "
-          "Use a separate generation workflow to complete and publish missing data. "
-          "Reuse complete validated metadata first; a changed PDK installation path produces a notice "
-          "and reuses the data with current paths, without collection. Otherwise automatically collect the directory, "
-          "full parameters, ports, geometry, simulator and callback metadata into the tool-managed private workspace store. "
-          "Missing/stale configured data does not require CAD support. Return a collection_ref to advance in "
-          "bounded batches. With multiple PDKs, library and choice_confirmed require an actual user "
-          "choice unless the target library already has a live technology binding. "
-          "This does not select foreground/background. "
-          "Interrupted read-only collection resumes automatically with bounded retries. "
-          "refresh restarts collection; respect user cancellation.",
+    _tool("prepare_pdk_data", "Start a separate PDK collection subtask before device search. "
+          "analogLib/basic use built-in data. Reuse qualified publications and validated metadata "
+          "first; a changed PDK path reuses relocated data with a notice. Otherwise collect "
+          "directory, parameters, ports, geometry, simulator and callback metadata into the "
+          "workspace store; return collection_ref for bounded batches. With multiple PDKs, "
+          "library and choice_confirmed need a real user choice unless a live technology "
+          "binding exists.",
           {"library": _text(), "view": _SEARCH["view"], "target_library": _text(),
            "choice_confirmed": {"type": "boolean", "default": False},
-           "refresh": {"type": "boolean", "default": False}}),
+           "refresh": {"type": "boolean", "default": False}},
+          help_text=(
+              "A capture-ready result is not design readiness; publishing uses the generation "
+              "workflow. Missing or stale configured data needs no CAD support. Interrupted "
+              "read-only collection resumes automatically with bounded retries; refresh restarts "
+              "it and user cancellation is respected. This tool does not choose "
+              "foreground/background; advance_pdk_collection carries the bounded batches.")),
     _tool("advance_pdk_collection", "Advance one bounded batch of the separate PDK data subtask. "
           "Repeat with the returned next_batch only while collecting; ready permits device search. "
           "Reusing a completed batch token returns progress without replaying it. Failure or "
@@ -79,35 +85,27 @@ PDK_TOOLS = [
     _tool("cancel_pdk_collection", "Cancel the retained PDK collection subtask without publishing "
           "partial data or changing the circuit task's presentation mode. Does not stop Virtuoso.",
           {"collection_ref": _REF}, ("collection_ref",)),
-    _tool("search_pdk_devices", "Legacy session-adapter metadata discovery; results do not grant design usage. Use get_pdk_data for standard candidate selection. "
-          "Search a prepared PDK directory without scanning libraries. "
-          "First get_pdk_preparation and prepare_pdk_data; finish the collection subtask if needed. "
-          "Missing data automatically starts a collection subtask; follow next_action until ready. "
-          "An ambiguous PDK requires the user's process selection before device scans. "
-          "Search summaries by exact library/cell/view/parameter/kind/family or substring query. "
-          "Once the database is prepared, category (PDK registry), tier (parameter tier, alone or "
-          "with parameter), range (parameter with a published min/max) and readiness filters use the "
-          "collected device index. Only devices included by the PDK inclusion rule are listed; an "
-          "excluded cell answers not_indexed with its reason. Repeat normalized filters and "
-          "snapshot_ref with each cursor. Classification stays unknown without sourced project "
-          "annotations. Does not run callbacks or modify OA.",
+    _tool("search_pdk_devices", "Legacy session-adapter discovery; results grant no design usage "
+          "(use get_pdk_data). Search a prepared PDK directory; missing data starts a collection "
+          "subtask, then follow next_action. An ambiguous PDK needs the user's process selection. "
+          "Match exact fields or a substring; category/tier/range/readiness filters use the "
+          "collected index. Only PDK-included cells are listed; excluded cells answer not_indexed. "
+          "Repeat filters and snapshot_ref per cursor; no callbacks run.",
           {**_SEARCH, **_COMMON}),
-    _tool("get_pdk_device", "Read selected effective cell CDF, ports, callback metadata, simulation "
-          "interfaces and local Symbol pin figures. Served from the prepared workspace database "
-          "(cache_status describes the source) so agents do not need a live device read; live capture "
-          "is the fallback and revalidate_pdk_bindings is the live check. tier=interface (default) "
-          "returns the design interface layer only, tier=all returns every CDF parameter. The first "
-          "detail read freezes a separate revision; later pages use that revision. No expressions or "
-          "callbacks are evaluated.",
+    _tool("get_pdk_device", "Read selected cell CDF, ports, callback metadata, simulation "
+          "interfaces and Symbol pin figures from the prepared database (cache_status names the "
+          "source); live capture is a fallback. tier=interface (default) returns the design layer, "
+          "tier=all every CDF parameter. First detail read freezes a revision later pages reuse; "
+          "no expressions or callbacks run.",
           {**_COMMON, "device_ref": _REF,
            "sections": {"type": "array", "items": {"enum": list(SECTIONS)},
                         "minItems": 1, "maxItems": len(SECTIONS), "uniqueItems": True},
            "tier": {**_enum(*TIERS), "default": "interface"}},
           ("snapshot_ref", "device_ref")),
     _tool("revalidate_pdk_bindings", "Recollect each selected device from the live session and compare "
-          "session generation, library resolution, master identity, CDF, ports, geometry and simInfo. "
-          "Requires a prior detail read. valid means collected metadata matches, not permission or "
-          "simulation readiness; unverified dependencies are reported. Never uses cached live data.",
+          "generation, library, master identity, CDF, ports, geometry and simInfo. Requires a "
+          "prior detail read. valid means metadata matches, not permission or simulation "
+          "readiness; unverified dependencies are reported; never cached.",
           {"snapshot_ref": _REF, "device_refs": {"type": "array", "items": _REF,
                                                 "minItems": 1, "maxItems": 20,
                                                 "uniqueItems": True}},

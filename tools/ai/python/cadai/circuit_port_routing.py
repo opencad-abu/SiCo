@@ -4,45 +4,34 @@ from .circuit_geometry_schema import bounds, transform_box
 from .circuit_pin_style import placed_pin_orientation
 
 
-def _unwrap(value):
-    if isinstance(value, dict):
-        if "status" in value and "value" in value:
-            return _unwrap(value["value"])
-        return {k: _unwrap(v) for k, v in value.items()}
-    if isinstance(value, list):
-        return [_unwrap(v) for v in value]
-    return value
-
-
 def stub_port(wire, layout):
     return ("port" in wire["endpoint"]
             and (layout.get("routing") or {}).get("ports", "stub") == "stub")
 
 
 def port_obstacles(plan, layout, body, wires):
-    """Reserve the actual builtin pin polygon plus its intentional stub.
+    """Reserve the published builtin pin bounds plus its intentional stub.
 
-    Basic pin masters are the same pinned builtin data used by the creator.
-    Keep these boxes for every net, including same-net device routing: an
-    intentional port stub must not accidentally become an internal trunk.
+    The basic pin bounds come from the bundled standard package (the confirmed
+    symbol bbox, equal to the master polygon outline).  Keep these boxes for
+    every net, including same-net device routing: an intentional port stub must
+    not accidentally become an internal trunk.
     """
     from .pdk_builtin import BuiltinPdk
 
     ports = {p["name"]: p for p in plan["spec"]["ports"]}
     result = {}
-    devices = None
+    bounds_by_cell = {}
     for index, wire in enumerate(wires):
         if not stub_port(wire, layout):
             continue
-        if devices is None:
-            devices = BuiltinPdk().bundle("basic")["payload"]["devices"]
         name = wire["endpoint"]["port"]
         port, position = ports[name], layout["ports"][name]
         cell = {"input": "ipin", "output": "opin", "inputOutput": "iopin"}[port["direction"]]
-        geometry = _unwrap(devices[cell]["database"]["geometry"])
-        points = geometry["items"][0]["raw"]["points"]
+        if cell not in bounds_by_cell:
+            bounds_by_cell[cell] = BuiltinPdk().symbol("basic", cell)["bbox"]
         orientation = placed_pin_orientation(position, body, port["direction"])
-        box = transform_box(bounds(points), orientation, position["xy"])
+        box = transform_box(bounds_by_cell[cell], orientation, position["xy"])
         result[("port", index)] = bounds([*box, *wire["points"]])
     return result
 

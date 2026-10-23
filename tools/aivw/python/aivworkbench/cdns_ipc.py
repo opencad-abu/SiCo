@@ -16,7 +16,7 @@ import stat
 import subprocess
 from typing import Any, Mapping, Sequence
 
-from .agent.runtime_info import production_python
+from .runtime_info import production_python
 from sicoentry import compiled_module, native_entry
 
 

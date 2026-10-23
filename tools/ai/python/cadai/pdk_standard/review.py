@@ -2,7 +2,7 @@
 
 from .jsonio import encode, fail
 
-MAX_REVIEW_BYTES = 10000
+MAX_REVIEW_BYTES = 2 * 1024 * 1024
 
 
 def validate_scope(scope):
@@ -11,11 +11,11 @@ def validate_scope(scope):
         files = "; ".join(
             f"{row['file']}: {len(encode(row))} bytes" for row in scope["changes"]
         )
-        fail(f"PDK review is {size} bytes; limit is {MAX_REVIEW_BYTES} bytes "
-             f"of UTF-8 formatted before/after differences, not patch input. Files: {files}. "
-             "Split by file, then by parameter group within a large CDF file. "
-             "Prepare, confirm and apply each batch, then read the new revision before the next batch. "
-             "No source validation or publication was performed.", "pdk_data_limit")
+        fail(f"PDK review is {size} bytes; storage limit is {MAX_REVIEW_BYTES} "
+             f"bytes of UTF-8 formatted before/after differences, not patch input. "
+             f"Files: {files}. The GUI paginates rendered reviews; this storage "
+             "limit only protects the retained evidence. No source validation or "
+             "publication was performed.", "pdk_data_limit")
 
 
 def question(scope, ref):

@@ -20,6 +20,9 @@ sico-ai = "cadai.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "project_memory: exercise the production project-memory default",
+]
 
 [tool.ruff]
 line-length = 100

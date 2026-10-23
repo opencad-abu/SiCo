@@ -25,13 +25,8 @@ def load_settings(path):
 
 
 def runtime_settings(row):
-    required = {'virtuoso', 'context', 'context_sha256', 'version', 'libraries'}
-    if not isinstance(row, dict) or not required <= set(row) <= required | {'xvfb'}:
-        raise ProtocolError('Invalid background runtime configuration')
-    try:
-        return BackgroundRuntime(**row)
-    except (TypeError, ValueError) as exc:
-        raise ProtocolError('Invalid background runtime values') from exc
+    """Adapt validated captured values to an executable service runtime."""
+    return BackgroundRuntime.from_record(row)
 
 
 def capture_settings(environment):

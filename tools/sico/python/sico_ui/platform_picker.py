@@ -63,8 +63,8 @@ class PlatformPicker(SiDialog):
         for column in range(4):
             self.instances.resizeColumnToContents(column)
         self.message.setText("请选择要关联的 CDNS-IC 实例。" if rows else
-            "未发现可连接实例。请在当前工程启动 Virtuoso，并加载站点的 SiCo 集成后刷新。"
-            "跨节点还需同用户 SSH 免密登录、已验证主机密钥和共享工程路径；SiCo 不会自动启动 IC 平台。")
+            "未发现可连接实例。可先通过“通信 → 启动 CDNS-IC…”启动一个已加载 SiCo "
+            "集成的 Virtuoso 再刷新；跨节点还需同用户 SSH 免密登录、已验证主机密钥和共享工程路径。")
 
     def _failed(self, error):
         self.refresh_button.setEnabled(True)

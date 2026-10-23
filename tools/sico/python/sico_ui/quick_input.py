@@ -19,7 +19,7 @@ class QuickInput(QObject):
             window.info_app.error("会话目标未注册", str(exc))
             return False
 
-        window.run_command("attach_targets", controller=controller, failure=failed)
+        window.actions.run_command("attach_targets", controller=controller, failure=failed)
         self.new = window.session_action("新会话", self.new_session, "Ctrl+N")
         self.new.setToolTip("在当前窗口新建会话页面；Ask 根据来源设计的绑定选择会话")
         self.new.setIcon(plus_icon(ACTION_GLYPH_SIZE))
@@ -50,7 +50,7 @@ class QuickInput(QObject):
 
         def notice_failure(accepted):
             if notification.get("sent") is False:
-                self.window.update_host_notices("failed")
+                self.window.actions.update_host_notices("failed")
                 text = (
                     "快速输入已接收，但宿主未收到确认；请在本窗口查看任务，勿重复提交。"
                     if accepted else "快速输入未接收，且宿主回执发送失败。"
@@ -70,7 +70,7 @@ class QuickInput(QObject):
                 if result.session == controller:
                     self.window.binding.poll()
                 else:
-                    self.window.activate_session(result.session.session_id)
+                    self.window.page.activate_session(result.session.session_id)
             self.window.restore()
             notice_failure(True)
 

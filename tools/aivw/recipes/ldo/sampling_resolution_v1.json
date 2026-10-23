@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "kind": "public-sampling-resolution-diagnostic",
+  "steps_s": [2e-8, 5e-9, 2e-9, 1e-9],
+  "pre_event_s": 1e-6,
+  "post_event_s": 2e-5,
+  "targets": {
+    "MASTER": "20260908T001838.659739Z-recipe-run-d98265d71c14",
+    "AON": "20260908T002018.129961Z-recipe-run-658ff7e7d809"
+  },
+  "event_signals": ["VDD", "EN"],
+  "dataset": "public_calibration",
+  "qualification": "NOT_ESTABLISHED"
+}

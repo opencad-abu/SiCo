@@ -1,0 +1,682 @@
+{
+  "absolute_floors": {
+    "approval": "PROPOSED_NOT_APPROVED",
+    "current_a": 1e-06,
+    "timing_s": 1e-07,
+    "voltage_v": 0.001
+  },
+  "baseline": {
+    "full_m3_complete": false,
+    "path": "/zone.disk/ssd1/path/to/sico-src/ai-verification-workbench/docs/IMPLEMENTATION_PLAN_LDO_MVP.md",
+    "sha256": "07a811aefeee349ecefa00b5b0c0026925697be8d70f3f395002049cac2748a2",
+    "stage": "M3"
+  },
+  "candidate_finally_frozen": false,
+  "checkpoint_version": 9,
+  "commit_or_push": "NOT_PERFORMED",
+  "completed_scope": [
+    "MASTER_refined_public_snapshot_102_to_107us_startup_tail_diagnostic_PASS",
+    "17_Xcelium_cases_and_Python_SV_parity",
+    "16_non_target_cases_preserved"
+  ],
+  "evidence_audit": {
+    "artifact_counts": {
+      "control": 1,
+      "payload": 1
+    },
+    "artifacts_verified": true,
+    "control_core_sha256": "f7293906ebc326a5e0d74dc5360f05c986b2455ddadae05d155ec6e903bcee7c",
+    "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T073515.097948Z-startup-tail-audit-6059000be57a/manifest.json",
+    "control_manifest_sha256": "295f9766eb1070c3e07ec7cf2533acbc8d44e0b0fcae9a5fcd28c8977afc9454",
+    "inputs": [
+      {
+        "artifact_counts": {
+          "control": 1,
+          "payload": 348
+        },
+        "artifacts_verified": true,
+        "control_core_sha256": "336a83404bca1e23c43aa8e647626cbaaf2e37963ca4f2a35b5fa8c88d4d44ce",
+        "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T071343.935190Z-startup-fidelity-31a1fcffd657/manifest.json",
+        "control_manifest_sha256": "0e8753958b458a0822590b133fc0a3e8ab75683d64ccc70fc619517eb896dc18",
+        "label": "initial_fidelity",
+        "locator_counts": {
+          "control": 0,
+          "payload": 0
+        },
+        "payload_core_sha256": "5b6b44b51656cba7292b632e533913d59ebd6c99d38794308375f2ba71de2417",
+        "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.startup_fidelity/runs/20260908T071343.935190Z-startup-fidelity-31a1fcffd657/payload-manifest.json",
+        "payload_manifest_sha256": "121de25b60c87d0a0cd5f577263f5604675b836527ce48f19ea12acdc28e1e5e",
+        "request_digest": "31a1fcffd6576a7bcb07cc5d567249b64a193d6ec41820ecc5adf3bd72013a5a",
+        "result": {
+          "cases": [
+            {
+              "csv_sha256": "cc292411993bddbfefebb70c79b4c5e12d8d89937a9f709eebe3bb7af27f7137",
+              "id": "moderate_replay",
+              "samples": 830,
+              "spec": {
+                "errpreset": "moderate",
+                "iabstol": 1e-12,
+                "id": "moderate_replay",
+                "maxstep": 2e-07,
+                "ramp_s": 2e-06,
+                "reltol": 0.001,
+                "vabstol": 1e-06
+              }
+            },
+            {
+              "csv_sha256": "64fdaff33b01f740a6690c09db394a83acf3e4e17ab95f2aed52f5a3ee9f7b7c",
+              "id": "conservative_5ns",
+              "samples": 25940,
+              "spec": {
+                "errpreset": "conservative",
+                "iabstol": 1e-14,
+                "id": "conservative_5ns",
+                "maxstep": 5e-09,
+                "ramp_s": 2e-06,
+                "reltol": 1e-05,
+                "vabstol": 1e-08
+              }
+            },
+            {
+              "csv_sha256": "d8049e853e401b26a64a3e653628aa0e0886e5a32f5488f8bf24ea3709abb6b5",
+              "id": "conservative_2ns",
+              "samples": 64472,
+              "spec": {
+                "errpreset": "conservative",
+                "iabstol": 1e-15,
+                "id": "conservative_2ns",
+                "maxstep": 2e-09,
+                "ramp_s": 2e-06,
+                "reltol": 1e-06,
+                "vabstol": 1e-09
+              }
+            },
+            {
+              "csv_sha256": "d8049e853e401b26a64a3e653628aa0e0886e5a32f5488f8bf24ea3709abb6b5",
+              "id": "conservative_2ns_repeat",
+              "samples": 64472,
+              "spec": {
+                "errpreset": "conservative",
+                "iabstol": 1e-15,
+                "id": "conservative_2ns_repeat",
+                "maxstep": 2e-09,
+                "ramp_s": 2e-06,
+                "reltol": 1e-06,
+                "vabstol": 1e-09
+              }
+            },
+            {
+              "csv_sha256": "c69e640a934f0995e204663cb09d152ffbdcf2654c06f9b0da123a14c2e498c2",
+              "id": "startup_1us",
+              "samples": 65528,
+              "spec": {
+                "errpreset": "conservative",
+                "iabstol": 1e-15,
+                "id": "startup_1us",
+                "maxstep": 2e-09,
+                "ramp_s": 1e-06,
+                "reltol": 1e-06,
+                "vabstol": 1e-09
+              }
+            },
+            {
+              "csv_sha256": "7607d4a2df1ae0ac4ef120de4bae03a9b0b32d37d28ea32cbca0a9b9f63398e4",
+              "id": "startup_4us",
+              "samples": 63762,
+              "spec": {
+                "errpreset": "conservative",
+                "iabstol": 1e-15,
+                "id": "startup_4us",
+                "maxstep": 2e-09,
+                "ramp_s": 4e-06,
+                "reltol": 1e-06,
+                "vabstol": 1e-09
+              }
+            }
+          ],
+          "comparisons": [
+            {
+              "alignment": "physical_time_union_no_shift",
+              "candidate": "moderate_replay",
+              "diagnostic_status": "FAIL_CORRELATION",
+              "events": [],
+              "product_status": "NOT_EVALUATED",
+              "reference": "original",
+              "status": "BLOCKED_CONTRACT",
+              "waveforms": {
+                "current": {
+                  "diagnostic_status": "FAIL_TOLERANCE",
+                  "failed_samples": 142,
+                  "max_absolute_error": 0.0001508222671315041,
+                  "samples": 288,
+                  "unit": "A",
+                  "worst_time_s": 0.0001022883930453274
+                },
+                "voltage": {
+                  "diagnostic_status": "PASS",
+                  "failed_samples": 0,
+                  "max_absolute_error": 0.003571282544977,
+                  "samples": 288,
+                  "unit": "V",
+                  "worst_time_s": 0.0001022753189093152
+                }
+              }
+            },
+            {
+              "alignment": "physical_time_union_no_shift",
+              "candidate": "conservative_5ns",
+              "diagnostic_status": "FAIL_CORRELATION",
+              "events": [],
+              "product_status": "NOT_EVALUATED",
+              "reference": "moderate_replay",
+              "status": "BLOCKED_CONTRACT",
+              "waveforms": {
+                "current": {
+                  "diagnostic_status": "FAIL_TOLERANCE",
+                  "failed_samples": 491,
+                  "max_absolute_error": 0.0003419728466893024,
+                  "samples": 1521,
+                  "unit": "A",
+                  "worst_time_s": 0.0001021590962019338
+                },
+                "voltage": {
+                  "diagnostic_status": "PASS",
+                  "failed_samples": 0,
+                  "max_absolute_error": 0.0086073621097397,
+                  "samples": 1521,
+                  "unit": "V",
+                  "worst_time_s": 0.0001021758413322245
+                }
+              }
+            },
+            {
+              "alignment": "physical_time_union_no_shift",
+              "candidate": "conservative_2ns",
+              "diagnostic_status": "FAIL_CORRELATION",
+              "events": [],
+              "product_status": "NOT_EVALUATED",
+              "reference": "conservative_5ns",
+              "status": "BLOCKED_CONTRACT",
+              "waveforms": {
+                "current": {
+                  "diagnostic_status": "FAIL_TOLERANCE",
+                  "failed_samples": 291,
+                  "max_absolute_error": 4.01827581723219e-05,
+                  "samples": 4715,
+                  "unit": "A",
+                  "worst_time_s": 0.0001024814434654053
+                },
+                "voltage": {
+                  "diagnostic_status": "PASS",
+                  "failed_samples": 0,
+                  "max_absolute_error": 0.0009996915155668,
+                  "samples": 4715,
+                  "unit": "V",
+                  "worst_time_s": 0.000102470682138496
+                }
+              }
+            },
+            {
+              "alignment": "physical_time_union_no_shift",
+              "candidate": "conservative_2ns_repeat",
+              "diagnostic_status": "PASS",
+              "events": [],
+              "product_status": "NOT_EVALUATED",
+              "reference": "conservative_2ns",
+              "status": "BLOCKED_CONTRACT",
+              "waveforms": {
+                "current": {
+                  "diagnostic_status": "PASS",
+                  "failed_samples": 0,
+                  "max_absolute_error": 0.0,
+                  "samples": 3336,
+                  "unit": "A",
+                  "worst_time_s": 0.000102
+                },
+                "voltage": {
+                  "diagnostic_status": "PASS",
+                  "failed_samples": 0,
+                  "max_absolute_error": 0.0,
+                  "samples": 3336,
+                  "unit": "V",
+                  "worst_time_s": 0.000102
+                }
+              }
+            }
+          ],
+          "holdout_evaluated": false,
+          "interpretation": "numerical_sensitivity_of_public_snapshot_not_candidate_qualification",
+          "live_source_rechecked": false,
+          "qualification": "NOT_ESTABLISHED",
+          "repeat_csv_equal": true,
+          "scope": "immutable_public_circuit_snapshot_numerical_fidelity_not_live_source_qualification",
+          "status": "PUBLIC_FIDELITY_DIAGNOSTICS_RECORDED",
+          "window_s": [
+            0.000102,
+            0.000107
+          ]
+        },
+        "run_id": "20260908T071343.935190Z-startup-fidelity-31a1fcffd657",
+        "run_status": "PUBLIC_FIDELITY_DIAGNOSTICS_RECORDED",
+        "status": "PASS",
+        "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.startup_fidelity/runs/20260908T071343.935190Z-startup-fidelity-31a1fcffd657/summary.json",
+        "summary_sha256": "ec77121ab3f219be05747bcf5140a86250621c1e1c76bb470ba5670a98aa285a"
+      },
+      {
+        "artifact_counts": {
+          "control": 1,
+          "payload": 175
+        },
+        "artifacts_verified": true,
+        "control_core_sha256": "cf599ff5b1ce21f07e6e19bde7bcf76e4667f215006c4eeb7a26de2a19e43104",
+        "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T071715.472246Z-startup-fidelity-4300c9d5e1a8/manifest.json",
+        "control_manifest_sha256": "970271baa078df63e3b592cd2d208f41567f7175cdee8f0ddf38e3f6d2feb689",
+        "label": "failed_fidelity",
+        "locator_counts": {
+          "control": 0,
+          "payload": 0
+        },
+        "payload_core_sha256": "b71065ef19a61aa3e7477e7a16fa4884934c409b2845482f145ceb6c138b79d6",
+        "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.startup_fidelity/runs/20260908T071715.472246Z-startup-fidelity-4300c9d5e1a8/payload-manifest.json",
+        "payload_manifest_sha256": "59c61fce18f25dc0e83fc40358d5eac101a903c411d999515c5328e2048b2693",
+        "request_digest": "4300c9d5e1a88223a507d8eb5d833f7ea3eed1be8f96efedf141b2c8b5e91018",
+        "result": {
+          "holdout_evaluated": false,
+          "qualification": "NOT_ESTABLISHED",
+          "status": "FAIL_EXECUTION"
+        },
+        "run_id": "20260908T071715.472246Z-startup-fidelity-4300c9d5e1a8",
+        "run_status": "FAIL_EXECUTION",
+        "status": "PASS",
+        "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.startup_fidelity/runs/20260908T071715.472246Z-startup-fidelity-4300c9d5e1a8/summary.json",
+        "summary_sha256": "9f737d10e93498f3481c9811a6978a7fccc430a84186e9bf34744ff715f90f4e"
+      },
+      {
+        "artifact_counts": {
+          "control": 1,
+          "payload": 180
+        },
+        "artifacts_verified": true,
+        "control_core_sha256": "5fdf0adc4df5b1e839ac0416885d18a72adadea80116aed7fb8307042910c48e",
+        "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T072213.856175Z-startup-fidelity-44efac112d9c/manifest.json",
+        "control_manifest_sha256": "ca2d460e04c9f944beb968458c0bf1ed48700c7486e52a5aa4df04cda3d529a0",
+        "label": "converged_fidelity",
+        "locator_counts": {
+          "control": 0,
+          "payload": 0
+        },
+        "payload_core_sha256": "17c2b7c328395a0e8a2475ad9dbc29393037dcfe827b7b7afd04dd0c0489e145",
+        "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.startup_fidelity/runs/20260908T072213.856175Z-startup-fidelity-44efac112d9c/payload-manifest.json",
+        "payload_manifest_sha256": "f0f95003f9babf3467471fad9dae91bb528649afa484509feaa3bedf9a90946f",
+        "request_digest": "44efac112d9c4f1d1e27ef59bbad15b9383301ad61da482b7009a2b4d1b90528",
+        "result": {
+          "cases": [
+            {
+              "csv_sha256": "83f0b358020f29791dc02237d918989ff559df609c8e79b5281d12b783564aba",
+              "id": "tight_1ns",
+              "samples": 129493,
+              "spec": {
+                "errpreset": "conservative",
+                "iabstol": 1e-16,
+                "id": "tight_1ns",
+                "maxstep": 1e-09,
+                "ramp_s": 2e-06,
+                "reltol": 1e-07,
+                "vabstol": 1e-10
+              }
+            },
+            {
+              "csv_sha256": "59e46be2e2595beb9d7d118c823896863fa48bacc726fe85a35ae2f504ca5b5e",
+              "id": "tight_075ns",
+              "samples": 170363,
+              "spec": {
+                "errpreset": "conservative",
+                "iabstol": 1e-16,
+                "id": "tight_075ns",
+                "maxstep": 7.5e-10,
+                "ramp_s": 2e-06,
+                "reltol": 1e-07,
+                "vabstol": 1e-10
+              }
+            },
+            {
+              "csv_sha256": "4e0214775563a06fd8dc9bb3d1f734e85f37ce399e1dabbfd80ab11a6607e145",
+              "id": "trap_1ns",
+              "samples": 128070,
+              "spec": {
+                "errpreset": "conservative",
+                "iabstol": 1e-16,
+                "id": "trap_1ns",
+                "maxstep": 1e-09,
+                "method": "trap",
+                "ramp_s": 2e-06,
+                "reltol": 1e-07,
+                "vabstol": 1e-10
+              }
+            }
+          ],
+          "comparisons": [
+            {
+              "alignment": "physical_time_union_no_shift",
+              "candidate": "tight_1ns",
+              "diagnostic_status": "FAIL_CORRELATION",
+              "events": [],
+              "product_status": "NOT_EVALUATED",
+              "reference": "original",
+              "status": "BLOCKED_CONTRACT",
+              "waveforms": {
+                "current": {
+                  "diagnostic_status": "FAIL_TOLERANCE",
+                  "failed_samples": 2154,
+                  "max_absolute_error": 0.000373068678210974,
+                  "samples": 7089,
+                  "unit": "A",
+                  "worst_time_s": 0.0001021391758917753
+                },
+                "voltage": {
+                  "diagnostic_status": "PASS",
+                  "failed_samples": 0,
+                  "max_absolute_error": 0.009099425931984,
+                  "samples": 7089,
+                  "unit": "V",
+                  "worst_time_s": 0.00010214893952598
+                }
+              }
+            },
+            {
+              "alignment": "physical_time_union_no_shift",
+              "candidate": "tight_075ns",
+              "diagnostic_status": "PASS",
+              "events": [],
+              "product_status": "NOT_EVALUATED",
+              "reference": "tight_1ns",
+              "status": "BLOCKED_CONTRACT",
+              "waveforms": {
+                "current": {
+                  "diagnostic_status": "PASS",
+                  "failed_samples": 0,
+                  "max_absolute_error": 3.472054663803e-07,
+                  "samples": 15134,
+                  "unit": "A",
+                  "worst_time_s": 0.0001020016491074872
+                },
+                "voltage": {
+                  "diagnostic_status": "PASS",
+                  "failed_samples": 0,
+                  "max_absolute_error": 6.9466511953e-06,
+                  "samples": 15134,
+                  "unit": "V",
+                  "worst_time_s": 0.0001020121608199978
+                }
+              }
+            },
+            {
+              "alignment": "physical_time_union_no_shift",
+              "candidate": "trap_1ns",
+              "diagnostic_status": "PASS",
+              "events": [],
+              "product_status": "NOT_EVALUATED",
+              "reference": "tight_075ns",
+              "status": "BLOCKED_CONTRACT",
+              "waveforms": {
+                "current": {
+                  "diagnostic_status": "PASS",
+                  "failed_samples": 0,
+                  "max_absolute_error": 1.4920235298933e-06,
+                  "samples": 14476,
+                  "unit": "A",
+                  "worst_time_s": 0.0001025236200014982
+                },
+                "voltage": {
+                  "diagnostic_status": "PASS",
+                  "failed_samples": 0,
+                  "max_absolute_error": 3.71513393988e-05,
+                  "samples": 14476,
+                  "unit": "V",
+                  "worst_time_s": 0.0001025130924066594
+                }
+              }
+            }
+          ],
+          "holdout_evaluated": false,
+          "interpretation": "numerical_sensitivity_of_public_snapshot_not_candidate_qualification",
+          "live_source_rechecked": false,
+          "qualification": "NOT_ESTABLISHED",
+          "repeat_csv_equal": null,
+          "scope": "immutable_public_circuit_snapshot_numerical_fidelity_not_live_source_qualification",
+          "status": "PUBLIC_FIDELITY_DIAGNOSTICS_RECORDED",
+          "window_s": [
+            0.000102,
+            0.000107
+          ]
+        },
+        "run_id": "20260908T072213.856175Z-startup-fidelity-44efac112d9c",
+        "run_status": "PUBLIC_FIDELITY_DIAGNOSTICS_RECORDED",
+        "status": "PASS",
+        "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.startup_fidelity/runs/20260908T072213.856175Z-startup-fidelity-44efac112d9c/summary.json",
+        "summary_sha256": "0157c6f27d1dcff50605ed2eb2579ff1ee04b2505510f1ed6a5963c95ea4855c"
+      },
+      {
+        "artifact_counts": {
+          "control": 1,
+          "payload": 724
+        },
+        "artifacts_verified": true,
+        "control_core_sha256": "d8270b2b558576ff020d7119c9065c53c8c8d3ca6b745a2267a6fff52e78454e",
+        "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T072631.360029Z-tail-refit-38489c846027/manifest.json",
+        "control_manifest_sha256": "f92b1cc9627702f534b211fae13190686e6939cbbd5129d56d0ce0de3bb26857",
+        "label": "refit_v1",
+        "locator_counts": {
+          "control": 0,
+          "payload": 0
+        },
+        "payload_core_sha256": "2b7177ad9b279d1a2f874ff5df5532c97ff9dfa19894c51cbac5ea49ab58878a",
+        "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.tail_refit/runs/20260908T072631.360029Z-tail-refit-38489c846027/payload-manifest.json",
+        "payload_manifest_sha256": "62765b48ff5ac31282be83ea8af43c9e9b9c349371fb933cde9ecdb1245d2f23",
+        "request_digest": "38489c8460277d5f9f21524a3067d42cad2b3a6444a51ed3493526a9e6c1fde9",
+        "result": {
+          "candidate_sha256": "a67d75ae1c9251decb0441c4cbe93abd7c5fb23754a80655ea95aa88cecfdfab",
+          "formal_reference_promoted": false,
+          "historical_public_count": 17,
+          "historical_public_passed": 16,
+          "holdout_evaluated": false,
+          "implementation_parity": "PASS",
+          "pole_count": 64,
+          "qualification": "NOT_ESTABLISHED",
+          "refined_tail_diagnostic": "FAIL",
+          "scope": "fast_startup_tail_refit_on_numerically_checked_public_snapshot; original_matrix_retained; no_reference_promotion",
+          "status": "BLOCKED_CONTRACT",
+          "unchanged_slow_slew_coefficients": true
+        },
+        "run_id": "20260908T072631.360029Z-tail-refit-38489c846027",
+        "run_status": "BLOCKED_CONTRACT",
+        "status": "PASS",
+        "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.tail_refit/runs/20260908T072631.360029Z-tail-refit-38489c846027/summary.json",
+        "summary_sha256": "2541bda1e345b6ed7c555658dcc3e8c7c98b9c7e52173aeac8870e2a8e8de306"
+      },
+      {
+        "artifact_counts": {
+          "control": 1,
+          "payload": 725
+        },
+        "artifacts_verified": true,
+        "control_core_sha256": "e1af28f09b466214e45a5b06b2c7a55fe9bca0266f874dfab23b859e14723f8b",
+        "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T073136.127521Z-tail-refit-38d7249223ca/manifest.json",
+        "control_manifest_sha256": "aa7cc95fdf0a2bec8c7357cd5c5227185e6b11e899d82f7984440c2ce6cb94fc",
+        "label": "refit",
+        "locator_counts": {
+          "control": 0,
+          "payload": 0
+        },
+        "payload_core_sha256": "6198d8f06f46b12f2789dc94104b911a0c2f5b0506831d5b6e9bd90d4dba8299",
+        "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.tail_refit/runs/20260908T073136.127521Z-tail-refit-38d7249223ca/payload-manifest.json",
+        "payload_manifest_sha256": "8e54408468939674c9248cf6e8823cc5317633e84e1354250792d135cfa1dcaf",
+        "request_digest": "38d7249223cae17c83881509892bcf358436910be8891797266d9f82eed7a812",
+        "result": {
+          "candidate_sha256": "723d519fc8392711ddd5d45bd3801baa9356590fa626efafb9473b187c1e7372",
+          "formal_reference_promoted": false,
+          "historical_public_count": 17,
+          "historical_public_passed": 16,
+          "holdout_evaluated": false,
+          "implementation_parity": "PASS",
+          "pole_count": 64,
+          "qualification": "NOT_ESTABLISHED",
+          "refined_tail_diagnostic": "PASS",
+          "scope": "fast_startup_tail_refit_on_numerically_checked_public_snapshot; original_matrix_retained; no_reference_promotion",
+          "status": "BLOCKED_CONTRACT",
+          "unchanged_slow_slew_coefficients": true
+        },
+        "run_id": "20260908T073136.127521Z-tail-refit-38d7249223ca",
+        "run_status": "BLOCKED_CONTRACT",
+        "status": "PASS",
+        "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.tail_refit/runs/20260908T073136.127521Z-tail-refit-38d7249223ca/summary.json",
+        "summary_sha256": "4545c6cbee11bed975a1c08be4b59ec9104b02c5674152ff3e53b24a2e647e42"
+      }
+    ],
+    "locator_counts": {
+      "control": 0,
+      "payload": 0
+    },
+    "payload_core_sha256": "bea881082ce304a24445a603d1f858352ac4f59bd625380f7bef16b8a19f7998",
+    "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/aivw.startup_tail.audit/runs/20260908T073515.097948Z-startup-tail-audit-6059000be57a/payload-manifest.json",
+    "payload_manifest_sha256": "5cf10f255fbe091d9877232887f1890941515b89a27adb4f1c07ed3b1fedcc3d",
+    "request_digest": "6059000be57ab82dcb5f3afdff6217f198e9bce2e4e29da9a45365c5ef61103c",
+    "run_id": "20260908T073515.097948Z-startup-tail-audit-6059000be57a",
+    "run_status": "PASS_EVIDENCE_AUDIT",
+    "status": "PASS",
+    "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/aivw.startup_tail.audit/runs/20260908T073515.097948Z-startup-tail-audit-6059000be57a/summary.json",
+    "summary_sha256": "1ce162c04a8473477bcc1e9a07b4f1107b507d74549ff56c6e82bc6b29087b50"
+  },
+  "formal_status": "BLOCKED_CONTRACT",
+  "historical_public_candidates": {
+    "AON": {
+      "artifact_counts": {
+        "control": 1,
+        "payload": 1017
+      },
+      "artifacts_verified": true,
+      "candidate_sha256": "c519a85910751534a6d9a1149f0b1bf2de22241b57f5cbd7e7fc49d6c8be8e20",
+      "case_count": 24,
+      "control_core_sha256": "2f079a8241272f2b0bbaaaf974f5b0c828d28bfe85f5ab128a4436a157635980",
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T052604.979276Z-transition-response-b112f98886ac/manifest.json",
+      "control_manifest_sha256": "d500038d6f1f9ef2a8a79ab0bac8370d786e6e888e770a187723540f7ea18d4e",
+      "label": "AON_v2",
+      "locator_counts": {
+        "control": 0,
+        "payload": 0
+      },
+      "parity": "PASS",
+      "passed_cases": 24,
+      "payload_core_sha256": "0861e887d7bac01d909a086621792575588ea2dc8e5d146fd3dbdeba82df6d43",
+      "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.transition_response/runs/20260908T052604.979276Z-transition-response-b112f98886ac/payload-manifest.json",
+      "payload_manifest_sha256": "47630fffe6c86598408b3a817689bb63aba8fc7a7419ff8d6d0f65d886259eae",
+      "regressions_from_v6": [],
+      "remaining_failures": [],
+      "request_digest": "b112f98886ac2e57e44f14e66421922b04d975d3859fff38934f8d90479e7e15",
+      "run_id": "20260908T052604.979276Z-transition-response-b112f98886ac",
+      "run_status": "BLOCKED_CONTRACT",
+      "status": "PASS",
+      "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.transition_response/runs/20260908T052604.979276Z-transition-response-b112f98886ac/summary.json",
+      "summary_sha256": "b31f11387f698278200f43fe940136db460ce472f2696d4faef458d13827d279"
+    },
+    "MASTER": {
+      "artifact_counts": {
+        "control": 1,
+        "payload": 723
+      },
+      "artifacts_verified": true,
+      "candidate_sha256": "dbf7fb3ce777688239714bc5a2140794c78e3114df9932cbca6553d8a5a72b06",
+      "case_count": 17,
+      "control_core_sha256": "c4fcd51d9e52672c7d24616f88cc04f597029dec5c79df43f04264bf7a684740",
+      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T053045.674467Z-transition-response-1bd9b6cc1850/manifest.json",
+      "control_manifest_sha256": "2d9711bec0e78681732be0d65ed9c3971287a9f8e6b6b434259a107f1b31f793",
+      "label": "MASTER_v3",
+      "locator_counts": {
+        "control": 0,
+        "payload": 0
+      },
+      "parity": "PASS",
+      "passed_cases": 16,
+      "payload_core_sha256": "f170341a24329418f381dc99a870dea590e900c0ed5d3eb63d7b541e26779475",
+      "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.transition_response/runs/20260908T053045.674467Z-transition-response-1bd9b6cc1850/payload-manifest.json",
+      "payload_manifest_sha256": "024aeaf5f1e48b72ca8f1e0426e8987a9ca1cf57b19a801bbcd0835688179ece",
+      "regressions_from_v6": [],
+      "remaining_failures": [
+        "startup_rate_0"
+      ],
+      "request_digest": "1bd9b6cc18504e6f76e0e70717fcb7da461ab9b34c2962c6a612d3d48ce22fc9",
+      "run_id": "20260908T053045.674467Z-transition-response-1bd9b6cc1850",
+      "run_status": "BLOCKED_CONTRACT",
+      "status": "PASS",
+      "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.transition_response/runs/20260908T053045.674467Z-transition-response-1bd9b6cc1850/summary.json",
+      "summary_sha256": "f23c48e715a7b956007bcaac4acb95055d2f62c5dcac327d0349bf121d53c35c"
+    }
+  },
+  "historical_results_are_numerically_unqualified": true,
+  "holdout_evaluated": false,
+  "kind": "ldo-dynamic-checkpoint",
+  "latest_tail_window_candidate": {
+    "artifact_counts": {
+      "control": 1,
+      "payload": 725
+    },
+    "artifacts_verified": true,
+    "control_core_sha256": "e1af28f09b466214e45a5b06b2c7a55fe9bca0266f874dfab23b859e14723f8b",
+    "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260908T073136.127521Z-tail-refit-38d7249223ca/manifest.json",
+    "control_manifest_sha256": "aa7cc95fdf0a2bec8c7357cd5c5227185e6b11e899d82f7984440c2ce6cb94fc",
+    "label": "refit",
+    "locator_counts": {
+      "control": 0,
+      "payload": 0
+    },
+    "payload_core_sha256": "6198d8f06f46b12f2789dc94104b911a0c2f5b0506831d5b6e9bd90d4dba8299",
+    "payload_manifest": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.tail_refit/runs/20260908T073136.127521Z-tail-refit-38d7249223ca/payload-manifest.json",
+    "payload_manifest_sha256": "8e54408468939674c9248cf6e8823cc5317633e84e1354250792d135cfa1dcaf",
+    "request_digest": "38d7249223cae17c83881509892bcf358436910be8891797266d9f82eed7a812",
+    "result": {
+      "candidate_sha256": "723d519fc8392711ddd5d45bd3801baa9356590fa626efafb9473b187c1e7372",
+      "formal_reference_promoted": false,
+      "historical_public_count": 17,
+      "historical_public_passed": 16,
+      "holdout_evaluated": false,
+      "implementation_parity": "PASS",
+      "pole_count": 64,
+      "qualification": "NOT_ESTABLISHED",
+      "refined_tail_diagnostic": "PASS",
+      "scope": "fast_startup_tail_refit_on_numerically_checked_public_snapshot; original_matrix_retained; no_reference_promotion",
+      "status": "BLOCKED_CONTRACT",
+      "unchanged_slow_slew_coefficients": true
+    },
+    "run_id": "20260908T073136.127521Z-tail-refit-38d7249223ca",
+    "run_status": "BLOCKED_CONTRACT",
+    "status": "PASS",
+    "summary": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.tail_refit/runs/20260908T073136.127521Z-tail-refit-38d7249223ca/summary.json",
+    "summary_sha256": "4545c6cbee11bed975a1c08be4b59ec9104b02c5674152ff3e53b24a2e647e42"
+  },
+  "previous_checkpoint": {
+    "path": "/zone.disk/ssd1/path/to/sico-src/ai-verification-workbench/recipes/ldo/dynamic_checkpoint_evidence_v8.json",
+    "sha256": "f9b06e69ec931f02d0cc55f8fce8a3a92a764339516eb3c52ec2222adad1526e"
+  },
+  "progress_document": {
+    "path": "/zone.disk/ssd1/path/to/sico-src/ai-verification-workbench/docs/LDO_STARTUP_TAIL_FIDELITY_PROGRESS.md",
+    "sha256": "2ee3f34add57a1072a895bbb42a2aca8470eab4765816b61bd3d6cc7a7424fe2"
+  },
+  "publication": "NOT_PERFORMED",
+  "qualification": "NOT_ESTABLISHED",
+  "reference_promoted": false,
+  "remaining": [
+    "version_and_live_source_recheck_complete_public_characterization_with_numerical_fidelity_for_both_LDOs",
+    "full_matrix_correlation_against_refined_reference_before_freeze",
+    "absolute_floor_contract_approval",
+    "actual_model_provider_qualification",
+    "private_evaluator_capability_isolation",
+    "final_candidate_freeze_and_two_hidden_repeats_after_admission",
+    "candidate_bound_AMS_config_and_system_verification"
+  ],
+  "schema_version": 1,
+  "source_oa_modified": false,
+  "tests": {
+    "compile_recipe_json_whitespace": "PASS",
+    "full_aivw_passed": 682
+  }
+}

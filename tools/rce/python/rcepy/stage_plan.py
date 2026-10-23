@@ -72,7 +72,7 @@ def build_stages(
     if "query" in enabled:
         stages.append(_query_stage(cfg, ctx))
     if "extract" in enabled:
-        if cfg.is_xrc:
+        if cfg.is_calibre_pex:
             stages.extend(_xrc_stages(cfg, ctx))
         else:
             stages.append(build_extract_stage(cfg, ctx, publications, defaults=defaults))

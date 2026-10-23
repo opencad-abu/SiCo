@@ -275,6 +275,6 @@ class ElicitationActions:
                 window.status.setText("答复已提交，等待交付")
                 window.binding.poll()
 
-        window.run_command("elicitation", row["id"], controller=controller, scope=scope,
+        window.actions.run_command("elicitation", row["id"], controller=controller, scope=scope,
                            response=result, reply_id=uuid.uuid4().hex, success=done, failure=failed,
                            settled=lambda _result, _error: self.pending.discard(key))

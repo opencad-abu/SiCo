@@ -95,6 +95,7 @@ _FLOW_ALLOWED_PATHS = {
         lvs.recognize_gates lvs.custom_svrf_command extract.tool extract.tech_name
         extract.tech_dir extract.corner_scope extract.corner extract.corners
         extract.temperature extract.corner_temperatures extract.rc_type
+        extract.remove_floating_nets
         extract.top_cell_source extract.name_source extract.output_type
         extract.start_rve extract.view.kind extract.view.name
         extract.view.library extract.view.cell
@@ -177,7 +178,7 @@ _FLOW_ENUM_VALUES = {
             {"Project Directory", "Current Directory", "Customize Directory"}
         ),
         "lvs.tool": frozenset({"Calibre"}),
-        "extract.tool": frozenset({"StarRC", "QRC", "CalXRC"}),
+        "extract.tool": frozenset({"StarRC", "QRC", "CalXRC", "CalXACT"}),
         "lvs.recognize_gates": frozenset({"NONE", "ALL", "SIMPLE"}),
         "extract.corner_scope": frozenset(
             {"Single Corner", "Multiple Corners"}

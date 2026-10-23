@@ -1,4 +1,4 @@
-"""Independent Linux worker launcher, deadlines and retained cleanup evidence."""
+"""Independent worker supervision with compatibility exports for process identity."""
 import os
 import signal
 import subprocess
@@ -7,12 +7,10 @@ from pathlib import Path
 
 from sicoprocess import enable_subreaper, reap_descendants
 
+# Compat: retire identity exports after supported consumers use their read-only owner.
+from ..process_identity import boot_id, process_identity
+
 PROTOCOL = 'cad_ai_background_watchdog.v1'
-
-
-def process_identity(pid):
-    fields = Path('/proc', str(pid), 'stat').read_text().rsplit(')', 1)[1].split()
-    return dict(pid=pid, start=fields[19], group=int(fields[2]), state=fields[0])
 
 
 def process_alive(identity):
@@ -21,10 +19,6 @@ def process_alive(identity):
         return actual['start'] == identity['start'] and actual['state'] != 'Z'
     except (OSError, KeyError, ValueError, IndexError):
         return False
-
-
-def boot_id():
-    return Path('/proc/sys/kernel/random/boot_id').read_text().strip()
 
 
 def wake_guardian(identity):

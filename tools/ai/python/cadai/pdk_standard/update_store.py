@@ -33,7 +33,7 @@ class Reviews:
         self.root = project_directory(workspace, "ai/pdk-confirmations")
 
     def path(self, ref, suffix=""):
-        if not isinstance(ref, str) or not re.fullmatch(r"pdk-update:[0-9a-f]{32}", ref):
+        if not isinstance(ref, str) or not re.fullmatch(r"pdk-(?:update|baseline):[0-9a-f]{32}", ref):
             fail("Invalid update reference", "pdk_update_unavailable")
         return self.root / (ref.split(":")[1] + suffix + ".json")
 

@@ -6,6 +6,7 @@ class PdkArgumentError(ValueError):
 
 
 class PdkUnavailable(RuntimeError):
-    def __init__(self, code, message):
+    def __init__(self, code, message, data=None):
         super().__init__(message)
         self.code = code
+        self.data = data

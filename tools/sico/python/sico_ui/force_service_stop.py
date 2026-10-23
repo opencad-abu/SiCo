@@ -24,8 +24,8 @@ class ForceServiceStop(QObject):
             self.dialog.raise_()
             self.dialog.activateWindow()
             return
-        dialog = SiConfirm("强制停止 Agent Service",
-                           "强制停止当前工程的 Agent Service？\n\n"
+        dialog = SiConfirm("强制停止智能体服务",
+                           "强制停止当前工程的智能体服务？\n\n"
                            "此工程的所有会话都会断开，正在处理的任务可能中断；其他工程不受影响。\n"
                            "会话记录和待核对证据会保留，重新打开 SiCo 可启动服务；请求不会自动重发。\n"
                            "已派发到 Virtuoso 或 LSF 的操作可能继续执行，结果仍需核对。",
@@ -47,7 +47,7 @@ class ForceServiceStop(QObject):
             return
         self.pending = True
         self.begin()
-        self.window.statusBar().showMessage("正在强制停止 Agent Service…")
+        self.window.statusBar().showMessage("正在强制停止智能体服务…")
         try:
             self.receipt.watch(self.window.api.force_stop_service(), self.stopped, self.failed)
         except (ValueError, OSError, RuntimeError) as exc:

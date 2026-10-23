@@ -3,7 +3,12 @@
 unless(boundp('sicoNativeTargets) sicoNativeTargets=makeTable("sicoNativeTargets" nil))
 unless(boundp('sicoNativeCounter) sicoNativeCounter=0)
 
-procedure(sicoBindingRevision() "20260921.sico.binding.v1")
+procedure(sicoBindingRevision() "20261020.sico.binding.v2")
+
+procedure(sicoBindingSamePath(first second)
+  if(and(stringp(first) stringp(second) strlen(first)>0 strlen(second)>0) then
+    simplifyFilename(first)==simplifyFilename(second)
+  else nil))
 
 procedure(sicoNativeRequest(anrCid anrLine)
   prog((anrFields anrTail anrBinding anrProtected anrError
@@ -23,7 +28,7 @@ procedure(sicoNativeRequest(anrCid anrLine)
         car(sicoNativeIdentity)!="" cadr(sicoNativeIdentity)!=""
         caddr(sicoNativeIdentity)==anrBinding['instanceId]
         nth(3 sicoNativeIdentity)==anrBinding['generation]
-        nth(4 sicoNativeIdentity)==anrBinding['cwd]
+        sicoBindingSamePath(nth(4 sicoNativeIdentity) anrBinding['cwd])
         nth(6 sicoNativeIdentity)==car(anrFields)
         listp(nth(7 sicoNativeIdentity)))
         anrError=t))
@@ -135,11 +140,12 @@ procedure(sicoNativePoll()
     foreach(anlKey anlKeys
       anlRow=sicoNativeTargets[anlKey]
       when(anlRow
+        errset(progn(
         if(or(anlRow['closed] !anlRow['ref] !sicoSessionLive(anlRow['cid])) then
           remove(anlKey sicoNativeTargets)
         else
-          unless(aiWindowResolve(anlRow['ref])
-            sicoNativeGone(anlRow['ref] "window_closed_or_changed"))))))
+          ; Resolve owns permanent retirement. Unknown observations retain the row.
+          aiWindowResolveState(anlRow['ref]))) nil))))
   hiRegTimer("sicoNativePoll()" 10))
 
 procedure(sicoInstallNativeBindings()

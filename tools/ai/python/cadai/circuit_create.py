@@ -25,28 +25,19 @@ GEOMETRY_ARGS = {
 CREATE_TOOLS = [
     tool(
         "inspect_circuit_target",
-        "Inspect the exact intended schematic, including unsaved contents in the captured editor. "
-        "An existing empty view can be reused. Existing content requires the user's decision to "
-        "continue, replace (with backup), or use another target. Retain target_ref for "
-        "preparation; changed content invalidates it. Inspect the entry schematic before "
-        "allocating a new target.",
+        "Read-only inspection of the exact schematic, including unsaved editor contents. Retain "
+        "target_ref for write preparation; changed content invalidates it. Inspection itself "
+        "never asks about existing content.",
         {"target": TARGET, "task_ref": REF, "request_id": REQUEST},
         ("target", "task_ref", "request_id"),
     ),
     tool(
         "prepare_circuit_creation",
-        "Recompute a generic geometry plan and validate its exact "
-        "selected masters, CDF and pin geometry in the current session. Retain a task-bound "
-        "prepare_ref without creating OA data. A design-unit TB requires its DUT symbol first: "
-        "inspect/reuse it, or "
-        "create, save and verify the missing symbol before preparation. Never copy or flatten "
-        "the DUT schematic into the TB. Requires static symbols, supported scalar "
-        "parameters and the standard 0.0625 schematic grid. CDF callbacks/hooks require an "
-        "installed device support validated automatically in the current session. "
-        "Prefer binding_refs from bind_pdk_device to reuse complete bindings and geometry. "
-        "Never ask users for internal registration or data references. "
-        "Does not discover or classify PDKs. Supply template_use for a template-backed plan. "
-        "Reuse identical request_id after unknown status.",
+        "Validate selected masters, CDF, pins and geometry without OA writes. A TB requires a "
+        "saved DUT symbol; never flatten it. Use static symbols, scalar params and the 0.0625 "
+        "grid. Prefer binding_refs from bind_pdk_device. An external nonempty target returns one "
+        "target decision here; current-task retained targets continue automatically. Retain "
+        "prepare_ref/request_id after unknown status.",
         {
             **GEOMETRY_ARGS,
             "spec": SELECTED_SPEC,
@@ -62,22 +53,19 @@ CREATE_TOOLS = [
     ),
     tool(
         "create_circuit_from_plan",
-        "Create or populate the inspected schematic using a retained prepare_ref. "
-        "Revalidate live dependencies and exact target contents. Evaluate built-in CDF callbacks "
-        "for all instances before opening the destination for writing; reject conflicting "
-        "requested values. Reuse evaluated parameters without repeating those callbacks, then "
-        "create instances/pins/stubs/notes, "
-        "schCheck, verify connectivity/parameters, save and reopen for readback. Foreground "
-        "windows remain open. Existing content requires an evidence-bound decision; replacement "
-        "saves a backup first. Identical request_id returns retained status "
-        "without repeating writes, including after partial failure. The final report includes "
-        "svg_preview with a workspace SVG path and checksum; SVG source stays outside model "
-        "context; native Cadence expressions "
-        "may remain as text. Preview export failure does not invalidate saved readback. "
-        "Does not create Maestro.",
+        "Create or populate the inspected schematic using a retained prepare_ref; revalidate live "
+        "dependencies and exact target contents. Evaluate built-in CDF callbacks for all instances "
+        "before writing and reject conflicting values; then create, check, verify and save for "
+        "readback. Existing content needs an evidence-bound decision; replacement saves a backup. "
+        "Identical request_id returns retained status without repeating writes, including after "
+        "partial failure. The report includes an svg_preview path+checksum.",
         {"prepare_ref": REF, "geometry_plan_digest": DIGEST, "request_id": REQUEST},
         ("prepare_ref", "geometry_plan_digest", "request_id"),
         True,
+        help_text=(
+            "Foreground windows remain open. SVG source stays outside model context and native "
+            "Cadence expressions may remain as text. Preview export failure does not invalidate "
+            "saved readback. Does not create Maestro."),
     ),
     tool(
         "inspect_created_circuit",
@@ -89,9 +77,9 @@ CREATE_TOOLS = [
     ),
     tool(
         "release_created_circuit",
-        "Detach a completed creation record; keep foreground window. "
-        "Failed or modified background references are retained. Does not save, delete or close "
-        "user windows. Released records remain available for idempotent status retrieval.",
+        "Detach a completed creation record; keep the foreground window. Failed/modified "
+        "background references are retained. Does not save, delete or close user windows; "
+        "released records stay retrievable.",
         {"circuit_ref": REF},
         ("circuit_ref",),
         True,
@@ -116,6 +104,16 @@ binding_sources(next(t["inputSchema"] for t in CREATE_TOOLS
 
 def payload(args, workspace=None):
     preview = preview_circuit(args["spec"], args["bindings"])
+    floating = [
+        row["net"] for row in preview["plan"]["warnings"]
+        if row["code"] == "single_endpoint_net"
+    ]
+    if floating:
+        raise CircuitSpecError(
+            "Nets with only one endpoint would fail schCheck: " + ", ".join(floating)
+            + ". Add a port whose name exactly equals the net name, or connect the net "
+            "to another instance or port before creation."
+        )
     optional = {"template_use": args["template_use"]} if "template_use" in args else {}
     result = preview_geometry(
         **{k: args[k] for k in GEOMETRY_ARGS}, **optional, workspace=workspace
@@ -310,8 +308,6 @@ def _call_create(name, args, client, workspace, pdk_bindings):
     if not ok:
         return decode_skill_result(response, transport_ok=False)
     ok, result = decode_skill_result(response)
-    if name == "inspect_circuit_target" and ok:
-        result = target_decision(result)
     if name == "create_circuit_from_plan" and result.get("code") == "pdk_validation_required":
         guard = result["pdk_guard"]
         require_service(pdk_bindings).validate_execute(guard)

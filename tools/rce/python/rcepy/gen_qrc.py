@@ -17,13 +17,14 @@ from .oa_view import (
 from .qrc_cells import qrc_cell_options
 from .qrc_commands import qrc_extract_commands, qrc_lines
 from .qrc_options import (
+    qrc_floating_net_option,
     qrc_filter_cap,
     qrc_filter_res,
     qrc_parasitic_info_options,
     qrc_pin_order_file,
 )
 from .qrc_outputs import qrc_output_publications as qrc_output_publications
-from .qrc_outputs import qrc_output_target
+from .qrc_outputs import qrc_output_target, qrc_per_corner_output
 from .qrc_technology import extract_tech_dirs, qrc_technology_options
 from .textutil import clean_lines, q, write_text
 
@@ -128,8 +129,13 @@ def generate_qrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | Non
         disable_instances = (
             f"-disable_instances {'true' if remove_instances else 'false'}"
         )
+    output_multi_value_rc = ""
+    if netlist_output and qrc_per_corner_output(cfg, output_type):
+        # Quantus defaults to one multi-value netlist; per-corner files need false.
+        output_multi_value_rc = "-output_multi_value_rc false"
     filter_c = qrc_filter_cap(cfg)
     filter_r = qrc_filter_res(cfg)
+    floating_net_option = qrc_floating_net_option(cfg)
     lvs_data = "pvs" if cfg.lvs_tool.upper() == "PVS" else "calibre"
 
     input_db_options = [
@@ -151,6 +157,7 @@ def generate_qrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | Non
         output_hierarchy_delimiter if netlist_output else "",
         *parasitic_info_options,
         disable_instances,
+        output_multi_value_rc,
         pin_control,
         *output_db_extra,
     ]
@@ -163,6 +170,7 @@ def generate_qrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | Non
         output_file,
         filter_c,
         filter_r,
+        floating_net_option,
         output_name_space,
         cell_options,
         baseline,

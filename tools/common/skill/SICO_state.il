@@ -1,7 +1,7 @@
 ; SKILL delegates state selection, activation admission and permissions to Python.
 ; Source installs use the development adapter; runtime installs require its ELF.
 unless(and(boundp('sicoStateVersion)
-           sicoStateVersion=="20260924.sico.state.v4")
+           sicoStateVersion=="20261020.sico.state.v5")
 
 procedure(SICO_stateInitialize()
   unless(boundp('sicoStateLaunchDirectory)
@@ -27,7 +27,9 @@ procedure(SICO_stateQuote(value)
 procedure(SICO_stateCommand(scope)
   prog((product entry python pythonRoot invocation command libraryPath)
     product=SICO_installationRoot()
-    python=SICO_environmentValue("SICO_PYTHON" list("CAD_PYTHON"))
+    python=SICO_installedPython(product)
+    unless(python
+      python=SICO_environmentValue("SICO_PYTHON" list("CAD_PYTHON")))
     unless(python
       pythonRoot=or(SICO_environmentValue("SICO_PYTHON_ROOT" list("CAD_PYTHON_ROOT"))
                     "/software/pkgs/python/3.9.13")
@@ -107,6 +109,6 @@ procedure(SICO_stateLaunchDirectory()
 procedure(SICO_stateEnvironment(@optional (scope "project"))
   cadddr(SICO_stateResponse(scope)))
 
-procedure(SICO_stateRevision() "20260924.sico.state.v4")
-sicoStateVersion="20260924.sico.state.v4"
+procedure(SICO_stateRevision() "20261020.sico.state.v5")
+sicoStateVersion="20261020.sico.state.v5"
 )

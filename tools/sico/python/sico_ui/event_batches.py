@@ -4,7 +4,7 @@ import time
 from dataclasses import dataclass
 
 from sico.service.event_display import BATCH_BYTES, BATCH_EVENTS, coalesce
-from sico.service.event_stream import DISPLAY_CONTRACT
+from sico.core.display_batch import DISPLAY_CONTRACT
 
 from .receipts import completed_result
 

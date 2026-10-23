@@ -1,15 +1,17 @@
-"""Explicit bounded wire representation for verified historical input assets."""
+"""Explicit bounded wire representation for preview and historical input assets."""
 
 import base64
 
 from ..storage.input_assets import MAX_ASSET
 from ..transport.framing import ProtocolError
 from .frontend_codec import PAYLOAD_BYTES, digest
+from .preview_catalog import PreviewContent, PreviewEntry, PreviewIndex
 from .published import freeze
 from .service_protocol import exact_fields
 from .service_values import integer
 
 ASSET_RESULT_BYTES = PAYLOAD_BYTES + (MAX_ASSET + 2) // 3 * 4
+PREVIEW_ENTRY_FIELDS = ("name", "size", "mtime", "sha256", "target", "registered", "notice")
 
 
 def result_budget(operation):
@@ -61,3 +63,40 @@ def detail_value(value):
     if not isinstance(images, (tuple, list)) or len(images) > 1:
         raise ProtocolError("Invalid detail image inventory")
     return freeze(dict(value, images=[asset_value(row) for row in images]))
+
+
+def preview_index_record(value):
+    """The viewer index carries names and checksums, never image bytes or paths."""
+    rows = tuple({field: getattr(row, field) for field in PREVIEW_ENTRY_FIELDS}
+                 for row in value.rows)
+    return dict(rows=rows, truncated=value.truncated, notice=value.notice)
+
+
+def preview_index_value(row):
+    """Rebuild one listed preview index; the UI gets no filesystem paths."""
+    exact_fields(row, {"rows", "truncated", "notice"})
+    if not isinstance(row["rows"], (tuple, list)) or type(row["truncated"]) is not bool:
+        raise ProtocolError("Invalid preview index")
+    entries = []
+    for item in row["rows"]:
+        exact_fields(item, set(PREVIEW_ENTRY_FIELDS))
+        entries.append(PreviewEntry(**item))
+    return PreviewIndex(tuple(entries), row["truncated"], row["notice"])
+
+
+def preview_content_record(value):
+    """One viewed preview: base64 bytes plus the size and digest they must match."""
+    if not value.data:
+        return dict(name=value.name, target=value.target, sha256=value.sha256, size=0,
+                    base64="", notice=value.notice)
+    return dict(asset_record(value.data), name=value.name, target=value.target,
+                notice=value.notice)
+
+
+def preview_content_value(row):
+    """Rebuild one viewed preview in the UI process, digest verified on the wire."""
+    exact_fields(row, {"name", "target", "sha256", "size", "base64", "notice"})
+    if not row["base64"]:
+        return PreviewContent(notice=row["notice"])
+    data = asset_value({key: row[key] for key in ("size", "sha256", "base64")})
+    return PreviewContent(row["name"], row["target"], row["sha256"], data, row["notice"])

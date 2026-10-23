@@ -12,6 +12,7 @@ from .contracts import (
     BoundContext,
     CircuitCallError,
     NeedsReconcile,
+    ToolExecution,
     ToolCall,
     ToolResult,
     identifier,
@@ -45,9 +46,13 @@ class ToolRegistry:
         self._aliases: dict[str, str] = {}
         self._locks: dict[str, threading.Lock] = {}
         self._guard = threading.Lock()
+        # Optional composition-layer projection for the advertised wire rows.
+        # Core validation keeps each tool's full schema unchanged.
+        self.schema_projector: Callable[[str, dict], dict] | None = None
         self.pdk_choice_validator = None
         self.pdk_update_validator = None
         self.target_choice_validator = None
+        self.destructive_review_validator = None
         # Reports the action an answered existing-design decision already
         # authorizes for an observation, so no duplicate question is opened.
         self.settled_target_action = None
@@ -81,7 +86,29 @@ class ToolRegistry:
             for t in self._tools.values()
         ]
 
-    def execute(self, call: ToolCall, context: BoundContext) -> ToolResult:
+    def mcp_schemas(self) -> list[dict]:
+        """One MCP wire projection; the stdio bridge and the help tool share it.
+
+        Readers of this projection (list responses, capability help) never
+        restate the field names or read handler internals.
+        """
+        projector = self.schema_projector or (lambda name, schema: schema)
+        return [
+            {
+                "name": tool["name"],
+                "description": tool["description"],
+                "inputSchema": projector(tool["name"], tool["input_schema"]),
+                "annotations": tool["annotations"],
+            }
+            for tool in self.schemas()
+        ]
+
+    def execute(
+        self,
+        call: ToolCall,
+        context: BoundContext,
+        execution: ToolExecution | None = None,
+    ) -> ToolResult:
         tool = self.resolve(call.name)
         if tool is None:
             return ToolResult("tool_error", "Tool is not registered")
@@ -98,11 +125,10 @@ class ToolRegistry:
             with nullcontext() if getattr(self, "routed", False) else lock:
                 # A queued tool may outlive its model turn while waiting for
                 # another handler. Recheck before entering any tool code.
-                from ..transport.broker import _CALL_CONTEXT
-                cancelled = _CALL_CONTEXT.get().get("cancelled")
+                cancelled = execution.cancelled if execution is not None else None
                 if cancelled and cancelled():
                     return ToolResult("cancelled_before_start", "任务已停止，工具未执行")
-                before_start = _CALL_CONTEXT.get().get("before_start")
+                before_start = execution.before_start if execution is not None else None
                 if before_start is not None:
                     blocked = before_start()
                     if blocked is not None:
@@ -121,7 +147,12 @@ class ToolRegistry:
                 "waiting_user",
             }:
                 return ToolResult(code, str(exc), {"code": code})
-            return ToolResult("tool_error", f"Tool failed ({type(exc).__name__})")
+            if tool.effect != "read":
+                return ToolResult("needs_reconcile",
+                    f"工具异常（{type(exc).__name__}）：{str(exc)[:500]}；"
+                    "操作效果未确认，请核对原请求或目标，不会自动重放")
+            return ToolResult("tool_error",
+                              f"Tool failed ({type(exc).__name__}): {str(exc)[:800]}")
 
 
 def no_arguments(inputs: dict) -> None:

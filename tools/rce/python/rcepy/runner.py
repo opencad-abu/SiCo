@@ -144,7 +144,7 @@ class RceRunner:
         self.ignored_lvs_mismatch = False
         self._backup_existing_run_data()
         ensure_dirs(self.ctx.run_dir, self.ctx.log_dir, self.ctx.db_dir, self.ctx.cdl_dir, self.ctx.gds_dir)
-        if not self.cfg.is_xrc and self.ctx.input_type != "CCI" and self.ctx.cci_dir:
+        if not self.cfg.is_calibre_pex and self.ctx.input_type != "CCI" and self.ctx.cci_dir:
             Path(self.ctx.cci_dir).mkdir(parents=True, exist_ok=True)
         for marker in (
             self.ctx.log_dir / "exit-abnormally",
@@ -209,7 +209,7 @@ class RceRunner:
             return qrc_output_publications(self.cfg, self.ctx)
         if tool in {"STARRC", "STARXTRACT"}:
             return starrc_output_publications(self.cfg, self.ctx)
-        if self.cfg.is_xrc:
+        if self.cfg.is_calibre_pex:
             return xrc_output_publications(self.cfg, self.ctx)
         return ()
 
@@ -247,7 +247,7 @@ class RceRunner:
 
     def _postprocess(self) -> None:
         mapping = configured_bus_delimiter_mapping(self.cfg)
-        if mapping is None or self.cfg.is_xrc:
+        if mapping is None or self.cfg.is_calibre_pex:
             return
         for output in self.cfg.output_paths(self.ctx):
             if not output.is_file():

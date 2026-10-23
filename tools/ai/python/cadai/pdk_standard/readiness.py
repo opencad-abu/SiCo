@@ -2,15 +2,20 @@
 
 from decimal import Decimal
 
+from ..simulation_schema import option_problems
 from .constraints import unknown
 from .interface import parameters
 from .jsonio import fail
 from .patches import pointer
+from .policy_modes import operands
 from .query import missing
 from .publication import FEATURE, PROFILE
+from .simulation_interfaces import IPAR_CAPABILITY
 
 PURPOSES = ('circuit', 'testbench')
-UNITS = {'1', 'm', 'm2', 'V', 'A', 'F', 'H', 'Ohm', 'Ohm/sq', 'Hz', 's', 'K', 'degC', 'S'}
+# 'deg' is consumer-supported for AC phase inputs (spectre documents phase in Deg).
+UNITS = {'1', 'm', 'm2', 'V', 'A', 'F', 'H', 'Ohm', 'Ohm/sq', 'Hz', 's', 'K', 'degC', 'S',
+         'deg'}
 
 
 def qualified(package):
@@ -18,6 +23,20 @@ def qualified(package):
         purpose = next((p for p in PURPOSES if row['use'][p] == 'allow'), None)
         if purpose:
             yield key, row, purpose
+
+
+def callback_operand_gaps(cdf, selected):
+    """Conditional-rule operands that callback execution cannot decide.
+
+    Callbacks may recompute fixed/derived values, and the creation flow only
+    verifies stability of requested writable inputs. Conditional rules are
+    therefore decidable by the design consumer only when every operand is a
+    writable input; anything else has no verified effective value.
+    """
+    if cdf['execution']['mode'] != 'cdf':
+        return []
+    return [name for name in sorted(operands(cdf, selected))
+            if cdf['parameters'][name]['write'] not in {'allow', 'conditional'}]
 
 
 def device_issues(package, key, row, purpose):
@@ -41,11 +60,8 @@ def device_issues(package, key, row, purpose):
             yield issue(cdf_name, pointer('parameters', name, 'default'), 'default_not_defined')
         if p['write'] in {'allow', 'conditional'} and isinstance(p['unit'], str) and p['unit'] not in UNITS:
             yield issue(cdf_name, pointer('parameters', name, 'unit'), 'unsupported_parameter_unit')
-    if cdf['execution']['mode'] == 'cdf' and (cdf.get('rules') or any(
-            cdf['parameters'][n]['write'] == 'conditional'
-            or cdf['parameters'][n]['requirement'] == 'conditional'
-            or cdf['parameters'][n]['domain']['kind'] == 'conditional' for n in selected)):
-        yield issue(cdf_name, '/execution', 'unsupported_callback_constraints')
+    for name in callback_operand_gaps(cdf, selected):
+        yield issue(cdf_name, pointer('parameters', name), 'conditional_operand_not_writable')
     symbol_name = directory + '/symbol.json'
     if package.available(symbol_name):
         symbol = package.document(symbol_name)
@@ -63,11 +79,21 @@ def device_issues(package, key, row, purpose):
         yield issue(name, '', 'simulation_interface_missing')
         return
     simulation = package.document(name)
+    if not simulation['interfaces']:
+        # A cell that contributes no netlist element (a global marker such as
+        # gnd) is accepted only with its recorded simulation-run evidence.
+        # Anything else stays a missing interface instead of a silent pass.
+        if not netlist_invisible_basis(package, simulation):
+            yield issue(name, '/interfaces', 'simulation_interface_missing')
+        return
     if not any(package.manifest['dependencies'][d]['kind'] == 'interface' for d in simulation['depends_on']):
         yield issue(name, '/depends_on', 'netlist_source_dependency_missing')
     if not simulation.get('setup'):
         yield issue(name, '/setup', 'simulation_setup_missing')
-    elif simulation['setup']['options']:
+    elif option_problems(simulation['setup']['options']):
+        # Only options the recipe consumer can apply (registered in
+        # simulation_schema) pass; anything else stays fail-closed so a PDK
+        # setting is never dropped to satisfy publication.
         yield issue(name, '/setup/options', 'unsupported_simulator_options')
     interfaces = [i for i in simulation['interfaces'].values() if i['simulator'] == 'spectre']
     if not interfaces:
@@ -75,20 +101,38 @@ def device_issues(package, key, row, purpose):
     if len(interfaces) > 1:
         yield issue(name, '/interfaces', 'ambiguous_spectre_interface')
     for interface in interfaces:
-        if interface.get('implicit_terminals'):
-            yield issue(name, '/interfaces', 'unsupported_implicit_terminals')
+        for net, value in (interface.get('implicit_terminals') or {}).items():
+            # A supported implicit terminal names the connection basis: either a
+            # same-instance netlist port or a confirmed global net name.
+            if not isinstance(value, str) or not value:
+                yield issue(name, pointer('interfaces', interface['simulator'],
+                                          'implicit_terminals', net),
+                            'netlist_implicit_terminal_invalid')
         for net, mapping in interface['parameters'].items():
             path = pointer('interfaces', 'spectre', 'parameters', net)
             if unknown(mapping):
                 yield issue(name, path, 'netlist_parameter_mapping_missing')
             elif 'derived' in mapping:
-                yield issue(name, path, 'unsupported_derived_netlist_parameter')
+                # A derived mapping is consumable only through a registered
+                # capability; iPar-synchronized instance parameters are the
+                # confirmed case, anything else stays flagged.
+                if mapping.get('implementation_ref') != IPAR_CAPABILITY:
+                    yield issue(name, path, 'unsupported_derived_netlist_parameter')
             elif 'cdf' in mapping:
-                p = cdf['parameters'][mapping['cdf']]
-                if mapping['cdf'] not in selected or unknown(p['type']) or unknown(p['unit']):
+                p = cdf['parameters'].get(mapping['cdf'])
+                if p is None or unknown(p['type']):
                     yield issue(name, path, 'netlist_parameter_outside_design_interface')
-                elif p['write'] == 'deny' and unknown(p['default']):
+                elif p['write'] in {'allow', 'conditional'} or p['requirement'] in {'explicit', 'conditional'}:
+                    # A design-controlled input needs a known unit for the
+                    # scale checks a consumer may apply.
+                    if unknown(p['unit']):
+                        yield issue(name, path, 'netlist_parameter_outside_design_interface')
+                elif unknown(p['default']):
+                    # A fixed field passes through as-is; only its confirmed
+                    # literal value can netlist.
                     yield issue(name, path, 'fixed_netlist_parameter_value_missing')
+                elif 'scale' in mapping and unknown(p['unit']):
+                    yield issue(name, path, 'netlist_parameter_outside_design_interface')
         if interface['model_source'] != 'external':
             continue
         model = package.document('model.json') if package.available('model.json') else {'corners': {}, 'configs': {}}
@@ -106,22 +150,36 @@ def device_issues(package, key, row, purpose):
                     yield issue('file.json', pointer('items', include['file_ref']), 'model_dependency_missing')
 
 
+def netlist_invisible_basis(package, simulation):
+    """True when the recorded evidence proves the cell emits no element.
+
+    The evidence under /interfaces must resolve to recorded simulation runs;
+    an interface-free document without such a basis is never accepted.
+    """
+    sources = package.document('sources.json')['items']
+    refs = [source for path, source in simulation['evidence'].items()
+            if path == '/interfaces' or path.startswith('/interfaces/')]
+    return bool(refs) and all(sources.get(ref, {}).get('kind') == 'simulation' for ref in refs)
+
+
 def issues(package):
     for key, row, purpose in qualified(package):
         yield from device_issues(package, key, row, purpose)
 
 
 def accept(package):
-    count, sample = 0, []
+    count = 0
     for gap in issues(package):
         count += 1
-        if len(sample) < 5:
-            sample.append(gap)
     if count:
-        fail('PDK generation incomplete (%d items): %s' % (count, sample), 'pdk_generation_incomplete')
+        from .blockers import message
+
+        fail(message(package), 'pdk_generation_incomplete')
     count = sum(1 for _ in qualified(package))
     if not count:
-        fail('Publication requires at least one usable design device', 'pdk_generation_incomplete')
+        from .blockers import message
+
+        fail(message(package), 'pdk_generation_incomplete')
     from .resource_check import check
     for ref, dependency in package.manifest['dependencies'].items():
         if dependency['kind'] in {'file', 'model'}:

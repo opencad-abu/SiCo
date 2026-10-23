@@ -7,7 +7,7 @@ from PyQt5.QtGui import QColor, QPainter
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QMenu, QStyle, QWidget
 
 from .glyphs import cross_icon
-from .theme import SELECTION, STOP
+from .theme import active_palette
 
 
 class ClosingMenuEntry(QWidget):
@@ -34,7 +34,8 @@ class ClosingMenuEntry(QWidget):
         mark = QLabel()
         mark.setObjectName("closingEntryIcon")
         mark.setFixedWidth(self.ICON)
-        mark.setPixmap(cross_icon(self.ICON, STOP).pixmap(self.ICON, self.ICON))
+        mark.setPixmap(cross_icon(self.ICON, active_palette().stop).pixmap(
+            self.ICON, self.ICON))
         caption = QLabel(title)
         caption.setObjectName("closingEntryText")
         for widget in (mark, caption):
@@ -57,7 +58,7 @@ class ClosingMenuEntry(QWidget):
     def paintEvent(self, event):
         if self._hover:
             painter = QPainter(self)
-            painter.fillRect(self.rect(), QColor(SELECTION))
+            painter.fillRect(self.rect(), QColor(active_palette().selection))
         super().paintEvent(event)
 
     def mouseReleaseEvent(self, event):

@@ -12,9 +12,11 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 
-from .provider_settings import provider_endpoint, validate_key
-from .response_http_error import body as error_body, rejection, safe_id, summary
 from .json_values import strict_json
+from .provider_settings import provider_endpoint, validate_key
+from .response_http_error import body as error_body
+from .response_http_error import rejection, safe_id, summary
+from .responses_compat import strip
 from .responses_sse import transform_stream
 from .responses_tools import CompatibilityError, ToolNames
 
@@ -124,6 +126,7 @@ class _Handler(BaseHTTPRequestHandler):
             wrapper.http_status = None
             names = ToolNames()
             request = names.request(strict_json(body))
+            request = strip(request, wrapper.unsupported_fields)
             exchange = _Exchange(wrapper, self.connection)
             with wrapper.lock:
                 if wrapper.stopped.is_set():
@@ -198,11 +201,13 @@ class _Handler(BaseHTTPRequestHandler):
 
 
 class ResponsesWrapper:
-    def __init__(self, base_url, api_key, *, timeout=30, idle_timeout=None):
+    def __init__(self, base_url, api_key, *, timeout=30, idle_timeout=None,
+                 unsupported_fields=()):
         self.url = urlsplit(provider_endpoint(base_url, "responses"))
         validate_key(api_key)
         self.api_key, self.timeout = api_key, timeout
         self.idle_timeout = timeout if idle_timeout is None else idle_timeout
+        self.unsupported_fields = frozenset(unsupported_fields)
         self.diagnostic = ""
         self.http_status = None
         self.token = secrets.token_urlsafe(32)

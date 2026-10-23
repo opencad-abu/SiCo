@@ -5,9 +5,9 @@ import re
 import sqlite3
 from pathlib import PurePosixPath
 
-from ..storage.native_origin import NativeOrigins
+from ..core.native_origin import NativeOrigins
 from .filesystem import fingerprint, issue
-from .native_assets import FILES
+from .native_assets import PROFILES
 from .native_databases import validate_projection, validate_quiescence, validate_state
 from .native_paths import UUID
 from .native_rollout import validate_index, validate_rollout
@@ -15,14 +15,15 @@ from .native_schema import DATABASES, home_version, validate_profile
 from .sqlite_snapshot import snapshot
 
 
-def validate_assets(entries):
+def validate_assets(entries, version):
+    expected = PROFILES[version]
     prefix = "skills/.system/"
     assets = {path[len(prefix):]: entry for path, entry in entries.items()
               if path.startswith(prefix) and entry["kind"] == "file"}
-    if assets and ({path: row.get("sha256") for path, row in assets.items()} != FILES):
+    if assets and ({path: row.get("sha256") for path, row in assets.items()} != expected):
         raise ValueError("Native builtin assets are incomplete or modified")
     for path, entry in entries.items():
-        if entry["schema"] == "native_system_asset" and entry.get("sha256") != FILES[path[len(prefix):]]:
+        if entry["schema"] == "native_system_asset" and entry.get("sha256") != expected.get(path[len(prefix):]):
             raise ValueError("Modified native builtin asset requires review")
 
 
@@ -55,7 +56,6 @@ def validate_home(tree, root, inventory):
     required = {*DATABASES, "thread-writer-locks/.coordination.lock"}
     if not required <= set(entries):
         raise ValueError("Native database or coordination lock is missing")
-    validate_assets(entries)
     for path, entry in entries.items():
         if (entry["action"] in {"archive", "lock"} or entry["schema"] == "native_system_asset"):
             if entry["action"] == "lock":
@@ -73,6 +73,7 @@ def validate_home(tree, root, inventory):
         version = home_version(connection)
         validate_profile(connection, "state_5.sqlite", version)
         threads = validate_state(connection, version)
+    validate_assets(entries, version)
     histories, rollouts = {}, set()
     for identity, thread in threads.items():
         if re.fullmatch(UUID, identity) is None:

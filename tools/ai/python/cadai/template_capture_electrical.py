@@ -12,7 +12,7 @@ _REQUIRED = {
 }
 
 
-def validate_electrical_capture(rows):
+def validate_electrical_capture(rows, asset=None):
     instances = {r["name"]: r for r in rows if r["kind"] == "instance"}
     ports = {r["name"]: r for r in rows if r["kind"] == "terminal"}
     nets = {r["name"]: r for r in rows if r["kind"] == "net"}
@@ -30,7 +30,12 @@ def validate_electrical_capture(rows):
             raise TemplateError("electrical observation requires an observed endpoint count")
         if kind == "instance_terminal":
             inventory = instances[row["instance"]]["terminal_names"]
-            if inventory is not None and row["name"] not in inventory:
+            # Layout pin instances use layout pin names, not device terminal names.
+            if (
+                asset != "layout"
+                and inventory is not None
+                and row["name"] not in inventory
+            ):
                 raise TemplateError("saved endpoint is absent from master terminal inventory")
         if kind == "pin" and row["net"] != ports[row["terminal"]]["net"]:
             raise TemplateError("pin net differs from its owning terminal net")

@@ -39,10 +39,14 @@ class RemoteCatalog:
         for session in row["sessions"]:
             self.api._sessions.publish(session, catalog=True)
         live = {value["address"]["session_id"] for value in row["sessions"]}
-        for token in captured:
-            if (token.runtime_id is not None and token.session_id not in live
-                    and self.api.owns(token)):
-                self.api._sessions.mark_closing(token)
+        # A partial or not-yet-scanned catalog response is not evidence that a
+        # live session ended. Only a complete service observation may retire a
+        # page that this window already attached.
+        if catalog is not None and catalog.get("complete") is True:
+            for token in captured:
+                if (token.runtime_id is not None and token.session_id not in live
+                        and self.api.owns(token)):
+                    self.api._sessions.mark_closing(token)
         if row["catalog"] is not None:
             self._view = row["catalog"]
         return tuple(SessionAddress.from_record(session["address"]).session

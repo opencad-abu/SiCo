@@ -68,7 +68,7 @@ procedure(timeFormatter()
 )
 
 procedure(rceFrontendRevision()
-  "20260924.flow.environment.v3"
+  "20261019.floating.net.include.all.v1"
 )
 
 procedure(rceFlowAuditRevision()
@@ -96,5 +96,5 @@ procedure(rceCdlIncludeRevision()
 )
 
 procedure(rceCallbackModulesRevision()
-  "20260919.callback.modules.v1"
+  "20261019.floating.net.include.all.v1"
 )

@@ -5,7 +5,7 @@ import queue
 import threading
 
 from ..core.contracts import NeedsReconcile
-from .rpc import RpcError
+from .rpc import RpcError, RpcRejected
 from .turn_requests import respond
 from .turn_response import EMPTY_RESPONSE, TurnResponse
 from .turn_error import failure_message
@@ -118,17 +118,34 @@ class TurnLoop:
         self.close()
         self.rpc = None
 
+    def _external_work_pending(self):
+        with self.journal.lock:
+            pending = (bool(self.journal.state.task["pending_calls"])
+                       or self.native.external_pending())
+        return pending or self.children.active()
+
+    def _pause_model(self):
+        """Pause local generation without asking the user to reconcile model-only work."""
+        self.close_connection()
+        self.finish("cancelled", "模型思考已暂停")
+        yield from self.journal.drain()
+
     def tick(self, turn_id, cancelled, interrupted, deadline, parent_result,
                    idle_timeout, tool_timeout):
         now = self.journal.clock().monotonic()
         self.native.flush()
+        if (interrupted and not self.source_status()[0]
+                and not self._external_work_pending()):
+            yield from self._pause_model()
+            return True, interrupted, deadline
         if interrupted and now >= deadline:
             raise RpcError("中断请求未及时结束，已关闭连接；请核对原操作结果，不会自动重跑。")
         with self.journal.lock:
-            waiting = (self.audit is not None and (
-                self.audit.waiting_for_input() or self.audit.waiting_for_host()
-                or any(p.get("child_thread_id") for p in self.audit.pending.values())
-            ))
+            # 未答复的阻塞问题属于等待用户；补充类会在本 tick 由
+            # answer_supplementary 释放。两者都让模型流暂时无事件，
+            # 空闲看门狗不得据此判死任务
+            # （实测 PDK 非阻塞提问会被 15 分钟超时误杀成待核对）。
+            waiting = self.audit is not None and bool(self.audit.pending)
             native_started = [row["started_at"] for row in self.native.pending.values()
                               if row["native"]["item_type"] != "plan"]
             running = bool(self.journal.state.task["pending_calls"] or native_started)
@@ -152,19 +169,32 @@ class TurnLoop:
             if self.audit is not None:
                 self.audit.end_inputs("任务已取消或来源失效，交互已结束")
             self.steering.end(turn_id)
+            if (cancelled() and not self.source_status()[0]
+                    and not self._external_work_pending()):
+                yield from self._pause_model()
+                return True, interrupted, deadline
             if parent_result is not None:
                 self.close_connection()
                 self.finish("needs_reconcile" if self.source_status()[0] else "cancelled",
                              self.source_status()[1] or "Cancelled while child input was pending")
                 yield from self.journal.drain()
                 return True, interrupted, deadline
-            self.interrupt(turn_id)
+            try:
+                self.interrupt(turn_id)
+            except RpcRejected:
+                if not waiting:
+                    raise
+                # A turn can finish while its host question is being withdrawn.
+                # A rejection is not a completion: consume the original terminal
+                # notification under the same deadline, without retrying interrupt.
+                pass
             interrupted = True
             deadline = self.journal.clock().monotonic() + 15
         if not interrupted and self.audit is not None:
-            if self.audit.pending:
+            if self.audit.waiting_for_input() or self.audit.waiting_for_host():
                 self.goals.pause(self.rpc, "waiting_user")
             self.audit.deliver()
+            self.audit.answer_supplementary()
             if self.source_status()[0] or cancelled():
                 return "repeat", interrupted, deadline
         if not interrupted:
@@ -180,6 +210,8 @@ class TurnLoop:
             keys = [key for key, p in self.audit.pending.items()
                     if not p.get("child_thread_id")]
             self.audit.elicitations.end("原回合已结束；未交付的答复不会重发", keys=keys)
+            if not cancelled() and not self.source_status()[0]:
+                self.audit.retain_turn_reviews(turn_id)
         self.steering.end(turn_id)
         status = params["turn"]["status"]
         if status == "failed" and (params["turn"].get("error") or not self.failure):
@@ -201,15 +233,14 @@ class TurnLoop:
         if self.audit is not None:
             keys = [key for key, p in self.audit.pending.items() if p.get("child_thread_id")]
             self.audit.end_inputs("子任务来源已结束；答复不会转入下一任务", keys=keys)
-        if status == "completed" and not cancelled() and not self.source_status()[0]:
-            if self.goals.running and self.journal.state.task.get("waiting_audits"):
+            if self.audit.pending and not cancelled() and not self.source_status()[0]:
+                if (self.journal.state.task["pending_calls"]
+                        or "needs_reconcile" in self.native.completed.values()):
+                    raise NeedsReconcile("原回合仍有操作结果未确认；审阅答复不会自动启动后续回合")
                 self.goals.pause(self.rpc, "waiting_user")
-            if self.audit is not None and self.audit.host_answer_ready():
-                yield from self.continue_after_host(cancelled)
-                return
-            if self.journal.state.task.get("waiting_audits"):
                 yield from self.wait_for_audit_answer(turn_id, cancelled)
                 return
+        if status == "completed" and not cancelled() and not self.source_status()[0]:
             if not self.response.usable:
                 self.goals.pause(self.rpc, "empty_response")
                 self.close_connection()
@@ -223,13 +254,16 @@ class TurnLoop:
             pending = bool(self.journal.state.task["pending_calls"])
         if status != "completed" or pending or self.source_status()[0] or cancelled():
             self.close_connection()
-        if self.source_status()[0]:
-            self.finish("needs_reconcile", self.source_status()[1])
-        elif status == "interrupted" or cancelled():
+        if status == "interrupted" or cancelled():
             self.finish("cancelled", "Generation stopped; no external job was stopped")
+        elif self.source_status()[0]:
+            self.finish("needs_reconcile", self.source_status()[1])
         elif status == "completed":
             if self.rpc is not None:
                 self.names.after_turn(self.rpc)
+                stopped = getattr(self.rpc, "stopped", None)
+                if stopped is not None and stopped.is_set():
+                    self.close_connection()
             self.finish("completed")
         else:
             self.finish("failed", self.failure or failure_message(
@@ -237,73 +271,21 @@ class TurnLoop:
         yield from self.journal.drain()
 
     def wait_for_audit_answer(self, turn_id, cancelled):
-        """Keep an ended model turn alive while Copilot audits await answers."""
+        """Retain task-owned questions and consume only a newly accepted turn."""
         while self.audit is not None and self.audit.pending:
             if cancelled() or self.source_status()[0]:
-                if cancelled() and not self.source_status()[0]:
-                    self.finish("cancelled", "Task cancelled while waiting for the user's answer")
-                    yield from self.journal.drain()
-                    return
-                raise NeedsReconcile(self.source_status()[1])
-            replies = self.audit.deliver_host()
-            if self.source_status()[0]:
-                raise NeedsReconcile(self.source_status()[1])
-            if replies:
-                # Host prerequisites are safe to continue immediately. Native
-                # blocking requests still need their RPC answer first.
-                if self.audit.waiting_for_input():
-                    self.journal.activity("waiting_user", "等待答复：" + self.audit.pending_title())
-                    yield from self.journal.drain()
-                    threading.Event().wait(0.1)
-                    continue
-                content = "\n".join(reply["content"] for reply in replies)
-                result = self.rpc.request(
-                    "turn/start",
-                    {"threadId": self.thread_id, "input": [{"type": "text", "text": content}]},
-                )
-                yield from self.resume(result["turn"]["id"], cancelled)
-                return
-            # Deliver native answers as soon as the host has submitted them.
-            delivered = self.audit.deliver()
-            if not self.audit.pending:
-                # A blocking native request should normally keep the Codex
-                # turn open. If an app-server completes early, continue
-                # consuming that same turn after sending its answer instead
-                # of leaving the task in an unresumable executing state.
-                if delivered:
-                    yield from self.resume(turn_id, cancelled)
-                return
-            self.journal.activity("waiting_user", "等待答复：" + self.audit.pending_title())
-            yield from self.journal.drain()
-            threading.Event().wait(0.1)
-
-    def continue_after_host(self, cancelled):
-        """Keep a host-opened question visible, then continue the same thread."""
-        while self.audit is not None and self.audit.waiting_for_host():
-            if cancelled() or self.source_status()[0]:
-                if cancelled() and not self.source_status()[0]:
-                    self.close_connection()
-                    self.finish("cancelled", "Task cancelled while waiting for the user's answer")
-                    yield from self.journal.drain()
-                    return
                 if self.source_status()[0]:
                     raise NeedsReconcile(self.source_status()[1])
-                return
-            replies = self.audit.deliver_host()
-            if self.source_status()[0]:
-                raise NeedsReconcile(self.source_status()[1])
-            if not replies:
-                self.journal.activity("waiting_user", "等待答复：" + self.audit.pending_title())
+                self.close_connection()
+                self.finish("cancelled", "Task cancelled while waiting for the user's answer")
                 yield from self.journal.drain()
-                threading.Event().wait(0.1)
-                continue
-            content = "\n".join(reply["content"] for reply in replies)
-            result = self.rpc.request(
-                "turn/start",
-                {
-                    "threadId": self.thread_id,
-                    "input": [{"type": "text", "text": content}],
-                },
-            )
-            yield from self.resume(result["turn"]["id"], cancelled)
-            return
+                return
+            next_turn = self.audit.continue_turn(turn_id)
+            if next_turn:
+                self.journal.state.task["turn"] = self.journal.state.task.get("turn", 1) + 1
+                yield from self.resume(next_turn, cancelled)
+                return
+            self.journal.activity("waiting_user", "等待答复：" + self.audit.waiting_title())
+            yield from self.journal.drain()
+            threading.Event().wait(0.1)
+        raise NeedsReconcile("等待的问题已结束，未启动新的回合；请核对后继续")

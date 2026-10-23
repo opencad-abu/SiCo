@@ -1,4 +1,4 @@
-"""Qt workspace layout persistence and offline snapshot validation."""
+"""Qt workspace layout and appearance persistence with snapshot validation."""
 
 import os
 import tempfile
@@ -6,8 +6,12 @@ from pathlib import Path
 
 from PyQt5.QtCore import QByteArray, QSettings
 
+from .appearance import KEYS as APPEARANCE_KEYS
+from .appearance import validate_stored_appearance
+
 MAX_BYTES = 1024 * 1024
-KEYS = frozenset({"workspace/geometry", "workspace/state"})
+LAYOUT_KEYS = frozenset({"workspace/geometry", "workspace/state"})
+KEYS = LAYOUT_KEYS | APPEARANCE_KEYS
 
 
 def open_settings(path):
@@ -31,7 +35,9 @@ def validate_stream(stream):
             keys = set(settings.allKeys())
             if settings.status() != QSettings.NoError or not keys <= KEYS:
                 raise ValueError("Unsupported workspace settings")
-            if any(not isinstance(settings.value(key), QByteArray) for key in keys):
+            if any(not isinstance(settings.value(key), QByteArray)
+                   for key in keys & LAYOUT_KEYS):
                 raise ValueError("Workspace layout must contain Qt byte arrays")
+            validate_stored_appearance(settings)
         finally:
             del settings

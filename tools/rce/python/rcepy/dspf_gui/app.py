@@ -8,7 +8,6 @@ import sys
 from typing import MutableMapping
 
 import cadgui.environment as _gui_environment
-from cadgui.chrome import apply_family_style
 from cadgui.lifecycle import (
     capture_parent_identity as _capture_parent_identity,
     finalize_gui_exit as _finalize_gui_exit,
@@ -65,8 +64,10 @@ def _import_qt():
 
 def apply_application_style(application) -> None:
     """家族外观：亮底 + 红棕强调，密集表格沿用同一套样式表。"""
+    from cadgui.appearance import apply_saved_appearance
+
     application.setStyle("Fusion")
-    apply_family_style(application)
+    apply_saved_appearance(application)
 
 
 def run_gui(

@@ -37,13 +37,13 @@ procedure(rceProfileFieldSpecs()
     ("lvs.virtual_connect_names" lvsVirtualConnName "?" nil)
     ("lvs.custom_svrf_enable" customSvrfEnable nil nil)
     ("lvs.custom_svrf_command" customSvrfCommand "" nil)
-    ("extract.tool" extTool "StarRC" nil)
     ("extract.tech_name" rcTechDirName "" nil)
     ("extract.tech_dir" rcTechDirPath "" t)
     ("extract.corner_scope" cornerType "Single Corner" nil)
     ("extract.corner" corner "" nil)
     ("extract.temperature" temp "25" nil)
     ("extract.rc_type" rcType "R+Cg+Cc" nil)
+    ("extract.remove_floating_nets" rmFloatNetsBtn t nil)
     ("extract.top_cell_source" topCellSource "Schematic" nil)
     ("extract.name_source" nameSource "Schematic" nil)
     ("extract.start_rve" startRve nil nil)
@@ -103,6 +103,7 @@ procedure(rceProfileCollect(form)
     libraryPath="extract.view.library"
     cellPath="extract.view.cell"
     entries=append(entries list(
+      list("extract.tool" form~>extTool~>value)
       list("input.cdl_include_enable" and(form~>cdlIncludeBtn~>value t))
       list("lvs.virtual_connect_enable" and(car(values) t))
       list("lvs.virtual_connect_name_enable" and(cadr(values) t))
@@ -121,7 +122,7 @@ procedure(rceProfileCollect(form)
       list("netlist.parasitic_res_dimensions" nth(2 form~>nlParInfo~>value))
       list("batch.tasks" or(form~>cadBatchTasks nil))))
     entries=append1(entries
-      if(form~>extTool~>value=="CalXRC" then
+      if(RCE_calibrePexToolP(form~>extTool~>value) then
         list("extract.view.cellmap_file" or(form~>viewDeviceMap~>value ""))
       else
         list("extract.view.device_mapping_file"
@@ -314,6 +315,10 @@ procedure(rceProfileApply(form data)
     rceLvsVirtualConnCB(form)
     cadCustomSvrfCB(form)
 
+    unless(RCE_setExtToolName(form
+               SICO_profileDataValue(data "extract.tool"
+                 form~>extTool~>value))
+      return(nil))
     rceExtToolCB(form)
     SICO_profileApplyFields(form data fieldSpecs)
     form~>outDirType~>value=rootType
@@ -367,7 +372,7 @@ procedure(rceProfileApply(form data)
       form~>viewTarget~>value=rceNativeViewTargetString(savedNativeTarget)
       putpropq(form rceNativeViewTargetString(savedNativeTarget)
                rceNativeViewTargetExplicitValue))
-    form~>viewDeviceMap~>value=if(form~>extTool~>value=="CalXRC" then
+    form~>viewDeviceMap~>value=if(RCE_calibrePexToolP(form~>extTool~>value) then
       nth(0 savedMaps) else nth(1 savedMaps))
     form~>viewLayerMap~>value=nth(2 savedMaps)
     rceSyncExtractTopCell(form)
@@ -394,7 +399,7 @@ procedure(rceProfileApply(form data)
 )
 
 procedure(rceProfileRevision()
-  "20260909.pin.order.v1"
+  "20261019.floating.net.include.all.v1"
 )
 
 SICO_profileRegisterAdapter("RCE" 'rceProfileCollect 'rceProfileApply)

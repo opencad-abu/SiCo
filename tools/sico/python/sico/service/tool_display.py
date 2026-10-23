@@ -24,6 +24,8 @@ TITLES = {
     "measure_waveform_pair": "双波形测量",
     "evaluate_waveform_specs": "波形规格对照",
     "set_copilot_stage": "任务阶段",
+    "plan_copilot_stages": "阶段计划",
+    "update_copilot_stage": "阶段状态",
     "list_copilot_data": "数据索引",
     "publish_copilot_report": "发布报告",
     # 历史会话里记录的是旧名字。

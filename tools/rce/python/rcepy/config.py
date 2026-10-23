@@ -13,12 +13,12 @@ from cadconfig.booleans import boolean_value
 from cadconfig.values import MISSING, freeze, thaw
 from .config_input import execution_values
 from .config_context import DesignContext
+from .pex_engine import calibre_pex_tool
 
 
 INPUTS_NEED_CDL = {"OA", "SCH+GDS"}
 INPUTS_NEED_GDS = {"OA", "CDL+LAY"}
 INPUTS_NEED_LVS = {"OA", "SCH+GDS", "CDL+LAY", "CDL+GDS"}
-XRC_TOOLS = {"CALXRC", "XRC", "CALIBRE-XRC", "CALIBRE_XRC"}
 PAIRED_INPUT_TYPES = {"OA", "SCH+GDS", "CDL+LAY", "CDL+GDS"}
 VIEW_OUTPUT_TYPES = {"view", "extview", "smartview", "calibreview", "starrcview"}
 def load_config(path: str | Path, *, legacy: bool = False) -> "RceConfig":
@@ -262,12 +262,15 @@ class RceConfig:
         return tuple(zip(self.corners, self.corner_temperatures()))
 
     @property
-    def is_xrc(self) -> bool:
-        return self.ext_tool.upper() in XRC_TOOLS
+    def is_calibre_pex(self) -> bool:
+        """Return whether the request uses the Calibre PEX (xRC/xACT) flow."""
+        return calibre_pex_tool(self.ext_tool)
 
     @property
     def start_rve(self) -> bool:
-        return self.is_xrc and self.flag("extract", "start_rve", default=False)
+        return self.is_calibre_pex and self.flag(
+            "extract", "start_rve", default=False
+        )
 
     @property
     def output_type(self) -> str:
@@ -362,7 +365,7 @@ class RceConfig:
             return self.path("netlist", "output_path", base=ctx.run_dir)
         output_type = self.output_type.strip().casefold()
         if output_type in VIEW_OUTPUT_TYPES:
-            if self.is_xrc:
+            if self.is_calibre_pex:
                 return str(ctx.db_dir / f"{ctx.source_cell}.pex.netlist")
             return ""
         suffix = {
@@ -486,9 +489,9 @@ class RceConfig:
             stages.append("cdl")
         if self.input_type in INPUTS_NEED_GDS:
             stages.append("gds")
-        if self.input_type in INPUTS_NEED_LVS and not self.is_xrc:
+        if self.input_type in INPUTS_NEED_LVS and not self.is_calibre_pex:
             stages.append("lvs")
-        if self.input_type != "CCI" and not self.is_xrc:
+        if self.input_type != "CCI" and not self.is_calibre_pex:
             stages.append("query")
         stages.append("extract")
         return stages
