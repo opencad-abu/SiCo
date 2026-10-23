@@ -44,7 +44,7 @@ SiCo的最终目标是多平台定制电路设计AI助手，能够协助电路/�
 后续文档整理好后会陆续开放开发计划
 ## 作者
 
-SiCo 的作者（按顺序）：GPT、DeepSeek、OpenCAD。
+SiCo 的作者（按顺序）：DeepSeek、GPT、OpenCAD。
 
 ## 许可证
 
