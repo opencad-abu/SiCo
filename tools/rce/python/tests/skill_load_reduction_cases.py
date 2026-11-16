@@ -1,3 +1,4 @@
+from skill_loader_test_support import loader_contract
 import re
 
 from skill_load_fixtures import (
@@ -13,7 +14,7 @@ def test_rce_quantus_reduction_is_wired_across_gui_toml_and_completion() -> None
     callback = read_skill_source(CAD_ROOT / "rce/skill++/RCECB.ils")
     profile = read_skill_source(CAD_ROOT / "rce/skill++/RCEPROFILE.ils")
     batch = read_skill_source(CAD_ROOT / "rce/skill++/RCEBATCH.ils")
-    entry = read_skill_source(CAD_ROOT / "rce/skill++/RCE.ils")
+    entry = loader_contract("rce/skill++/RCE.ils")
 
     # Native-view destination controls come first; the user chooses the output
     # target before opting into standalone reduction.  The subordinate
@@ -154,6 +155,6 @@ def test_rce_quantus_reduction_is_wired_across_gui_toml_and_completion() -> None
     assert 'cond(\n      ((member(lowerCase(or(outputType ""))' not in importer
     assert 'strcat(caddr(target) "_" form~>reductionOutputTag~>value)' in reduction
 
-    assert 'strcat(rceSkillRoot "/skill++/RCEREDUCTION.ils")' in entry
-    assert 'rceReductionRevision()=="20260908.recognize.gates.v1"' in entry
-    assert 'rceLoaderRevision()=="20260924.flow.environment.v3"' in entry
+    assert entry.contains_source("/skill++/RCEREDUCTION.ils")
+    assert entry.revision("rceReductionRevision") == "20260908.recognize.gates.v1"
+    assert entry.revision("rceFrontendRevision") == "20261019.floating.net.include.all.v1"

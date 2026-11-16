@@ -101,7 +101,7 @@ def _graphic_views(record):
         if any(not isinstance(v, str) or not v for v in target):
             _error("ignored graphic master identity is incomplete")
         role = graphic_role(dict(cellName=target[1], master_available=True,
-                                 master_view_type=row.get("master_view_type"),
+                                 master_oa_view_type=row.get("master_oa_view_type"),
                                  builtin_library=row.get("builtin_library")))
         if not role or row.get("role") != role or row.get("kind") != role:
             _error("ignored graphic lacks installed symbol evidence")
@@ -154,7 +154,7 @@ def _observation(record):
         if not isinstance(row, dict):
             _error("electrical observation view is malformed")
         required = {
-            "target", "view_type", "source_view", "parameterized", "hierarchy_count",
+            "target", "oa_view_type", "source_view", "parameterized", "hierarchy_count",
             "instance_count", "mosaic_count", "terminal_expressions", "signal_expressions",
         }
         if required - set(row) or set(row) - required - set(INHERITANCE.TEXT_FIELDS):
@@ -175,8 +175,8 @@ def _observation(record):
             _error("only the selected source cell may be marked source")
         if row["source_view"] == "master" and key == _source_view(record):
             _error("source cell cannot also be marked master")
-        if not isinstance(row["view_type"], str) or not row["view_type"]:
-            _error("electrical observation view_type is missing")
+        if not isinstance(row["oa_view_type"], str) or not row["oa_view_type"]:
+            _error("electrical observation oa_view_type is missing")
         if type(row["parameterized"]) is not bool:
             _error("electrical observation parameterized must be boolean")
         for field in ("hierarchy_count", "instance_count", "mosaic_count"):
@@ -200,7 +200,7 @@ def _observation(record):
         source_instances += len(record.get("topology", {}).get("ignored_graphics", []))
         if source_row["instance_count"] != source_instances:
             _error("source instance count differs from the captured inventory")
-        if any(indexed[key]["view_type"] != "schematicSymbol" or
+        if any(indexed[key]["oa_view_type"] != "schematicSymbol" or
                indexed[key]["instance_count"] != 0 for key in graphics):
             _error("ignored graphics must be flat symbol masters")
     if source_row["instance_count"] < source_instances:

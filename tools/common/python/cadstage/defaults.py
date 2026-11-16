@@ -15,7 +15,7 @@ _CDL_RESERVED = {
 }
 _GDS_RESERVED = {
     "library", "topcell", "view", "layermap", "strmfile", "logfile",
-    "outputdir", "rundir", "replacebusbitchar",
+    "outputdir", "rundir", "replacebusbitchar", "objectmap", "propmap", "userskillfile",
 }
 _LITERAL = re.compile(r'\s*("(?:[^"\\]|\\.)*"|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|nil\b|t\b|list\b|[()\x27])')
 

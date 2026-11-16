@@ -131,7 +131,7 @@ def resolve_starrc_inputs(
             corner_dir,
             label="mapping",
             option="extract.starrc.mapping_file",
-            preferred_names=("tran.map", "map", "MAPPING_FILE", "mapping_file"),
+            preferred_names=("tran.map", "map", "MAPPING_FILE", "mapping_file", "starrcxt_mapping"),
             fallback_pattern="*.map",
             secondary_candidates=(
                 tech_root / "MAPPING_FILE",

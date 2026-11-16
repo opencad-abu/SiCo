@@ -58,7 +58,7 @@ def audit(control):
                'implementation': {str(p): sha256_file(p) for p in [Path(__file__).resolve(),
                    Path(__file__).resolve().parents[1]/'python/aivworkbench/qualification/error_regions.py']}}
     digest = stable_digest(request)
-    run = allocate_split_run(resolve_launch_paths(), Path('/path/to/xh/amsVerify/data/ams').resolve(),
+    run = allocate_split_run(resolve_launch_paths(), Path('/workarea/xh/amsVerify/data/ams').resolve(),
         library=plan['target']['library'], cell=plan['target']['cell'], view='public_error_regions',
         kind='error-region-audit', request_digest=digest)
     summary = {'status': 'PUBLIC_DIAGNOSTICS_RECORDED', 'qualification': 'NOT_ESTABLISHED',

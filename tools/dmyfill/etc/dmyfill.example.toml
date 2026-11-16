@@ -1,0 +1,31 @@
+# PDK/CAD-owned dummy-fill rules for environments without a foundry metal
+# dummy deck.  Lengths are in um.  Copy this file to
+# $PROJ_PDK_HOME/dmyfill.toml and replace the values with the PDK DRM rule
+# values.  DMYFILL_FILE always takes precedence over this file.
+
+format = "sico.dmyfill.rules.v1"
+unit = "um"
+source = "replace-with-DRM-document-and-section"
+target_density = 0.40
+edge = 2.5
+
+[defaults]
+wide_width = 4.5
+wide_space = 1.5
+blockers = { FW = 5.0, LMARK = 5.0, INDDMY = 2.5, CBM = 1.5, LOGO = 0.0 }
+
+[groups.m1_mx]
+layers = ["M1", "M2", "M3", "M4", "M5", "M6"]
+width = [0.3, 3.0]
+space = 0.3
+metal_space = 0.3
+area = [0.24, 80]
+tile = [0.5, 2.0]
+
+[groups.top]
+layers = ["M7", "M8", "M9"]
+width = [0.4, 3.0]
+space = 0.4
+metal_space = 0.6
+area = [0.565, 160]
+tile = [1.0, 2.0]

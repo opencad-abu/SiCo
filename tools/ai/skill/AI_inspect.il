@@ -1,6 +1,6 @@
 ; Bounded, read-only JSON helpers. Named cellviews open "r" and close before return.
 unless(and(boundp('aiInspectVersion)
-             aiInspectVersion=="20261022.ai.inspect.v11")
+             aiInspectVersion=="20261101.ai.inspect.v12")
 
 procedure(aiInspectSchematic(lib cell view viewType maxItems includePlacement)
   let((limit target cv budget instances nets terminals remaining entry appended
@@ -405,8 +405,8 @@ procedure(aiInspectMasterEvidence(ameTargets ameMaxItems)
       rows count limit
       aiInspectJsonBoolean(or(truncated budget['full] budget['textTruncated])))))
 procedure(aiInspectRevision()
-  "20261022.ai.inspect.v11"
+  "20261101.ai.inspect.v12"
 )
 
-aiInspectVersion="20261022.ai.inspect.v11"
+aiInspectVersion="20261101.ai.inspect.v12"
 )

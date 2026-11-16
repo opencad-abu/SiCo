@@ -46,7 +46,7 @@ PROJECT_TOOLS = [
                     {
                         **TARGET["properties"],
                         "intent": enum("create", "read", "edit"),
-                        "view_type": enum("schematic", "schematicSymbol", "maestro", "config"),
+                        "oa_view_type": string_schema(64),
                     }
                 ),
                 32,

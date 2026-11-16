@@ -31,7 +31,7 @@ def validate(header, rows, footer, *, capture_v2):
             "target",
             "role",
             "library_path",
-            "view_type",
+            "oa_view_type",
             "parameterized",
             "instance_count",
             "mosaic_count",
@@ -60,7 +60,7 @@ def validate(header, rows, footer, *, capture_v2):
             )
             or not isinstance(view["library_path"], str)
             or not view["library_path"].startswith("/")
-            or not isinstance(view["view_type"], str)
+            or not isinstance(view["oa_view_type"], str)
         ):
             raise TemplateError("invalid native view observations")
         files = view["files"]
@@ -142,7 +142,10 @@ def fingerprint(view):
     ):
         return None
     # Source role and site paths are not part of native view identity.
-    value = {k: view[k] for k in ("target", "view_type", "instance_count", "mosaic_count")}
+    value = {
+        k: view[k]
+        for k in ("target", "oa_view_type", "instance_count", "mosaic_count")
+    }
     value["files"] = sorted(view["files"], key=lambda r: r["name"])
     value["terminals"] = sorted(view["terminals"], key=lambda r: r["name"])
     return sha(jcs(dict(method=METHOD, **value)))

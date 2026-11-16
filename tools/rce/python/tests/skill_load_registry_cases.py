@@ -1,3 +1,4 @@
+from skill_loader_test_support import loader_contract
 from collections import defaultdict
 
 from skill_load_fixtures import (
@@ -43,13 +44,11 @@ def test_frontend_versions_force_updated_callbacks_to_reload() -> None:
         ("lvs/skill++/LVS.ils", "lvs/skill++/LVSCB.ils", "lvs"),
         ("drc/skill++/DRC.ils", "drc/skill++/DRCCB.ils", "drc"),
     ):
-        entry_text = (CAD_ROOT / entry).read_text(encoding="utf-8")
+        entry_text = loader_contract(entry)
         callback_text = (CAD_ROOT / callback).read_text(encoding="utf-8")
-        assert f"isCallable('{prefix}LoaderRevision)" in entry_text
-        assert f"procedure({prefix}LoaderRevision(" in entry_text
-        assert (
-            f"{prefix}FrontendRevision()=={prefix}LoaderRevision()" in entry_text
-        )
+        assert entry_text.requires(f"{prefix}LoaderRevision")
+        assert entry_text.requires(f"{prefix}FrontendRevision")
+        assert entry_text.revision(f"{prefix}FrontendRevision")
         assert f"procedure({prefix}FrontendRevision(" in callback_text
 
 
@@ -59,8 +58,8 @@ def test_flow_loaders_load_the_widget_before_ipc_callbacks() -> None:
         ("lvs/skill++/LVS.ils", '"/skill++/LVSRUN.ils"'),
         ("drc/skill++/DRC.ils", '"/skill++/DRCRUN.ils"'),
     ):
-        text = (CAD_ROOT / entry).read_text(encoding="utf-8")
-        assert "isCallable('GUI_flowLogOpen)" in text
+        text = loader_contract(entry)
+        assert text.requires("GUI_flowLogOpen")
         assert text.index('"/skill/UI_flowLog.il"') < text.index(callback)
 
 

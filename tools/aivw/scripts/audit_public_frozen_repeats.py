@@ -57,7 +57,7 @@ def audit(control):
                'dataset': 'public_calibration', 'holdout_evaluated': False}
     request_digest = stable_digest(request)
     launch = resolve_launch_paths()
-    db = Path('/path/to/xh/amsVerify/data/ams').resolve()
+    db = Path('/workarea/xh/amsVerify/data/ams').resolve()
     run = allocate_split_run(launch, db, library=plan['target']['library'], cell=plan['target']['cell'],
                             view='public_frozen_repeat', kind='public-frozen-repeats', request_digest=request_digest)
     write_json_once(run.control_root/'request.json', request)

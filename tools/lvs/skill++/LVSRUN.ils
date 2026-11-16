@@ -1,5 +1,5 @@
 unless(and(isCallable('SICO_tomlRevision)
-             SICO_tomlRevision()=="20260922.sico.temp.v6"
+             SICO_tomlRevision()=="20261024.sico.temp.v7"
              isCallable('SICO_tomlString) isCallable('SICO_shellQuote)
              isCallable('SICO_tempPath) isCallable('SICO_tempEnvironment))
   cond(
@@ -48,14 +48,7 @@ procedure(lvsRunDirFromConfig(config)
 )
 
 procedure(LVS_pythonExe()
-  let((pythonRoot)
-    or(SICO_envValue("LVS_PYTHON") SICO_installedPython()
-       progn(
-         pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
-         or(SICO_envValue("SICO_PYTHON")
-            when(pythonRoot
-              simplifyFilename(strcat(pythonRoot "/bin/python3") t))
-            "python3"))))
+  SICO_installedPython()
 )
 
 procedure(LVS_launchEnvCommand(args)
@@ -132,9 +125,9 @@ procedure(lvsCompletionCorrectP(config exitStatus)
 procedure(lvsShowCompletionSummary(config svdb exitStatus)
   let((statusText result)
     statusText=if(lvsCompletionCorrectP(config exitStatus) then
-      "LVS Status: CORRECT :-)"
+      "LVS Status: CORRECT ^_^"
       else
-      "LVS Status: INCORRECT :-(")
+      "LVS Status: INCORRECT TAT")
     result=hiDisplayAppDBox(
       ?name          'lvsCompletionSummary
       ?dboxBanner    "LVS Summary"
@@ -299,7 +292,7 @@ procedure(lvsBatchStart(form)
 )
 
 procedure(lvsOpenRve(config svdb)
-  prog((runDir logDir rveLog cmd launchCmd cid)
+  prog((runDir logDir rveLog launchCmd cid)
     runDir=lvsRunDirFromConfig(config)
     unless(isFile(config)
       config=strcat(runDir "/log/lvs.toml")
@@ -311,11 +304,9 @@ procedure(lvsOpenRve(config svdb)
       return(nil))
     logDir=strcat(runDir "/log")
     rveLog=strcat(logDir "/lvs.rve.log")
-    cmd=strcat(SICO_backendCommand("lvs" LVS_pythonExe() LVS_pythonEntry()) " report " SICO_shellQuote(config))
     launchCmd=LVS_launchEnvCommand(
                 strcat(SICO_backendCommand("lvs" LVS_pythonExe() LVS_pythonEntry()) " report "
                         SICO_shellQuote(config)))
-    info(strcat("<INFO> LVS::RVE CMD=\"" cmd "\"\n"))
     system(strcat("mkdir -p " SICO_shellQuote(logDir)))
     cid=ipcBeginProcess(launchCmd "" nil nil nil rveLog)
     when(cid

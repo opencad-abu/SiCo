@@ -1,7 +1,7 @@
 ; SKILL delegates state selection, activation admission and permissions to Python.
 ; Source installs use the development adapter; runtime installs require its ELF.
 unless(and(boundp('sicoStateVersion)
-           sicoStateVersion=="20261020.sico.state.v5")
+           sicoStateVersion=="20261024.sico.state.v6")
 
 procedure(SICO_stateInitialize()
   unless(boundp('sicoStateLaunchDirectory)
@@ -25,19 +25,11 @@ procedure(SICO_stateQuote(value)
     strcat(output "'")))
 
 procedure(SICO_stateCommand(scope)
-  prog((product entry python pythonRoot invocation command libraryPath)
+  prog((product entry python invocation command libraryPath)
     product=SICO_installationRoot()
     python=SICO_installedPython(product)
     unless(python
-      python=SICO_environmentValue("SICO_PYTHON" list("CAD_PYTHON")))
-    unless(python
-      pythonRoot=or(SICO_environmentValue("SICO_PYTHON_ROOT" list("CAD_PYTHON_ROOT"))
-                    "/software/pkgs/python/3.9.13")
-      unless(and(strlen(pythonRoot)>0 substring(pythonRoot 1 1)=="/" isDir(pythonRoot))
-        error("SiCo state requires an absolute Python installation root\n"))
-      python=strcat(pythonRoot "/bin/python3"))
-    unless(and(strlen(python)>0 substring(python 1 1)=="/" isExecutable(python))
-      error("SiCo state requires the configured Python interpreter\n"))
+      error("SiCo state requires $SICO_HOME/runtime/python/bin/python3\n"))
     libraryPath=SICO_stateQuote(or(SICO_environmentValue("SICO_SYSTEM_LD_LIBRARY_PATH"
       list("CAD_SYSTEM_LD_LIBRARY_PATH")) ""))
     entry=strcat(product "/tools/common/bin/sico-state")
@@ -109,6 +101,6 @@ procedure(SICO_stateLaunchDirectory()
 procedure(SICO_stateEnvironment(@optional (scope "project"))
   cadddr(SICO_stateResponse(scope)))
 
-procedure(SICO_stateRevision() "20261020.sico.state.v5")
-sicoStateVersion="20261020.sico.state.v5"
+procedure(SICO_stateRevision() "20261024.sico.state.v6")
+sicoStateVersion="20261024.sico.state.v6"
 )

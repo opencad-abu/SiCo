@@ -73,7 +73,7 @@ procedure(aiSimSignalResolve(asgTest asgOutput asgSource)
     unwindProtect(progn(asgResult=errset(progn(
       asgCv=apply('dbOpenCellViewByType append(asgTarget list("" "r")))
       foreach(asgPart asgParents
-        unless(and(asgCv asgCv~>cellViewType=="schematic" !dbIsCellViewModified(asgCv)
+        unless(and(asgCv asgCv~>viewType=="schematic" !dbIsCellViewModified(asgCv)
           aiSimSourceReadyP(asgCv))
           error("Signal hierarchy requires saved schematics without error markers: %s" asgLabel))
         asgInst=dbFindAnyInstByName(asgCv asgPart)
@@ -103,7 +103,7 @@ procedure(aiSimSignalResolve(asgTest asgOutput asgSource)
             asgTarget=list(asgInst~>libName asgInst~>cellName asgView))
           dbClose(asgCv) asgCv=nil
           asgCv=apply('dbOpenCellViewByType append(asgTarget list("" "r")))
-          unless(and(asgCv asgCv~>cellViewType=="schematic" !dbIsCellViewModified(asgCv)
+          unless(and(asgCv asgCv~>viewType=="schematic" !dbIsCellViewModified(asgCv)
             !asgCv~>superMaster !asgCv~>isParamCell
             aiSimSourceReadyP(asgCv))
             error("Signal hierarchy requires a saved static schematic without error markers: %s" asgLabel))
@@ -154,7 +154,7 @@ procedure(aiSimViewCoverage(asvTest)
         asvCv=apply('dbOpenCellViewByType append(asvItem list("" "r")))
         unless(asvCv error(sprintf(nil "master %s/%s unreadable (views %L)"
           car(asvItem) cadr(asvItem) aiSimViewNames(car(asvItem) cadr(asvItem)))))
-        when(asvCv~>cellViewType=="schematic"
+        when(asvCv~>viewType=="schematic"
           foreach(asvInst setof(asvI asvCv~>instances !asvI~>pin)
             asvStep=aiSimViewStep(asvInst asvSwitches asvStops)
             if(eq(car(asvStep) 'follow)

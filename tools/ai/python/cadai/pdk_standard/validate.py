@@ -141,6 +141,13 @@ def device(value):
 
 
 def _document(name, value):
+    if name == "layout.json":
+        from . import layout
+        return layout.validate_process(value)
+    if name.endswith("/layout.json"):
+        from . import layout
+        return layout.validate_device(value)
+
     def check(node):
         if node is None:
             fail("Null is not a standard fact value")

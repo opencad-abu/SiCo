@@ -87,8 +87,8 @@ procedure(aiPdkDatabase(apDbLib apDbCell apDbView apDbType)
     apDbCv=nil apDbOwned=nil apDbResult=nil apDbPorts=nil apDbGeometry=nil
     apDbModified=nil apDbState=nil apDbClosed=nil apDbStamp=nil
     unless(apDbType=="schematicSymbol"
-      return(aiPdkObj(list(list("ports" aiPdkSection("unavailable" "unsupported_view_type" nil))
-        list("geometry" aiPdkSection("unavailable" "unsupported_view_type" nil))))))
+      return(aiPdkObj(list(list("ports" aiPdkSection("unavailable" "unsupported_oa_view_type" nil))
+        list("geometry" aiPdkSection("unavailable" "unsupported_oa_view_type" nil))))))
     apDbResult=unwindProtect(errset(progn(
       foreach(apDbOpen dbGetOpenCellViews()
         when(equal(list(apDbOpen~>libName apDbOpen~>cellName apDbOpen~>viewName)

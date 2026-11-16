@@ -11,7 +11,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 CAD_ROOT = ROOT.parent
 LAUNCHER = ROOT / "skill" / "MTS_netlistor.il"
-REVISION = "20260924.sico.mts.launcher.v7"
+REVISION = "20261024.sico.mts.launcher.v12"
 
 
 def _skill_string(value: Path) -> str:
@@ -47,10 +47,16 @@ def test_launcher_source_guards_all_definitions_and_uses_skill_gets_api() -> Non
     assert "return(cid)" in source
     assert "procedure(mtsNetlistorRunningProcess" in source
     assert "procedure(mtsNetlistorBrand()" in source
+    assert 'when(and(start stringp(start) rexMatchp("^[0-9]+$" start))' in source
+    assert "return(start))" in source
+    assert "return(token))" in source
+    assert "return(path)" in source
     assert 'info("<INFO> %s::MTS Netlistor is already running.\\n"' in source
     assert "mtsNetlistorBrand()" in source
-    assert 'SICO_guiPythonLaunchCommand(command "MTS_NETLISTOR_ORIG_LD_LIBRARY_PATH"' in source
-    assert 'command=strcat("env SICO_PYTHON="' in source
+    assert "return(SICO_guiPythonLaunchCommand(" in source
+    assert 'command "MTS_NETLISTOR_ORIG_LD_LIBRARY_PATH"' in source
+    assert "env SICO_PYTHON=" not in source
+    assert "mtsNetlistorPythonExe" not in source
     assert '"-u LD_PRELOAD -u LD_AUDIT -u CDS_MPS_SESSION -u CDS_MPS_HOST -u CDS_MPS_PORT "' in source
     assert 'deOpenCellView(library cell view "" nil "r")' in source
     assert 'member(view list("symbol" "spectreText" "spiceText"))' in source
@@ -64,9 +70,80 @@ def test_menu_callback_is_revision_aware_everywhere() -> None:
     )
 
     assert config.count('name = "mtsNetlistor"') == 3
-    assert config.count(f'(mtsNetlistorRevision)==\\"{REVISION}\\"') == 3
+    assert config.count("mtsnl/skill++/MTS.ils") == 3
     assert generated.count('list("mtsNetlistor" "MTS Netlistor..."') == 3
-    assert generated.count(f'(mtsNetlistorRevision)==\\\"{REVISION}\\\"') == 3
+    assert generated.count("mtsnl/skill++/MTS.ils") == 3
+
+
+def test_proc_start_time_returns_ticks(tmp_path: Path) -> None:
+    dbaccess = shutil.which("dbAccess")
+    if dbaccess is None:
+        pytest.skip("dbAccess is unavailable")
+    probe = tmp_path / "identity_probe.il"
+    probe.write_text(
+        "\n".join((
+            f"load({_skill_string(ROOT / 'skill++/MTS.ils')})",
+            "start=mtsNetlistorProcStartTime(ipcGetPid())",
+            'unless(and(stringp(start) rexMatchp("^[0-9]+$" start))',
+            '  error("process start time was not returned"))',
+            'printf("MTS_PROC_START=%L\\n" start)',
+            "exit()",
+            "",
+        )),
+        encoding="ascii",
+    )
+    environment = {
+        key: value for key, value in os.environ.items()
+        if key not in {"LD_LIBRARY_PATH", "LD_PRELOAD", "CAD_HOME"}
+        and not key.startswith("SICO_")
+    }
+    environment["SICO_HOME"] = str(CAD_ROOT.parent)
+    completed = subprocess.run(
+        [dbaccess, "-load", str(probe)], cwd=tmp_path, env=environment,
+        text=True, capture_output=True, timeout=60, check=False)
+    output = completed.stdout + completed.stderr
+    assert completed.returncode == 0, output
+    assert "MTS_PROC_START=nil" not in output, output
+    assert "*Error*" not in output, output
+
+
+def test_session_writer_and_token_reader_return_values(tmp_path: Path) -> None:
+    dbaccess = shutil.which("dbAccess")
+    if dbaccess is None:
+        pytest.skip("dbAccess is unavailable")
+    session = tmp_path / "session.json"
+    token = tmp_path / "token.txt"
+    token.write_text("abc123\n", encoding="ascii")
+    probe = tmp_path / "session_probe.il"
+    probe.write_text(
+        "\n".join((
+            f"load({_skill_string(ROOT / 'skill++/MTS.ils')})",
+            f'session=mtsNetlistorWriteSession({_skill_string(session)} '
+            f'{_skill_string(ROOT / "skill/MTS_netlistor.il")} 123 "456" '
+            'list(list("lib" "/tmp/lib")))',
+            f'unless(session=={_skill_string(session)} error("session path not returned"))',
+            f'token=mtsNetlistorReadToken({_skill_string(token)})',
+            'unless(token=="abc123" error("token was not returned"))',
+            'printf("MTS_SESSION_IO_OK\\n")',
+            "exit()",
+            "",
+        )),
+        encoding="ascii",
+    )
+    environment = {
+        key: value for key, value in os.environ.items()
+        if key not in {"LD_LIBRARY_PATH", "LD_PRELOAD", "CAD_HOME"}
+        and not key.startswith("SICO_")
+    }
+    environment["SICO_HOME"] = str(CAD_ROOT.parent)
+    completed = subprocess.run(
+        [dbaccess, "-load", str(probe)], cwd=tmp_path, env=environment,
+        text=True, capture_output=True, timeout=60, check=False)
+    output = completed.stdout + completed.stderr
+    assert completed.returncode == 0, output
+    assert "MTS_SESSION_IO_OK" in output, output
+    assert "*Error*" not in output, output
+    assert session.is_file()
 
 
 @pytest.mark.skipif(

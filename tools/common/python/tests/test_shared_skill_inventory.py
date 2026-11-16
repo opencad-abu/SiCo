@@ -11,6 +11,7 @@ import pytest
 from skill_style import analyze
 from skill_syntax import parse as _parse
 from skill_test_support import ROOT, common_source_loads, skill_group_paths
+from skill_loader_test_support import loader_contract, ordered_sources
 
 
 @pytest.mark.parametrize("group,suffix", [("gui", ".ils"), ("lsf", ".il")])
@@ -29,7 +30,7 @@ def test_shared_inventory_preserves_source_language_and_all_frontend_orders(grou
         definitions += re.findall(r"^(?:procedure|defclass|defmethod|defmacro|defgeneric)\((\w+)", source, re.M)
     assert len(definitions) == len(set(definitions))
     for flow in ("rce", "drc", "lvs", "lef"):
-        source = (ROOT / flow / "skill++" / f"{flow.upper()}.ils").read_text()
+        source = loader_contract(f"{flow}/skill++/{flow.upper()}.ils")
         offsets = [source.index(f'"/{path.parent.name}/{path.name}"') for path in sources]
         assert offsets == sorted(offsets)
         if group == "gui":
@@ -38,7 +39,7 @@ def test_shared_inventory_preserves_source_language_and_all_frontend_orders(grou
         else:
             revision = "SICO_lsfModulesRevision"
             revision_value = "20260924.flow.environment.v3"
-        assert source.count(f'{revision}()=="{revision_value}"') >= 2
+        assert source.revision(revision) == revision_value
         if group == "lsf":
             assert source.index('"/skill/SICO_guiProtocol.il"') < offsets[0]
             assert offsets[-1] < source.index('"/skill/SICO_lsfMonitor.il"')
@@ -56,9 +57,11 @@ def test_standalone_lsf_menu_loads_explicit_discovery_group():
     assert len(callbacks) == 3
     assert menu
     for callback in callbacks:
-        offsets = [callback.index(str(path.relative_to(ROOT))) for path in skill_group_paths("common", "lsf")]
-        assert offsets == sorted(offsets)
-        assert offsets[-1] < callback.index("common/skill/SICO_lsfMonitor.il")
+        assert 'common/skill++/LSF.ils' in callback
+    paths = ordered_sources("lsf")
+    offsets = [paths.index(path) for path in skill_group_paths("common", "lsf")]
+    assert offsets == sorted(offsets)
+    assert offsets[-1] < paths.index(ROOT / "common/skill/SICO_lsfMonitor.il")
 
 
 @pytest.mark.skipif(os.environ.get("RCE_RUN_SKILL_PROBE") != "1", reason="set RCE_RUN_SKILL_PROBE=1")

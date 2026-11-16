@@ -37,9 +37,9 @@ def test_dspf_bridge_protocol_and_process_are_bounded() -> None:
     assert "boundp('rceDspfProtocolVersion)" in protocol
     assert 'rceDspfProtocolVersion=="20260721.dspf.protocol.v3"' in protocol
     assert 'rceDspfGeometryVersion=="20260721.dspf.geometry.v1"' in geometry
-    assert 'rceDspfLauncherVersion=="20260814.dspf.launcher.v5"' in launcher
+    assert 'rceDspfLauncherVersion=="20261024.dspf.launcher.v6"' in launcher
     assert "boundp('rceDspfAnalyzerVersion)" in analyzer
-    assert 'rceDspfAnalyzerVersion=="20260722.dspf.analyzer.v5"' in analyzer
+    assert 'rceDspfAnalyzerVersion=="20261024.dspf.analyzer.v6"' in analyzer
 
     for unsafe in ("evalstring", "linereadstring", "loadstring"):
         for source in (region_codec, protocol, geometry, launcher, analyzer):
@@ -117,11 +117,12 @@ def test_rce_and_analyzer_inherit_the_shared_python() -> None:
     helper_end = helper.index("procedure(RCE_tomlRevision()", helper_start)
     python_helper = helper[helper_start:helper_end]
 
-    assert 'rceTomlVersion=="20260818.common.compat.v2"' in helper
-    assert 'rceTomlVersion="20260818.common.compat.v2"' in helper
-    assert 'SICO_tomlRevision()=="20260922.sico.temp.v6"' in helper
+    assert 'rceTomlVersion=="20261024.common.compat.v4"' in helper
+    assert 'rceTomlVersion="20261024.common.compat.v4"' in helper
+    assert 'load(strcat(commonSkill "SICO_toml.il"))' in helper
     assert entry.startswith("#!/usr/bin/env python3\n")
     assert 'SICO_envValue("RCE_PYTHON")' in python_helper
+    assert 'SICO_installedPython()' in python_helper
     assert 'SICO_envValue("SICO_PYTHON")' in python_helper
     assert 'SICO_envValue("SICO_PYTHON_ROOT")' in python_helper
     assert 'strcat(pythonRoot "/bin/python3")' in python_helper
@@ -129,10 +130,10 @@ def test_rce_and_analyzer_inherit_the_shared_python() -> None:
     for source in (launcher, analyzer):
         assert 'SICO_envValue("RCE_ANALYZER_PYTHON")' in source
         assert "RCE_pythonExe()" in source
-    assert 'RCE_PYTHON=${CAD_PYTHON_ROOT%/}/bin/python3' in bash_env
+    assert 'RCE_PYTHON=${SICO_PYTHON_ROOT%/}/bin/python3' in bash_env
     assert 'RCE_PYTHON=python3' in bash_env
-    assert 'setenv RCE_PYTHON "$CAD_PYTHON"' in csh_env
-    assert 'setenv RCE_PYTHON "$CAD_PYTHON_ROOT/bin/python3"' in csh_env
+    assert 'setenv RCE_PYTHON "$SICO_PYTHON"' in csh_env
+    assert 'setenv RCE_PYTHON "$SICO_PYTHON_ROOT/bin/python3"' in csh_env
     assert "setenv RCE_PYTHON python3" in csh_env
     assert 'RCE_RUN_ROOT="${RCE_RUN_ROOT:-${PROJECT_ROOT}/.rce}"' in bash_env
     assert 'setenv RCE_RUN_ROOT "$PROJECT_ROOT/.rce"' in csh_env
@@ -197,13 +198,12 @@ def test_dspf_summary_and_loader_rebuild_and_wire_the_analyzer() -> None:
     assert "rceSummaryAnalyzableP(meta success netlistReady)" in summary
     assert "form~>rceSummaryAnalyzable" in summary
     assert "rceDspfAnalyzerStart(path meta)" in summary
-    assert 'rceDspfRegionCodecRevision()=="20260721.dspf.regions.v1"' in entry
-    assert 'rceDspfProtocolRevision()=="20260721.dspf.protocol.v3"' in entry
-    assert 'rceDspfGeometryRevision()=="20260721.dspf.geometry.v1"' in entry
-    assert 'rceDspfLauncherRevision()=="20260814.dspf.launcher.v5"' in entry
-    assert 'SICO_guiProtocolRevision()=="20260814.cadgui.v1"' in entry
-    assert "isCallable('rceDspfAnalyzerChooseFile)" in entry
-    assert 'rceDspfAnalyzerRevision()=="20260722.dspf.analyzer.v5"' in entry
+    assert '(rceDspfRegionCodecRevision "20260721.dspf.regions.v1")' in entry
+    assert '(rceDspfProtocolRevision "20260721.dspf.protocol.v3")' in entry
+    assert '(rceDspfGeometryRevision "20260721.dspf.geometry.v1")' in entry
+    assert '(rceDspfLauncherRevision "20261024.dspf.launcher.v6")' in entry
+    assert "rceDspfAnalyzerChooseFile" in entry
+    assert '(rceDspfAnalyzerRevision "20261024.dspf.analyzer.v6")' in entry
     assert entry.index('"/skill/RCE_dspfRegionCodec.il"') < entry.index(
         '"/skill/RCE_dspfProtocol.il"'
     )

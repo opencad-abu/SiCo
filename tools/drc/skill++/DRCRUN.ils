@@ -1,5 +1,5 @@
 unless(and(isCallable('SICO_tomlRevision)
-             SICO_tomlRevision()=="20260922.sico.temp.v6"
+             SICO_tomlRevision()=="20261024.sico.temp.v7"
              isCallable('SICO_tomlString) isCallable('SICO_shellQuote)
              isCallable('SICO_tempPath) isCallable('SICO_tempEnvironment))
   cond(
@@ -33,14 +33,7 @@ procedure(drcRunUsesCadTempPath()
 )
 
 procedure(DRC_pythonExe()
-  let((pythonRoot)
-    or(SICO_envValue("DRC_PYTHON") SICO_installedPython()
-       progn(
-         pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
-         or(SICO_envValue("SICO_PYTHON")
-            when(pythonRoot
-              simplifyFilename(strcat(pythonRoot "/bin/python3") t))
-            "python3"))))
+  SICO_installedPython()
 )
 
 procedure(DRC_launchEnvCommand(args)

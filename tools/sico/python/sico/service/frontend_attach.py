@@ -32,6 +32,67 @@ def session_record(controller, descriptor):
                 closing=controller.closing or controller._shutdown.is_set())
 
 
+def create_from_source(owner, descriptor, control, wire, address, context, record=None):
+    """Create one session; retry only when the service published no runtime."""
+
+    record = record or session_record
+    before = set(owner.controllers)
+    for attempt in (0, 1):
+        new = None
+        try:
+            if address.session.session_id in owner.controllers:
+                new = control.run(address, wire.connection, wire.control,
+                    lambda: owner.create_from(address.session.session_id,
+                                              uuid.uuid4().hex, context))
+            else:
+                new = owner.creation.create(address.session, uuid.uuid4().hex, context)
+        except Exception as exc:
+            new = _published_creation(owner, before)
+            if new is None:
+                _diagnostic("Session creation did not publish a runtime", exc)
+                if isinstance(exc, ValueError):
+                    raise
+                if attempt:
+                    raise ValueError(
+                        "会话创建未完成，未创建运行实例，请重试"
+                    ) from exc
+                continue
+            return _creation_result(descriptor, control, wire, new, record, exc)
+        return _creation_result(descriptor, control, wire, new, record)
+
+
+def _published_creation(owner, before):
+    created = [controller for session_id, controller in owner.controllers.items()
+               if session_id not in before]
+    return created[0] if len(created) == 1 else None
+
+
+def _creation_result(descriptor, control, wire, controller, record, cause=None):
+    try:
+        row = record(controller, descriptor)
+        granted = control.continue_session(
+            wire.connection, SessionAddress.from_record(row["address"])
+        )
+        return dict(session=row, control=granted.record())
+    except Exception as exc:
+        if cause is not None:
+            _diagnostic(
+                "Session creation was published before its response failed", cause
+            )
+        _diagnostic("Session creation result was not confirmed", exc)
+        raise ValueError(
+            "会话已创建，但控制状态未能确认；请刷新会话列表后继续"
+        ) from exc
+
+
+def _diagnostic(message, error):
+    try:
+        from ..core.diagnostics import diagnostics
+    except ImportError:  # Legacy development layouts may predate the shared queue.
+        return
+    diagnostics.submit(__name__, message, error)
+
+
 class FrontendAttach:
     def __init__(self, owner, descriptor):
         self.owner, self.descriptor = owner, descriptor
@@ -165,7 +226,11 @@ class FrontendAttach:
             if mode == "demo":
                 context = BoundContext("demo-instance", uuid.uuid4().hex, "bound", dict(
                     source="simulated", valid=True, cwd=str(self.owner.project),
-                    cellview=dict(lib="demo", cell="amp", view="schematic")))
+                    cellview=dict(
+                        lib="demo", cell="amp", view_name="schematic",
+                        oa_view_type="schematic",
+                        oa_view_type_source="platform_api",
+                    )))
                 peer = DemoPeer(broker, context, cancelled=wire.closed.is_set)
                 pending.callback(peer.close)
             else:

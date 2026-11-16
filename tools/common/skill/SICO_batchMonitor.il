@@ -3,7 +3,7 @@
 ;------------------------------------------------------------------------------
 
 unless(and(boundp('sicoBatchMonitorAuditVersion)
-             sicoBatchMonitorAuditVersion=="20260911.flow.audit.v1")
+             sicoBatchMonitorAuditVersion=="20261024.flow.audit.v2")
 
 procedure(cadBatchMonitorFormValidP(form)
   and(form
@@ -236,8 +236,8 @@ procedure(cadBatchMonitorDisplay(meta)
         formName
         strcat(cond(
                  (isCallable('SICO_logo) SICO_logo())
-                 (isCallable('witMenuLogo) witMenuLogo())
-                 (t "SiCo"))
+                 (isCallable('sicoMenuLogo) sicoMenuLogo())
+                 (t "Silicon Copilot"))
                 "::" meta['flow] " Multi-Cell Summary")
         layout
         ?buttonLayout list(
@@ -264,14 +264,14 @@ procedure(cadBatchMonitorDisplay(meta)
 )
 
 procedure(cadBatchMonitorRevision()
-  "20260902.form.lifecycle.v1"
+  "20261024.form.lifecycle.v2"
 )
 
 procedure(cadBatchMonitorAuditRevision()
-  "20260911.flow.audit.v1"
+  "20261024.flow.audit.v2"
 )
 
-sicoBatchMonitorAuditVersion="20260911.flow.audit.v1"
+sicoBatchMonitorAuditVersion="20261024.flow.audit.v2"
 
-sicoBatchMonitorVersion="20260902.form.lifecycle.v1"
+sicoBatchMonitorVersion="20261024.form.lifecycle.v2"
 )

@@ -46,7 +46,7 @@ procedure(aiCdfSnapshot(acdTarget acdInstance)
       acdCv=dbOpenCellViewByType(car(acdTarget) cadr(acdTarget) caddr(acdTarget) "" "r")
       unless(acdCv error("CDF target cannot be opened"))
       if(acdInstance then
-        unless(acdCv~>cellViewType=="schematic" error("instance CDF requires schematic"))
+        unless(acdCv~>viewType=="schematic" error("instance CDF requires schematic"))
         acdInst=dbFindAnyInstByName(acdCv acdInstance)
         unless(acdInst error("instance not found; direct instance name required"))
         acdMaster=acdInst~>master
@@ -67,7 +67,7 @@ procedure(aiCdfSnapshot(acdTarget acdInstance)
         list(aiCdfTyped(acdCdf~>formInitProc) aiCdfTyped(acdCdf~>doneProc))
         aiCdfTyped(acdCdf~>simInfo)
         ddGetObjReadPath(ddGetObj(car(acdTarget)))
-        acdMaster~>cellViewType
+        acdMaster~>viewType
         aiCrShapeRows(acdMaster))
       when(strlen(aiCircuitJson(acdAnswer))>524288 error("CDF snapshot exceeds 512 KiB")))
       when(acdCv dbClose(acdCv)))

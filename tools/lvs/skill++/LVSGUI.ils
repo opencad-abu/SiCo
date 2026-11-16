@@ -24,7 +24,6 @@ defclass(LVSGUI (PROFILEGUI INPUTGUI OUTPUTGUI LVSOPTGUI HARDWARE TOOLSETGUI BAT
     (inputMoreContents @initform nil)
     (outLay       @initform nil)
     (lvsOptLay    @initform nil)
-    (svdbQuery    @initform nil)
     (lvsRunMode   @initform nil)
     (lvsMore      @initform nil)
     (lvsMoreContents @initform nil)
@@ -42,21 +41,6 @@ defmethod(makeLvsCpus ((inst LVSGUI))
     ?items    inst->cpuChoices
     ?defValue "1"
     ?editable nil
-  )
-)
-
-defmethod(makeLvsSvdbQuery ((inst LVSGUI))
-  inst->svdbQuery=hiCreateToggleField(
-    ?name       'svdbQuery
-    ?prompt     "SVDB query:"
-    ?choices    list(list('svdbQueryCci "CCI")
-                     list('svdbQuerySi "SI")
-                     list('svdbQueryRecon "RECON")
-                     list('svdbQueryIxfNxfSlph "IXF+NXF+SLPH")
-                     list('svdbQueryPinloc "PINLOC"))
-    ?itemsPerRow 5
-    ?value      '(nil nil nil nil nil)
-    ?defValue   '(nil nil nil nil nil)
   )
 )
 
@@ -245,13 +229,7 @@ procedure(cadDisplayLvsForm()
     gui->lvsToolDefValue      = lvsStruc->lvsToolDefValue
     makeForm(gui)
     hiInstantiateForm(gui->mainForm)
-    gui->mainForm->svdbQuery->hiToolTip=list(
-      "Calibre Connectivity Interface"
-      "LVS Recon or short isolation"
-      "LVS Recon ERC"
-      "ASCII cross-reference"
-      "Pin locations"
-    )
+    gui->mainForm->svdbQuery->hiToolTip=lvsSvdbQueryToolTip()
     putpropq(gui->mainForm nil cadProfilePathStates)
     putpropq(gui->mainForm nil cadProfileSourcePath)
     cadCustomSvrfBind(gui->mainForm)

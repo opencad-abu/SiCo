@@ -1,7 +1,9 @@
 """Load ownership applicability and broken-guard regressions."""
 
-from utility.skill_load_audit import check_load_ownership, local_guards
-from conftest import write
+import json
+
+from utility.skill_load_audit import check_load_ownership, check_repository, local_guards
+from utility.tests.gate_fixtures import write
 
 
 def guarded(body="procedure(sample() t)", *, version="v1", assignment="v1"):
@@ -102,3 +104,16 @@ def test_lifecycle_requires_existing_anchored_owner_and_evidence(tmp_path):
     files["caller.py"] = "renamed_call('worker')"
     errors, _ = audit(tmp_path, files, manifest)
     assert any("stale evidence anchor" in item for item in errors)
+
+
+def test_repository_audits_untracked_sources_without_private_probe_files(repo):
+    write(repo, "tools/utility/skill_load_ownership.json", json.dumps(
+        dict(schema_version=1, loaders=[], lifecycles=[])))
+    write(repo, "skill/new.il", "procedure(newFunction() t)\n")
+    write(repo, ".cad/probe.il", "procedure(privateProbe() t)\n")
+    errors, _ = check_repository(repo)
+    assert len(errors) == 1 and errors[0].startswith("skill/new.il:")
+    write(repo, "skill/new.il", guarded())
+    errors, records = check_repository(repo)
+    assert errors == []
+    assert records == [dict(path="skill/new.il", kind="local-version-guard")]

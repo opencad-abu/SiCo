@@ -41,7 +41,7 @@
         "tran-supply-step"
       ],
       "control_manifest": {
-        "path": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T000251.595490Z-recipe-run-49de8a1311e3/manifest.json",
+        "path": "/zone.disk/ssd1/workarea/ai/openclaw/cad/.aivw/runs/20260907T000251.595490Z-recipe-run-49de8a1311e3/manifest.json",
         "sha256": "302dc87e9613af151d6e051d4791b60fa5b020ac504e5ad0639f0ea541f4b4a0"
       },
       "measurement_contract": {
@@ -128,7 +128,7 @@
         }
       ],
       "observations": {
-        "path": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.rnm_candidate/runs/20260907T000251.595490Z-recipe-run-49de8a1311e3/checks/gates/exploratory/exploratory-observations.json",
+        "path": "/zone.disk/ssd1/workarea/xh/amsVerify/data/ams/amsLDO.LDO_AON.rnm_candidate/runs/20260907T000251.595490Z-recipe-run-49de8a1311e3/checks/gates/exploratory/exploratory-observations.json",
         "sha256": "b889538d876c86d242fa69f84a93084cfcb267eeedbe19516c561d756910701e"
       },
       "observed_ranges": {
@@ -154,12 +154,12 @@
         }
       },
       "payload_manifest": {
-        "path": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.rnm_candidate/runs/20260907T000251.595490Z-recipe-run-49de8a1311e3/payload-manifest.json",
+        "path": "/zone.disk/ssd1/workarea/xh/amsVerify/data/ams/amsLDO.LDO_AON.rnm_candidate/runs/20260907T000251.595490Z-recipe-run-49de8a1311e3/payload-manifest.json",
         "sha256": "94a886871ee82c753a6f77202a63abe4c259052b859376f18d317beff8ae89c9"
       },
       "plan": {
         "digest": "sha256:0012418407a22bbbbc0f590a631056d14d4775deda13a2546166651800bc127e",
-        "path": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_AON.rnm_candidate/runs/20260907T000251.595490Z-recipe-run-49de8a1311e3/checks/gates/exploratory/exploratory-plan.json",
+        "path": "/zone.disk/ssd1/workarea/xh/amsVerify/data/ams/amsLDO.LDO_AON.rnm_candidate/runs/20260907T000251.595490Z-recipe-run-49de8a1311e3/checks/gates/exploratory/exploratory-plan.json",
         "sha256": "6417743c617190faa9a2703d2840cf6381e031fbfff581263af74194dac3add5"
       },
       "psf_artifact_count": 36,
@@ -207,7 +207,7 @@
         "tran-supply-step"
       ],
       "control_manifest": {
-        "path": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T000003.816042Z-recipe-run-58789411bf49/manifest.json",
+        "path": "/zone.disk/ssd1/workarea/ai/openclaw/cad/.aivw/runs/20260907T000003.816042Z-recipe-run-58789411bf49/manifest.json",
         "sha256": "0d1f801404b8b3726d2181ba6c2c8bac5bb9afd2faecb0c9c26fbbe1d8ee3732"
       },
       "measurement_contract": {
@@ -293,7 +293,7 @@
         }
       ],
       "observations": {
-        "path": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.rnm_candidate/runs/20260907T000003.816042Z-recipe-run-58789411bf49/checks/gates/exploratory/exploratory-observations.json",
+        "path": "/zone.disk/ssd1/workarea/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.rnm_candidate/runs/20260907T000003.816042Z-recipe-run-58789411bf49/checks/gates/exploratory/exploratory-observations.json",
         "sha256": "b4f8bbaa9d325c98618a60e82c0c97c0785889f942dc51f4e09f49164ddda588"
       },
       "observed_ranges": {
@@ -319,12 +319,12 @@
         }
       },
       "payload_manifest": {
-        "path": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.rnm_candidate/runs/20260907T000003.816042Z-recipe-run-58789411bf49/payload-manifest.json",
+        "path": "/zone.disk/ssd1/workarea/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.rnm_candidate/runs/20260907T000003.816042Z-recipe-run-58789411bf49/payload-manifest.json",
         "sha256": "f24d76e53e622296a544ff2e4f13bddbdf6742c6ff241169eb09fc1c4d52f162"
       },
       "plan": {
         "digest": "sha256:65baef303b053d14224b910dcfe897cfdb80fded3629e68199bdc5a49acff93e",
-        "path": "/zone.disk/ssd1/path/to/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.rnm_candidate/runs/20260907T000003.816042Z-recipe-run-58789411bf49/checks/gates/exploratory/exploratory-plan.json",
+        "path": "/zone.disk/ssd1/workarea/xh/amsVerify/data/ams/amsLDO.LDO_MASTER.rnm_candidate/runs/20260907T000003.816042Z-recipe-run-58789411bf49/checks/gates/exploratory/exploratory-plan.json",
         "sha256": "6b2cc6446948f35d4144992a30b49c6d76df40aceb7c1111deda9d3baefa9eff"
       },
       "psf_artifact_count": 20,

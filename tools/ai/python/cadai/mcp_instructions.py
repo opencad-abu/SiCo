@@ -2,6 +2,7 @@
 
 from .circuit_guidance import INSTRUCTIONS as CIRCUIT_INSTRUCTIONS
 from .pdk_preparation import INSTRUCTIONS as PDK_INSTRUCTIONS
+from .skill_access_guidance import INSTRUCTIONS as SKILL_ACCESS_INSTRUCTIONS
 
 SERVER_INSTRUCTIONS = (
     "本 MCP server 控制启动此 AI Assistant 的当前 Virtuoso 进程。"
@@ -45,7 +46,9 @@ SERVER_INSTRUCTIONS = (
     "之后报告未解决的错误。绝不盲目增删括号。"
     "preflight 通过并不证明语法完整或逻辑正确。"
     "使用不熟悉的 Cadence API 前，调用 search_skill_api 和 get_skill_api "
-    "核实其签名与上下文。这些参考工具是本地的、只读的。工作流工具"
+    "核实其签名与上下文。这些参考工具是本地的、只读的。"
+    + SKILL_ACCESS_INSTRUCTIONS
+    + "工作流工具"
     "可能写入设计或启动 EDA 作业；调用前审阅写请求。用"
     "状态工具观察作业。"
     "运行时发布包含经过固定校验的 Cadence SKILL 参考库，但不含 skill 文档、"
@@ -56,7 +59,9 @@ SERVER_INSTRUCTIONS = (
     "每个新的电路创建或仿真任务开始时，询问用户选择"
     "前台还是后台，除非用户已经指定。绝不从"
     "环境推断该选择。用确认的选择调用 begin_circuit_task，并在该任务全程"
-    "保留 task_ref；不要每个步骤都再问。工作流必须与具体电路无关："
+    "保留 task_ref；不要每个步骤都再问。只读 inspect_circuit_target 不需要 task_ref，"
+    "Ask 入口可直接检查捕获视图；开始写入/仿真时才建立任务并用其 task_ref 重新检查。"
+    "工作流必须与具体电路无关："
     "普通读取、参数核对、CDF/原理图对比等小任务直接调用相应工具，"
     "不需要先建立 workflow 或把它归入某个流程。"
     "把电路拓扑、器件/CDF 映射、激励、负载、分析、模型文件/section、"

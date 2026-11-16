@@ -59,7 +59,7 @@ def audit(control_path):
     request = {"kind": "sampled-model-implementation-parity", "source_pair": pair,
                "script_sha256": sha256_file(Path(__file__)), "candidate_sha256": sha256_file(candidate)}
     request_digest = stable_digest(request)
-    run = allocate_split_run(resolve_launch_paths(), Path("/path/to/xh/amsVerify/data/ams").resolve(),
+    run = allocate_split_run(resolve_launch_paths(), Path("/workarea/xh/amsVerify/data/ams").resolve(),
         library="aivw", cell=model["module"], view="implementation_parity", kind="trajectory-parity", request_digest=request_digest)
     summary = {"schema_version": 1, **request, "status": "PASS_IMPLEMENTATION_PARITY" if all(c["status"] == "PASS" for c in checks) else "FAIL_IMPLEMENTATION_PARITY",
                "checks": checks, "qualification": "NOT_ESTABLISHED", "holdout_evaluated": False}

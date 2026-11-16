@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import datetime
 from html import escape
 
-from ..core.cad_ref import linkify_cad_refs, target_from_snapshot
+from ..core.cad_linkify import linkify_cad_refs, linkify_object_inputs
+from ..core.cad_ref import target_from_snapshot
 from ..core.links import object_link
 from ..storage.native_media import raster_data, web_url
 from .chat_audit import approval_command, fence_block
@@ -160,6 +161,11 @@ class DetailContent:
         )
         markdown = row["markdown"]
         if target is not None and row.get("object_refs"):
+            inputs = [
+                {"type": "object_ref", "name": ref.get("name"), "ref": ref}
+                for ref in row["object_refs"] if isinstance(ref, dict)
+            ]
+            markdown = linkify_object_inputs(markdown, inputs, self.index.session_id)
             markdown = linkify_cad_refs(markdown, target, self.index.session_id)
         return {"prefix": "".join(parts), "markdown": markdown,
                 "suffix": "".join(suffix)}

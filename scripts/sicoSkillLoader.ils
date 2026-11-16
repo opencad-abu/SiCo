@@ -1,7 +1,8 @@
 ; Source development only. Protected contexts retain their own init lifecycle.
 ; Lexical state is private to this process; no business globals are reset.
 unless(isCallable('SICO_sourceRequire)
-  let((installation files groups initializers loading ready loadMember classesReady)
+  let((installation files groups initializers loading ready loadMember classesReady
+       ownedFunctions)
     installation=strcat("/" buildString(reverse(cddr(reverse(
       parseString(simplifyFilename(get_filename(piport)) "/")))) "/"))
     files=makeTable("sicoSourceFiles" nil)
@@ -11,6 +12,15 @@ unless(isCallable('SICO_sourceRequire)
 
     classesReady=lambda((spec)
       forall(name nth(6 spec) findClass(name)))
+
+    ownedFunctions=lambda((spec)
+      let((methods definitions)
+        methods=or(nth(7 spec) nil)
+        definitions=nil
+        foreach(name cadddr(spec)
+          unless(member(name methods)
+            definitions=cons(list(name getd(name)) definitions)))
+        reverse(definitions)))
 
     ready=lambda((spec record)
       and(record car(record)=='loaded cadr(record)==caddr(spec)
@@ -35,12 +45,12 @@ unless(isCallable('SICO_sourceRequire)
         saved=foreach(mapcar marker nth(5 spec)
           list(marker boundp(marker) when(boundp(marker) symeval(marker))))
         foreach(item saved set(car(item) nil))
-        savedDefinitions=foreach(mapcar name cadddr(spec)
-          list(name getd(name)))
+        savedDefinitions=ownedFunctions(spec)
         unwindProtect(
           progn(
-            ; A managed upgrade replaces only this member; clear its old
-            ; definitions first so SKILL does not report every export as redefined.
+            ; Replace only this member's unique definitions. Method names share
+            ; one group-wide generic; clearing them would remove every other
+            ; member's methods.
             foreach(item savedDefinitions putd(car(item) nil))
             result=errset(load(strcat(installation "/" path)) t)
             unless(and(result car(result))
@@ -49,8 +59,7 @@ unless(isCallable('SICO_sourceRequire)
                        forall(revision nth(4 spec)
                          equal(car(errset(apply(car(revision) nil) nil)) cadr(revision))))
               error("SiCo source contract failed: %s\n" path))
-            files[path]=list('loaded caddr(spec)
-              foreach(mapcar name cadddr(spec) list(name getd(name))) count+1 nil)
+            files[path]=list('loaded caddr(spec) ownedFunctions(spec) count+1 nil)
             completed=t)
           progn(
             loading=cdr(loading)

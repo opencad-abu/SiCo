@@ -1,12 +1,13 @@
 ; Installed command selection shared by independent frontends and AI workflows.
 unless(and(boundp('sicoCommandsVersion)
-           sicoCommandsVersion=="20260924.sico.commands.v4")
+           sicoCommandsVersion=="20261029.sico.commands.v5")
 
 procedure(SICO_commandTool(name)
   case(name
     (("rce" "dspfana") "rce")
     (("lvs" "gdsout" "cdlout") "lvs")
     ("drc" "drc")
+    ("dmyfill" "dmyfill")
     ("lefgen" "lef")
     ("mts-netlistor" "mtsnl")
     (("sico-profile" "sico-batch" "sico-lsf" "lsfmonitor" "nl2view" "sico-state") "common")
@@ -51,6 +52,6 @@ procedure(SICO_commandInvocation(name python source)
     else
       strcat(SICO_commandQuote(python) " -s " SICO_commandQuote(source)))))
 
-procedure(SICO_commandsRevision() "20260924.sico.commands.v4")
-sicoCommandsVersion="20260924.sico.commands.v4"
+procedure(SICO_commandsRevision() "20261029.sico.commands.v5")
+sicoCommandsVersion="20261029.sico.commands.v5"
 )

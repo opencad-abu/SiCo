@@ -99,8 +99,18 @@ def test_lvs_svdb_query_tokens_reject_unknown_values(tmp_path: Path) -> None:
         generate_lvs(cfg, cfg.context(), standalone=True)
 
 
-@pytest.mark.parametrize("configured", [None, [], ["CCI", "PINLOC"]])
-def test_rce_lvs_always_requests_only_cci(tmp_path: Path, configured) -> None:
+@pytest.mark.parametrize(
+    ("configured", "expected"),
+    [
+        (None, "QUERY CCI"),
+        ([], "QUERY"),
+        (["SI", "PINLOC"], "QUERY SI PINLOC"),
+        (["CCI", "SI"], "QUERY CCI SI"),
+    ],
+)
+def test_rce_lvs_renders_configured_svdb_query(
+    tmp_path: Path, configured, expected: str
+) -> None:
     cfg, _ = make_lvs_config(tmp_path)
     if configured is not None:
         cfg = cfg.replace('lvs', 'svdb_query', value=configured)
@@ -108,7 +118,7 @@ def test_rce_lvs_always_requests_only_cci(tmp_path: Path, configured) -> None:
     text = generate_lvs(cfg, cfg.context()).read_text(encoding="utf-8")
 
     assert next(line for line in text.splitlines() if line.startswith("MASK SVDB")) == (
-        f'MASK SVDB DIRECTORY "{cfg.context().svdb_dir}" QUERY CCI'
+        f'MASK SVDB DIRECTORY "{cfg.context().svdb_dir}" {expected}'
     )
 
 
@@ -287,25 +297,16 @@ def test_generic_lvs_missing_or_disabled_hcell_omits_argument(
 
 
 @pytest.mark.parametrize("runner_type", RUNNER_TYPES)
-@pytest.mark.parametrize(
-    ("hcell_file", "error", "message"),
-    [
-        ("", ValueError, "lvs.hcell_file is empty"),
-        ("missing.hcells", FileNotFoundError, "Cannot access Calibre LVS hcell file"),
-    ],
-)
-def test_generic_lvs_enabled_hcell_rejects_invalid_file(
+@pytest.mark.parametrize("hcell_file", ["", "missing.hcells"])
+def test_generic_lvs_enabled_hcell_ignores_missing_file(
     tmp_path: Path,
     runner_type: type[RceRunner] | type[LvsRunner],
     hcell_file: str,
-    error: type[Exception],
-    message: str,
 ) -> None:
     cfg, _ = make_lvs_config(tmp_path)
     cfg = cfg.replace('lvs', value={**cfg.section('lvs'), **{"hcell_enable": True, "hcell_file": hcell_file}})
 
-    with pytest.raises(error, match=message):
-        lvs_command(runner_type(cfg))
+    assert "-hcell" not in lvs_command(runner_type(cfg))
 
 
 def test_lvs_hcell_path_expands_environment_variable(
@@ -343,24 +344,13 @@ def test_user_hcell_file_is_not_included_as_svrf_selection_file(
     ) == "HCELL block block\n"
 
 
-def test_standalone_lvs_validates_hcell_before_backing_up_run_data(
+def test_standalone_lvs_ignores_missing_hcell_file(
     tmp_path: Path,
 ) -> None:
-    cfg, paths = make_lvs_config(tmp_path)
-    log_dir = paths["run_dir"] / "log"
-    db_dir = paths["run_dir"] / "db"
-    log_dir.mkdir(parents=True)
-    db_dir.mkdir()
-    marker = log_dir / "keep.log"
-    marker.write_text("keep\n", encoding="utf-8")
+    cfg, _ = make_lvs_config(tmp_path)
     cfg = cfg.replace('lvs', value={**cfg.section('lvs'), **{"hcell_enable": True, "hcell_file": "missing.hcells"}})
 
-    with pytest.raises(FileNotFoundError, match="Calibre LVS hcell file"):
-        LvsRunner(cfg, generate_only=True).run()
-
-    assert marker.is_file()
-    assert not list(paths["run_dir"].glob("log.*"))
-    assert db_dir.is_dir()
+    assert "-hcell" not in lvs_command(LvsRunner(cfg))
 
 
 def test_standalone_lvs_collects_run_root_files_in_log(
@@ -474,12 +464,9 @@ def test_xrc_enabled_empty_hcell_uses_corner_fallback(tmp_path: Path) -> None:
     )
 
 
-def test_xrc_missing_corner_hcell_reports_resolved_path(tmp_path: Path) -> None:
+def test_xrc_missing_corner_hcell_is_omitted(tmp_path: Path) -> None:
     cfg, paths = make_xrc_config(tmp_path)
     hcell = paths["corner_dir"] / "hcell_list"
     hcell.unlink()
 
-    with pytest.raises(FileNotFoundError) as exc_info:
-        xrc_stages(cfg)
-
-    assert str(hcell) in str(exc_info.value)
+    assert "-hcell" not in xrc_stages(cfg)[0].command

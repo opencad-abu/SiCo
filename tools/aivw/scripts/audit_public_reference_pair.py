@@ -40,7 +40,7 @@ def audit(config_path, target, policy_path=None):
                           (__file__,str(Path(__file__).with_name('correlate_refined_public_matrix.py')))},
         'policy_digest':stable_digest(policy),'policy_source':policy_source,'holdout_evaluated':False}
     digest=stable_digest(request)
-    run=allocate_split_run(resolve_launch_paths(),Path('/path/to/xh/amsVerify/data/ams').resolve(),
+    run=allocate_split_run(resolve_launch_paths(),Path('/workarea/xh/amsVerify/data/ams').resolve(),
         library=plan['target']['library'],cell=plan['target']['cell'],view='reference_pair',
         kind='reference-pair-audit',request_digest=digest)
     write_json_once(run.control_root/'request.json',request)

@@ -23,7 +23,8 @@ def validate_source(context):
         raise ValueError("快速输入的设计来源已失效")
     cellview = context.snapshot.get("cellview")
     if cellview is not None and (not isinstance(cellview, dict) or not all(
-        isinstance(cellview.get(key), str) and cellview[key] for key in ("lib", "cell", "view")
+        isinstance(cellview.get(key), str) and cellview[key]
+        for key in ("lib", "cell", "view_name")
     )):
         raise ValueError("快速输入缺少完整的 lib/cell/view")
 

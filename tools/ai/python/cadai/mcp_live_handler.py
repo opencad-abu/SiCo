@@ -46,7 +46,7 @@ LIVE_MODEL_TOOLS = [
             "profile": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/+@=-]{0,159}$"},
             "debounce_ms": {"type": "integer", "minimum": 0, "maximum": 10000},
             "target": {"type": "object", "properties": {"library": {"type": "string"}, "cell": {"type": "string"}, "module": {"type": "string"}}, "required": ["library", "cell", "module"], "additionalProperties": False},
-            "view_identity": {"type": "object", "properties": {"library": {"type": "string"}, "cell": {"type": "string"}, "view": {"type": "string"}, "view_type": {"type": "string"}, "kind": {"type": "string"}}, "required": ["library", "cell", "view", "view_type", "kind"], "additionalProperties": False},
+            "view_identity": {"type": "object", "properties": {"library": {"type": "string"}, "cell": {"type": "string"}, "view_name": {"type": "string"}, "oa_view_type": {"type": "string"}, "oa_view_type_source": {"type": "string", "enum": ["platform_api"]}, "kind": {"type": "string"}}, "required": ["library", "cell", "view_name", "oa_view_type", "oa_view_type_source", "kind"], "additionalProperties": False},
         }, ["recipe_id", "through", "profile"], read_only=False, approval_required=True,
     ),
     _live_tool(
@@ -56,7 +56,7 @@ LIVE_MODEL_TOOLS = [
             "sequence": {"type": "integer", "minimum": 1},
             "source_generation": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/+@=-]{0,255}$"},
             "target": {"type": "object", "properties": {"library": {"type": "string"}, "cell": {"type": "string"}, "module": {"type": "string"}}, "required": ["library", "cell", "module"], "additionalProperties": False},
-            "view_identity": {"type": "object", "properties": {"library": {"type": "string"}, "cell": {"type": "string"}, "view": {"type": "string"}, "view_type": {"type": "string"}, "kind": {"type": "string"}}, "required": ["library", "cell", "view", "view_type", "kind"], "additionalProperties": False},
+            "view_identity": {"type": "object", "properties": {"library": {"type": "string"}, "cell": {"type": "string"}, "view_name": {"type": "string"}, "oa_view_type": {"type": "string"}, "oa_view_type_source": {"type": "string", "enum": ["platform_api"]}, "kind": {"type": "string"}}, "required": ["library", "cell", "view_name", "oa_view_type", "oa_view_type_source", "kind"], "additionalProperties": False},
             "changed_kind": {"type": "string"},
         }, ["sequence", "source_generation", "target", "view_identity", "changed_kind"],
         read_only=False, approval_required=True,

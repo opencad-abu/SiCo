@@ -23,7 +23,11 @@ class DemoPeer:
                 "source": "simulated",
                 "valid": True,
                 "version": "simulated IC231 context",
-                "cellview": {"lib": "demo", "cell": "amp", "view": "schematic"},
+                "cellview": {
+                    "lib": "demo", "cell": "amp", "view_name": "schematic",
+                    "oa_view_type": "schematic",
+                    "oa_view_type_source": "platform_api",
+                },
             },
         )
         self.connection = Connection(socket.create_connection(broker.address, timeout=10))

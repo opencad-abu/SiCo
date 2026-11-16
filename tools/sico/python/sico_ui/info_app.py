@@ -14,6 +14,8 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
 )
 
+from cadgui.branding import logo_text
+
 from .chrome import SiDialog
 
 
@@ -31,7 +33,7 @@ class _InfoDialog(SiDialog):
              "信息": QStyle.SP_MessageBoxInformation, "提示": QStyle.SP_MessageBoxInformation}
 
     def __init__(self, parent):
-        super().__init__("SiCo", parent, ("close",))
+        super().__init__(logo_text(), parent, ("close",))
         self.setObjectName("infoDialog")
         self.setWindowModality(Qt.NonModal)
         layout = QVBoxLayout()
@@ -72,7 +74,7 @@ class _InfoDialog(SiDialog):
         self.resize(600, 340)
 
     def present(self, notice, repeats, remaining):
-        title = "SiCo · " + notice.level
+        title = logo_text() + " · " + notice.level
         self.setWindowTitle(title)
         self.title_bar.title.setText(title)
         self.heading.setText(notice.level + " · " + notice.title)

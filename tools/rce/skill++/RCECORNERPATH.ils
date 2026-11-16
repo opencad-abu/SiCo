@@ -48,7 +48,7 @@ procedure(rceStarCornerDirP(cornerDir processRoot)
     gridFound=or(rceDirectoryHasNamedFile(cornerDir '("nxtgrd"))
                   rceDirectorySuffixFileCount(cornerDir "[.]nxtgrd$")==1)
     mapFound=or(rceDirectoryHasNamedFile(
-                   cornerDir '("tran.map" "map" "MAPPING_FILE" "mapping_file"))
+                   cornerDir '("tran.map" "map" "MAPPING_FILE" "mapping_file" "starrcxt_mapping"))
                  rceDirectorySuffixFileCount(cornerDir "[.]map$")==1
                  rceDirectoryHasNamedFile(processRoot '("MAPPING_FILE" "mapping_file"))
                  rceDirectoryHasNamedFile(parentDir '("MAPPING_FILE" "mapping_file")))
@@ -85,6 +85,10 @@ procedure(rceProcessCornerNames(tool processDir)
   let((corners entry cornerDir)
     corners=nil
     when(and(processDir isDir(processDir))
+      when(and(member(tool '("QRC" "Quantus"))
+                 !rceProcessCornerDirP(tool processDir processDir)
+                 isDir(strcat(processDir "/Tech")))
+        processDir=strcat(processDir "/Tech"))
       if(rceProcessCornerDirP(tool processDir processDir) then
         corners=list(rceProcessPathTail(processDir))
       else

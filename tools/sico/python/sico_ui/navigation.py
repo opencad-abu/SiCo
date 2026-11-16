@@ -402,7 +402,11 @@ class Navigation(SessionRowMenu, NavigationActions, LabelActions, EvenTabWidget)
         for tree in self._navigation_trees():
             for item in _deep_items(tree):
                 if item.data(0, Qt.UserRole) == key:
-                    tree.setCurrentItem(item)
+                    blocked = tree.blockSignals(True)
+                    try:
+                        tree.setCurrentItem(item)
+                    finally:
+                        tree.blockSignals(blocked)
                     return True
         return False
 
@@ -423,7 +427,8 @@ class Navigation(SessionRowMenu, NavigationActions, LabelActions, EvenTabWidget)
                 return
             key = item.data(0, Qt.UserRole)
             unavailable = item.data(0, Qt.UserRole + 2)
-            if unavailable:
+            damaged = item.data(0, Qt.UserRole + 3)
+            if unavailable and not damaged:
                 self._alert(self._unavailable_text(unavailable))
                 self.catalog_state = None
                 return

@@ -6,6 +6,7 @@ from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtWidgets import (QHBoxLayout, QHeaderView, QLabel, QPushButton, QTreeWidget,
                              QTreeWidgetItem, QVBoxLayout, QWidget)
 
+from cadgui.branding import logo_text
 from sico import PRODUCT_NAME
 from .close_choice import CloseChoice, PLATFORM_CLOSE_NOTE
 from .info_app import InfoApp
@@ -36,7 +37,7 @@ class HomeWindow(CopilotWorkspace):
         self.setWindowTitle(PRODUCT_NAME)
         content = QWidget()
         layout = QVBoxLayout(content)
-        title = QLabel("SiCo")
+        title = QLabel(logo_text())
         font = title.font()
         font.setPointSize(22)
         title.setFont(font)
@@ -176,15 +177,17 @@ class HomeWindow(CopilotWorkspace):
                 self._dialog.raise_()
                 return
             dialog = self._dialog = SiConfirm("关闭 SiCo",
-                "关闭窗口后项目服务按空闲策略继续运行；结束服务需先完成工程中的活动工作。\n"
+                "挂起：关闭窗口，项目服务与各会话继续在后台运行，之后重新打开可继续。\n"
+                "结束服务：彻底停止当前工程的 SiCo 服务；活动会话、队列和后台作业会停止，\n"
+                "会话记录和待核对证据会保留。\n"
                 + PLATFORM_CLOSE_NOTE, self)
+            dialog.add_choice("suspend", "挂起", default=True)
             dialog.add_choice("service", "结束服务")
-            dialog.add_choice("window", "关闭窗口", default=True)
             dialog.add_choice("cancel", "取消", escape=True)
             def chosen(key):
                 self._dialog = None
                 dialog.deleteLater()
-                if key == "window":
+                if key == "suspend":
                     self.finish()
                 elif key == "service":
                     self.request_stop()

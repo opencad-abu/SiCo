@@ -151,7 +151,7 @@ procedure(rceRcTypeCB(form)
 procedure(rceOutTypeCB(form)
   let(()
     case(form~>outType~>value
-      ("view" || "extview" || "smartview" || "calibreview" || "starrcview"
+      ("view" || "extview" || "smartview" || "idspf" || "calibreview" || "starrcview"
         form~>nlLay~>invisible=t
         form~>nlRmInst~>enabled=nil
       )
@@ -172,9 +172,9 @@ procedure(rceOutTypeCB(form)
 
 
     case(form->outType~>value
-      ("view" || "extview" || "smartview" || "calibreview" || "starrcview"
+      ("view" || "extview" || "smartview" || "idspf" || "calibreview" || "starrcview"
         when(form~>extTool~>value!="QRC"
-          when(member(lowerCase(form~>outType~>value) '("extview" "smartview"))
+          when(member(lowerCase(form~>outType~>value) '("extview" "smartview" "idspf"))
             GUI_messageApp('i "RCE" extmsgStruc->viewEngine)
             form~>extTool~>value="QRC"
           )

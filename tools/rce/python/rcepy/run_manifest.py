@@ -7,6 +7,7 @@ from pathlib import Path
 from .config import DesignContext, RceConfig
 from .reduction import reduced_output_paths, reduced_view_name, reduction_enabled
 from .textutil import write_text
+from .process_environment import PROCESS_FILES
 
 
 def write_run_manifest(
@@ -24,6 +25,7 @@ def write_run_manifest(
         f"layout_cell = {ctx.layout_cell}",
         f"lvs_tool = {cfg.lvs_tool}",
         f"extract_tool = {cfg.ext_tool}",
+        f"finfet_flow = {cfg.flag('extract', 'finfet_flow')}",
         f"corners = {', '.join(cfg.corners)}",
         f"corner_temperatures = {', '.join(cfg.corner_temperatures())}",
         f"start_rve = {cfg.start_rve}",
@@ -39,4 +41,7 @@ def write_run_manifest(
     ]
     for name, path in sorted(generated.items()):
         lines.append(f"{name} = {path}")
+    lines.extend(["", "[process_inputs]"])
+    for path in PROCESS_FILES.values():
+        lines.append(f"{path} = {cfg.text(*path.split('.'))}")
     write_text(ctx.log_dir / "rce.manifest", "\n".join(lines) + "\n")

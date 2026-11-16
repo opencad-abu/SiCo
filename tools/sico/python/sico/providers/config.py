@@ -1,4 +1,8 @@
-"""Provider construction and selection, with a compatibility validation export."""
+"""Provider construction and selection, with a compatibility validation export.
+
+The Python HTTP backend (SICO_BACKEND=python, anthropic/openai protocols) has been
+retired. Only the Codex provider path remains.
+"""
 
 from __future__ import annotations
 
@@ -10,9 +14,7 @@ from cadai.env_names import name as env_name
 from cadai.env_names import value as env_value
 
 from ..transport.framing import strict_json
-from .anthropic import AnthropicProvider
 from .mock import ContextDemoProvider
-from .openai import OpenAIProvider
 # Compat: retire after supported imports use configuration.provider.
 from ..configuration.provider import validate_config
 from ..storage.roots import state_root
@@ -30,12 +32,11 @@ def environment_config(environment):
     require_supported_runtime(environment)
     url, model = (str(env_value(environment, suffix, "")).strip() for suffix in ENV_OPTIONS)
     backend = str(env_value(environment, "BACKEND", "codex")).strip().lower() or "codex"
-    if backend not in {"python", "codex"}:
-        raise ValueError("SICO_BACKEND must be python or codex")
-    default_protocol = "responses" if backend == "codex" else "anthropic"
-    protocol = str(env_value(environment, "PROVIDER", "")).strip().lower() or default_protocol
-    if protocol not in ({"responses"} if backend == "codex" else {"anthropic", "openai"}):
-        raise ValueError("SICO_PROVIDER must match the selected backend (Codex: responses)")
+    if backend != "codex":
+        raise ValueError("SICO_BACKEND must be codex; the python backend has been retired")
+    protocol = str(env_value(environment, "PROVIDER", "")).strip().lower() or "responses"
+    if protocol != "responses":
+        raise ValueError("SICO_PROVIDER must be responses; python HTTP providers have been retired")
     if not url and not model:
         return None
     if not url or not model:
@@ -45,16 +46,13 @@ def environment_config(environment):
         "base_url": url,
         "model": model,
         "api_key_env": credential_reference(environment),
+        "backend": "codex",
+        "tool_format": codex_tool_format(environment),
+        "linux_sandbox": str(env_value(environment, "LINUX_SANDBOX", "default")),
     }
-    if backend == "codex":
-        config.update(
-            backend="codex",
-            tool_format=codex_tool_format(environment),
-            linux_sandbox=str(env_value(environment, "LINUX_SANDBOX", "default")),
-        )
-        cli = str(env_value(environment, "CODEX_CLI", "")).strip()
-        if cli:
-            config["codex_executable"] = cli
+    cli = str(env_value(environment, "CODEX_CLI", "")).strip()
+    if cli:
+        config["codex_executable"] = cli
     return config
 
 
@@ -96,24 +94,14 @@ def provider_from_config(config, *, environment=None):
     if config is None:
         return ContextDemoProvider()
     config = validate_config(config)
-    if config.get("backend") == "codex":
-        from ..codex.settings import CodexSettings
-
-        return CodexSettings(config, environment)
-    key_name = config.get("api_key_env", env_name("API_KEY"))
-    factory = AnthropicProvider if config["provider"] == "anthropic" else OpenAIProvider
-    options = {"max_tokens": config.get("max_tokens", 4096), "timeout": config.get("timeout", 30)}
-    if config["provider"] == "openai":
-        options.update(
-            token_limit_field=config.get("token_limit_field", "max_tokens"),
-            include_usage=config.get("include_usage", False),
+    if config.get("backend") != "codex":
+        raise ValueError(
+            "The Python HTTP backend has been retired; "
+            "only Codex providers are supported (backend=codex)"
         )
-    return factory(
-        config["base_url"],
-        (os.environ if environment is None else environment).get(key_name, ""),
-        config["model"],
-        **options,
-    )
+    from ..codex.settings import CodexSettings
+
+    return CodexSettings(config, environment)
 
 
 def load_provider(path=None, *, environment=None, launch_dir=None):

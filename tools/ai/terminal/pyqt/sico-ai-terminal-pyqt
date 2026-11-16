@@ -7,16 +7,15 @@ from __future__ import annotations
 # ``python3`` happens to own this shebang.
 
 import os
-import shutil
 import sys
 from pathlib import Path
 
 launcher = Path(__file__).resolve()
 product_root = launcher.parents[4] if launcher.parent.name == "pyqt" else launcher.parents[3]
 sys.path.insert(0, str(product_root / "tools/common/python"))
-from sicoenv import RETIRED_NAMES, promote, read
+from sicoenv import RETIRED_NAMES, promote
 promote(os.environ, *RETIRED_NAMES)
-for selector in ("SICO_PYTHON", "SICO_PYTHON_ROOT", "SICO_AI_PYQT_ROOT"):
+for selector in ("SICO_AI_PYQT_ROOT",):
     if selector in os.environ and not os.environ[selector].strip():
         raise SystemExit(f"{selector} must not be empty")
 
@@ -52,44 +51,27 @@ def _existing_directories(directories: list[Path]) -> list[str]:
     return [str(directory) for directory in directories if directory.is_dir()]
 
 
-def _configured_interpreter() -> Path | None:
-    configured = os.environ.get("SICO_PYTHON", "").strip()
-    if not configured:
-        configured_root = os.environ.get("SICO_PYTHON_ROOT", "").strip()
-        if configured_root:
-            configured = str(Path(configured_root).expanduser() / "bin" / "python3")
-    if not configured:
-        return None
-    candidate = Path(configured).expanduser()
-    if not candidate.is_absolute():
-        resolved = shutil.which(configured)
-        if resolved is None:
-            print(
-                f"sico-ai-terminal: SICO_PYTHON is not executable: {configured}",
-                file=sys.stderr,
-            )
-            raise SystemExit(2)
-        candidate = Path(resolved)
+def _runtime_interpreter() -> Path:
+    candidate = product_root / "runtime/python/bin/python3"
     try:
         candidate = candidate.resolve(strict=True)
     except OSError:
         print(
-            f"sico-ai-terminal: SICO_PYTHON is not executable: {configured}",
+            f"sico-ai-terminal: SiCo Python is unavailable: {candidate}",
             file=sys.stderr,
         )
         raise SystemExit(2)
     if not candidate.is_file() or not os.access(candidate, os.X_OK):
         print(
-            f"sico-ai-terminal: SICO_PYTHON is not executable: {configured}",
+            f"sico-ai-terminal: SiCo Python is not executable: {candidate}",
             file=sys.stderr,
         )
         raise SystemExit(2)
     return candidate
 
 
-configured_interpreter = _configured_interpreter()
 current_interpreter = Path(sys.executable).resolve()
-target_interpreter = configured_interpreter or current_interpreter
+target_interpreter = _runtime_interpreter()
 installed_layout = launcher.parent.name == "bin"
 configured_runtime = os.environ.get("SICO_AI_QTERMWIDGET_RUNTIME", "").strip()
 runtime_root = Path(configured_runtime).expanduser() if configured_runtime else installed_root
@@ -99,12 +81,8 @@ if installed_layout and not runtime_root.is_absolute():
         file=sys.stderr,
     )
     raise SystemExit(2)
-if installed_layout and configured_interpreter is None:
-    print(
-        "sico-ai-terminal: SICO_PYTHON or SICO_PYTHON_ROOT is required",
-        file=sys.stderr,
-    )
-    raise SystemExit(2)
+os.environ["SICO_PYTHON"] = str(target_interpreter)
+os.environ["SICO_PYTHON_ROOT"] = str(product_root / "runtime/python")
 
 python_library_value = os.environ.get("SICO_AI_PYTHON_LIBRARY_PATH", "").strip()
 if "SICO_AI_PYTHON_LIBRARY_PATH" not in os.environ:
@@ -170,7 +148,7 @@ if target_interpreter != current_interpreter or environment_changed:
         )
     except OSError as exc:
         print(
-            f"sico-ai-terminal: cannot start SICO_PYTHON: {exc}",
+            f"sico-ai-terminal: cannot start SiCo Python: {exc}",
             file=sys.stderr,
         )
         raise SystemExit(2) from exc

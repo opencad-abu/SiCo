@@ -78,7 +78,15 @@ def append_custom_svrf(
     return _append_svrf(text, custom, compile_time_tvf=compile_time_tvf)
 
 
-def generate_drc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | None = None) -> Path:
+def generate_drc(
+    cfg: RceConfig,
+    ctx: DesignContext,
+    *,
+    defaults: Defaults | None = None,
+    layout_system: str = "GDSII",
+) -> Path:
+    if layout_system not in {"GDSII", "OASIS"}:
+        raise ValueError(f"Unsupported DRC layout system: {layout_system}")
     runset = cfg.path("drc", "runset_file")
     if not runset:
         raise ValueError("Missing drc.runset_file in DRC TOML")
@@ -95,7 +103,7 @@ def generate_drc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | Non
     lines = [
         f'LAYOUT PRIMARY "{q(ctx.layout_cell)}"',
         f'LAYOUT PATH "{q(ctx.layout_path)}"',
-        "LAYOUT SYSTEM GDSII",
+        f"LAYOUT SYSTEM {layout_system}",
         f'DRC RESULTS DATABASE "{q(str(drc_dir / "cal_drc.out"))}" ASCII',
         f'DRC SUMMARY REPORT "{q(str(ctx.log_dir / "cal_drc.sum"))}"',
         *baseline.get("default", []),

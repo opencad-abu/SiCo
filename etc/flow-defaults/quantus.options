@@ -53,6 +53,9 @@
 -res_property_name "r"
 -enable_cellview_check true
 
+[output_db.idspf]
+-subtype extended
+
 [output_setup]
 # -net_name_space is generated from GUI "Use Name From"; OA views require SCHEMATIC.
 -temporary_directory_name "qrcTemp"

@@ -1,0 +1,34 @@
+{
+  "actions": {
+    "list": {
+      "capability": "aiWindowList",
+      "request": {
+        "fields": ["offset", "limit"],
+        "required": ["offset", "limit"]
+      },
+      "response": {
+        "schema": "cad.windows.v1"
+      }
+    }
+  },
+  "errors": [
+    "invalid_arguments",
+    "unsupported_contract",
+    "version_mismatch",
+    "capability_not_available",
+    "source_not_captured",
+    "stale_context",
+    "read_failed",
+    "result_too_large",
+    "timeout",
+    "cancelled",
+    "internal"
+  ],
+  "limits": {
+    "max_bytes": 55000,
+    "max_items": 200,
+    "max_text": 4096
+  },
+  "name": "sico.cad.windows.v1",
+  "version": 1
+}

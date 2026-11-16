@@ -14,7 +14,7 @@
 <a class="skip" href="#main">跳到正文</a>
 <header class="topbar">
   <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
-  <span class="edition">使用手册 / 2026.09</span>
+  <span class="edition">使用手册 / 2026.10</span>
   <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
 </header>
 <noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
@@ -23,6 +23,8 @@
 <p class="rail-label">SICO DOCUMENTATION</p>
 <a href="index.html">开始阅读</a>
 <p class="nav-group">开始使用</p>
+<a href="sico-gui.html">SiCo · 客户端界面</a>
+<a href="sico-workspace.html">SiCo · 工作区页面</a>
 <a href="installation.html">01 · 安装</a>
 <a href="environment.html">02 · 环境变量</a>
 <a href="virtuoso.html">03 · Virtuoso 集成</a>
@@ -35,6 +37,9 @@
 <a href="utilities.html">LEF / GDS / CDL</a>
 <a href="lsf.html">LSF · 运行与资源</a>
 <p class="nav-group">参考附录</p>
+<a href="appendix-pdk-data-standard.html">PDK 数据标准</a>
+<a href="appendix-circuit-template-standard.html">电路模板标准</a>
+<a href="appendix-symbol-template-standard.html">Symbol 模板标准</a>
 <a href="environment-internal.html">环境接口附录</a>
 <div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
 </nav>
@@ -61,10 +66,35 @@ setenv PROJ_USER_HOME /path/to/source/project/user
 # PROJ_USER_HOME/cds.lib 必须已存在并能正确解析源库。</code></pre></div>
 <p>这段只说明必要目录字段，完整站点工具配置由 CAD 提供。仅创建空 modulefile 不足以完成源项目准备。</p>
 <h2 id="gui">在 GUI 中配置与生成</h2>
-<ol class="steps"><li>在当前目标工程的 Virtuoso 选择 <strong>SiCo → MTS Netlistor…</strong>，或使用独立命令启动。每个 Process 页面选择一个源项目。</li><li>等待源库列表加载，选择 library / cell / schematic view。需要读取新增 cell 时点击 <strong>Refresh</strong>。</li><li>选择 <strong>spectre</strong> 或 <strong>hspiceD</strong>。查看从源工艺读取的模型和默认项，核对 model file、section、启用状态及顺序。</li><li>按方言支持调整温度、scale、gmin 和 simulator options；Spectre 还可配置 tnom、scalem、reltol。当前 hspiceD 不接受后三项。保留单位和数据类型，不凭文件名猜模型 corner。</li><li>点击 <strong>Run Current</strong> 运行当前设置，或 <strong>Run All</strong> 顺序处理已配置项目。检查日志与结果后，通过 <strong>Open Result</strong> 查看输出。</li><li>用 <strong>Save Config…</strong> 保存整个工作台配置，之后用 <strong>Load Config…</strong> 恢复。</li></ol>
+<figure class="figure">
+  <a href="assets/screenshots/mts-main.png" aria-label="查看 MTS Netlistor 主窗口原图"><img src="assets/screenshots/mts-main.png" alt="MTS Netlistor 主窗口：Process 页签、源工程与 cell 浏览器、仿真设置、模型库、发布目标和运行日志" loading="lazy"></a>
+  <figcaption><strong>MTS Netlistor 主窗口。</strong>示例使用演示工程 source、cell 和模型；实际项目候选来自 <code>MTS_NETLISTOR_MODULEFILES</code>。<span class="zoom-hint">点击图片查看原始尺寸</span></figcaption>
+</figure>
+<p>从 <strong>SiCo → MTS Netlistor…</strong> 打开，或使用独立命令启动。窗口以 Process 页签组织多个源 cell；每个页签有自己的源工程、仿真设置、模型列表、发布目标和日志。</p>
+<div class="table-wrap"><table><thead><tr><th>页面/控件</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>Process1 / New Process</strong> 页签</td><td>每个 Process 页处理一个或多个源 cell；点击 New Process 新建页，页签右侧 × 关闭。</td><td>Run All 只处理已经填写 source 的页；每个页有独立后台 OCEAN 进程。</td></tr>
+<tr><td><strong>Project</strong></td><td>选择源项目；候选来自项目 modulefile 列表。</td><td>切换项目会更换源 <code>cds.lib</code> 与工具环境，不要把它当作目标工艺切换。</td></tr>
+<tr><td><strong>Source cds.lib</strong> + <strong>Browse…</strong></td><td>指定源工程库映射文件，并浏览选择。</td><td>源库必须能在该 cds.lib 中解析；路径变化会触发源目录重新读取。</td></tr>
+<tr><td><strong>Refresh</strong></td><td>强制重新读取源库、cell 和 view 目录。</td><td>新增 cell 未显示时使用；成功快照在 GUI 内缓存约 300 秒。</td></tr>
+<tr><td>Library / Cell / View 浏览器与过滤器</td><td>逐列筛选并选择源 view；双击或选择后加入 Source Cells 队列。</td><td>只选择需要生成的 schematic view；不要混入目标库中的派生 view。</td></tr>
+<tr><td><strong>Source Cells</strong> 队列</td><td>列出已经加入本 Process 的源 cell。</td><td>右键可删除；切换行会把右侧设置保存到对应 cell 草稿。</td></tr>
+<tr><td><strong>Simulator Options</strong> → Simulator</td><td>选择 <strong>spectre</strong> 或 <strong>hspiceD</strong>。</td><td>方言决定可用选项、输出后缀和模型 section 语义；切换后重新核对设置。</td></tr>
+<tr><td><strong>Temperature</strong> + 模式</td><td>固定本页温度，或继承 ADE top temperature。</td><td>固定模式接受数值或源默认；继承模式只对具备 ADE top 上下文的会话可靠。</td></tr>
+<tr><td><strong>Scale</strong> / <strong>Gmin</strong></td><td>设置仿真 scale 与 gmin。</td><td>沿用源工艺单位与数据类型；不要用 scale 修正错误的模型单位。</td></tr>
+<tr><td><strong>Advanced Options</strong> 表</td><td>列 Enabled、Name、Type、Value、Enum Values；按钮 Add、Remove、Duplicate、Move Up、Move Down。</td><td>选项按顺序生成；类型和枚举值必须与仿真器语法一致。旧版本单独的 tnom/scalem/reltol 输入已并入该表。</td></tr>
+<tr><td><strong>Model Library Setup</strong></td><td>列 Enabled、Model File、Corner、Label；按钮 Add、Remove、Move Up、Move Down、Duplicate。</td><td>可双击 Model File 浏览；corner 从模型文件 section 读取，顺序会影响网表中的 include 顺序。</td></tr>
+<tr><td><strong>Edit corner profiles…</strong></td><td>管理 CornerExport 的 fixed/library 模式和多组模型 profile。</td><td>Library 模式要求 Spectre，并为每个 corner 提供完整模型集合。</td></tr>
+<tr><td><strong>Simulation Views</strong></td><td><strong>Generate symbol view</strong>、<strong>Generate netlist view</strong>，各自带 Overwrite if exist；Target Library / Target Cell 在启用生成后可用。</td><td>目标库来自当前目标会话的权威 catalog；默认拒绝覆盖已有 view。</td></tr>
+<tr><td><strong>日志区</strong></td><td>显示源目录读取、默认项、生成、发布和仿真器诊断。</td><td>只保留可读诊断；OCEAN 输入回显会被隐藏。失败时先看最后一条 error。</td></tr>
+<tr><td><strong>Open Result</strong></td><td>打开当前页最近一次成功生成的结果浏览器。</td><td>没有成功运行时保持禁用；不会打开半成品目录。</td></tr>
+<tr><td><strong>Run Current / Cancel Current</strong></td><td>运行当前页，或取消当前页正在进行的生成/发布。</td><td>取消不会删除已经完成的其它页结果；重新运行前核对日志。</td></tr>
+<tr><td><strong>Load Config… / Save Config…</strong></td><td>读取或保存整个 MTS 工作台配置，包括多个 Process 页。</td><td>这是 workspace 配置，不是 CLI request TOML；两者格式不同。</td></tr>
+<tr><td><strong>Run All / Cancel All</strong></td><td>按页签顺序运行所有已配置 Process，或取消当前批次。</td><td>运行中配置编辑被锁定；先取消批次再修改页签或配置。</td></tr>
+</tbody></table></div>
+<ol class="steps"><li>选择源项目并核对 <strong>Source cds.lib</strong>；需要读取新增 cell 时点击 <strong>Refresh</strong>。</li><li>在浏览器中选择 library / cell / schematic view，加入 <strong>Source Cells</strong>。</li><li>选择 <strong>spectre</strong> 或 <strong>hspiceD</strong>，核对温度、scale、gmin、Advanced Options 和模型 section/顺序。</li><li>如需发布，在 <strong>Simulation Views</strong> 启用 symbol 或 netlist view，选择目标 library / cell，并明确是否需要覆盖。</li><li>点击 <strong>Run Current</strong>，或 <strong>Run All</strong> 顺序处理已配置项目；检查日志与结果后通过 <strong>Open Result</strong> 查看输出。</li><li>用 <strong>Save Config…</strong> 保存整个工作台配置，之后用 <strong>Load Config…</strong> 恢复。</li></ol>
 <p>每个 Process 页复用自己的后台 OCEAN，切换 cell 通常无需重启源进程。更换项目、配置变化或任务失败可能重新创建该进程。首次加载 PDK 会比后续切换慢，留意日志中的初始化进度。</p>
 <h2 id="publish">配置目标发布</h2>
-<p>生成结果检查完成后，可设置目标 library / cell，选择生成 symbol view、netlist view，再使用 <strong>Publish Views</strong>。目标库需在目标工程的 <code>cds.lib</code> 中可解析且可写。独立 GUI 若没有目标 session，需要先提供正确的目标会话信息；从 Virtuoso 菜单启动会带入当前目标工程。</p>
+<p>发布目标在源 cell 的 <strong>Simulation Views</strong> 中配置：启用 symbol view 或 netlist view，选择 Target Library / Target Cell，再运行该 Process。发布与生成属于同一回合，不再需要单独的 Publish Views 按钮。目标库需在目标工程的 <code>cds.lib</code> 中可解析且可写；独立 GUI 若没有目标 session，需要先提供正确的目标会话信息，从 Virtuoso 菜单启动会带入当前目标工程。</p>
 <p>source 与 target 使用独立的 Cadence 环境。不要把源项目 <code>cds.lib</code> 加载到当前目标 Virtuoso 来“切换工艺”；在 MTS 的 Process 页面选择源项目即可。默认拒绝覆盖已有目标，确实需要更新时明确选择相应 symbol / netlist view 覆盖选项。</p>
 <h2 id="cli">命令行 request 示例</h2>
 <p>CLI 的 request 文件与 GUI 保存的 workspace 配置格式不同。下面示例只生成一个源 cell 的 Spectre 网表；填写实际源库、模型和路径后先校验。</p>
@@ -100,7 +130,7 @@ mts-netlistor inspect /path/to/completed/run --json</code></pre></div>
 <tr><td>模型或默认设置不对</td><td>核对所选源项目、方言及模型 section；需要的 startup_file / simrc 必须显式提供。</td></tr>
 </tbody></table></div>
 
-<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="utilities.html">LEF 与导出工具 →</a></footer>
+<footer class="page-footer"><span>内容基线 ed47e32e · 界面核对 2026-10-24</span><a href="utilities.html">LEF 与导出工具 →</a></footer>
 </main>
 <aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#environment">先配置项目来源</a><a href="#modulefile">项目 modulefile 应提供什么</a><a href="#gui">在 GUI 中配置与生成</a><a href="#publish">配置目标发布</a><a href="#cli">命令行 request 示例</a><a href="#troubleshoot">常见问题</a></aside>
 </div></div>

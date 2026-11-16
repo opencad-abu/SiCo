@@ -1,0 +1,33 @@
+{
+  "actions": {
+    "summary": {
+      "capability": "xcelium.evidence",
+      "request": {
+        "fields": ["run_ref"],
+        "required": ["run_ref"]
+      },
+      "response": {
+        "schema": "xcelium.evidence.summary.v1"
+      }
+    }
+  },
+  "errors": [
+    "invalid_arguments",
+    "unsupported_contract",
+    "version_mismatch",
+    "capability_not_available",
+    "stale_context",
+    "read_failed",
+    "result_too_large",
+    "timeout",
+    "cancelled",
+    "internal"
+  ],
+  "limits": {
+    "max_bytes": 55000,
+    "max_items": 200,
+    "max_text": 4096
+  },
+  "name": "sico.xcelium.evidence.v1",
+  "version": 1
+}

@@ -62,10 +62,6 @@ case $program in
         ;;
     dspfana)
         target=$tools_root/rce/bin/rce
-        if [ -n "${RCE_ANALYZER_PYTHON-}" ]; then
-            RCE_PYTHON=$RCE_ANALYZER_PYTHON
-            export RCE_PYTHON
-        fi
         set -- dspf-gui "$@"
         ;;
     gdsout)

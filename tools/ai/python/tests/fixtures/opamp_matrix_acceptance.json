@@ -1,0 +1,183 @@
+{
+  "source": "gpdk045 Two_Stage_Opamp reference example specifications; acceptance fixture only, not production requirements",
+  "expected_test_points": [
+    {
+      "test": "AC",
+      "corner": "tt",
+      "point": 1
+    },
+    {
+      "test": "TRAN",
+      "corner": "tt",
+      "point": 1
+    },
+    {
+      "test": "AC",
+      "corner": "ff",
+      "point": 1
+    },
+    {
+      "test": "TRAN",
+      "corner": "ff",
+      "point": 1
+    },
+    {
+      "test": "AC",
+      "corner": "ss",
+      "point": 1
+    },
+    {
+      "test": "TRAN",
+      "corner": "ss",
+      "point": 1
+    },
+    {
+      "test": "AC",
+      "corner": "tt",
+      "point": 2
+    },
+    {
+      "test": "TRAN",
+      "corner": "tt",
+      "point": 2
+    },
+    {
+      "test": "AC",
+      "corner": "ff",
+      "point": 2
+    },
+    {
+      "test": "TRAN",
+      "corner": "ff",
+      "point": 2
+    },
+    {
+      "test": "AC",
+      "corner": "ss",
+      "point": 2
+    },
+    {
+      "test": "TRAN",
+      "corner": "ss",
+      "point": 2
+    },
+    {
+      "test": "AC",
+      "corner": "tt",
+      "point": 3
+    },
+    {
+      "test": "TRAN",
+      "corner": "tt",
+      "point": 3
+    },
+    {
+      "test": "AC",
+      "corner": "ff",
+      "point": 3
+    },
+    {
+      "test": "TRAN",
+      "corner": "ff",
+      "point": 3
+    },
+    {
+      "test": "AC",
+      "corner": "ss",
+      "point": 3
+    },
+    {
+      "test": "TRAN",
+      "corner": "ss",
+      "point": 3
+    },
+    {
+      "test": "AC",
+      "corner": "tt",
+      "point": 4
+    },
+    {
+      "test": "TRAN",
+      "corner": "tt",
+      "point": 4
+    },
+    {
+      "test": "AC",
+      "corner": "ff",
+      "point": 4
+    },
+    {
+      "test": "TRAN",
+      "corner": "ff",
+      "point": 4
+    },
+    {
+      "test": "AC",
+      "corner": "ss",
+      "point": 4
+    },
+    {
+      "test": "TRAN",
+      "corner": "ss",
+      "point": 4
+    }
+  ],
+  "specifications": [
+    {
+      "test": "AC",
+      "output": "Current",
+      "unit": "A",
+      "upper": 0.0015,
+      "upper_inclusive": false
+    },
+    {
+      "test": "AC",
+      "output": "UGF",
+      "unit": "Hz",
+      "lower": 533000000.0,
+      "lower_inclusive": false
+    },
+    {
+      "test": "AC",
+      "output": "Gain",
+      "unit": "dB",
+      "lower": 44,
+      "lower_inclusive": false
+    },
+    {
+      "test": "AC",
+      "output": "Voffset",
+      "unit": "V",
+      "lower": -0.01,
+      "upper": 0.01
+    },
+    {
+      "test": "TRAN",
+      "output": "Swing",
+      "unit": "V",
+      "lower": 0.98,
+      "lower_inclusive": false
+    },
+    {
+      "test": "TRAN",
+      "output": "SettlingTime",
+      "unit": "s",
+      "upper": 8e-09,
+      "upper_inclusive": false
+    },
+    {
+      "test": "TRAN",
+      "output": "RelativeSwingPercent",
+      "unit": "%",
+      "lower": 75,
+      "lower_inclusive": false
+    },
+    {
+      "test": "TRAN",
+      "output": "PhaseMargin",
+      "unit": "deg",
+      "lower": 20,
+      "lower_inclusive": false
+    }
+  ]
+}

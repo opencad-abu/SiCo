@@ -18,6 +18,9 @@ def _clear_rce_process_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep process-level RCE policy variables from leaking into unit tests."""
     monkeypatch.delenv("RCE_QUANTUS_BLOCK_CELL_FILE", raising=False)
     monkeypatch.delenv("RCE_QREDUCE", raising=False)
+    from rcepy.process_environment import PROCESS_FILES
+    for name in ("RCE_FINFET_FLOW", *PROCESS_FILES):
+        monkeypatch.delenv(name, raising=False)
 
 # Internal source-contract helpers are not runtime dependencies.
 UTILITY_ROOT = Path(__file__).resolve().parents[3] / "utility"

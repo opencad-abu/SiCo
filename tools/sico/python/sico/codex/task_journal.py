@@ -43,6 +43,10 @@ class TaskJournal:
             self.events.put(event)
             return event
 
+    def artifact(self, data):
+        """Store a private context artifact through the owning session journal."""
+        return self.journal.artifact(data)
+
     def activity(self, phase, label, *, tool=""):
         """Publish a bounded progress hint without exposing model reasoning.
 

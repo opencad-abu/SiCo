@@ -3,7 +3,16 @@
 from __future__ import annotations
 
 from PyQt5.QtCore import QPoint, Qt, pyqtSignal
-from PyQt5.QtWidgets import QFrame, QLabel, QListWidget, QListWidgetItem, QVBoxLayout
+from PyQt5.QtWidgets import (
+    QFrame,
+    QLabel,
+    QListWidget,
+    QListWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
+
+MARGIN = 4
 
 
 class ObjectMentionPopup(QFrame):
@@ -30,7 +39,7 @@ class ObjectMentionPopup(QFrame):
         self.rows.verticalScrollBar().valueChanged.connect(self._scroll_changed)
         self.hint = QLabel()
         self.hint.setTextFormat(Qt.PlainText)
-        self.hint.setWordWrap(True)
+        self.hint.setWordWrap(False)
         layout.addWidget(self.hint)
         self.setMinimumWidth(430)
         self.resize(430, 300)
@@ -42,6 +51,7 @@ class ObjectMentionPopup(QFrame):
             self.loadMoreRequested.emit()
 
     def show_loading(self, text="正在读取当前选择…"):
+        self.set_title("对象引用")
         self.rows.clear()
         item = QListWidgetItem(text)
         item.setFlags(Qt.NoItemFlags)
@@ -56,6 +66,33 @@ class ObjectMentionPopup(QFrame):
         self.rows.addItem(item)
         self.hint.setText("当前没有可插入的对象")
         self._show()
+
+    def set_title(self, text):
+        self.title.setText(text)
+
+    def show_scope(self, scope, *, count=0, selection_count=0, object_count=0,
+                   object_total=0, truncated=False, query=""):
+        if scope == "selection":
+            self.set_title("对象引用 · 当前选择")
+            if count:
+                self.set_hint(
+                    f"当前选择 {selection_count} 个对象 · "
+                    "↑/↓ 选择，Enter 插入，Esc 关闭")
+            else:
+                self.set_hint("当前选择没有匹配项 · 清空选择后可浏览当前窗口")
+            return
+        if scope == "window":
+            self.set_title("对象引用 · 当前窗口")
+            if truncated:
+                self.set_hint(
+                    f"已加载 {object_count} / {object_total} 个对象 · 滚动加载更多")
+            elif object_total == 0 and not query:
+                self.set_hint("当前窗口没有可引用的器件、网络或引脚")
+            else:
+                self.set_hint(
+                    "器件 / 网络 / 引脚 · ↑/↓ 选择，Enter 插入，Esc 关闭")
+            return
+        self.set_title("对象引用")
 
     def set_items(self, items):
         self.rows.clear()
@@ -90,18 +127,46 @@ class ObjectMentionPopup(QFrame):
 
     def _show(self):
         parent = self.parentWidget()
-        if parent is None:
+        input_widget = getattr(parent, "input", None) if parent is not None else None
+        if input_widget is None:
             return
+        bounds = self._bounds(parent)
+        anchor = input_widget.mapTo(parent, QPoint(0, 0))
+        above_y = anchor.y() - MARGIN
+        below_y = anchor.y() + input_widget.height() + MARGIN
+        available_above = above_y - bounds.top()
+        available_below = bounds.bottom() + 1 - below_y
+        self.setMinimumWidth(min(430, bounds.width()))
+        self.setMaximumWidth(bounds.width())
+        self.setMaximumHeight(bounds.height())
         self.adjustSize()
-        input_widget = getattr(parent, "input", None)
-        if input_widget is not None:
-            point = input_widget.mapTo(parent, QPoint(0, 0))
-            y = point.y() - self.height() - 4
-            if y < 0:
-                y = point.y() + input_widget.height() + 4
-            self.move(max(4, point.x()), max(4, y))
+        width = min(bounds.width(), max(240, self.width()))
+        desired = min(self.height(), bounds.height())
+        candidates = []
+        if available_above > 0:
+            above = min(desired, available_above)
+            candidates.append((above, above_y - above))
+        if available_below > 0:
+            candidates.append((min(desired, available_below), below_y))
+        # The body fallback overlays the input when neither side can show a
+        # complete list; it still stays inside the composer.
+        candidates.append((max(1, min(desired, bounds.height())), bounds.top()))
+        height, y = max(candidates, key=lambda item: item[0])
+        self.resize(width, height)
+        y = max(bounds.top(), min(y, bounds.bottom() + 1 - height))
+        x = min(max(bounds.left(), anchor.x()), bounds.right() + 1 - width)
+        self.move(x, y)
         self.show()
         self.raise_()
+
+    @staticmethod
+    def _bounds(parent):
+        body = getattr(parent, "body", None)
+        if isinstance(body, QWidget) and body.isVisible():
+            rect = body.geometry()
+        else:
+            rect = parent.rect()
+        return rect.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN)
 
 
 __all__ = ["ObjectMentionPopup"]

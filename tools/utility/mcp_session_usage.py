@@ -19,7 +19,7 @@ Frozen counting rules (``sico-session-usage.v1``):
 
 Usage:
 
-    /software/pkgs/python/3.9.13/bin/python3 tools/utility/mcp_session_usage.py \\
+    "$SICO_HOME/runtime/python/bin/python3" tools/utility/mcp_session_usage.py \\
         SESSION_DIR --output /private/evidence/session.json
 """
 

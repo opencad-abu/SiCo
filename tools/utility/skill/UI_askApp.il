@@ -1,5 +1,5 @@
 unless(and(boundp('sicoGuiAskAppVersion)
-             sicoGuiAskAppVersion=="20260714.recursive.safe")
+             sicoGuiAskAppVersion=="20261024.recursive.safe.v2")
 
 procedure(GUI_askApp(flow askText "SS")
   let((ask answer)
@@ -7,8 +7,8 @@ procedure(GUI_askApp(flow askText "SS")
           ?name          'rceAskApp
           ?dboxBanner    strcat(cond(
                                   (isCallable('SICO_logo) SICO_logo())
-                                  (isCallable('witMenuLogo) witMenuLogo())
-                                  (t "SiCo"))
+                                  (isCallable('sicoMenuLogo) sicoMenuLogo())
+                                  (t "Silicon Copilot"))
                                 "::Question---" flow)
           ?dboxText      askText
           ?buttonLayout  'UserDefined
@@ -27,5 +27,5 @@ procedure(GUI_askApp(flow askText "SS")
   );let
 );procedure
 
-sicoGuiAskAppVersion="20260714.recursive.safe"
+sicoGuiAskAppVersion="20261024.recursive.safe.v2"
 )

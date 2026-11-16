@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SiCo 使用手册附录：SICO-SYMBOL-TEMPLATE 0.1.6 Symbol 模板数据与消费约束复核草案全文。">
+<title>Symbol 模板标准（草案） · SiCo 使用手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b4543a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='sans-serif' font-size='24' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/manual.css">
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
+  <span class="edition">使用手册 / 2026.10</span>
+  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+</header>
+<noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用复制与主题切换。</p></noscript>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="手册目录">
+<p class="rail-label">SICO DOCUMENTATION</p>
+<a href="index.html">开始阅读</a>
+<p class="nav-group">开始使用</p>
+<a href="sico-gui.html">SiCo · 客户端界面</a>
+<a href="sico-workspace.html">SiCo · 工作区页面</a>
+<a href="installation.html">01 · 安装</a>
+<a href="environment.html">02 · 环境变量</a>
+<a href="virtuoso.html">03 · Virtuoso 集成</a>
+<a href="flows.html">04 · CAD flows</a>
+<p class="nav-group">流程指南</p>
+<a href="drc.html">DRC · 规则检查</a>
+<a href="lvs.html">LVS · 连接检查</a>
+<a href="rce.html">RCE · 寄生提取</a>
+<a href="mts.html">MTS · 多工艺网表</a>
+<a href="utilities.html">LEF / GDS / CDL</a>
+<a href="lsf.html">LSF · 运行与资源</a>
+<p class="nav-group">参考附录</p>
+<a href="appendix-pdk-data-standard.html">PDK 数据标准</a>
+<a href="appendix-circuit-template-standard.html">电路模板标准</a>
+<a href="appendix-symbol-template-standard.html" aria-current="page">Symbol 模板标准</a>
+<a href="environment-internal.html">环境接口附录</a>
+<div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
+</nav>
+<div class="reading">
+<main id="main">
+<p class="eyebrow">APPENDIX / SICO-SYMBOL-TEMPLATE</p>
+<h1>Symbol 模板标准（草案）</h1>
+<p class="lead">Symbol 模板的数据归属、坐标与几何、约束分层、消费流程和验收边界。</p>
+<div class="meta"><span class="tag">复核草案</span><span class="tag">SICO-SYMBOL-TEMPLATE</span><span class="tag">内容核对 · 2026.10.24</span></div>
+<div class="notice"><strong>复核草案，不注册第二种数据格式。</strong> 本页收入 SICO-SYMBOL-TEMPLATE 0.1.6 全文；数据权威仍为 SICO-CIRCUIT-TEMPLATE-DATA 0.1.0 附录 B.9 的 <code>symbol.json</code>。</div>
+<p class="appendix-source"><strong>源文档</strong></p><ul class="appendix-source"><li><code>docs/SICO_SYMBOL_TEMPLATE_STANDARD.md</code></li></ul>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文档标识</td>
+<td>SICO-SYMBOL-TEMPLATE（设计说明，不注册第二种数据格式）</td>
+</tr>
+<tr>
+<td>文档修订</td>
+<td>0.1.6，2026-10-18；原生轮廓验收恢复与源标签拒绝边界</td>
+</tr>
+<tr>
+<td>状态</td>
+<td>数据说明仍为草案，未注册第二种数据格式；消费准入、锚点方法、独立接口证据、源标签拒绝和原生轮廓验收已实现，验证见审计总结</td>
+</tr>
+<tr>
+<td>数据权威</td>
+<td>SICO-CIRCUIT-TEMPLATE-DATA 0.1.0 附录 B.9 的 <code>symbol.json</code>（源事实/资格参考）</td>
+</tr>
+<tr>
+<td>运行契约</td>
+<td>现有 Symbol preview/create/draw/inspect 工具及已确认的渲染约束</td>
+</tr>
+<tr>
+<td>目的</td>
+<td>说明接口、图形忠实度、允许适配与验收边界，避免另建数据模型</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="sec-1">1. 已有能力与本草案的范围</h2>
+<p>Symbol 数据和创建流程已经存在，不能以本草案尚未发布推论它们不存在：</p>
+<ul>
+<li><span class="source-ref" title="源文档：../tools/ai/docs/CIRCUIT_TEMPLATE_SYMBOL_V1.md">Symbol v1</span>定义持久模板、目标 schematic、
+  显式端口映射和 preview/create/inspect 生命周期。</li>
+<li><span class="source-ref" title="源文档：../tools/ai/docs/CIRCUIT_MCP_PHASE18_SYMBOL_DRAW.md">轮廓重绘</span>定义 <code>template_outline</code>、
+  <code>draw_symbol</code>、供电位置、端口短线和固定标签；原矩形路径继续兼容。</li>
+<li><span class="source-ref" title="源文档：SICO_CIRCUIT_TEMPLATE_DATA_STANDARD_CONTENT.md">内容附录 B.9</span>已有 <code>symbol.json</code>；
+  <span class="source-ref" title="源文档：../tools/ai/python/cadai/template_standard/symbol_checks.py">symbol_checks.py</span>校验接口、锚点、
+  图元、总线和资格回执。</li>
+</ul>
+<p><strong>当前执行边界（三审补充）：</strong> <code>ctpl_</code> 的 preview/create/draw 经
+<code>TemplateCatalog.locate → replay.engine_record</code> 取得 transient raw record；
+<code>template_outline</code> 目前读取 <code>record["assets"]["symbol"]</code>，不是直接读取 B.9 的
+<code>symbol.json</code>。因此 <code>symbol.json</code> 目前是持久源事实/资格权威，不是完整的 renderer
+输入；修改一个 <code>symbol.json</code> 字段不能推定创建结果随之改变。当前路径要求
+<code>detail_level=raw</code> 且有 retained private capture，L1/L2/L3 投影只能作为离线参考，不能据此
+宣称可创建。要统一到 B.9 单一路径，须先补齐 pin figure、lpp、line width 等信息并让
+reader/renderer 消费该文档；在此之前按本边界记录证据。</p>
+<p>本草案保留“区分必须满足和可适配内容”的思路，但不能让 LLM 凭理由改变既有硬约束。
+当前失败根因应通过固定模板、请求、预览、保存回读和原生截图定位。本次未取得原审计所称
+“效果差”的具体失败件，不能认定它由缺少约束层级或提示词造成。</p>
+<p>范围是设计单元 Symbol 的数据参考与消费，不重定义 PDK 器件 symbol/CDF，不生成或修改
+PDK 库。层次/PCell Symbol、多 pin terminal 和复杂 bus 表达式须沿用现有拒绝边界。
+数据采集可完整保留未支持事实；保存了事实不等于当前 renderer 能创建。</p>
+<h2 id="sec-2">2. 一份事实的唯一归属</h2>
+<p>不采用原稿的 <code>sico.symbol.template.v1</code> 与 <code>.minimal</code> 双格式，不把端口、约束、几何和
+允许操作在多个对象里各写一份。最小可用数据是现有格式的完整必备部分，不能删掉单位、
+来源、接口映射或能力证据后另称“最小版”。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>信息</th>
+<th>权威位置</th>
+<th>消费方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>包版本/清单/固定依赖</td>
+<td><code>package.json</code></td>
+<td>内容文件继承版本，不重复维护</td>
+</tr>
+<tr>
+<td>模板身份/用途许可</td>
+<td><code>template.json</code></td>
+<td>固定 <code>ctpl_</code> 与 use 分开读取</td>
+</tr>
+<tr>
+<td>来源及其依据</td>
+<td><code>sources.json</code>，公共信封 <code>source/depends_on/evidence</code></td>
+<td>引 ID，不内嵌原始 capture 或可执行表达式</td>
+</tr>
+<tr>
+<td>schematic 端口及电气连接</td>
+<td><code>topology.json</code></td>
+<td>symbol terminal 用 <code>port</code> 引端口，不复制网络表</td>
+</tr>
+<tr>
+<td>Symbol 源接口/锚点/主体/文字</td>
+<td><code>symbol.json</code></td>
+<td>采用本节下方字段，作为源事实/资格参考；不是当前 renderer 的完整执行输入</td>
+</tr>
+<tr>
+<td>当前执行输入</td>
+<td>transient <code>replay.engine_record()</code> 重建的 raw retained capture</td>
+<td>仅 raw + 私有 retained evidence；是执行适配，不是第二份持久权威</td>
+</tr>
+<tr>
+<td>采集缺项</td>
+<td><code>collection.json</code></td>
+<td>缺失、未知、不适用明确区分</td>
+</tr>
+<tr>
+<td>源 Symbol 能力结果</td>
+<td><code>qualification.json</code> 的 <code>symbol-reference-v1</code></td>
+<td>绑定固定内容；不等于目标创建/视觉已通过</td>
+</tr>
+<tr>
+<td>本次目标映射/缩放/样式</td>
+<td>preview 请求及不可变计划</td>
+<td>不回写成源模板事实</td>
+</tr>
+<tr>
+<td>目标回读和视觉验收</td>
+<td>本次操作回执与私有证据</td>
+<td>不覆盖源能力回执</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>symbol.json</code> 必备公共信封以及 <code>frame,terminals,anchors,outline,labels</code>：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>当前格式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>frame</td>
+<td><code>unit=source_dbu</code>、正整数 <code>dbu_per_uu</code>、版本化 <code>anchor_method</code></td>
+</tr>
+<tr>
+<td>terminals</td>
+<td>ID → <code>{name,direction,width,port?}</code>；direction 为 input/output/inputOutput/unknown</td>
+</tr>
+<tr>
+<td>anchors</td>
+<td>ID → <code>{terminal,xy,escape}</code>；同一 terminal 可记录多锚点，消费者另行限制</td>
+</tr>
+<tr>
+<td>outline</td>
+<td>ID → 已登记 polyline/polygon/rectangle/ellipse/arc 图元</td>
+</tr>
+<tr>
+<td>labels</td>
+<td>ID → <code>{text,xy,bbox,kind}</code>，kind 为 literal/dynamic_literal</td>
+</tr>
+</tbody>
+</table></div>
+<p>symbol terminal 表是实际保存接口的观察，不是另一个人工修改 schematic 接口的入口。
+有 schematic 时，port 映射须完整且名称/方向/位宽一致；独立 symbol 采集没有 topology 时，
+必须有保存接口证据，并在 collection 说明。<code>inputOutput</code> 是现有枚举，不能写 <code>inout</code>。
+未知方向可保留为事实，不能取得完整 Symbol 资格或当作可执行方向。
+0.1.4 已把无 topology 的独立接口绑定到现有 source envelope：<code>symbol.source</code> 必须为
+<code>symbol_interface</code>，<code>symbol.depends_on</code> 必须为 <code>["capture"]</code>；<code>sources.symbol_interface</code>
+必须是 <code>kind=derived</code>、<code>method=saved-symbol-interface-v1</code>、<code>inputs=["capture"]</code>，且
+<code>evidence_ref</code> 等于 capture scope digest 与 terminal 名称/方向/位宽 JCS 摘要的组合。
+新 qualification validator 使用 <code>-symbol-interface-v1</code> 后缀。旧 v3 回执保持原有
+capture 依赖检查，不重分类、不提高已有包资格；缺少或伪造绑定只在新回执路径拒绝。</p>
+<h2 id="sec-3">3. 坐标、单位与几何</h2>
+<ul>
+<li>源坐标使用相对于 symbol 视图原点的整数 DBU，按实际采集的 <code>dbu_per_uu</code> 换算。
+  OA x 向右、y 向上；SVG 屏幕坐标转换由 renderer 负责，不能反过来改变源数据。</li>
+<li>当前 <code>anchor_method</code> 的已知值为 <code>instance-min-or-view-origin-v1</code>；未知值不能按视图
+  原点解释。施工首批已在 <code>symbol_checks.py</code> 强制核验该值，消除其与投影层的差异。</li>
+<li>目标 UU 坐标由 <code>source_dbu / dbu_per_uu</code> 再应用显式缩放和目标变换得到。
+  不假定 <code>dbu_per_micron=1000</code>；Symbol user unit 不自动等于物理版图微米。</li>
+<li>pin anchor 必须落在目标连接网格上，terminal 的连接点与画出的 stub 一致。
+  主体曲线与 stub 的接触必须按真实图元校验，不能以 bbox 接触代替曲线接触。</li>
+<li>源几何、目标占用框与目标 selection box 分属不同对象；后两者从目标计划/回读派生，
+  不与源轮廓复制维护为多个可修改尺寸字段。</li>
+<li>当前 outline renderer 的 pin 网格为 0.0625 UU，每端口一条非零短线，长度不超过
+  <code>5 × 0.0625 UU</code>；字体/标签及供电位置沿用既有契约。它们是实现约束，不是任意 PDK
+  的普遍物理规则，也不能因本草案把它们降为“建议”。</li>
+<li>B.9 的 <code>symbol.json</code> 保存 <code>outline</code> 图元和锚点，但不保存完整 pin figure、
+  <code>lpp</code>、线宽等 <code>template_outline</code> 当前需要的全部字段；因此“未登记图元”或
+  pin 图形差异只能按 raw/replay 证据定位，不能仅凭 <code>symbol-reference-v1</code> 推定
+  renderer 可重放。</li>
+</ul>
+<p>下例为虚构的两端口矩形 Symbol 内容，用于解释 B.9，不是可发布模板或合格电路。
+<code>capture</code> 来源与依赖、<code>p_a/p_y</code> 端口须由包内真实 sources/dependencies/topology 提供；
+这里只有合法业务字段，没有伪造 passed 或专家签核。示例 <code>dbu_per_uu=1000</code> 仅为演示值。</p>
+<div class="code-block"><div class="code-label">JSON</div><pre><code class="language-json">{
+  &quot;source&quot;: &quot;capture&quot;,
+  &quot;depends_on&quot;: [&quot;capture&quot;],
+  &quot;frame&quot;: {
+    &quot;unit&quot;: &quot;source_dbu&quot;,
+    &quot;dbu_per_uu&quot;: 1000,
+    &quot;anchor_method&quot;: &quot;instance-min-or-view-origin-v1&quot;
+  },
+  &quot;terminals&quot;: {
+    &quot;t_a&quot;: {&quot;name&quot;: &quot;A&quot;, &quot;direction&quot;: &quot;input&quot;, &quot;width&quot;: 1, &quot;port&quot;: &quot;p_a&quot;},
+    &quot;t_y&quot;: {&quot;name&quot;: &quot;Y&quot;, &quot;direction&quot;: &quot;output&quot;, &quot;width&quot;: 1, &quot;port&quot;: &quot;p_y&quot;}
+  },
+  &quot;anchors&quot;: {
+    &quot;a_a&quot;: {&quot;terminal&quot;: &quot;t_a&quot;, &quot;xy&quot;: [-750, 0], &quot;escape&quot;: &quot;left&quot;},
+    &quot;a_y&quot;: {&quot;terminal&quot;: &quot;t_y&quot;, &quot;xy&quot;: [750, 0], &quot;escape&quot;: &quot;right&quot;}
+  },
+  &quot;outline&quot;: {
+    &quot;body&quot;: {&quot;kind&quot;: &quot;rectangle&quot;, &quot;points&quot;: [[-500, -500], [500, 500]]},
+    &quot;stub_a&quot;: {&quot;kind&quot;: &quot;polyline&quot;, &quot;points&quot;: [[-750, 0], [-500, 0]]},
+    &quot;stub_y&quot;: {&quot;kind&quot;: &quot;polyline&quot;, &quot;points&quot;: [[500, 0], [750, 0]]}
+  },
+  &quot;labels&quot;: {
+    &quot;label_a&quot;: {&quot;text&quot;: &quot;A&quot;, &quot;xy&quot;: [-375, 125], &quot;bbox&quot;: [[-375, 125], [-250, 250]], &quot;kind&quot;: &quot;literal&quot;},
+    &quot;label_y&quot;: {&quot;text&quot;: &quot;Y&quot;, &quot;xy&quot;: [250, 125], &quot;bbox&quot;: [[250, 125], [375, 250]], &quot;kind&quot;: &quot;literal&quot;}
+  }
+}
+</code></pre></div>
+<p>本例双侧 anchor 为 ±0.75 UU、短线长 0.25 UU，均兼容当前目标网格/短线范围；
+完整发布仍需包身份、真实来源、内容指纹、collection、qualification 与用途许可。
+labels 保存源文字事实，不意味着 renderer 必须执行或原样复制它们。</p>
+<h2 id="sec-4">4. 约束分层：按来源与用途判定</h2>
+<p>“硬/软/指导”只用于说明强制程度，不能由模型为字段随意分级，也不按电气/美观机械分类。
+例如 <code>+/-</code> 既是视觉信息，也可能是极性语义；固定字体则可能是已确认交付要求。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>规则</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>接口与执行硬约束</td>
+<td>目标完整端口、名称/方向/位宽/总线成员对应，明确 global/sigType 语义，保存前重验，既有 Symbol 不覆盖，task/request/digest 绑定</td>
+</tr>
+<tr>
+<td>用户或实现已确定的图形硬约束</td>
+<td>当前 power 上、ground 下；pin 网格与 stub 接触/长度；明确要求保留的主体与语义标记；失败须报告</td>
+</tr>
+<tr>
+<td>可适配偏好</td>
+<td>只有既有接口允许或本任务明确授权的缩放、非功能位置调整；不靠“更美观”越过硬边界</td>
+</tr>
+<tr>
+<td>一般展示建议</td>
+<td>未被固定的非语义留白/文字避让等；不得遮挡引脚、误导极性或执行源动态文本</td>
+</tr>
+</tbody>
+</table></div>
+<p>特别约束：</p>
+<ol>
+<li><strong>极性/功能标记</strong>：运放正负号、反相泡、时钟边沿符号必须与相应 terminal 角色一致。
+   缺少角色证据时不能按名字猜测，也不能删除后仍声称忠实重绘。当前 renderer 不保留任意源
+   文字；如关键标记由文字承载，须先验证支持，必要时报告能力缺口。
+   0.1.5 的固定失败件为 <code>gsclib045/INVX1</code> 的源 Symbol <code>[@info]</code> 标签：旧的
+   <code>template_outline</code> 计划跳过该 label figure 并继续预览，未报告文字丢失。现在
+   <code>outline_plan</code> 在生成预览前核对源标签；只接受 <code>cdsName()</code>、<code>[@partName]</code>、
+   <code>[@cellName]</code>、<code>[@instanceName]</code>、terminal 名称和 <code>cdsTerm("terminal")</code>，其余
+   literal/dynamic 文字（包括 <code>[@info]</code>、<code>cdsParam(...)</code>、固定电压标注）抛出
+   <code>TemplateUnavailable</code> 并列出文本，不创建目标 Symbol。</li>
+<li><strong>供电与隐式连接</strong>：不得以高层框图或密集排版为由隐藏/删除电源 terminal、创建新继承连接
+   或改变 global/local。源 symbol 少画而 schematic 存在的端口由现有流程显式补出。</li>
+<li><strong>端口映射</strong>：已有 <code>port_map</code> 允许源到目标显式一对一改名，须保留方向、位宽、bus 顺序等；
+   不等于允许交换电气角色。<code>net_scope_map</code> 只能按已有明确规则使用。</li>
+<li><strong>位置与连接区分</strong>：移动 INP/INN 的几何位置不必然反相；交换 terminal 与网络对应才改变
+   电气语义。移动现有实例 pin 还会影响已连导线，所以不能以“无功能影响”跳过回读或覆盖保护。</li>
+<li><strong>可选电路组</strong>：omit/add 受 reuse 契约控制，不是一般软约束；Symbol 草案不扩大电路适配许可。</li>
+</ol>
+<p>不新增每字段 <code>constraint_tier</code>、importance 与多个 allowed/prohibited 列表。若真实反例证明
+现有格式无法保存必要的语义标记绑定，再向父标准提出最小扩展：一个权威字段/引用、一种
+能力版本、未知特性的拒绝行为、迁移方式和反例验收。未登记前不通过 <code>x_</code> 承载执行权限。</p>
+<h2 id="sec-5">5. 当前可执行的消费流程</h2>
+<ol>
+<li><strong>核对目标</strong>：读取已保存 schematic 的完整接口；检查同一 library/cell 的 symbol。
+   已有且一致则复用；不一致或检查失败时停止相关 TB 创建，不覆盖既有 symbol。</li>
+<li><strong>选择固定模板</strong>：检索用途许可及所需能力，读取接口/轮廓/缺口；区分 <code>tpl_</code> legacy 与
+   <code>ctpl_</code> 标准引用。源能力通过不免除当前消费者的支持范围和目标检查。当前创建还需
+   <code>detail_level=raw</code> 的 retained private capture；L1/L2/L3 投影只读参考，<code>replay</code> 拒绝
+   执行。施工首批由 <code>make_plan → replay.require_symbol</code> 在预览文件/原生调用前检查
+   <code>standard_use.reference=allow</code>；<code>template_outline</code> 另须 <code>symbol-reference-v1=passed</code>。
+   矩形样式不消费源 Symbol，不因该资产缺失而拒绝；两种样式继续逐项检查 schematic
+   完整接口及目标映射，不要求与 Symbol 无关的内部电路 topology/whole/core 资格。
+   当前仍需要 schematic 接口，独立 Symbol 的资格不会自动产生可创建能力。</li>
+<li><strong>选择已有样式</strong>：普通模块矩形使用 <code>rectangular_module</code>；保留门/自定义轮廓显式选
+   <code>template_outline</code>。默认值是矩形；不靠默认值宣称保留源轮廓，不支持时不得静默降级。</li>
+<li><strong>形成预览</strong>：复用已确认 task 呈现方式，传入必要的 port_map/net_scope_map/port_roles
+   和 outline_scale；检查预览中的完整端口、added_ports、缩放、主体/短线和标签。
+   <code>outline_scale</code> 仅在 <code>template_outline</code> 生效，允许 0.25..32；<code>rectangular_module</code>
+   会静默忽略它。<code>port_roles</code> 也只接受 <code>template_outline</code>，矩形模式传入会报错。</li>
+<li><strong>创建缺失 Symbol</strong>：用原 preview_ref/digest 和请求身份执行现有 create/draw 入口。
+   创建前重验目标；未知传输结果先查回执，不换请求 ID 绕过部分失败。</li>
+<li><strong>回读与显示验收</strong>：检查保存接口、几何、来源和原生实例显示；只有 schVIC/保存成功
+   不能宣称视觉通过。失败保留目标与证据供查询，不循环删除重建。</li>
+<li><strong>需要 TB 时</strong>：Symbol 通过后，使用同一 library/cell 的 symbol 实例作为 DUT。
+   不把内部 schematic 器件复制到 TB；缺少现有绑定能力时报告限制，不猜 pin 坐标。</li>
+</ol>
+<p>辅助测试/probe 统一在当前工作区 <code>SicoTest</code> 后台通过 <code>dbOpenCellViewByType</code> 创建，
+不打开、切换或抬升编辑窗口，不覆盖旧测试；库路径冲突须报告。用户交付目标及其 TB 才跟随
+已确认呈现方式。若需连线，<code>schCreateWire</code> 第三个参数只允许 <code>direct</code> 或 <code>full</code>。
+这些是现行工程约束，不要求为辅助测试重复询问用户。</p>
+<h2 id="sec-6">6. 验收：分项结果，不以总分抵消错误</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>验收项</th>
+<th>通过依据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据格式</td>
+<td>按 B.9 和包校验器解析；来源/ID/单位/缺口不矛盾</td>
+</tr>
+<tr>
+<td>完整接口</td>
+<td>对目标 schematic 检查端口、方向、位宽、bus 顺序与网络语义；无遗漏、重复或错误对应</td>
+</tr>
+<tr>
+<td>几何连通</td>
+<td>实际 pin/stub 接触、网格、长度及 selection box 回读符合所选 renderer</td>
+</tr>
+<tr>
+<td>语义外观</td>
+<td>极性/反相/边沿等含义保持；不存在误导标签或遗漏必要 terminal</td>
+</tr>
+<tr>
+<td>持久结果</td>
+<td>save/reopen/inspect 对应同一目标、模板与摘要；重复请求不产生第二份对象</td>
+</tr>
+<tr>
+<td>原生可读性</td>
+<td>在实际 Cadence 实例显示中检查遮挡、文字、供电位置与轮廓；截图绑定对象和源码/模板身份</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>交付通过要求全部适用硬约束通过且无阻塞缺口。</strong> “未运行”记 unknown/not_run，不能记 passed；
+原稿“硬约束违反率&lt;1%”和总分≥0.7 的放行规则删除。</p>
+<p>若后续评估要比较软偏好，只作为诊断量使用：
+<code>S = sum(w_i × s_i) / sum(w_i)</code>，<code>w_i&gt;0</code>、<code>0≤s_i≤1</code>；无偏好时记 not_applicable。
+例如两个偏好权重 0.9/0.8，只满足第一个，S=0.9/1.7≈0.529，不能再除一次 1.7。
+硬约束失败立即不合格；S、人工视觉判断与硬结果分开报告，本稿不设未经校准的生产阈值。</p>
+<h2 id="sec-7">7. 正反例与定位顺序</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>请求/观察</th>
+<th>正确处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>“按门模板外形绘制”，结果为矩形</td>
+<td>核查实际 style；矩形默认是现有契约。应显式请求 template_outline，再查实际结果</td>
+</tr>
+<tr>
+<td>已传 template_outline，但某条弧缺失</td>
+<td>固定 template_ref/preview，检查 capture、B.9、引擎重放、图元支持及原生读回；定位到具体环节</td>
+</tr>
+<tr>
+<td>选择 L1/L2 的 <code>ctpl_</code> 想直接创建</td>
+<td>记录为 reference-only；当前 replay 要求 raw + retained capture，不能把查询 passed 当作可执行</td>
+</tr>
+<tr>
+<td>运放正负号只在源 label 中</td>
+<td>当前 renderer 不复制任意文字；不能删除符号仍称成功，也不能求值源表达式。记录语义标记支持缺口</td>
+</tr>
+<tr>
+<td>源 Symbol 含 <code>[@info]</code>、<code>cdsParam(...)</code> 或固定电压文字</td>
+<td>0.1.5 起 <code>template_outline</code> 在预览前拒绝并列出未支持标签；不再静默生成缺文字的目标 Symbol。<code>rectangular_module</code> 不消费源 Symbol 标签</td>
+</tr>
+<tr>
+<td>VOUT 想从右侧改到顶部</td>
+<td>当前工具没有任意换边参数；不能由 LLM 直接改计划/digest。现有授权/能力不足时保留原规则并说明限制</td>
+</tr>
+<tr>
+<td>源 VINP 映射到目标 INP</td>
+<td>显式一对一 port_map 且完整接口重验可接受；不因名字不同自动拒绝</td>
+</tr>
+<tr>
+<td>为省空间隐藏 VDD/VSS</td>
+<td>拒绝改变完整接口；按既有供电位置和显式 pin 流程处理</td>
+</tr>
+<tr>
+<td>既有 symbol 不一致</td>
+<td>停止 TB 创建，报告差异；不重画覆盖，不展开 DUT schematic 替代</td>
+</tr>
+</tbody>
+</table></div>
+<p>最小问题证据包括：固定模板引用及修订、完整请求/样式、目标接口摘要、预览 JSON/SVG、
+阶段回执、保存回读和原生截图。必须区分“模板未采到”“格式转换未保留”“renderer 不支持”
+“调用选择不同”和“生成后显示有误”，不能统一归因为 LLM。</p>
+<h2 id="sec-8">8. 后续实施与发布条件</h2>
+<ol>
+<li>首批保留 raw/replay，落实第 5 节的用途、按样式消费资格及完整接口检查，并拒绝未知
+   anchor_method；这些条件共同满足，不能以“完成其中一项”关闭消费准入。已存在的
+   preview_ref 仍按原不可变计划处理；新准入只在加载新源码后的新 preview 生效。
+   B.9 直接驱动 renderer 要按具体失败件另行评估，不是本次必要的格式重建。</li>
+<li>首个可复现失败件已完成：<code>gsclib045/INVX1</code> 的 <code>[@info]</code> 源标签在旧计划中被静默
+   丢弃；0.1.5 在预览/原生调用前拒绝并列出未支持标签。0.1.6 恢复了原生轮廓验收：
+   owned Virtuoso 子进程不再继承源测试的 Qt offscreen，使用 <code>xvfb-run</code> 和
+   <code>-restore</code> 启动；门控记录在 <code>SicoTest</code> 中后台创建，原生前/后台、保存回读、几何、
+   支持标签和截图均通过。含未支持标签的门控记录仍按 0.1.5 拒绝，原生几何验收使用
+   label-free 捕获记录，不能把拒绝路径绕过。后续仍按第 7 节定位其他真实失败。</li>
+<li>若调用指导不足，在实际工具说明/帮助或 workflow 的权威入口补充短说明；
+   不向 <code>adapters/circuit.py</code> 无差别塞入大段提示词，新增广告字节须遵守 MCP 预算。</li>
+<li>若是 renderer/语义表达缺口，修改对应责任模块和必要数据标准，并对代表样例、拒绝路径、
+   原生保存/显示验证。不得只用文字承诺“已经修复”。</li>
+<li>只有扩展字段、reader/writer/renderer、迁移与回归证据一致时才正式发布父标准修订；
+   本文版本号只是文档修订，不自动生效、不注册新 schema。</li>
+<li>无 topology 的已保存独立接口证据绑定已实现：新回执要求 capture scope digest 与
+   terminal 接口摘要绑定的 <code>evidence_ref</code>，拒绝伪造 source/depends_on/证据或改动接口；
+   旧 v3 回执继续按历史语义读取。该实现不提高已有包资格，也不把固定证据与目标创建
+   或视觉验收混为一谈。固定真实 Symbol 失败件仍是下一项。</li>
+</ol>
+<p>本稿未创建原稿列出的五个模板文件，也不宣称它们已经交付。模板扩充按真实需求与许可选择，
+PDK 基础器件优先使用已发布 master，不以新画一套器件 Symbol 替代 PDK。辅助验收、源数据和
+截图留私有目录，正式发行继续遵守仓库运行时政策。</p>
+<p>版本记录：0.1.0 为 Fable5 原稿；0.1.1 修正已有能力判断、合并数据权威、坐标/端口/供电
+语义和评分错误；0.1.2 三审补充 raw/replay 与 B.9 的消费边界、L1/L2 参考限制、
+<code>anchor_method</code> 校验缺口和 <code>outline_scale</code>/<code>port_roles</code> 条件；0.1.3 区分矩形与轮廓
+的必要准入，记录首批实现及剩余独立证据缺口；0.1.4 实现独立保存接口证据绑定、
+伪造拒绝和历史 v3 回执兼容；0.1.5 固定 <code>[@info]</code> 标签静默丢失失败件并在预览前拒绝
+未支持源标签；0.1.6 恢复 owned Virtuoso 下的原生轮廓验收，使用 <code>SicoTest</code> 和
+label-free 捕获记录。完整审计依据见
+<span class="source-ref" title="源文档：SICO_ARCHITECTURE_AUDIT_20261018.md">架构复核报告</span>。</p>
+<footer class="page-footer"><span>依据 SICO-SYMBOL-TEMPLATE 0.1.6 · 修订 2026-10-18</span><a href="index.html">返回使用手册 →</a></footer>
+</main>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#sec-1">1. 已有能力与本草案的范围</a><a href="#sec-2">2. 一份事实的唯一归属</a><a href="#sec-3">3. 坐标、单位与几何</a><a href="#sec-4">4. 约束分层：按来源与用途判定</a><a href="#sec-5">5. 当前可执行的消费流程</a><a href="#sec-6">6. 验收：分项结果，不以总分抵消错误</a><a href="#sec-7">7. 正反例与定位顺序</a><a href="#sec-8">8. 后续实施与发布条件</a></aside>
+</div></div>
+</body>
+</html>

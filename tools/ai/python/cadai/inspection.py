@@ -33,16 +33,16 @@ class InspectionArgumentError(ValueError):
 def build_read_only_skill(name: str, arguments: dict[str, Any]) -> str:
     """Build one fixed-shape SKILL expression for an inspection MCP tool."""
     if name == "inspect_schematic":
-        target = _target(arguments, "schematic", "schematic", allow_placement=True)
+        target = _target(arguments, "schematic", allow_placement=True)
         placement = _boolean(arguments, "include_placement", default=False)
         return "aiInspectSchematic({} {} {} {} {} {})".format(
             *target, _max_items(arguments), "t" if placement else "nil"
         )
     if name == "inspect_layout":
-        target = _target(arguments, "layout", "maskLayout")
+        target = _target(arguments, "maskLayout")
         return "aiInspectLayout({} {} {} {} {})".format(*target, _max_items(arguments))
     if name == "inspect_symbol_ports":
-        target = _target(arguments, "symbol", "schematicSymbol")
+        target = _target(arguments, "schematicSymbol")
         return "aiInspectSymbolPorts({} {} {} {} {})".format(*target, _max_items(arguments))
     if name == "inspect_master_evidence":
         _require_only(arguments, {"targets", "max_items"})
@@ -54,12 +54,12 @@ def build_read_only_skill(name: str, arguments: dict[str, Any]) -> str:
         for entry in targets:
             if not isinstance(entry, dict):
                 raise InspectionArgumentError("each target must be an object")
-            _require_only(entry, {"lib", "cell", "view"})
-            view = _optional_string(entry, "view")
+            _require_only(entry, {"lib", "cell", "view_name"})
+            view_name = _optional_string(entry, "view_name")
             entries.append("list({} {} {})".format(
                 _string(entry, "lib"),
                 _string(entry, "cell"),
-                _skill_string(view if view is not None else "symbol"),
+                _skill_string(view_name if view_name is not None else "symbol"),
             ))
         return "aiInspectMasterEvidence(list({}) {})".format(
             " ".join(entries), _max_items(arguments))
@@ -70,13 +70,13 @@ def build_read_only_skill(name: str, arguments: dict[str, Any]) -> str:
         _require_only(arguments, {"name"})
         return f"aiInspectLibrary({_string(arguments, 'name')})"
     if name == "inspect_config_binding":
-        _require_only(arguments, {"lib", "cell", "view", "max_items"})
-        for key in ("lib", "cell", "view"):
+        _require_only(arguments, {"lib", "cell", "view_name", "max_items"})
+        for key in ("lib", "cell", "view_name"):
             _string(arguments, key)
         return "aiInspectConfigBinding({} {} {} {})".format(
             _string(arguments, "lib"),
             _string(arguments, "cell"),
-            _string(arguments, "view"),
+            _string(arguments, "view_name"),
             _max_items(arguments),
         )
     if name == "list_windows":
@@ -87,11 +87,11 @@ def build_read_only_skill(name: str, arguments: dict[str, Any]) -> str:
 
 def build_config_binding_skill(arguments: dict[str, Any]) -> str:
     """Build the fixed-shape controller-owned HDB readback call."""
-    _require_only(arguments, {"lib", "cell", "view", "max_items"})
+    _require_only(arguments, {"lib", "cell", "view_name", "max_items"})
     return "aiInspectConfigBinding({} {} {} {})".format(
         _string(arguments, "lib"),
         _string(arguments, "cell"),
-        _string(arguments, "view"),
+        _string(arguments, "view_name"),
         _max_items(arguments),
     )
 
@@ -103,24 +103,27 @@ def build_snapshot_request(arguments: dict[str, Any]) -> dict[str, Any]:
     request.  Keeping that path out of MCP arguments prevents an agent from
     directing Virtuoso writes outside the session spool.
     """
-    allowed = {"lib", "cell", "view", "view_type", "include_placement"}
+    allowed = {"lib", "cell", "view_name", "oa_view_type", "include_placement"}
     _require_only(arguments, allowed)
     lib = _optional_string(arguments, "lib")
     cell = _optional_string(arguments, "cell")
     if (lib is None) != (cell is None):
         raise InspectionArgumentError("lib and cell must be supplied together")
-    view = _optional_string(arguments, "view")
-    view_type = _optional_string(arguments, "view_type")
-    if lib is None and (view is not None or view_type is not None):
-        raise InspectionArgumentError("view and view_type require lib and cell")
-    if view_type is not None and view_type != "schematic":
-        raise InspectionArgumentError("snapshot_schematic requires view_type schematic")
+    view_name = _optional_string(arguments, "view_name")
+    oa_view_type = _optional_string(arguments, "oa_view_type")
+    if lib is None and (view_name is not None or oa_view_type is not None):
+        raise InspectionArgumentError("view_name and oa_view_type require lib and cell")
+    if lib is not None and (view_name is None or oa_view_type is None):
+        raise InspectionArgumentError(
+            "explicit snapshot target requires view_name and oa_view_type")
+    if oa_view_type is not None and oa_view_type != "schematic":
+        raise InspectionArgumentError("snapshot_schematic requires oa_view_type schematic")
     placement = _boolean(arguments, "include_placement", default=False)
     return {
         "lib": lib,
         "cell": cell,
-        "view": view or "schematic",
-        "view_type": "schematic",
+        "view_name": view_name,
+        "oa_view_type": oa_view_type,
         "include_placement": placement,
     }
 
@@ -133,8 +136,8 @@ def build_snapshot_skill(arguments: dict[str, Any], output_path: str) -> str:
     return "aiSnapshotSchematic({} {} {} {} {} {})".format(
         _skill_string(target["lib"]) if target["lib"] is not None else "nil",
         _skill_string(target["cell"]) if target["cell"] is not None else "nil",
-        _skill_string(target["view"]),
-        _skill_string(target["view_type"]),
+        _skill_string(target["view_name"]) if target["view_name"] is not None else "nil",
+        _skill_string(target["oa_view_type"]) if target["oa_view_type"] is not None else "nil",
         _skill_string(output_path),
         "t" if target["include_placement"] else "nil",
     )
@@ -149,30 +152,35 @@ def decode_read_only_result(detail: dict[str, Any]) -> tuple[bool, dict[str, Any
 
 def _target(
     arguments: dict[str, Any],
-    default_view: str,
-    default_view_type: str,
+    expected_oa_view_type: str,
     *,
     allow_placement: bool = False,
 ) -> tuple[str, ...]:
-    allowed = {"lib", "cell", "view", "view_type", "max_items"}
+    allowed = {"lib", "cell", "view_name", "oa_view_type", "max_items"}
     if allow_placement:
         allowed.add("include_placement")
     _require_only(arguments, allowed)
     lib = _optional_string(arguments, "lib")
     cell = _optional_string(arguments, "cell")
-    view = _optional_string(arguments, "view")
-    view_type = _optional_string(arguments, "view_type")
+    view_name = _optional_string(arguments, "view_name")
+    oa_view_type = _optional_string(arguments, "oa_view_type")
     if (lib is None) != (cell is None):
         raise InspectionArgumentError("lib and cell must be supplied together")
     if lib is None:
-        if view is not None or view_type is not None:
-            raise InspectionArgumentError("view and view_type require lib and cell")
+        if view_name is not None or oa_view_type is not None:
+            raise InspectionArgumentError("view_name and oa_view_type require lib and cell")
         return ("nil", "nil", "nil", "nil")
+    if view_name is None or oa_view_type is None:
+        raise InspectionArgumentError(
+            "explicit inspection target requires view_name and oa_view_type")
+    if oa_view_type != expected_oa_view_type:
+        raise InspectionArgumentError(
+            f"inspection requires oa_view_type {expected_oa_view_type}")
     return (
         _skill_string(lib),
         _skill_string(cell),
-        _skill_string(view or default_view),
-        _skill_string(view_type or default_view_type),
+        _skill_string(view_name),
+        _skill_string(oa_view_type),
     )
 
 

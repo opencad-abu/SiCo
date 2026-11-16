@@ -50,7 +50,7 @@ ARITIES = {
     "aiCopilotListLibraries": (1, 1),
     "aiCopilotListCells": (1, 1),
     "aiCopilotListViews": (2, 3),
-    "aiCopilotOpenTarget": (4, 5),
+    "aiCopilotOpenTarget": (4, 6),
     "aiCopilotInspectSelected": (3, 3),
     "aiCopilotHighlightObject": (7, 8),
     "aiCopilotListObjects": (5, 5),

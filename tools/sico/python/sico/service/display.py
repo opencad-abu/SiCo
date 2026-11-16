@@ -146,7 +146,7 @@ def data_html(data):
 def target_label(snapshot):
     cellview = snapshot.get("cellview")
     design = (
-        " / ".join(str(cellview.get(key, "?")) for key in ("lib", "cell", "view"))
+        " / ".join(str(cellview.get(key, "?")) for key in ("lib", "cell", "view_name"))
         if isinstance(cellview, dict)
         else "CIW（未绑定设计视图）"
     )

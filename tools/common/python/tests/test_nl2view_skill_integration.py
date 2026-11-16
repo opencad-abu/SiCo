@@ -32,7 +32,7 @@ def test_menu_registers_nl2view_everywhere() -> None:
     assert "list('Close 'cadNl2ViewCloseCB)" in form
     assert "hiSetFormButtonEnabled(form 'Apply nil)" in form
     assert "hiSetCallbackStatus" not in form
-    assert 'sicoNl2ViewVersion="20260818.nl2view.v6"' in form
+    assert 'sicoNl2ViewVersion="20261024.nl2view.v7"' in form
     assert "procedure(cadNl2ViewSessionLibraryPath" in form
     assert "ddGetObjWritePath(libObj)" in form
     assert '" --expected-library-path " SICO_shellQuote(libraryPath)' in form
@@ -68,7 +68,7 @@ def test_generated_menu_matches_toml(tmp_path: Path) -> None:
     output = tmp_path / "menu.generated.il"
     completed = subprocess.run(
         [
-            shutil.which("python3") or "/usr/bin/python3",
+            str(CAD_ROOT.parent / "runtime/python/bin/python3"),
             str(CAD_ROOT / "utility/menu_to_skill.py"),
             str(CAD_ROOT / "utility/menu.toml"),
             str(output),

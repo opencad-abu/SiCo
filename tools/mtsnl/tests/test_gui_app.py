@@ -61,3 +61,33 @@ def test_gui_warns_for_missing_module_configuration_and_cleans_session(
     assert not session_path.exists()
     assert exits == [(1, owner)]
     assert application is qt_widgets.QApplication.instance()
+
+
+def test_family_style_follows_the_project_appearance(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    qt_core = pytest.importorskip("PyQt5.QtCore")
+    qt_widgets = pytest.importorskip("PyQt5.QtWidgets")
+    from cadgui.appearance import (
+        AppearancePreferences,
+        apply_application_appearance,
+        save_appearance,
+    )
+    from cadgui.palette import DARK, active
+    from mtsnetlistor.gui import app
+
+    state = tmp_path / ".sico"
+    state.mkdir(mode=0o700)
+    path = state / "ai/agent/workspace.ini"
+    path.parent.mkdir(parents=True)
+    settings = qt_core.QSettings(str(path), qt_core.QSettings.IniFormat)
+    save_appearance(settings, AppearancePreferences("dark", 16, 10))
+    monkeypatch.setenv("SICO_TEMP_DIR", str(state))
+    application = qt_widgets.QApplication.instance() or qt_widgets.QApplication([])
+    point = application.font().pointSize()
+    try:
+        app.apply_application_style(application)
+        assert active().name == "dark"
+        assert DARK.background in application.styleSheet()
+    finally:
+        apply_application_appearance(
+            application, AppearancePreferences("light", point, point))

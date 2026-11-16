@@ -13,6 +13,10 @@ COMMON_PYTHON = SICO_TOOLS_ROOT / "common" / "python"
 if str(COMMON_PYTHON) not in sys.path:
     sys.path.insert(0, str(COMMON_PYTHON))
 
+from sicoruntimebootstrap import ensure_runtime
+
+ensure_runtime(HERE, SICO_TOOLS_ROOT.parent)
+
 from rcepy.cli import main
 
 

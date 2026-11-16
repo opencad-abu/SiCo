@@ -3,7 +3,7 @@
 ;==============================================================================
 
 unless(and(boundp('sicoChangeTechLibGuiVersion)
-           sicoChangeTechLibGuiVersion=="20260902.form.lifecycle.v1"
+           sicoChangeTechLibGuiVersion=="20261024.form.lifecycle.v2"
            isCallable('cadChangeTechLibGuiApplyCB)
            isCallable('cadChangeTechLibGuiViaAddMappingCB)
            isCallable('cadChangeTechLibGuiViaSourceLibCB))

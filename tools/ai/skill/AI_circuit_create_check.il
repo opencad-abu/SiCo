@@ -77,7 +77,7 @@ procedure(aiCrParam(accCdf accRow @optional accExtension)
 
 procedure(aiCrMasterSignature(accMaster accRow)
   prog((accCdf accTerms accPins accPoints accBody accSig accWanted accType accExtension)
-    unless(and(accMaster accMaster~>cellViewType=="schematicSymbol" !dbIsCellViewModified(accMaster)
+    unless(and(accMaster accMaster~>viewType=="schematicSymbol" !dbIsCellViewModified(accMaster)
       !accMaster~>superMaster !accMaster~>isParamCell !accMaster~>instances)
       error("saved static flat symbol required"))
     accCdf=cdfGetCellCDF(ddGetObj(accMaster~>libName accMaster~>cellName))
@@ -135,7 +135,7 @@ procedure(aiCrTargetFacts(actTarget)
         unless(actCv error("Existing schematic could not be read")))
       actState="absent"
       when(actCv
-        unless(actCv~>cellViewType=="schematic" error("Target is not a schematic"))
+        unless(actCv~>viewType=="schematic" error("Target is not a schematic"))
         when(or(actCv~>mosaics actCv~>superMaster actCv~>isParamCell)
           error("Array or parameterized design requires separate inspection"))
         when(or(length(actCv~>instances)>1024 length(actCv~>shapes)>4096
@@ -165,13 +165,23 @@ procedure(aiCrTargetFacts(actTarget)
         actContents actWritable))
       when(and(actCv actOwn) dbClose(actCv)))
     return(actFacts)))
+procedure(aiCrObservationTask(aitTask)
+  if(and(boundp('aiCopilotSource) aiCopilotSource aitTask
+      boundp('aiCircuitTasks) boundp('aiCopilotTasks) isCallable('aiCopilotOwner)
+      not(and(member(aiCircuitTasks[aitTask] list("foreground" "background"))
+        equal(aiCopilotTasks[aitTask] aiCopilotOwner(aiCopilotSource)))))
+    then nil else aitTask))
+
 procedure(aiCrInspectTarget(aitTask aitId aitTarget)
   prog((aitRef aitRecord aitFacts aitResult)
     aitResult=errset(progn(
-      unless(aiCircuitTasks[aitTask] error("Confirmed circuit task required"))
+      ; A read-only inspection is source-scoped. Only a task owned by the
+      ; current source can be retained for later write preparation.
+      aitTask=aiCrObservationTask(aitTask)
       aitRef=strcat("circuit-target:" aitId) aitFacts=aiCrTargetFacts(aitTarget)
       aitRecord=aiCrTargets[aitRef]
       if(aitRecord then
+        when(and(!aitRecord['task] aitTask) aitRecord['task]=aitTask)
         unless(and(aitRecord['task]==aitTask equal(aitRecord['target] aitTarget)
           equal(aitRecord['facts] aitFacts)) error("Target changed; inspect with a new request"))
       else
@@ -321,7 +331,7 @@ procedure(aiCrBodyData(acbLib acbCell acbView acbPath)
       unless(equal(simplifyFilename(ddGetObjReadPath(ddGetObj(acbLib))) simplifyFilename(acbPath))
         error("library binding changed"))
       acbCv=dbOpenCellViewByType(acbLib acbCell acbView "" "r")
-      unless(and(acbCv acbCv~>cellViewType=="schematicSymbol" !dbIsCellViewModified(acbCv)
+      unless(and(acbCv acbCv~>viewType=="schematicSymbol" !dbIsCellViewModified(acbCv)
         !acbCv~>superMaster !acbCv~>isParamCell !acbCv~>instances !acbCv~>mosaics)
         error("saved static flat symbol required"))
       foreach(acbTerm acbCv~>terminals

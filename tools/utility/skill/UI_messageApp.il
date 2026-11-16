@@ -1,5 +1,5 @@
 unless(and(boundp('sicoGuiMessageAppVersion)
-             sicoGuiMessageAppVersion=="20260714.recursive.safe")
+             sicoGuiMessageAppVersion=="20261024.recursive.safe.v2")
 
 procedure(GUI_messageApp(mesgType flow infoText "sSS")
   let((tmp)
@@ -18,8 +18,8 @@ procedure(GUI_messageApp(mesgType flow infoText "sSS")
       ?name         'rceMessageApp
       ?dboxBanner   strcat(cond(
                              (isCallable('SICO_logo) SICO_logo())
-                             (isCallable('witMenuLogo) witMenuLogo())
-                             (t "SiCo"))
+                             (isCallable('sicoMenuLogo) sicoMenuLogo())
+                             (t "Silicon Copilot"))
                            "::Message---" flow)
       ?buttonLayout 'Close
       ?dboxText     tmp
@@ -27,5 +27,5 @@ procedure(GUI_messageApp(mesgType flow infoText "sSS")
   );let
 );procedure
 
-sicoGuiMessageAppVersion="20260714.recursive.safe"
+sicoGuiMessageAppVersion="20261024.recursive.safe.v2"
 )

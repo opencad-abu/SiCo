@@ -118,3 +118,44 @@ def test_flows_share_the_authoritative_eda_restoration():
 
     assert lef_restore is restore_eda_temp_environment
     assert rce_restore is restore_eda_temp_environment
+
+
+def test_eda_provenance_preserves_empty_unset_and_is_idempotent():
+    from cadenv import preserve_virtuoso_environment, restore_virtuoso_environment
+
+    source = {"PATH": "/eda/bin", "PYTHONPATH": "", "LM_LICENSE_FILE": "fixture"}
+    original = dict(source)
+    preserve_virtuoso_environment(source)
+    assert source["SICO_VIRTUOSO_PYTHONPATH_SET"] == "1"
+    assert source["SICO_VIRTUOSO_LD_LIBRARY_PATH_SET"] == "0"
+    source.update(PATH="/runtime/bin", LD_LIBRARY_PATH="/runtime/lib", PYTHONPATH="/runtime/python")
+    captured = dict(source)
+    preserve_virtuoso_environment(source)
+    assert source == captured
+    assert restore_virtuoso_environment(source) == original
+    assert source == captured
+
+
+@pytest.mark.parametrize("invalid", [
+    {"SICO_VIRTUOSO_PATH_SET": "1"},
+    {"SICO_VIRTUOSO_PATH": "", "SICO_VIRTUOSO_PATH_SET": "invalid"},
+    {"SICO_VIRTUOSO_PATH": "/eda/bin", "SICO_VIRTUOSO_PATH_SET": "0"},
+    {"CAD_VIRTUOSO_PATH_SET": "0"},
+])
+def test_invalid_eda_provenance_never_mutates_the_input(invalid):
+    from cadenv import preserve_virtuoso_environment, restore_virtuoso_environment
+
+    original = dict(invalid)
+    for operation in (preserve_virtuoso_environment, restore_virtuoso_environment):
+        with pytest.raises(ValueError):
+            operation(invalid)
+        assert invalid == original
+
+
+def test_old_eda_capture_is_not_reinterpreted_as_unset():
+    from cadenv import preserve_virtuoso_environment, restore_virtuoso_environment
+
+    source = {"PATH": "/runtime/bin", "SICO_VIRTUOSO_PATH": ""}
+    preserve_virtuoso_environment(source)
+    assert "SICO_VIRTUOSO_PATH_SET" not in source
+    assert restore_virtuoso_environment(source)["PATH"] == ""

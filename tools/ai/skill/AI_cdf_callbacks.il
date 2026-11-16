@@ -70,7 +70,7 @@ procedure(aiCdfCallbackEvidence(acbCdf acbRows)
     return(acbEvidence)))
 procedure(aiCdfCallbackValidate(acbMaster acbRows)
   let((acbInit)
-    unless(and(acbMaster acbMaster~>cellViewType=="schematicSymbol"
+    unless(and(acbMaster acbMaster~>viewType=="schematicSymbol"
       !dbIsCellViewModified(acbMaster) !acbMaster~>isParamCell !acbMaster~>superMaster !acbMaster~>instances)
       error("CDF callbacks currently require a saved static flat symbol"))
     acbInit=aiPdkInitLibrary(acbMaster~>libName)

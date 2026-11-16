@@ -52,6 +52,24 @@ def test_xrc_translates_filter_selection_and_netlist_options(tmp_path: Path) -> 
     assert "-select" in xrc_stages(cfg)[1].command
 
 
+def test_xrc_states_the_floating_net_choice(tmp_path: Path) -> None:
+    cfg, paths = make_xrc_config(tmp_path)
+
+    generate_all(cfg, cfg.context())
+    text = paths["runset"].read_text(encoding="utf-8")
+    assert text.count("PEX EXTRACT FLOATING NETS") == 1
+    assert "PEX EXTRACT FLOATING NETS GROUNDED" in text
+    assert text.rindex("INCLUDE ") < text.index("PEX EXTRACT FLOATING NETS")
+
+    cfg = cfg.replace("extract", "remove_floating_nets", value=False)
+    generate_all(cfg, cfg.context())
+
+    text = paths["runset"].read_text(encoding="utf-8")
+    assert text.count("PEX EXTRACT FLOATING NETS") == 1
+    assert "PEX EXTRACT FLOATING NETS ALL" in text
+    assert text.rindex("INCLUDE ") < text.index("PEX EXTRACT FLOATING NETS")
+
+
 
 @pytest.mark.parametrize(
     ("output_type", "svrf_format", "suffix"),
@@ -81,7 +99,7 @@ def test_xrc_rejects_formats_outside_the_rce_contract(
     cfg, _ = make_xrc_config(tmp_path, output_type=output_type)
 
     with pytest.raises(
-        ValueError, match="Calibre XRC output supports only.*view, dspf, and spice"
+        ValueError, match="Calibre xRC output supports only.*view, dspf, and spice"
     ):
         generate_all(cfg, cfg.context())
 

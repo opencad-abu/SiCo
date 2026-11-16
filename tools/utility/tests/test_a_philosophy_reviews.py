@@ -8,7 +8,7 @@ from utility.a_philosophy_compat import compatibility_candidates, load_compatibi
 from utility.a_philosophy_exports import surface_digest
 from utility.a_philosophy_reviews import review_candidates
 from utility.a_philosophy_sources import source_rows
-from conftest import commit, write
+from utility.tests.gate_fixtures import commit, write
 
 
 @pytest.fixture

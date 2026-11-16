@@ -70,7 +70,7 @@ class GatewayJob:
         )
         self.record = dict(scheduler=self.expected, phase="submission_intent")
         self.save()
-        worker = agent_command("gateway-worker")
+        worker = agent_command("gateway-worker", environment=environment)
         if worker[0].endswith("python3") or "-s" in worker:
             worker[0] = cad_python(environment)
         env = dict(environment, BSUB_QUIET="1", PYTHONNOUSERSITE="1")

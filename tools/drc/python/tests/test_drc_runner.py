@@ -178,6 +178,20 @@ def test_generate_drc_writes_inputs_and_includes_rule_file(tmp_path: Path) -> No
     )
 
 
+def test_generate_drc_can_target_an_oasis_candidate(tmp_path: Path) -> None:
+    cfg = _config(tmp_path)
+    foundry_deck = _runset(tmp_path)
+    cfg = cfg.replace('drc', 'runset_file', value=foundry_deck.name)
+
+    output = generate_drc(cfg, cfg.context(), layout_system="OASIS")
+
+    body = output.read_text(encoding="utf-8")
+    assert "LAYOUT SYSTEM OASIS" in body
+    assert "LAYOUT SYSTEM GDSII" not in body
+    with pytest.raises(ValueError, match="Unsupported DRC layout system"):
+        generate_drc(cfg, cfg.context(), layout_system="OAS")
+
+
 def test_generate_drc_appends_enabled_custom_svrf_verbatim(tmp_path: Path) -> None:
     cfg = _config(tmp_path)
     foundry_deck = _runset(tmp_path)

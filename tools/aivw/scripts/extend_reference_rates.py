@@ -58,7 +58,7 @@ def extend(reference_control, *, start_s, ramps, timeout):
     tools = {t.name: t.path for t in qualified if t.status == "PASS"}
     if set(tools) != {"spectre", "ocean"}:
         raise ValueError("Spectre/OCEAN qualification unavailable")
-    run = allocate_split_run(resolve_launch_paths(), Path("/path/to/xh/amsVerify/data/ams").resolve(),
+    run = allocate_split_run(resolve_launch_paths(), Path("/workarea/xh/amsVerify/data/ams").resolve(),
         library=plan["target"]["library"], cell=plan["target"]["cell"], view="reference_extension",
         kind="reference-rate-extension",
         request_digest=stable_digest({"kind": "reference-rate-extension", "reference": str(reference_control),

@@ -19,6 +19,10 @@ def _install_tree(tmp_path: Path) -> Path:
     install = tmp_path / "install"
     install.mkdir()
     (install / "tools").symlink_to(CAD_ROOT, target_is_directory=True)
+    for relative in ("bin", "etc", "scripts", "share"):
+        (install / relative).symlink_to(
+            CAD_ROOT.parent / relative, target_is_directory=True
+        )
     return install
 
 

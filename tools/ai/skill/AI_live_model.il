@@ -6,7 +6,7 @@
 ; second controller/listener.
 
 unless(and(boundp('aiLiveModelVersion)
-             aiLiveModelVersion=="20260902.ai.live.v1"
+             aiLiveModelVersion=="20261101.ai.live.v2"
              boundp('aiLiveModelState)
              isCallable('aiLiveModelPostSaveTrigger))
 
@@ -14,7 +14,7 @@ unless(boundp('aiLiveModelState)
   aiLiveModelState=makeTable("aiLiveModelState" nil))
 
 procedure(aiLiveModelRevision()
-  "20260902.ai.live.v1"
+  "20261101.ai.live.v2"
 )
 
 procedure(aiLiveModelPair(key value)
@@ -30,9 +30,9 @@ procedure(aiLiveModelBoundText(value limit)
     nil)
 )
 
-procedure(aiLiveModelViewKind(viewType viewName)
+procedure(aiLiveModelViewKind(viewType)
   let((lower)
-    lower=lowerCase(or(viewType viewName ""))
+    lower=lowerCase(or(viewType ""))
     cond(
       (member(lower list("schematic" "schematicsymbol")) "schematic")
       (member(lower list("symbol" "symbolic")) "symbol")
@@ -52,17 +52,14 @@ procedure(aiLiveModelIdentity(cv)
     lib=aiLiveModelBoundText(car(values) 160)
     cell=aiLiveModelBoundText(cadr(values) 160)
     view=aiLiveModelBoundText(caddr(values) 160)
-    ; Some Virtuoso cellview classes expose a nil viewType; the canonical
-    ; view name is then the only authoritative type available to the callback.
     viewType=aiLiveModelBoundText(cadddr(values) 160)
-    unless(viewType viewType=aiLiveModelBoundText(caddr(values) 160))
-    kind=aiLiveModelViewKind(viewType view)
+    kind=aiLiveModelViewKind(viewType)
     unless(and(lib cell view viewType kind) return(nil))
     identity=makeTable("aiLiveModelIdentity" nil)
     identity["library"]=lib
     identity["cell"]=cell
-    identity["view"]=view
-    identity["view_type"]=viewType
+    identity["view_name"]=view
+    identity["oa_view_type"]=viewType
     identity["kind"]=kind
     return(identity)
   )
@@ -79,8 +76,9 @@ procedure(aiLiveModelIdentityPairs(identity)
   list(
     aiLiveModelPair("library" identity["library"])
     aiLiveModelPair("cell" identity["cell"])
-    aiLiveModelPair("view" identity["view"])
-    aiLiveModelPair("view_type" identity["view_type"])
+    aiLiveModelPair("view_name" identity["view_name"])
+    aiLiveModelPair("oa_view_type" identity["oa_view_type"])
+    aiLiveModelPair("oa_view_type_source" "platform_api")
     aiLiveModelPair("kind" identity["kind"]))
 )
 
@@ -127,8 +125,8 @@ procedure(aiLiveModelViewIdentityValidP(identity)
   and(tablep(identity)
       aiLiveModelBoundText(identity["library"] 160)
       aiLiveModelBoundText(identity["cell"] 160)
-      aiLiveModelBoundText(identity["view"] 160)
-      aiLiveModelBoundText(identity["view_type"] 160)
+      aiLiveModelBoundText(identity["view_name"] 160)
+      aiLiveModelBoundText(identity["oa_view_type"] 160)
       member(identity["kind"] list("schematic" "symbol" "config" "spec" "output_view" "layout")))
 )
 
@@ -350,5 +348,5 @@ unless(and(boundp('cadContextBuilding) cadContextBuilding)
   when(isCallable('dbRegPostSaveTrigger)
     errset(dbRegPostSaveTrigger('aiLiveModelPostSaveTrigger 0) nil)))
 
-aiLiveModelVersion="20260902.ai.live.v1"
+aiLiveModelVersion="20261101.ai.live.v2"
 )

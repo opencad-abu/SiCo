@@ -2,8 +2,8 @@
   "schema_version": 1,
   "name": "amsverify",
   "display_name": "amsVerify IC23/Xcelium23 Mixed-Signal Qualification",
-  "workspace_root": "/path/to/xh/amsVerify",
-  "setup_script": "/path/to/xh/amsVerify/setup.bashrc",
+  "workspace_root": "/workarea/xh/amsVerify",
+  "setup_script": "/workarea/xh/amsVerify/setup.bashrc",
   "storage": {
     "payload_env": "PROJ_AMS_DB_DIR",
     "target_layout": "{lib}.{cell}.{view}/runs/{run_id}"
@@ -65,32 +65,32 @@
   ],
   "projects": {
     "adc": {
-      "root": "/path/to/xh/amsVerify/adc_verification_v5.0_001",
-      "cds_lib": "/path/to/xh/amsVerify/adc_verification_v5.0_001/WORK/saradc/cds.lib",
+      "root": "/workarea/xh/amsVerify/adc_verification_v5.0_001",
+      "cds_lib": "/workarea/xh/amsVerify/adc_verification_v5.0_001/WORK/saradc/cds.lib",
       "library": "saradc",
       "environment": {
-        "PROJECT": "/path/to/xh/amsVerify/adc_verification_v5.0_001",
-        "FLOW_HOME": "/path/to/xh/amsVerify/adc_verification_v5.0_001"
+        "PROJECT": "/workarea/xh/amsVerify/adc_verification_v5.0_001",
+        "FLOW_HOME": "/workarea/xh/amsVerify/adc_verification_v5.0_001"
       }
     },
     "pll": {
-      "root": "/path/to/xh/amsVerify/pll_verification_ws_v2.0",
-      "cds_lib": "/path/to/xh/amsVerify/pll_verification_ws_v2.0/WORK/pll_zambezi45/cds.lib",
+      "root": "/workarea/xh/amsVerify/pll_verification_ws_v2.0",
+      "cds_lib": "/workarea/xh/amsVerify/pll_verification_ws_v2.0/WORK/pll_zambezi45/cds.lib",
       "library": "zambezi45_sim",
       "environment": {
-        "PROJECT": "/path/to/xh/amsVerify/pll_verification_ws_v2.0"
+        "PROJECT": "/workarea/xh/amsVerify/pll_verification_ws_v2.0"
       }
     },
     "dms_ams_flow": {
-      "root": "/path/to/xh/amsVerify/DMS_AMS_FLOW"
+      "root": "/workarea/xh/amsVerify/DMS_AMS_FLOW"
     },
     "ldo": {
-      "root": "/path/to/xh/amsVerify/DESIGNS/LDO_IP",
-      "cds_lib": "/path/to/xh/amsVerify/cds.lib",
-      "source_cds_lib": "/path/to/xh/amsVerify/DESIGNS/LDO_IP/cds.lib",
-      "mapping_cds_lib": "/path/to/xh/amsVerify/cds.lib",
+      "root": "/workarea/xh/amsVerify/DESIGNS/LDO_IP",
+      "cds_lib": "/workarea/xh/amsVerify/cds.lib",
+      "source_cds_lib": "/workarea/xh/amsVerify/DESIGNS/LDO_IP/cds.lib",
+      "mapping_cds_lib": "/workarea/xh/amsVerify/cds.lib",
       "mapping_allowed_roots": [
-        "/path/to/xh/amsVerify",
+        "/workarea/xh/amsVerify",
         "/zone.disk/hdd3/cold-archive/PDK.Collection/CADENCE/45n",
         "/software/cad/share/cdslib",
         "/software/eda/cadence/installs/IC23.10.130"
@@ -98,7 +98,7 @@
       "mapping_environment": {
         "CDSHOME": "/software/eda/cadence/installs/IC23.10.130"
       },
-      "model_root": "/path/to/xh/amsVerify/DESIGNS/LDO_IP/models/spectre",
+      "model_root": "/workarea/xh/amsVerify/DESIGNS/LDO_IP/models/spectre",
       "library": "amsLDO",
       "read_only_structure_adapter": "ldo.official_ams.v1",
       "required_library_mappings": ["amsLDO", "gpdk045", "analogLib", "basic"],
@@ -126,44 +126,44 @@
   "qualification_inputs": [
     {
       "name": "adc_cds_lib",
-      "path": "/path/to/xh/amsVerify/adc_verification_v5.0_001/WORK/saradc/cds.lib"
+      "path": "/workarea/xh/amsVerify/adc_verification_v5.0_001/WORK/saradc/cds.lib"
     },
     {
       "name": "pll_cds_lib",
-      "path": "/path/to/xh/amsVerify/pll_verification_ws_v2.0/WORK/pll_zambezi45/cds.lib"
+      "path": "/workarea/xh/amsVerify/pll_verification_ws_v2.0/WORK/pll_zambezi45/cds.lib"
     },
     {
       "name": "m0_e_run_file",
-      "path": "/path/to/xh/amsVerify/DMS_AMS_FLOW/Lab6/test/CORE_UVM/sim/run_full.f"
+      "path": "/workarea/xh/amsVerify/DMS_AMS_FLOW/Lab6/test/CORE_UVM/sim/run_full.f"
     },
     {
       "name": "m0_s_config",
-      "path": "/path/to/xh/amsVerify/pll_verification_ws_v2.0/DESIGNS/GPDK045/FRACNPLL/oa/zambezi45_sim/pll_sim/config_function/expand.cfg"
+      "path": "/workarea/xh/amsVerify/pll_verification_ws_v2.0/DESIGNS/GPDK045/FRACNPLL/oa/zambezi45_sim/pll_sim/config_function/expand.cfg"
     },
     {
       "name": "m0_s_ams_state",
-      "path": "/path/to/xh/amsVerify/pll_verification_ws_v2.0/DESIGNS/GPDK045/FRACNPLL/oa/zambezi45_sim/pll_sim/ams_function/ADE_state.info"
+      "path": "/workarea/xh/amsVerify/pll_verification_ws_v2.0/DESIGNS/GPDK045/FRACNPLL/oa/zambezi45_sim/pll_sim/ams_function/ADE_state.info"
     },
     {
       "name": "m1_ai_schematic",
-      "path": "/path/to/xh/amsVerify/adc_verification_v5.0_001/DESIGNS/GPDK045/SARADC/oa/saradc/comparator_new/schematic",
+      "path": "/workarea/xh/amsVerify/adc_verification_v5.0_001/DESIGNS/GPDK045/SARADC/oa/saradc/comparator_new/schematic",
       "kind": "directory"
     },
     {
       "name": "m1_ai_maestro",
-      "path": "/path/to/xh/amsVerify/adc_verification_v5.0_001/DESIGNS/GPDK045/SARADC/oa/saradc/comparator_new/maestro",
+      "path": "/workarea/xh/amsVerify/adc_verification_v5.0_001/DESIGNS/GPDK045/SARADC/oa/saradc/comparator_new/maestro",
       "kind": "directory"
     },
     {
       "name": "m1_ai_manual",
-      "path": "/path/to/xh/amsVerify/ADC Verification.pdf"
+      "path": "/workarea/xh/amsVerify/ADC Verification.pdf"
     }
   ],
   "pilots": {
     "m0-e": {
       "title": "Lab6 Known-Good Execution Qualification",
       "purpose": "Qualify the isolated Xcelium/AMS runner, verdict parser, artifact collector, and report state machine.",
-      "entry": "/path/to/xh/amsVerify/DMS_AMS_FLOW/Lab6/test/CORE_UVM/sim/run_full.f",
+      "entry": "/workarea/xh/amsVerify/DMS_AMS_FLOW/Lab6/test/CORE_UVM/sim/run_full.f",
       "proves": [
         "the fixed Xcelium/Spectre environment can execute the known-good Lab6 flow",
         "UVM, AMS, UPF, timeout, and tool failures are classified deterministically",

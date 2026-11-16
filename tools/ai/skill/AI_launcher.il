@@ -1,7 +1,7 @@
 ; Virtuoso launcher for the external Python/PyQt5/QTermWidget terminal.
 
 unless(and(boundp('aiLauncherVersion)
-             aiLauncherVersion=="20261020.sico.launcher.v21")
+             aiLauncherVersion=="20261024.sico.launcher.v23")
 
 unless(boundp('aiLaunchWorkingDir)
   unless(and(boundp('cadContextBuilding) cadContextBuilding)
@@ -70,16 +70,9 @@ procedure(aiControllerReadyDelay()
 )
 
 procedure(aiPythonExecutable()
-  let((installed configured configuredRoot selected)
+  let((installed)
     installed=SICO_installedPython()
-    configured=when(not(installed)
-      aiProductEnvironment("SICO_PYTHON" list("CAD_PYTHON")))
-    configuredRoot=when(and(not(installed) not(configured))
-      aiProductEnvironment("SICO_PYTHON_ROOT" list("CAD_PYTHON_ROOT")))
-    selected=or(installed configured
-      when(and(configuredRoot stringp(configuredRoot))
-        strcat(configuredRoot "/bin/python3")))
-    when(and(selected aiProductionPythonP(selected)) selected)
+    when(and(installed aiProductionPythonP(installed)) installed)
   )
 )
 
@@ -151,17 +144,7 @@ procedure(aiStartAgent(workspace agent @optional entryRef entryCaptured)
       return(nil))
     python=aiPythonExecutable()
     unless(python
-      configured=aiProductEnvironment("SICO_PYTHON" list("CAD_PYTHON"))
-      configuredRoot=aiProductEnvironment("SICO_PYTHON_ROOT" list("CAD_PYTHON_ROOT"))
-      cond(
-        (configured
-          warn("AI Assistant cannot use SICO_PYTHON; it must be an absolute, executable Python 3.9.13 interpreter: %s\n"
-            configured))
-        (configuredRoot
-          warn("AI Assistant cannot use SICO_PYTHON_ROOT/bin/python3; it must be an executable Python 3.9.13 interpreter: %s/bin/python3\n"
-            configuredRoot))
-        (t
-          warn("AI Assistant requires $SICO_HOME/runtime/python, $SICO_HOME/etc/config/dev-runtime, or SICO_PYTHON/SICO_PYTHON_ROOT for Python 3.9.13.\n")))
+      warn("AI Assistant requires $SICO_HOME/runtime/python/bin/python3 as an executable Python 3.9.13 interpreter.\n")
       return(nil))
     entry=aiPythonEntry()
     unless(and(entry isFile(entry))
@@ -222,8 +205,8 @@ procedure(aiCreateLaunchForm()
       'cadAiLaunchForm
       strcat(cond(
                (isCallable('SICO_logo) SICO_logo())
-               (isCallable('witMenuLogo) witMenuLogo())
-               (t "SiCo"))
+               (isCallable('sicoMenuLogo) sicoMenuLogo())
+               (t "Silicon Copilot"))
              "::AI Assistant")
       layout
       ?buttonLayout list('Empty list('Launch 'aiLaunchFormCB) list('Close 'hiFormClose))
@@ -249,8 +232,8 @@ procedure(cadDisplayAiAssistant()
 )
 
 procedure(aiLauncherRevision()
-  "20261020.sico.launcher.v21"
+  "20261024.sico.launcher.v23"
 )
 
-aiLauncherVersion="20261020.sico.launcher.v21"
+aiLauncherVersion="20261024.sico.launcher.v23"
 )

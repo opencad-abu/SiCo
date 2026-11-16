@@ -1,3 +1,4 @@
+from skill_loader_test_support import loader_contract
 from skill_load_fixtures import (
     CAD_ROOT,
     _procedure_body,
@@ -9,7 +10,7 @@ def test_flow_log_widget_tails_the_complete_launch_log() -> None:
     text = read_skill_source(CAD_ROOT / "utility/skill/UI_flowLog.il")
 
     assert "boundp('sicoFlowLogVersion)" in text
-    assert 'sicoFlowLogVersion=="20260721.flow.log.owned.v2"' in text
+    assert 'sicoFlowLogVersion=="20261024.flow.log.owned.v3"' in text
     assert "procedure(GUI_flowLogRevision()" in text
     assert "procedure(GUI_flowLogOpen(flow logFile)" in text
     assert "procedure(GUI_flowLogShow(requestId)" in text
@@ -68,10 +69,10 @@ def test_standard_forms_keep_their_shell_and_flow_logs_use_the_shared_logo() -> 
         ("lvs/skill++/LVS.ils", '"/skill++/LVSRUN.ils"'),
         ("drc/skill++/DRC.ils", '"/skill++/DRCRUN.ils"'),
     ):
-        text = read_skill_source(CAD_ROOT / relative)
-        assert "isCallable('SICO_setWindowIcon)" in text
-        assert "isCallable('SICO_windowIconRevision)" in text
-        assert 'SICO_windowIconRevision()=="20260921.sico.flow.icon.v1"' in text
+        text = loader_contract(relative)
+        assert text.requires("SICO_setWindowIcon")
+        assert text.requires("SICO_windowIconRevision")
+        assert text.revision("SICO_windowIconRevision") == "20261024.sico.flow.icon.v2"
         assert text.index('"/skill/UI_windowIcon.il"') < text.index(
             '"/skill/UI_flowLog.il"'
         )
@@ -98,7 +99,7 @@ def test_ipc_output_is_routed_to_tail_viewfiles_not_ciw() -> None:
 def test_rce_parasitic_netlist_views_are_wired_to_ipc_completion() -> None:
     gui = read_skill_source(CAD_ROOT / "rce/skill++/RCEGUI.ils")
     callback = read_skill_source(CAD_ROOT / "rce/skill++/RCECB.ils")
-    entry = read_skill_source(CAD_ROOT / "rce/skill++/RCE.ils")
+    entry = loader_contract("rce/skill++/RCE.ils")
 
     assert "(createNetlistView @initform nil)" in gui
     assert "(startRve      @initform nil)" in gui
@@ -123,7 +124,7 @@ def test_rce_parasitic_netlist_views_are_wired_to_ipc_completion() -> None:
     assert callback.count("rceSyncCreateNetlistView(form)") >= 3
     assert 'SICO_tomlWriteBool(outFile "create_view" createView)' in callback
     assert "procedure(rceSyncStartRve(form)" in callback
-    assert 'visible=(form~>extTool~>value=="CalXRC")' in callback
+    assert "visible=RCE_calibrePexToolP(form~>extTool~>value)" in callback
     assert "form~>startRve~>invisible=!visible" in callback
     assert "form~>startRve~>enabled=visible" in callback
     assert "form~>startRve~>value=nil" in callback
@@ -183,10 +184,10 @@ def test_rce_parasitic_netlist_views_are_wired_to_ipc_completion() -> None:
     assert "request=rceNetlistViewRequest(" in batch
     assert "form viewTarget outputPaths finalOutputPaths outputType" in batch
 
-    assert "isCallable('SICO_importTextCellView)" in entry
-    assert "isCallable('rceSyncStartRve)" in entry
-    assert "isCallable('rceIpcSetMeta)" in entry
-    assert "isCallable('rceIpcGetMeta)" in entry
+    assert entry.requires("SICO_importTextCellView")
+    assert entry.requires("rceSyncStartRve")
+    assert entry.requires("rceIpcSetMeta")
+    assert entry.requires("rceIpcGetMeta")
     assert entry.index('"/skill/DM_textCellView.il"') < entry.index(
         '"/skill++/RCECB.ils"'
     )
@@ -196,10 +197,10 @@ def test_rce_completion_summary_is_native_versioned_and_wired() -> None:
     summary_path = CAD_ROOT / "rce/skill/UI_rceSummary.il"
     summary = read_skill_source(summary_path)
     callback = read_skill_source(CAD_ROOT / "rce/skill++/RCECB.ils")
-    entry = read_skill_source(CAD_ROOT / "rce/skill++/RCE.ils")
+    entry = loader_contract("rce/skill++/RCE.ils")
 
     assert "boundp('UIrceSummaryVersion)" in summary
-    assert 'UIrceSummaryVersion=="20260919.gui.modules.v1"' in summary
+    assert 'UIrceSummaryVersion=="20261024.calibre.pex.tool.v2"' in summary
     assert "procedure(rceSummaryDisplay(meta exitStatus viewOk)" in summary
     assert "success=and(exitStatus==0 viewOk" in summary
     assert "not(meta['fileOutput])" in summary
@@ -244,11 +245,11 @@ def test_rce_completion_summary_is_native_versioned_and_wired() -> None:
     assert "and(success not(ignoredLvsMismatch) displayed)" in summary
     assert "Displayed extraction summary" in summary
 
-    assert "isCallable('rceSummaryUiRevision)" in entry
-    assert 'rceSummaryUiRevision()=="20260911.flow.audit.v1"' in entry
-    assert 'GUI_flowLogRevision()=="20260721.flow.log.owned.v2"' in entry
-    assert "isCallable('GUI_flowLogClose)" in entry
-    assert "isCallable('rceSummaryOpenLogCB)" in entry
+    assert entry.requires("rceSummaryUiRevision")
+    assert entry.revision("rceSummaryUiRevision") == "20261024.flow.audit.v2"
+    assert entry.revision("GUI_flowLogRevision") == "20261024.flow.log.owned.v3"
+    assert entry.requires("GUI_flowLogClose")
+    assert entry.requires("rceSummaryOpenLogCB")
     assert entry.index('"/skill/UI_rceSummary.il"') < entry.index(
         '"/skill++/RCECB.ils"'
     )

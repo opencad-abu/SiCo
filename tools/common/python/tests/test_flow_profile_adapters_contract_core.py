@@ -149,7 +149,7 @@ def test_rce_profile_apply_restores_state_after_dependency_callbacks() -> None:
     )
     assert 'form~>startRve~>value=savedStartRve' in body
     assert 'form~>nlRmInst~>value=nth(7 savedNetlist)' in body
-    assert 'form~>viewDeviceMap~>value=if(form~>extTool~>value=="CalXRC"' in body
+    assert "form~>viewDeviceMap~>value=if(RCE_calibrePexToolP(form~>extTool~>value)" in body
     assert "unless(rceProfileRestoreCorners(form corners temperatures cornerScope)" in body
 
     rc_type = _procedure(_source("rce/skill++/RCECB.ils"), "rceRcTypeCB")
@@ -167,7 +167,7 @@ def test_rce_profile_rejects_missing_saved_corners_and_separates_view_maps() -> 
     assert "available=or(form~>rceAvailableCorners nil)" in restore
     assert "matched=rceMatchingProcessCorner(requested available)" in restore
     assert "unless(matched return(nil))" in restore
-    assert 'if(form~>extTool~>value=="CalXRC"' in collect
+    assert "if(RCE_calibrePexToolP(form~>extTool~>value)" in collect
     assert 'list("extract.view.cellmap_file"' in collect
     assert 'list("extract.view.device_mapping_file"' in collect
     assert "procedure(rceProfileOutputViewKind" in source
@@ -197,6 +197,7 @@ def test_rce_profile_helpers_preserve_choice_path_and_corner_contracts_with_dbac
     sources = (
         CAD_ROOT / "common/skill/SICO_toml.il",
         CAD_ROOT / "common/skill/SICO_profile.il",
+        CAD_ROOT / "rce/skill/RCE_envOptions.il",
         CAD_ROOT / "rce/skill++/RCEPROFILE.ils",
     )
     skill = "\n".join(
@@ -306,6 +307,7 @@ def test_rce_collector_normalizes_auto_host_with_dbaccess() -> None:
     sources = (
         CAD_ROOT / "common/skill/SICO_toml.il",
         CAD_ROOT / "common/skill/SICO_profile.il",
+        CAD_ROOT / "rce/skill/RCE_envOptions.il",
         CAD_ROOT / "rce/skill++/RCEPROFILE.ils",
     )
     skill = "\n".join(

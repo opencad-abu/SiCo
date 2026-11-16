@@ -171,16 +171,16 @@ def test_starrc_omits_annotation_without_matching_oa_input(
         ("OA_LAYER_MAP", "StarRC OA layer mapping file"),
     ),
 )
-def test_starrc_view_requires_foundry_oa_mapping_files(
+def test_starrc_view_omits_missing_foundry_oa_mapping_files(
     tmp_path: Path, file_name: str, message: str
 ) -> None:
     cfg = _config(tmp_path)
     (tmp_path / "tech/RCmax" / file_name).unlink()
 
-    with pytest.raises(FileNotFoundError, match=message):
-        _command(cfg)
+    command = _command(cfg)
 
-    assert not (tmp_path / "run/log/star.cmd").exists()
+    key = "OA_DEVICE_MAPPING_FILE" if file_name == "OA_DEVICE_MAP" else "OA_LAYER_MAPPING_FILE"
+    assert not any(line.startswith(key + ":") for line in command.splitlines())
 
 
 @pytest.mark.parametrize(

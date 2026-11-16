@@ -147,12 +147,14 @@ def test_xrc_view_rejects_implicit_target_without_selected_oa_namespace(
         generate_all(cfg, cfg.context())
 
 
-def test_xrc_view_requires_foundry_cellmap(tmp_path: Path) -> None:
+def test_xrc_view_omits_missing_foundry_cellmap(tmp_path: Path) -> None:
     cfg, paths = _view_config(tmp_path)
     (paths["corner_dir"] / "calview.cellmap").unlink()
 
-    with pytest.raises(FileNotFoundError, match="Calibre View cellmap file"):
-        generate_all(cfg, cfg.context())
+    generate_all(cfg, cfg.context())
+
+    setup = (paths["run_dir"] / "log" / "calibreview.setup").read_text()
+    assert "cellmap_file :" not in setup
 
 
 def test_xrc_view_rejects_text_netlist_name_customization(tmp_path: Path) -> None:

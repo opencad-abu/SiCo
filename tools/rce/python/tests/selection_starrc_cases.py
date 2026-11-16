@@ -138,3 +138,39 @@ def test_starrc_converts_filter_units_and_emits_minres(tmp_path: Path) -> None:
     assert "COUPLING_THRESHOLD_OPERATION: AND" in command
     assert "NETLIST_MINRES_HANDLING: SHORT" in command
     assert "NETLIST_MINRES_THRESHOLD: 0.001" in command
+
+
+@pytest.mark.parametrize(
+    ("remove_floating_nets", "expected"),
+    (
+        (False, "REMOVE_FLOATING_NETS: NO"),
+        (True, "REMOVE_FLOATING_NETS: YES"),
+    ),
+)
+def test_starrc_states_the_gui_floating_net_choice(
+    tmp_path: Path,
+    remove_floating_nets: bool,
+    expected: str,
+) -> None:
+    cfg = _config(
+        tmp_path,
+        "StarRC",
+        extract={"remove_floating_nets": remove_floating_nets},
+    )
+
+    command = generate_starrc(cfg, cfg.context()).read_text(encoding="utf-8")
+
+    assert command.count("REMOVE_FLOATING_NETS") == 1
+    assert expected in command
+
+
+def test_starrc_rejects_common_options_that_change_floating_net_removal(
+    tmp_path: Path,
+) -> None:
+    cfg = _config(tmp_path, "StarRC", extract={"remove_floating_nets": True})
+    (tmp_path / "tech/RCmax/common.opt").write_text(
+        "REMOVE_FLOATING_NETS: NO\n", encoding="utf-8"
+    )
+
+    with pytest.raises(ValueError, match=r"REMOVE_FLOATING_NETS: YES"):
+        generate_starrc(cfg, cfg.context())

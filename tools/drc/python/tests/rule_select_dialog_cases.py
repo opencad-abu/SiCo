@@ -37,7 +37,7 @@ def test_dialog_uses_configured_logo_in_title(
     monkeypatch.delenv("COMPANY", raising=False)
     dialog = RuleSelectDialog(groups, output_path=tmp_path / "unused.tsv")
 
-    assert dialog.windowTitle() == "SiCo::DRC Rule Select"
+    assert dialog.windowTitle() == "Silicon Copilot::DRC Rule Select"
 
     dialog.close()
     application.processEvents()

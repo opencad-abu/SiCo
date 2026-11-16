@@ -17,7 +17,7 @@ from .workspace import LaunchPaths, allocate_run, sha256_file, stable_digest, wr
 
 
 EXPORTER_VERSION = "aivw-m1-spectre-evidence-3"
-LICENSE_ENDPOINT = "5280@127.0.0.1"
+LICENSE_ENDPOINT = "5280@192.168.124.7"
 _SOURCE_NETLIST = re.compile(
     r"(?:^|/)Interactive\.0/1/saradc:comparator_offset_TB_new:1/netlist/netlist$"
 )

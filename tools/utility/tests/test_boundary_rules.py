@@ -7,7 +7,7 @@ import pytest
 
 from utility.boundary_rules import violations
 from utility.check_private_import_boundaries import check, load_manifest
-from conftest import write
+from utility.tests.gate_fixtures import write
 
 ROOT = Path(__file__).resolve().parents[2]
 UI = next(r for r in load_manifest()["rules"] if r["id"] == "assistant-ui-backend")
@@ -119,3 +119,17 @@ def test_missing_source_root_and_duplicate_rules_fail(repo):
     rule = dict(id="repeated", root="pkg")
     manifest.write_text(json.dumps(dict(schema_version=1, rules=[rule, rule])))
     assert any("duplicate boundary id" in e for e in check(manifest, root=repo))
+
+
+def test_rule_can_exclude_explicit_composition_paths(repo):
+    write(repo, "pkg/ordinary.py", "import sico.storage\n")
+    write(repo, "pkg/composition.py", "import sico.storage\n")
+    rule = dict(id="pkg-ui", root="pkg", exclude_paths=["pkg/composition.py"],
+                forbid_modules=["sico.storage"], rationale="test", evidence=["pkg/ordinary.py"])
+    assert check_rule(rule, root=repo) == [
+        "pkg-ui: pkg/ordinary.py:1: forbidden import sico.storage"
+    ]
+    write(repo, "manifest.json", json.dumps(dict(schema_version=1, rules=[rule])))
+    assert check(repo / "manifest.json", root=repo) == [
+        "pkg-ui: pkg/ordinary.py:1: forbidden import sico.storage"
+    ]

@@ -63,7 +63,7 @@ def freeze_candidate(matrix_control, reference_control, crosscheck_control, sour
                "policy_sha256": candidate["policy_sha256"], "admission_digest": stable_digest(record["admission"]),
                "sources": record["sources"], "reservations": record["reservations"]}
     digest = stable_digest(request)
-    run = allocate_split_run(resolve_launch_paths(), Path("/path/to/xh/amsVerify/data/ams").resolve(),
+    run = allocate_split_run(resolve_launch_paths(), Path("/workarea/xh/amsVerify/data/ams").resolve(),
         library=candidate["target"]["library"], cell=candidate["target"]["cell"], view="candidate_freeze",
         kind="candidate-freeze", request_digest=digest)
     write_json_once(run.control_root/"request.json", request)

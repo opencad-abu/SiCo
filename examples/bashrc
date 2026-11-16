@@ -7,7 +7,7 @@
 export SICO_HOME="/software/sico/latest-bin"
 
 # Python、运行时库和终端实现由 SICO_HOME 推导。源码测试树提供
-# $SICO_HOME/etc/config/dev-runtime；发布包提供 $SICO_HOME/runtime/python。
+# $SICO_HOME/runtime/python，且只有这一个解释器。
 # EDA 兼容库只使用本安装的 lib；Python/Qt 的库目录由启动器推导。
 export LD_LIBRARY_PATH="$SICO_HOME/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
@@ -141,6 +141,30 @@ unset SICO_AI_QTERMWIDGET_RUNTIME SICO_AI_RELEASE_ROOT SICO_AI_CONTEXT SICO_AI_Q
 # export RCE_STARRC_OA_LAYER_MAP="${PDK_ROOT}/rc/starrc/Typ/OA_LAYER_MAP"
 # QRC foundry blocking-cell 文件；相对路径以当前有效 corner 为基准，仅有真实文件时设置。
 # export RCE_QUANTUS_BLOCK_CELL_FILE="fabBlockCells.list"
+
+# CAD flow：FinFET（默认 0 为平面；详见 docs/SICO_RCE_FINFET.md）
+# 仅接受 0/1
+# export RCE_FINFET_FLOW="1"
+# FinFET GDS 导出必需的 object map
+# export RCE_GDS_OBJECT_MAP="$PDK_ROOT/Techfile/objectmap"
+# 可选属性映射
+# export RCE_GDS_PROPERTY_MAP="$PDK_ROOT/Techfile/propmap"
+# 可选 stream-out SKILL
+# export RCE_GDS_USER_SKILL_FILE="$PDK_ROOT/Techfile/streamout.il"
+# 器件定义；默认在工艺目录查找
+# export RCE_CDL_SOURCE_ADDED_FILE="$PDK_ROOT/rc/source.added"
+# 包含 DFM 等相对依赖的根目录
+# export RCE_LVS_INCLUDE_DIR="$PDK_ROOT/rc/common_file"
+# 在工艺 deck 后包含的可选 SVRF
+# export RCE_LVS_EXTRA_FILE="$PROJECT_ROOT/rules/rce-extra.svrf"
+# 可选覆盖；默认查找 star_cmd
+# export RCE_STARRC_REFERENCE_FILE="$PDK_ROOT/rc/star_cmd"
+# 可选覆盖；默认查找 capgen.cmd
+# export RCE_QRC_COMMAND_FILE="$PDK_ROOT/rc/capgen.cmd"
+# 可选覆盖；默认查找 layer_setup
+# export RCE_QRC_LAYER_SETUP_FILE="$PDK_ROOT/rc/layer_setup"
+# 可选覆盖；默认查找 lpe_confile
+# export RCE_QRC_LPE_CONFILE="$PDK_ROOT/rc/lpe_confile"
 
 # CAD flow：LEF Generator
 # Abstract Generator 工艺选项文件，包含 pin、extract、blockage 和 site 等设置。

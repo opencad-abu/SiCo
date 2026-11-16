@@ -32,6 +32,9 @@ class GdsCommandOptions:
     layer_map: str
     output_filename: str
     replace_bus_bit_char: bool = True
+    object_map: str = ""
+    property_map: str = ""
+    user_skill_file: str = ""
 
 
 def render_cdl_env(options: CdlCommandOptions, *, defaults: Defaults | None = None) -> str:
@@ -52,11 +55,18 @@ auCdlReplaceAngleBracketsWithSquare = {"'t" if options.replace_angle_brackets el
 def render_streamout_cmd(options: GdsCommandOptions, *, defaults: Defaults | None = None) -> str:
     """Render the ``strmout`` command file."""
     text = streamout_lines(resolve_defaults(("streamout.options",), defaults).source("streamout.options"))
+    extra = "".join(
+        f'{name} "{_quote(value)}"\n'
+        for name, value in (
+            ("objectMap", options.object_map), ("propMap", options.property_map),
+            ("userSkillFile", options.user_skill_file),
+        ) if value
+    )
     return f"""library \"{_quote(options.layout_lib)}\"
 topCell \"{_quote(options.layout_cell)}\"
 view \"{_quote(options.layout_view)}\"
 layerMap \"{_quote(options.layer_map)}\"
-strmFile \"{_quote(options.output_filename)}\"
+{extra}strmFile \"{_quote(options.output_filename)}\"
 {text.get("geometry", "")}
 logFile                            "strmOut.log"
 {text.get("vertices", "")}

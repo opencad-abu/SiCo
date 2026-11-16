@@ -1,5 +1,59 @@
 from cadprofile_profile_fixtures import *
 
+@pytest.mark.parametrize(
+    ("query_line", "expected"),
+    (
+        ("", ("CCI",)),
+        ("svdb_query = []\n", ()),
+        ('svdb_query = ["SI", "PINLOC"]\n', ("SI", "PINLOC")),
+    ),
+)
+def test_rce_profile_uses_selectable_svdb_query_with_cci_default(
+    tmp_path: Path, query_line: str, expected: tuple[str, ...]
+) -> None:
+    source = _write(
+        tmp_path / "rce.toml",
+        _metadata("RCE")
+        + f'''[run]
+root = "runs"
+[input]
+type = "OA"
+[lvs]
+tool = "Calibre"
+{query_line}[extract]
+corner = "typ"
+[runtime]
+lvs_cpus = "1"
+ext_cpus = "1"
+''',
+    )
+
+    assert load_profile(source, "RCE").as_dict()["lvs.svdb_query"] == expected
+
+
+def test_rce_profile_rejects_unknown_svdb_query(tmp_path: Path) -> None:
+    source = _write(
+        tmp_path / "rce.toml",
+        _metadata("RCE")
+        + '''[run]
+root = "runs"
+[input]
+type = "OA"
+[lvs]
+tool = "Calibre"
+svdb_query = ["NOT_A_QUERY"]
+[extract]
+corner = "typ"
+[runtime]
+lvs_cpus = "1"
+ext_cpus = "1"
+''',
+    )
+
+    with pytest.raises(ProfileError, match="Unsupported lvs.svdb_query"):
+        load_profile(source, "RCE")
+
+
 def test_versioned_rce_rejects_legacy_enum_aliases(
     tmp_path: Path,
 ) -> None:

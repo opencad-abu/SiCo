@@ -149,11 +149,15 @@ def _validate_view(value: Any, label: str) -> dict[str, Any]:
     view = _object(
         value,
         label,
-        {"library", "cell", "view", "view_type", "kind"},
-        {"library", "cell", "view", "view_type", "kind"},
+        {"library", "cell", "view_name", "oa_view_type", "oa_view_type_source", "kind"},
+        {"library", "cell", "view_name", "oa_view_type", "oa_view_type_source", "kind"},
     )
-    for key in ("library", "cell", "view", "view_type"):
+    for key in ("library", "cell", "view_name", "oa_view_type"):
         _identifier(view[key], "%s.%s" % (label, key))
+    if view["oa_view_type_source"] != "platform_api":
+        raise LiveModelProtocolError(
+            "invalid_view", "%s.oa_view_type_source must be platform_api" % label
+        )
     kind = view["kind"]
     if not isinstance(kind, str) or kind not in _VIEW_KIND:
         raise LiveModelProtocolError("invalid_view", "%s.kind is unsupported" % label)

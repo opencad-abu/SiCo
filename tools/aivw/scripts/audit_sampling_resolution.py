@@ -61,7 +61,7 @@ def audit(recipe_path):
     request = {'kind': recipe['kind'], 'recipe_sha256': sha256_file(recipe_path), 'sources': inputs,
                'implementation': {str(p): sha256_file(p) for p in [Path(__file__).resolve(), module]}}
     digest = stable_digest(request)
-    run = allocate_split_run(resolve_launch_paths(), Path('/path/to/xh/amsVerify/data/ams').resolve(),
+    run = allocate_split_run(resolve_launch_paths(), Path('/workarea/xh/amsVerify/data/ams').resolve(),
         library='aivw', cell='dynamic_sampling', view='public_diagnostic', kind='sampling-audit', request_digest=digest)
     summary = {'status': 'PUBLIC_SAMPLING_DIAGNOSTICS_RECORDED', 'qualification': 'NOT_ESTABLISHED',
                'holdout_evaluated': False, 'targets': targets}

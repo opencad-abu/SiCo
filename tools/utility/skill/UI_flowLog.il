@@ -1,5 +1,5 @@
 unless(and(boundp('sicoFlowLogVersion)
-             sicoFlowLogVersion=="20260721.flow.log.owned.v2")
+             sicoFlowLogVersion=="20261024.flow.log.owned.v3")
 
 unless(boundp('cadFlowLogRequests)
   cadFlowLogRequests=makeTable("cadFlowLogRequests" nil)
@@ -20,8 +20,8 @@ unless(boundp('cadFlowLogWindowRequests)
 procedure(GUI_flowLogBrand()
   cond(
     (isCallable('SICO_logo) SICO_logo())
-    (isCallable('witMenuLogo) witMenuLogo())
-    (t "SiCo")
+    (isCallable('sicoMenuLogo) sicoMenuLogo())
+    (t "Silicon Copilot")
   )
 )
 
@@ -135,8 +135,8 @@ procedure(GUI_flowLogClose(requestId)
 )
 
 procedure(GUI_flowLogRevision()
-  "20260721.flow.log.owned.v2"
+  "20261024.flow.log.owned.v3"
 )
 
-sicoFlowLogVersion="20260721.flow.log.owned.v2"
+sicoFlowLogVersion="20261024.flow.log.owned.v3"
 )

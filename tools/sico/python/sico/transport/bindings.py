@@ -39,7 +39,7 @@ def resource_keys(context):
     if ade:
         keys.add((*prefix, "ade", str(ade)))
     if isinstance(cellview, dict):
-        names = tuple(cellview.get(key) for key in ("lib", "cell", "view"))
+        names = tuple(cellview.get(key) for key in ("lib", "cell", "view_name"))
         if all(isinstance(name, str) and name for name in names):
             keys.add((*prefix, "cellview", *names))
             path = snapshot.get("library_path")

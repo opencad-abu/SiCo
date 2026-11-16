@@ -69,7 +69,7 @@ def main():
     parser.add_argument("--policy", type=Path, default=Path("recipes/ldo/dynamic_acceptance_proposal_v1.json"))
     parser.add_argument("--target", action="append", dest="targets")
     parser.add_argument("--payload-root", type=Path,
-                        default=Path("/path/to/xh/amsVerify/data/ams"))
+                        default=Path("/workarea/xh/amsVerify/data/ams"))
     args = parser.parse_args()
     config = json.loads(args.config.read_text())
     targets = args.targets or sorted(config["targets"])

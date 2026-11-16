@@ -14,7 +14,7 @@ procedure(aiSimConfigWalk(acwVector acwTarget acwPath acwAncestors acwBudget)
     when(or(length(acwPath)>8 member(acwTarget acwAncestors)) error("Config recursion/depth limit"))
     unwindProtect(progn(acwResult=errset(progn(
       acwCv=dbOpenCellViewByType(car(acwTarget) cadr(acwTarget) caddr(acwTarget) "" "r")
-      unless(and(acwCv acwCv~>cellViewType=="schematic" !dbIsCellViewModified(acwCv)
+      unless(and(acwCv acwCv~>viewType=="schematic" !dbIsCellViewModified(acwCv)
         aiSimSourceReadyP(acwCv))
         error("bound schematic requires saved data without error markers: %L" acwTarget))
       acwRows=list(list(acwPath acwTarget simplifyFilename(ddGetObjReadPath(ddGetObj(car(acwTarget))))
@@ -38,7 +38,7 @@ procedure(aiSimConfigWalk(acwVector acwTarget acwPath acwAncestors acwBudget)
             unless(caddr(acwBound)=="spectre" error("only Spectre primitive stop views supported"))
           else
             acwMaster=dbOpenCellViewByType(car(acwBound) cadr(acwBound) caddr(acwBound) "" "r")
-            unless(and(acwMaster acwMaster~>cellViewType=="schematic") error("non-schematic/sub-config binding unsupported"))
+            unless(and(acwMaster acwMaster~>viewType=="schematic") error("non-schematic/sub-config binding unsupported"))
             acwInterface=sort(foreach(mapcar acwTerm acwInst~>master~>terminals
               sprintf(nil "%L" list(acwTerm~>name acwTerm~>direction))) 'alphalessp)
             unless(equal(acwInterface sort(foreach(mapcar acwTerm acwMaster~>terminals

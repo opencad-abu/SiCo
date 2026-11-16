@@ -35,7 +35,7 @@ BOOLEAN_DEFAULTS = MappingProxyType({
     for paths in FLOW_BOOLEAN_PATHS.values() for path in paths
 })
 REQUEST_BOOLEAN_PATHS = frozenset(BOOLEAN_DEFAULTS) | frozenset({
-    "options.replace_bus_bit_char", "extract.starrc.three_d_ic",
+    "options.replace_bus_bit_char", "extract.starrc.three_d_ic", "extract.finfet_flow",
 })
 
 

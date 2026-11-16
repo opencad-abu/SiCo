@@ -26,14 +26,14 @@ def test_new_project_and_nested_handoff_restore_original_environment(tmp_path):
     assert restored == original
 
 
-def test_existing_legacy_project_is_selected_without_parallel_new_root(tmp_path):
-    (tmp_path / ".cad").mkdir(mode=0o700)
+def test_existing_legacy_project_gets_an_isolated_new_root(tmp_path):
+    legacy = tmp_path / ".cad"
+    legacy.mkdir(mode=0o700)
     environment = {}
-    with pytest.raises(ValueError, match="read-only"):
-        initialize(environment, cwd=tmp_path)
-    assert environment == {}
-    assert not list((tmp_path / ".cad").iterdir())
-    assert not (tmp_path / ".sico").exists()
+    assert initialize(environment, cwd=tmp_path) == tmp_path / ".sico/ai"
+    assert environment["SICO_TEMP_DIR"] == str(tmp_path / ".sico")
+    assert (tmp_path / ".sico/legacy-ignored.json").is_file()
+    assert not list(legacy.iterdir())
 
 
 @pytest.mark.parametrize("value", ["", "relative/.sico", "/tmp/.sico/ai", "/tmp/.cad"])

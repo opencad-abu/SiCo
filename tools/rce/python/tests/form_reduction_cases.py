@@ -60,7 +60,7 @@ def test_rce_reduction_form_tracks_output_capabilities(tmp_path: Path) -> None:
                 "  !form~>reductionEnable~>value",
                 "  form~>reductionOptions~>invisible",
                 '  hiGetLayoutFrame(form \'reductionOptions)=="Reduction Options"',
-                '  getq(form rceReductionFormVersion)=="20260909.pin.order.v1")',
+                '  getq(form rceReductionFormVersion)=="20261103.svdb.query.v2")',
                 "modeLoc=hiGetGridLayoutItemLocation(form 'reductionMode)",
                 "modePromptLoc=hiGetGridLayoutItemLocation(form 'reductionModePrompt)",
                 "tagLoc=hiGetGridLayoutItemLocation(form 'reductionOutputTag)",

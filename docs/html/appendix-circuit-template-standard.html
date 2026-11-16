@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SiCo 使用手册附录：SICO-CIRCUIT-TEMPLATE 0.1.0 电路模板规范草案全文。">
+<title>电路模板规范（草案） · SiCo 使用手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b4543a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='sans-serif' font-size='24' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/manual.css">
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
+  <span class="edition">使用手册 / 2026.10</span>
+  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+</header>
+<noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用复制与主题切换。</p></noscript>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="手册目录">
+<p class="rail-label">SICO DOCUMENTATION</p>
+<a href="index.html">开始阅读</a>
+<p class="nav-group">开始使用</p>
+<a href="sico-gui.html">SiCo · 客户端界面</a>
+<a href="sico-workspace.html">SiCo · 工作区页面</a>
+<a href="installation.html">01 · 安装</a>
+<a href="environment.html">02 · 环境变量</a>
+<a href="virtuoso.html">03 · Virtuoso 集成</a>
+<a href="flows.html">04 · CAD flows</a>
+<p class="nav-group">流程指南</p>
+<a href="drc.html">DRC · 规则检查</a>
+<a href="lvs.html">LVS · 连接检查</a>
+<a href="rce.html">RCE · 寄生提取</a>
+<a href="mts.html">MTS · 多工艺网表</a>
+<a href="utilities.html">LEF / GDS / CDL</a>
+<a href="lsf.html">LSF · 运行与资源</a>
+<p class="nav-group">参考附录</p>
+<a href="appendix-pdk-data-standard.html">PDK 数据标准</a>
+<a href="appendix-circuit-template-standard.html" aria-current="page">电路模板标准</a>
+<a href="appendix-symbol-template-standard.html">Symbol 模板标准</a>
+<a href="environment-internal.html">环境接口附录</a>
+<div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
+</nav>
+<div class="reading">
+<main id="main">
+<p class="eyebrow">APPENDIX / SICO-CIRCUIT-TEMPLATE</p>
+<h1>电路模板规范（草案）</h1>
+<p class="lead">从模板定义、抽取与复用契约，到检索、目标准备和创建验收的总体规则，以及当前兼容实现的边界。</p>
+<div class="meta"><span class="tag">草案全文</span><span class="tag">SICO-CIRCUIT-TEMPLATE</span><span class="tag">内容核对 · 2026.10.24</span></div>
+<div class="notice"><strong>讨论草案，尚未生效。</strong> 本页收入 SICO-CIRCUIT-TEMPLATE 0.1.0 全文；收入手册不改变草案状态、运行行为、模板身份或现行授权。</div>
+<p class="appendix-source"><strong>源文档</strong></p><ul class="appendix-source"><li><code>docs/SICO_CIRCUIT_TEMPLATE_STANDARD.md</code></li></ul>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>拟用编号</td>
+<td>SICO-CIRCUIT-TEMPLATE</td>
+</tr>
+<tr>
+<td>草案版本</td>
+<td>0.1.0</td>
+</tr>
+<tr>
+<td>整理日期</td>
+<td>2026-10-08</td>
+</tr>
+<tr>
+<td>状态</td>
+<td>讨论草案，尚未生效；本次整理不改变运行行为、已有模板身份或现行授权</td>
+</tr>
+<tr>
+<td>核对基线</td>
+<td><code>fea9411dd9f216aed4124b13de8a625720750d94</code></td>
+</tr>
+<tr>
+<td>适用对象</td>
+<td>模板生产者、目录读取器、检索与适配器、电路创建消费者、验收人员</td>
+</tr>
+</tbody>
+</table></div>
+<p>本文整理拟统一的规则；“必须／不得”为拟定强制要求，“应”为推荐要求，“可”为可选要求。
+代码现状、历史文档差异和未完成项另见<span class="source-ref" title="源文档：SICO_CIRCUIT_TEMPLATE_REVIEW_20261008.md">现状回顾</span>。
+本草案沿用现有 record 和工具协议，不把标准版本 0.1.0 当作数据 schema 版本。
+正式生效时须登记日期、迁移范围及逐项符合性；提交草案本身不表示现有实现全部合规。</p>
+<p>2026-10-08 后续方向：用户要求参照 PDK 数据采集标准，采用扁平数据结构。
+新数据格式统一见<span class="source-ref" title="源文档：SICO_CIRCUIT_TEMPLATE_DATA_STANDARD.md">电路模板数据采集标准草案</span>。
+本文保留总体工作流和现状边界；下文 SQLite／现有字段／响应预算是当前兼容实现说明，
+不再作为新采集格式的建议。新标准尚未生效，运行接口迁移另行实施。</p>
+<h2 id="sec-1">1. 定义与范围</h2>
+<p><strong>电路模板是带固定内容身份、来源证据、明确电气拓扑、可选图形资产及受控复用规则的电路知识单元。</strong>
+模板描述可参考的结构、接口与布局关系；目标电路另以完整 <code>circuit_spec</code> 表达实际器件、参数和连接。</p>
+<p>本版覆盖原理图模板的抽取、存储、检索、匹配、适配、目标创建及验收；symbol 和物理 layout
+可作为独立资产附带。物理版图重建、DRC/LVS、跨工艺电气等价和性能仿真不属于模板资格本身。
+RC/opamp 等示例生成器、仿真 recipe、任意可执行脚本不因名称含 template 就属于本规范。</p>
+<p>必须区分以下对象，不得用一个“模板可用”标志代替：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>对象／结论</th>
+<th>含义</th>
+<th>尚不能证明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>原始采集证据</td>
+<td>一次只读采集的事实及缺失项，可供复核</td>
+<td>拓扑完整、允许复用</td>
+</tr>
+<tr>
+<td>参考模板</td>
+<td>可读取的归一化记录，可按已支持能力查看或精确消费</td>
+<td>任意修改拓扑、跨工艺直接创建</td>
+</tr>
+<tr>
+<td>合格复用模板</td>
+<td>源证据满足指定能力，复用契约合法且可重新验证</td>
+<td>目标 PDK、参数、几何已就绪</td>
+</tr>
+<tr>
+<td>目标准备计划</td>
+<td>选定模板和明确目标完成映射、适配与几何检查</td>
+<td>已完成现场创建预检或 OA 写入</td>
+</tr>
+<tr>
+<td>已创建电路</td>
+<td>创建、保存、重开及实际回读达到所声明的验收范围</td>
+<td>视觉、仿真、物理版图均合格</td>
+</tr>
+</tbody>
+</table></div>
+<p>上述是语义区分，不要求新增一套重复状态字段；现有 qualification、prepare、创建和验收回执
+各自承担相应职责。模板缺少某资产，只阻塞依赖该资产的操作。</p>
+<h2 id="sec-2">2. 单一权威与维度</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>信息</th>
+<th>权威归属</th>
+<th>约束</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>已保存的源连接</td>
+<td><code>topology</code></td>
+<td>器件端子、网络、端口只维护一份电气图</td>
+</tr>
+<tr>
+<td>源视图图形与位置</td>
+<td><code>assets.schematic/symbol/layout</code></td>
+<td>按 topology ID 关联，不按截图推导连接</td>
+</tr>
+<tr>
+<td>复用权限与硬约束</td>
+<td><code>reuse_contract</code></td>
+<td>引用已有器件／端点，不再复制电气图</td>
+</tr>
+<tr>
+<td>源类别及资格依据</td>
+<td>分类证据、源观察、qualification</td>
+<td>明确来源与适用修订；可重新校验</td>
+</tr>
+<tr>
+<td>目标器件、参数、连接</td>
+<td>目标 <code>circuit_spec</code></td>
+<td>不由模板源参数、缓存或隐含规则覆盖</td>
+</tr>
+<tr>
+<td>目标工艺使用规则</td>
+<td>已发布的 SiCo PDK 数据及有效绑定</td>
+<td>模板不维护第二套 CDF 可写性和参数范围</td>
+</tr>
+<tr>
+<td>本次复用对应关系</td>
+<td><code>template_use</code></td>
+<td>绑定固定模板、目标意图和适配回执，可重验</td>
+</tr>
+<tr>
+<td>查询摘要、索引、缓存</td>
+<td>权威内容的派生数据</td>
+<td>可删除重建，不成为人工维护入口</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>category</code>（digital/analog/reference）、<code>granularity</code>（atomic/block/subsystem/ip）、
+<code>detail_level</code>（L1/L2/L3）、<code>tier</code>（private/project/builtin）互相独立，均不授予创建资格。
+未确定的粒度可以保留未知；不能以目录名或器件数猜测功能层级。</p>
+<h2 id="sec-3">3. 记录内容与电气语义</h2>
+<p>原理图参考记录至少包含版本、固定引用、来源／capture 摘要、资产覆盖、topology、缺口和派生摘要。
+只有 symbol/layout 的有效采集可作为相应资产参考保存，但不得宣称具有原理图复用资格。
+字段拼写沿用现有 schema；本表规定逻辑责任，不要求另造平行文件或重复字段。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>内容</th>
+<th>必备语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>身份与版本</td>
+<td><code>schema_version</code>、<code>rule_version</code>、<code>template_ref</code>；capture 版本与 catalog 兼容版本单独解释</td>
+</tr>
+<tr>
+<td>来源</td>
+<td>library/cell/view、采集身份、依赖与内容摘要；原始解析路径只作受控证据</td>
+</tr>
+<tr>
+<td>器件</td>
+<td>唯一 ID、类别、role、已观察的 master/端子清单、分类依据；源实例名属于追溯信息</td>
+</tr>
+<tr>
+<td>网络</td>
+<td>唯一 ID、名称、位宽、明确 global/local 语义和 <code>sig_type</code></td>
+</tr>
+<tr>
+<td>端点与端口</td>
+<td>器件 ID＋端子名到网络的连接；外部端口的名称、方向、位宽与网络</td>
+</tr>
+<tr>
+<td>覆盖与缺口</td>
+<td>哪些事实已采集、缺失、未知、不适用或不受当前能力支持，保留具体对象与理由</td>
+</tr>
+<tr>
+<td>复用契约</td>
+<td>对合格 v3 必备，明确 core、optional、boundary、规则及布局约束</td>
+</tr>
+</tbody>
+</table></div>
+<p>未知、空集合、明确不存在和不适用必须区分。未知 global 不能默认为 local；未知器件类别
+不能推定为允许；缺少端点不能以“通常如此”的连线补齐。重复 ID、悬空引用、冲突分类必须拒绝。</p>
+<p>项目器件分类必须有覆盖实际源对象的证据；名称、端子外观及所属 PDK 名称不能充当分类证明。
+basic/analogLib 图元的特殊处理须有已解析的安装库身份及 master 类型证据，不能只看名字。
+几何分组、同行、镜像和相似名称不证明功能分组、电气匹配、D/S 可交换或可删除权限。</p>
+<p>当前基线的 v3 复用能力限定 direct-level、已确认类别、完整连接的标量电路。
+层级、继承连接、mosaic、未展开 bus、未验证 master 或不完整源几何须按能力明确拒绝／报告；
+保留参考记录不等于通过复用验收。后续扩展须新增能力及正反例，不能仅清除 gap 标记。</p>
+<h2 id="sec-4">4. 几何、参数与内容详略</h2>
+<p>新生成的归一化坐标使用源数据库整数 DBU 的相对位置，记录单位换算、锚点与舍入缺口。
+source anchor 的绝对位置只用于追溯；旧 v1 的 user-unit 坐标按旧版本解释，不静默重标。
+目标位置、占用框、pin anchor、间距和布线必须依据目标 master、有效参数与目标网格重算。
+wire 的归属以已保存的网络及端点证据为准；线条视觉相交不自动表示电气连接。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>内容层级</th>
+<th>保存目的</th>
+<th>限制</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>原始记录</td>
+<td>源事实、追溯和重新验证</td>
+<td>私有证据，不能等同已经脱敏的共享投影</td>
+</tr>
+<tr>
+<td>L1</td>
+<td>抽象器件类别、接口、拓扑及相对关系／风格</td>
+<td>不含源 master、原始坐标、尺寸或私有路径</td>
+</tr>
+<tr>
+<td>L2</td>
+<td>L1 加明确 PDK master 身份和相对原理图几何</td>
+<td>不含源数值 sizing；工艺身份仍需按访问范围控制</td>
+</tr>
+<tr>
+<td>L3</td>
+<td>L2 加源器件上观察到的物理参数</td>
+<td>数值只作参考，不表示适合目标 PDK 或可以直接赋值</td>
+</tr>
+</tbody>
+</table></div>
+<p>投影必须按字段白名单产生，移除原始 SKILL 文本、源实例名、绝对库路径及私有 wire 原始证据。
+投影保存固定源引用和 capture 摘要用于受控追溯；不得因脱敏丢掉电气限制却仍宣称合格。
+历史 SQLite 投影接口仍拒绝直接投影 v3；标准 JSON raw 的 L1/L2/L3 发布已通过独立入口接入，
+参见<span class="source-ref" title="源文档：SICO_CIRCUIT_TEMPLATE_PROJECTION.md">标准分层发布</span>。各层级独立计算资格，不自动提升为 legacy v3。</p>
+<p>源属性、表达式和动态文字只作数据，不执行源表达式或任意 callback。
+W/L、指宽／总宽、nf/fingers、m、segW/segL 等不可跨工艺按同名推定等价。
+目标参数以目标 PDK 的参数规则和本次 spec 为准；源参数别名表不能成为跨 PDK 写入白名单。
+物理输入与派生值分工遵守<a href="appendix-pdk-data-standard.html">PDK 数据标准</a>。</p>
+<h2 id="sec-5">5. 身份、存储与目录</h2>
+<p><code>template_ref</code> 使用既有 <code>tpl_</code>＋64 位十六进制摘要格式；目录位置不充当模板身份。
+v1/v2 保留各自历史算法，v3 沿用版本化 canonical 内容算法，排除自引用和派生 summary。
+摘要编码固定 UTF-8、排序键、有限数值；不得改变旧引用的算法或把 <code>cad.*</code> 协议前缀机械改名。
+内容、分类证据或复用许可改变必须产生新引用。复制同一内容到另一目录不改变引用；
+重新采集导致 provenance 改变时可产生新引用，不能仅凭拓扑相同强行复用旧身份。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>来源</th>
+<th>当前位置</th>
+<th>写入边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>private</td>
+<td><code>&lt;workspace&gt;/.sico/ai/circuit_templates</code></td>
+<td>新抽取及私有预览的工作区入口</td>
+</tr>
+<tr>
+<td>project</td>
+<td><code>$SICO_CIRCUIT_TEMPLATES_DIR</code></td>
+<td>SiCo 读取；由用户／CAD／IT 放置</td>
+</tr>
+<tr>
+<td>builtin</td>
+<td><code>&lt;SiCo&gt;/tools/ai/reference/circuit_templates</code>（若存在）</td>
+<td>只读参考；不表示正式软件包必须附带</td>
+</tr>
+</tbody>
+</table></div>
+<p>状态目录只经统一 <code>sicostate</code> 解析。旧 <code>.cad</code> 只读，写入前按既有迁移器激活；
+<code>.cad/.sico</code> 同时存在时遵守激活检查，不自行合并。旧 <code>reference/circuit-templates</code>
+作为已支持的兼容读取布局，不产生第二个写入目标。新产品配置使用 SICO 环境变量。</p>
+<p>当前兼容实现读取：根 <code>catalog.sqlite3</code>，或 <code>catalogs/*.sqlite3</code> 的一级成员；
+<code>captures/</code> 和 <code>previews/</code> 是辅助证据／可重建产物，不是普通共享消费的必要条件。
+新采集数据拟改用上述扁平 JSON 标准，SQLite 保留为 legacy 输入或可重建索引，不能双份人工维护。
+离线补全若依赖 retained capture，必须明确其必要性及缺失反馈。</p>
+<p>同 ref 同内容跨来源合并并保留全部来源；同 ref 不同内容必须报冲突。
+同名 cell 的不同 ref 分别保留。目录不存在／空与损坏／不可读必须区分。
+来源偏好 private → project → builtin 只在质量比较后使用，不能覆盖内容冲突或硬约束。
+数据读取须验证普通文件、边界、SQLite 状态、成员稳定性及内容一致性，拒绝越界软链接与活动 WAL/journal。</p>
+<p><code>snapshot_ref</code> 表示一次目录内容观察；record digest 表示完整记录内容；<code>template_ref</code>
+表示版本化模板身份。三者不得互相替代，也不代表审批或电路性能认证。</p>
+<h2 id="sec-6">6. 抽取与资格补齐</h2>
+<ol>
+<li>明确源 library/cell/view、采集资产及必要分类证据，只读采集，不保存或改写源 OA。</li>
+<li>校验 capture 完整性、来源、依赖和电气事实；构造参考记录并保留具体缺口。</li>
+<li>要求可复用时，通过同一 <code>extract_circuit_templates</code> 显式选择 <code>reuse.mode=whole/core</code>。
+   whole 保护所有器件和端点；core 由源实例名声明核心、完整可选组与外围边界。</li>
+<li>权威构造器推导内部 ID、边界连接和删除后的网／端口，再验证分类、源资格和契约。</li>
+<li>原子写入工作区私有库，不覆盖既有不同内容；返回固定 ref、资格范围和缺口。</li>
+<li>缺失分类等可离线补齐项优先使用保存的 ref 和 continuation；源事实变更或无法补证才重新采集。</li>
+</ol>
+<p>省略 reuse 保持参考抽取语义。复用失败但参考有效时，可保留参考；必须返回失败状态、
+具体原因及 <code>reuse.template_ref=null</code>，不能将顶层参考 ref 当作合格复用 ref。
+补齐分类不得覆盖冲突证据、抹掉层级或虚构端点；新契约产生新引用，保留基线追溯。
+qualification 必须绑定源事实与摘要并可重新计算，不能以手工置 true 替代验证。</p>
+<h2 id="sec-7">7. 复用契约与适配</h2>
+<p>core 与 optional groups 必须互斥并覆盖全部电气器件；core_connections 保护全部核心端子。
+每个外围边界必须声明核心端点、允许的外接器件类别及连接数量范围。
+数量按非核心端点计算，包含保留的可选器件，不能误按外围器件个数计算。</p>
+<p>允许的改变只限已安装且版本固定的规则：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>规则</th>
+<th>要求</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rename</code></td>
+<td>局部网络／端口显式改名；保留完整对应与方向，不由对称性推断交换</td>
+</tr>
+<tr>
+<td><code>omit_optional_group</code></td>
+<td>仅删除明确允许的完整组，检查被删除的网、端口及残余连接</td>
+</tr>
+<tr>
+<td><code>add_boundary_group</code></td>
+<td>新增器件通过允许边界接入，不改变受保护核心内部连接</td>
+</tr>
+</tbody>
+</table></div>
+<p>每条规则同时满足模板声明和本次目标授权，核对 id、version、implementation_digest。
+已有用户决定和有效规则选择可以复用；“显式授权”不要求每次重新询问。
+目标 spec 必须完整表达适配结果，不能仅传“从模板删掉若干器件”作为隐藏意图。
+当前实现最多省略 8 个完整组；新增限一个连通外围组，省略与新增不能在同次适配混用。
+改变这些界限必须有版本化能力和验证，不通过扩大数组或预算暗中开放。</p>
+<p>禁止隐式合并／拆分网、交换差分或 D/S 端子、修改核心连接或丢掉 global/supply/ground 语义。
+历史精确适配中的 <code>net_scope_map</code> 仅按该入口已验证条件使用，不扩大为通用转换许可。
+适配回执必须保留完整映射、规则、差异与输入／输出摘要；下游重验回执，不只信任摘要字符串。</p>
+<h2 id="sec-8">8. 检索与目标准备</h2>
+<p>推荐入口为 <code>prepare_circuit_template_plan</code>；query/get 用于调查和按需选取详情，
+match 用于明确的拓扑比较，<code>prepare_template_circuit</code> 保留已支持的 legacy 精确适配。
+新工作流共用一套匹配、适配和几何验证器，不新建第二个创建后端。</p>
+<p>目标准备提交完整 spec、固定候选或明确搜索范围、必要映射与规则，另选以下互斥输入：</p>
+<ul>
+<li><code>binding_refs</code>，或完整 <code>bindings + geometry</code>。</li>
+<li><code>placement</code>（含明确 routing 选择），或显式 <code>layout</code>。</li>
+</ul>
+<p>binding、内部 ID、digest、callback 元数据由工具取得和保留；不让用户手工抄录。
+先检查硬条件，再比较适配代价、覆盖与来源。指纹、索引命中或相似度只能筛候选。
+对称映射歧义返回 needs_mapping；未知不按硬拒绝处理，也不默认交换端口。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>结果</th>
+<th>必须表达</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ready_for_creation_prepare</code></td>
+<td>固定候选、完整且验证通过的 plan、摘要及快照；尚须现场创建预检</td>
+</tr>
+<tr>
+<td><code>needs_selection/mapping/adaptation/binding/geometry</code></td>
+<td>具体对象、缺项及下一步；plan=null</td>
+</tr>
+<tr>
+<td><code>no_match</code></td>
+<td>已完成本次范围内所有候选判定且全部不满足</td>
+</tr>
+<tr>
+<td><code>inconclusive</code></td>
+<td>预算耗尽或结果未知；保留已检查／剩余／未知量和停止原因；plan=null</td>
+</tr>
+<tr>
+<td><code>unavailable/invalid_request</code></td>
+<td>环境／数据不可用或输入错误；不降级为空库、不生成计划</td>
+</tr>
+</tbody>
+</table></div>
+<p>固定 ref 或 first_eligible 要求 <code>return_alternatives=0</code>；first_eligible 不宣称全局最佳。
+只有 ready 可携带完整 plan；响应超限不能裁掉验证输入后仍称 ready。
+prepare 结束前及进入创建链时复核所需内容；成员或依赖改变则失效，不能执行期间自动改绑 latest。
+缓存只保存可重建纯值，键覆盖内容、规则、目标与依赖版本；命中仍做权威重验，关闭后语义等价。
+ready plan 缓存不保存 OA 句柄、写入授权或现场成功回执。</p>
+<h2 id="sec-9">9. PDK、创建、symbol 与 TB</h2>
+<p>正常设计消费已发布 PDK 包的使用资格与参数规则；模板缺项不得导致反复重新发现相同 PDK 规则。
+仅真实依赖改变、现场冲突或未知行为进入维护／针对性 probe，沿用 PDK 标准的边界。
+实际目标仍须经所选 PDK 初始化、受支持 CDF/callback、有效参数与真实几何检查。
+源模板中的空参数或同名物理量不构成绕过 PDK 必备赋值的许可。</p>
+<p>推荐创建链：目标准备 → <code>prepare_circuit_creation</code> → SiCo 既有执行入口 → inspect／回读。
+实际写入前重新核对任务、目标动作、来源和摘要；已有有效目标决定及呈现方式继续使用。
+用户既有非空视图须沿已确认的继续／备份后替换流程处理，不能默认覆盖；只读源、PDK 和
+安装库保持保护。目标身份按实际解析路径和依赖判断，不因 library 改名解除保护。
+未知写入结果先查原操作，禁止换 request_id 盲目重放；保留失败阶段、引用和部分目标证据。</p>
+<p>创建完成至少要求 schCheck、逐端点连接／有效参数／几何回读、保存重开及幂等核对。
+明确选择的 stub 与失败 fallback 必须分别报告；fallback 不得冒称连续布线。
+外部 pin 默认独立 stub 的既有策略保持；只有明确选择才做连续端口布线。
+图面质量须检查实际原理图截图，PNG/SVG 导出成功或 schCheck 通过均不自动证明视觉合格。</p>
+<p>为源设计单元补建缺失 symbol 时，沿用现有明确许可与接口校验，不改写其 schematic。
+symbol 预览默认 <code>style=auto</code>：有可用捕获轮廓时使用 <code>template_outline</code>；不能使用轮廓时
+返回 <code>rectangular_module</code> 并在 <code>fallback_reason</code> 说明原因。轮廓渲染不能复现的源文字标注
+默认拒绝；显式 <code>label_policy=drop</code> 可省略并在 <code>dropped_labels</code> 逐项报告，二者都不静默
+丢失信息。<code>label_policy=preserve</code> 可保留普通文字和 <code>cdsParam(...)</code> 占位符的位置、
+justify、orient、font、height，并以非执行标签重绘；<code>cdsParam</code> 不执行表达式。包含
+条件表达式或未知 <code>ILLabel</code> 的动态标注明确拒绝，不采用求值或静默替换。
+常见符号可使用 <code>symbol_family</code>：私有
+<code>.cad/ai/circuit_templates/symbol_families/&lt;family_ref&gt;.json</code> 保存一份规范化的
+body/stub 几何和 terminal slots；目标 schematic 通过 <code>slot_map</code> 把端口绑定到 slots，
+不复制源 cellview。family 记录版本化为 <code>sico.symbol.family.v1</code>，目标端子方向/宽度
+必须与 slot 一致；找不到绑定或 family 不可用时明确报错，不回退为静默改名。
+为 DUT 创建 TB 前，检查同一 library/cell 的 symbol：已有则校验复用；缺失则根据已保存
+schematic 接口创建、保存并校验。接口不一致或创建失败时停止 TB，不以展开内部器件替代 DUT。
+辅助测试／probe 只在当前工作区 SicoTest 后台创建，不覆盖视图，不打开或抬升编辑器；
+路径冲突须报告。用户交付视图沿用已确认的呈现方式。<code>schCreateWire</code> routeMethod 只允许 direct/full。</p>
+<h2 id="sec-10">10. 有界读取与接口</h2>
+<p>默认返回摘要、计数、覆盖和固定引用；topology、relations、parameters、资产详情按 section/entity 分页。
+每个有界列表保留总数、返回数及省略／续页信息，不以删除硬约束满足预算。
+原始 capture、长 CDF 和 SVG 正文不进入普通模型上下文；图形通过私有 artifact 引用交付。</p>
+<p>本草案先固定有界原则；当前实现的兼容参数如下，不把 PDK 接口的 16 KiB 上限套到模板接口：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>当前基线</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>query 条数</td>
+<td>默认 10，最多 30</td>
+</tr>
+<tr>
+<td>get 详情条数</td>
+<td>默认 100，最多 200；仍受总响应预算约束</td>
+</tr>
+<tr>
+<td>模板／prepare 完整响应</td>
+<td>最多 90,000 UTF-8 JSON 字节</td>
+</tr>
+<tr>
+<td>capture</td>
+<td>最多 64 MiB</td>
+</tr>
+<tr>
+<td>v3 topology</td>
+<td>最多 64 器件、256 网、128 端口、每器件 64 端子；完整匹配图还受 512 节点限制</td>
+</tr>
+<tr>
+<td>检索默认预算</td>
+<td>500 ms、50,000 states；整体 prepare 默认 5,000 ms</td>
+</tr>
+</tbody>
+</table></div>
+<p>这些是接受上限，不是延迟承诺。超预算须返回可区分的未知／超限结果，不放宽正确性或隐式扩大搜索。
+若将来压缩公共接口，必须同时定义分页、完整计划传递及兼容迁移，不能只减少数值上限。</p>
+<h2 id="sec-11">11. 验收与历史迁移</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>验收面</th>
+<th>最低证据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据与身份</td>
+<td>schema、引用、摘要、ID／引用一致性、summary 一致性、不可变冲突、目录移动后固定引用</td>
+</tr>
+<tr>
+<td>源资格</td>
+<td>分类覆盖、源依赖、完整端点、网语义；unknown、层级、继承、缺几何等反例不得被提升</td>
+</tr>
+<tr>
+<td>复用契约</td>
+<td>核心保护、组完整性、边界与双重授权；缺规则、篡改映射、越界修改必须拒绝</td>
+</tr>
+<tr>
+<td>搜索与准备</td>
+<td>完整基线／索引对照、歧义、no_match 与 inconclusive 区分、缓存等价及内容变化失效</td>
+</tr>
+<tr>
+<td>创建生命周期</td>
+<td>实际 PDK/CDF、目标保护、保存重开、逐端点及参数回读、未知写入恢复与幂等</td>
+</tr>
+<tr>
+<td>图面与其他资格</td>
+<td>实际截图检查；视觉、仿真、物理验证分别报告，未执行项明确未验证</td>
+</tr>
+</tbody>
+</table></div>
+<p>验收报告记录版本、输入摘要、范围、执行环境、结果、未完成项与私有证据引用。
+合成变体不能计作独立真实设计；Agent 图像审阅不能替代人工电路专家验收。
+某一个案例通过不构成全部模板、全部 PDK 或全部图面合格。</p>
+<p>旧 v1/v2 及历史结构型 v3 按既有能力只读兼容；格式可读与资格通过分别检查。
+升级不得仅改 schema 标记或补 true：补证据、重跑资格／契约验证、产生新 ref，并保留旧引用。
+符合性按具体能力登记，不能要求所有历史参考立即具备所有资产。
+legacy 入口退出条件为消费者迁移完成、固定引用重放与兼容验收通过，并在正式版本中明确宣布。</p>
+<p>模板目录复制与文件版本由用户／CAD／IT 管理；本规范不新增审批、发布、NFS 或版本管理服务。
+内部 catalog writer 的 publish 仅指原子落盘，不代表外部发行授权。
+共享、脱敏与运行发行是不同边界；本规范及模板数据不因合规而自动进入软件发行包，
+正式分发仍遵守<span class="source-ref" title="源文档：../deploy/RUNTIME_RELEASE_POLICY.md">运行发行政策</span>。</p>
+<footer class="page-footer"><span>依据 SICO-CIRCUIT-TEMPLATE 0.1.0 · 整理 2026-10-08</span><a href="index.html">返回使用手册 →</a></footer>
+</main>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#sec-1">1. 定义与范围</a><a href="#sec-2">2. 单一权威与维度</a><a href="#sec-3">3. 记录内容与电气语义</a><a href="#sec-4">4. 几何、参数与内容详略</a><a href="#sec-5">5. 身份、存储与目录</a><a href="#sec-6">6. 抽取与资格补齐</a><a href="#sec-7">7. 复用契约与适配</a><a href="#sec-8">8. 检索与目标准备</a><a href="#sec-9">9. PDK、创建、symbol 与 TB</a><a href="#sec-10">10. 有界读取与接口</a><a href="#sec-11">11. 验收与历史迁移</a></aside>
+</div></div>
+</body>
+</html>

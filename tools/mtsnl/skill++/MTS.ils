@@ -5,16 +5,17 @@ let((entryDirectory)
     parseString(simplifyFilename(get_filename(piport) t) "/")))) "/"))
   load(strcat(entryDirectory "/../../../scripts/sicoSkillLoader.ils"))
   load(strcat(entryDirectory "/../../../scripts/sicoSource.il"))
-  SICO_sourceRequire("mts" "8db06c7a32aedf1db0c46d00dcac3fcb3599b2eb04f46626715b33909aea7515" '(
-    ("tools/mtsnl/skill" "MTS_netlistor.il" "0a5c51d506b2235f65a43217285422f7ee8165a0ff93502ace760cf81aa01712"
+  SICO_sourceRequire("mts" "aa9fb96bef425cce57f03f68523974e6444d5b2be670fec2268518faf28b4698" '(
+    ("tools/mtsnl/skill" "MTS_netlistor.il" "491363489bb420f803afb03a99c4b63ad207fcc336b1513ba4f3beb267fae609"
       (mtsNetlistorRevision mtsNetlistorBrand mtsNetlistorOaNameP mtsNetlistorParseOpenView
        mtsNetlistorSessionLibraryP mtsNetlistorHandleOpenView mtsNetlistorDataHandler
        mtsNetlistorShellQuote mtsNetlistorJsonEscape mtsNetlistorProcStartTime mtsNetlistorReadToken
        mtsNetlistorDigestValidP mtsNetlistorTargetLibraries mtsNetlistorWriteSession
        mtsNetlistorToolsRoot mtsNetlistorModuleRoot mtsNetlistorLaunchCommand mtsNetlistorStopAll
        mtsNetlistorRunningProcess mtsNetlistorPostFunc mtsNetlistorStart mtsNetlistorInitializeRuntime)
-      ((mtsNetlistorRevision "20261022.sico.mts.launcher.v9"))
+      ((mtsNetlistorRevision "20261024.sico.mts.launcher.v12"))
       (mtsNetlistorVersion)
+      ()
       ())
   ))
 )

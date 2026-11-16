@@ -13,10 +13,10 @@ from cadprofile.skill_data import render_form_data as render_form_data
 from skill_test_support import read_skill_source
 
 CAD_ROOT = Path(__file__).resolve().parents[3]
-PROFILE_REVISION = "20260924.profile.environment.v4"
+PROFILE_REVISION = "20261022.profile.environment.v6"
 PROFILE_GUI_REVISION = "20260818.profile.gui.v2"
 ADAPTER_PROFILE_REVISION = "20260820.rce.live.log.v4"
-RCE_PROFILE_REVISION = "20260909.pin.order.v1"
+RCE_PROFILE_REVISION = "20261103.svdb.query.v1"
 RUN_SKILL_PROBE = os.environ.get("RCE_RUN_SKILL_PROBE") == "1"
 
 
@@ -126,6 +126,7 @@ RCE_FIELDS = {
     "lvs.recognize_gates",
     "lvs.custom_svrf_enable",
     "lvs.custom_svrf_command",
+    "lvs.svdb_query",
     "extract.tool",
     "extract.tech_name",
     "extract.tech_dir",
@@ -135,6 +136,7 @@ RCE_FIELDS = {
     "extract.temperature",
     "extract.corner_temperatures",
     "extract.rc_type",
+    "extract.remove_floating_nets",
     "extract.top_cell_source",
     "extract.name_source",
     "extract.output_type",

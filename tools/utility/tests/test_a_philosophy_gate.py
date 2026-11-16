@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 from utility.a_philosophy_gate import run
-from conftest import commit, write
+from utility.tests.gate_fixtures import commit, write
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "a_philosophy_gate.py"
@@ -30,12 +30,7 @@ def configuration(repo):
         "a_philosophy_compatibility": dict(schema_version=1, compatibility=[record]),
         "a_philosophy_reviews": dict(schema_version=1, reviews=[]),
         "a_philosophy_size_baseline": dict(schema_version=1, baseline=[]),
-        "a_philosophy_inventories": dict(
-            schema_version=1,
-            inventories=[
-                dict(path="native.json", search_paths=["."], entries=["pkg.main"])
-            ],
-        ),
+        "a_philosophy_inventories": dict(schema_version=2, inventories=["native.json"]),
         "private_import_boundaries": dict(schema_version=1, rules=[]),
         "skill_load_ownership": dict(schema_version=1, loaders=[], lifecycles=[]),
     }.items():
@@ -45,7 +40,9 @@ def configuration(repo):
         "native.json",
         json.dumps(
             dict(
-                format="cad.python.native.v1",
+                format="cad.python.native.v2",
+                closure=dict(search_paths=["."], entries=["pkg.main"],
+                             complete_packages=[], development_modules=[]),
                 source_root=".",
                 modules=[
                     dict(name="pkg.__init__", source="pkg/__init__.py"),

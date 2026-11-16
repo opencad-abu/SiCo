@@ -26,9 +26,11 @@ def starrc_oa_output_options(
         f"OA_LIB_NAME: {target.library}",
         f"OA_CELL_NAME: {target.cell}",
         f"OA_VIEW_NAME: {target.view}",
-        f"OA_DEVICE_MAPPING_FILE: {device_mapping}",
-        f"OA_LAYER_MAPPING_FILE: {layer_mapping}",
     ]
+    if device_mapping is not None:
+        commands.append(f"OA_DEVICE_MAPPING_FILE: {device_mapping}")
+    if layer_mapping is not None:
+        commands.append(f"OA_LAYER_MAPPING_FILE: {layer_mapping}")
     if ctx.input_type in {"OA", "SCH+GDS"}:
         commands.append(f"OA_CDLOUT_RUNDIR: {ctx.cdl_dir}")
 

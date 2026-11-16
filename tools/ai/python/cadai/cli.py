@@ -93,12 +93,12 @@ def _remote_session_command(args: argparse.Namespace) -> list[str]:
     elif entry.name == "__main__.py" and entry.parent.name == "cadai":
         script_entry = entry.parent.parent / "sico-ai"
         invocation = (
-            [production_python(require_environment=False), str(script_entry)]
+            [production_python(), str(script_entry)]
             if script_entry.is_file()
-            else [production_python(require_environment=False), "-m", "cadai"]
+            else [production_python(), "-m", "cadai"]
         )
     else:
-        invocation = [production_python(require_environment=False), str(entry)]
+        invocation = [production_python(), str(entry)]
     command = [
         *invocation,
         "session",

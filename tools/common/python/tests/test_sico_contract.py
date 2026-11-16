@@ -1,5 +1,6 @@
 """Installation identity, relocation and environment precedence are observable contracts."""
 
+import os
 from pathlib import Path
 
 import pytest
@@ -116,3 +117,33 @@ def test_identity_cannot_be_borrowed_from_another_installation(tmp_path):
 def test_source_tree_has_the_marked_product_layout():
     root = Path(__file__).resolve().parents[4]
     assert Installation(root).tools == root / "tools"
+
+
+def test_runtime_python_and_libraries_are_derived_from_the_installation(tmp_path):
+    root = make_install(tmp_path / "sico")
+    python = root / "runtime/python/bin/python3"
+    python.parent.mkdir(parents=True)
+    python.write_text("#!/bin/sh\n", encoding="ascii")
+    python.chmod(0o755)
+
+    selected = Installation(root)
+    assert selected.runtime_python == python
+    assert selected.runtime_python_root == root / "runtime/python"
+    assert selected.runtime_library_path == (
+        f"{root}/runtime/python/lib{os.pathsep}{root}/lib"
+    )
+
+
+def test_source_tree_without_runtime_python_has_no_fallback(tmp_path):
+    root = make_install(tmp_path / "sico")
+    python = tmp_path / "site-python/bin/python3"
+    python.parent.mkdir(parents=True)
+    python.write_text("#!/bin/sh\n", encoding="ascii")
+    python.chmod(0o755)
+    marker = root / "etc/config/dev-runtime"
+    marker.write_text(str(python) + "\n", encoding="utf-8")
+
+    selected = Installation(root)
+    assert selected.runtime_python is None
+    assert selected.runtime_python_root is None
+    assert selected.runtime_library_path is None

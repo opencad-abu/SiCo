@@ -7,7 +7,7 @@ import pytest
 
 from utility.a_philosophy_sources import source_rows
 from utility.a_philosophy_baseline import check_baseline
-from conftest import commit, write
+from utility.tests.gate_fixtures import commit, write
 
 
 def baseline(path, lines):

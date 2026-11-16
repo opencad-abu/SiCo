@@ -109,7 +109,8 @@ GUIDANCE = {
     "schematic": (
         "用户正从原理图编辑器发起协作。",
         ["sch*", "db*"],
-        "用 inspect_circuit_target 检查这个捕获的原理图。复用空视图；"
+        "用 inspect_circuit_target 检查这个捕获的原理图；该检查只读，不需要 task_ref。"
+        "复用空视图；"
         "写入前询问是继续还是替换既有内容。"
         "不要把已存在的入口视图当作新目标冲突。",
     ),

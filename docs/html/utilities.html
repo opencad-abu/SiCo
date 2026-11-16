@@ -14,7 +14,7 @@
 <a class="skip" href="#main">跳到正文</a>
 <header class="topbar">
   <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
-  <span class="edition">使用手册 / 2026.09</span>
+  <span class="edition">使用手册 / 2026.10</span>
   <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
 </header>
 <noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
@@ -23,6 +23,8 @@
 <p class="rail-label">SICO DOCUMENTATION</p>
 <a href="index.html">开始阅读</a>
 <p class="nav-group">开始使用</p>
+<a href="sico-gui.html">SiCo · 客户端界面</a>
+<a href="sico-workspace.html">SiCo · 工作区页面</a>
 <a href="installation.html">01 · 安装</a>
 <a href="environment.html">02 · 环境变量</a>
 <a href="virtuoso.html">03 · Virtuoso 集成</a>
@@ -35,6 +37,9 @@
 <a href="utilities.html" aria-current="page">LEF / GDS / CDL</a>
 <a href="lsf.html">LSF · 运行与资源</a>
 <p class="nav-group">参考附录</p>
+<a href="appendix-pdk-data-standard.html">PDK 数据标准</a>
+<a href="appendix-circuit-template-standard.html">电路模板标准</a>
+<a href="appendix-symbol-template-standard.html">Symbol 模板标准</a>
 <a href="environment-internal.html">环境接口附录</a>
 <div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
 </nav>
@@ -45,6 +50,26 @@
 <p class="lead">通过 SiCo 菜单完成常用 OA 数据交接。各工具共用安装与工程环境，但使用各自的输出目录和配置文件。</p>
 <h2 id="lef">LEF Generator</h2>
 <p>在 <strong>SiCo → LEF Generator</strong> 中选择 layout library / cell / view，或使用 batch cell-list。Abstract options 包含 PDK 的 pin、extract、blockage 与 site 规则，应由工艺或 CAD 提供。</p>
+<figure class="figure">
+  <a href="assets/screenshots/lef-form.png" aria-label="查看 LEF Generator 表单原图"><img src="assets/screenshots/lef-form.png" alt="LEF Generator 表单：Design Input、Abstract Generation、Output Configuration 和 Hardware Configuration" loading="lazy"></a>
+  <figcaption><strong>LEF Generator。</strong>示例填写了演示库、cell、abstract options 和输出文件；实际候选来自工程环境。<span class="zoom-hint">点击图片查看原始尺寸</span></figcaption>
+</figure>
+<div class="table-wrap"><table><thead><tr><th>页面/控件</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>Config File</strong> + <strong>Load / Save / Save As…</strong></td><td>管理 LEF Profile。</td><td>载入后重新核对 design、options 和输出文件。</td></tr>
+<tr><td><strong>Design Input</strong> → Library / Layout View</td><td>单 cell 的 OA 库、cell 与 layout view。</td><td>库必须能从当前 <code>cds.lib</code> 解析；view 默认 <code>layout</code>。</td></tr>
+<tr><td><strong>Cell List File</strong> / <strong>Single Cell</strong></td><td>批处理列表或单个 cell 名称。</td><td>两者不能混为同一个输入；批处理文件内容会决定实际 cell 集合。</td></tr>
+<tr><td><strong>Logical View / Abstract View</strong></td><td>逻辑 view（默认 schematic）与 abstract view 名称。</td><td>只有工艺/工具确实使用这些 view 时才修改默认值。</td></tr>
+<tr><td><strong>cds.lib</strong></td><td>输入库映射文件。</td><td>使用目标工程的 cds.lib，不要指向另一个 PDK 的库。</td></tr>
+<tr><td><strong>Options File</strong></td><td>Abstract Generator options 文件。</td><td>由 PDK/CAD 提供；不要用任意文本文件代替。</td></tr>
+<tr><td><strong>Cell Bin</strong></td><td><strong>Core</strong>、<strong>Block</strong>、<strong>IO</strong>、<strong>Corner</strong>。</td><td>分类影响 abstract 生成规则；默认 Core。</td></tr>
+<tr><td><strong>Run Steps</strong></td><td><strong>Pins</strong>、<strong>Extract</strong>、<strong>Abstract</strong> 三步开关。</td><td>只跑需要的步骤；关闭前置步骤却要求后续步骤时，先确认已有中间数据。</td></tr>
+<tr><td><strong>More Abstract Options</strong></td><td>展开 Pins / Extract / Abstract 三组选项，包括 pin 文本映射、电源/地名称、边界与层、extract 层/层数、blockage、site 与 fracture 等。</td><td>默认 <code>From Options File</code> 表示继承 options 文件；只覆盖已经确认的字段。</td></tr>
+<tr><td><strong>Save Data to</strong></td><td>Project / Current / Customize Directory。</td><td>示例输出结构为 <code>$LEF_DB_DIR/&lt;lib&gt;.&lt;cell&gt;.&lt;view&gt;/&lt;cell&gt;.lef</code>。</td></tr>
+<tr><td><strong>LEF File / LEF Version</strong></td><td>最终 LEF 路径与版本。</td><td>版本必须被下游布局工具接受；不要用输出路径替代 Profile。</td></tr>
+<tr><td><strong>Geometry LEF / Technology LEF</strong></td><td>分别生成 cell geometry 与 technology 数据。</td><td>按交付需求选择；Technology LEF 通常只需由工艺/CAD 统一发布。</td></tr>
+<tr><td><strong>Run at / Queue / Host / LSF / CPU Number</strong></td><td>选择本机或 LSF 执行并设置 CPU。</td><td>核对队列、主机与资源后再 Run。</td></tr>
+<tr><td><strong>Run+Close / Run / Close</strong></td><td>运行后关闭、运行保留、只关闭。</td><td>LEF 表单没有独立 Report 按钮；结果从 LEF File 与运行目录查看。</td></tr>
+</tbody></table></div>
 <div class="code-block"><div class="code-label">Bash · LEF 配置</div><pre><code>export LEF_DB_DIR="$PROJECT_ROOT/exports/lef"
 export LEFGEN_OPT_FILE="$PDK_ROOT/lef/abstract.options"
 export LEF_DEFAULT_BIN="Core"
@@ -57,6 +82,25 @@ export LEF_ABSTRACT="abstract"</code></pre></div>
 <div class="code-block"><div class="code-label">Shell · LEF 运行配置</div><pre><code>lefgen generate /path/to/run/lef.toml
 lefgen run /path/to/run/lef.toml</code></pre></div>
 <h2 id="gds-cdl">Stream GDS 与 Export CDL</h2>
+<div class="screenshot-pair">
+  <figure class="figure">
+    <a href="assets/screenshots/stream-gds.png" aria-label="查看 Stream GDS 表单原图"><img src="assets/screenshots/stream-gds.png" alt="Stream GDS 表单：Layout Input、Output Configuration、Options 和 Hardware Configuration" loading="lazy"></a>
+    <figcaption><strong>Stream GDS。</strong>示例 layout 输入与输出根。</figcaption>
+  </figure>
+  <figure class="figure">
+    <a href="assets/screenshots/export-cdl.png" aria-label="查看 Export CDL 表单原图"><img src="assets/screenshots/export-cdl.png" alt="Export CDL 表单：Schematic Input、CDL Include、Output Configuration、Options 和 Hardware Configuration" loading="lazy"></a>
+    <figcaption><strong>Export CDL。</strong>示例 schematic 输入和器件 include。</figcaption>
+  </figure>
+</div>
+<div class="table-wrap"><table><thead><tr><th>页面/控件</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>Layout Input</strong>（Stream GDS）</td><td>OA library / cell / layout view。</td><td>需要 <code>CDS_LIB</code>、<code>TECH_LAYER_MAP</code> 和 PATH 中的 <code>strmout</code>。</td></tr>
+<tr><td><strong>Schematic Input</strong>（Export CDL）</td><td>OA library / cell / schematic view。</td><td>需要 <code>CDS_LIB</code> 和 PATH 中的 <code>si</code>；器件定义按需通过 CDL Include 提供。</td></tr>
+<tr><td><strong>CDL Include</strong></td><td>启用并选择 CDL header/include 文件。</td><td>非空 <code>CDL_HEADER_FILE</code> 会作为初值；文件必须匹配目标 PDK。</td></tr>
+<tr><td><strong>Save Data to</strong> + 路径</td><td>选择项目、当前或自定义输出根。</td><td>Project Directory 分别来自 <code>GDS_DB_DIR</code> / <code>CDL_DB_DIR</code>；未设置时使用当前目录。</td></tr>
+<tr><td><strong>Options → Replace &lt;&gt; with []</strong></td><td>把总线位名从尖括号转换为方括号。</td><td>按下游工具/网表约定选择；转换发生在导出内容中，不改变源 OA。</td></tr>
+<tr><td><strong>Run at / Queue / Host / LSF / CPU Number</strong></td><td>选择执行位置与资源。</td><td>LSF 队列和主机必须已经验证；导出 CPU 需求通常低于 DRC/RCE。</td></tr>
+<tr><td><strong>Run+Close / Run / Close</strong></td><td>运行后关闭、运行保留、只关闭。</td><td>独立导出不会复用 LVS/RCE 内部导出目录；结果写入本次运行目录。</td></tr>
+</tbody></table></div>
 <div class="table-wrap"><table><thead><tr><th>工具</th><th>输入与环境</th><th>默认项目输出结构</th></tr></thead><tbody>
 <tr><td>Stream GDS</td><td>OA layout、CDS_LIB、TECH_LAYER_MAP；PATH 中的 strmout</td><td><code>$GDS_DB_DIR/&lt;lib&gt;.&lt;cell&gt;/&lt;cell&gt;.gds</code></td></tr>
 <tr><td>Export CDL</td><td>OA schematic、CDS_LIB；按需 CDL_HEADER_FILE；PATH 中的 si</td><td><code>$CDL_DB_DIR/&lt;lib&gt;.&lt;cell&gt;/&lt;cell&gt;.cdl</code></td></tr>
@@ -71,6 +115,20 @@ cdlout /path/to/run/cdl.toml --generate-only
 cdlout /path/to/run/cdl.toml</code></pre></div>
 <h2 id="netlist-view">Netlist to View</h2>
 <p>菜单 <strong>SiCo → Netlist to View…</strong> 将已有文本网表交给 Cadence <code>cdsTextTo5x</code> 导入目标 view。源文件、目标 OA library 与选定 <code>cds.lib</code> 必须已存在。</p>
+<figure class="figure">
+  <a href="assets/screenshots/netlist-to-view.png" aria-label="查看 Netlist to View 表单原图"><img src="assets/screenshots/netlist-to-view.png" alt="Netlist to View 表单：Netlist File、Format、Destination、cds.lib、Copy source into view 和 Status" loading="lazy"></a>
+  <figcaption><strong>Netlist to View。</strong>示例使用 Spectre 网表和 <code>spectreText</code> 目标 view。<span class="zoom-hint">点击图片查看原始尺寸</span></figcaption>
+</figure>
+<div class="table-wrap"><table><thead><tr><th>页面/控件</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>Netlist File</strong></td><td>选择已有文本网表；选择后会尝试用文件名预填 Cell。</td><td>文件必须可读；文件名与实际顶层 cell 不一致时手动修正。</td></tr>
+<tr><td><strong>Format</strong></td><td><strong>Spectre</strong>、<strong>HSPICE</strong>、<strong>SPICE</strong>、<strong>DSPF</strong>。</td><td>改变格式会同步默认 view 名；不支持的 PSpice 不在列表中。</td></tr>
+<tr><td><strong>Destination</strong> Library / Cell / View</td><td>目标 OA library、cell 与 view 名。</td><td>目标库必须已存在且当前 cds.lib 可解析；默认 view 随格式变化。</td></tr>
+<tr><td><strong>cds.lib</strong></td><td>目标工程的库映射文件。</td><td>GUI 会核对目标库物理位置与当前 Virtuoso 同名库一致。</td></tr>
+<tr><td><strong>Copy source into view</strong></td><td>勾选时复制网表内容；取消勾选时使用链接/引用方式。</td><td>需要独立保存时勾选；原文件会移动或长期保留时不要依赖链接。</td></tr>
+<tr><td><strong>Status</strong></td><td>显示 Ready、Importing、导入完成或错误信息。</td><td>运行中不要关闭窗口；需要中止时使用 Close，它会终止当前导入进程。</td></tr>
+<tr><td><strong>Apply</strong></td><td>启动 <code>nl2view</code> 导入，成功后创建目标 view。</td><td>一次只处理一个文件/目标；批量导入需要逐个提交。</td></tr>
+<tr><td><strong>Close</strong></td><td>关闭表单；有活动导入时先取消该导入。</td><td>关闭不删除已导入的 view。</td></tr>
+</tbody></table></div>
 <div class="table-wrap"><table><thead><tr><th>格式参数</th><th>默认目标 view</th></tr></thead><tbody><tr><td>spectre</td><td>spectreText</td></tr><tr><td>hspice</td><td>hspiceText</td></tr><tr><td>spice</td><td>spiceText</td></tr><tr><td>dspf</td><td>dspfText</td></tr></tbody></table></div>
 <div class="code-block"><div class="code-label">Shell · 文本网表导入</div><pre><code>nl2view --format spectre --library my_design --cell amplifier \
   --cdslib "$CDS_LIB" /path/to/amplifier.scs
@@ -79,10 +137,28 @@ nl2view --format dspf --library my_design --cell amplifier \
 <p>默认复制源网表，避免原文件移动后链接失效；表单也可显式选择 link 模式。PSpice 不在支持格式内。GUI 还会核对目标库物理位置与当前 Virtuoso 的同名库一致。</p>
 <h2 id="dspf">DSPF Analyzer</h2>
 <p>从 <strong>SiCo → DSPF Analyzer…</strong> 或 <code>dspfana /path/to/file.dspf</code> 打开寄生网表，查看网络与寄生数据。首次读取会建立索引；可通过 <code>RCE_DSPF_CACHE_DIR</code> 选择缓存目录，默认使用当前工程状态根下的 <code>rce/dspf</code>。</p>
+<figure class="figure">
+  <a href="assets/screenshots/dspf-analyzer.png" aria-label="查看 DSPF Analyzer 原图"><img src="assets/screenshots/dspf-analyzer.png" alt="DSPF Analyzer：Open/Rebuild/Cancel 工具栏、Nets 列表、Summary 和右侧分析页签" loading="lazy"></a>
+  <figcaption><strong>DSPF Analyzer。</strong>示例读取演示 DSPF 并选中一个网络；首次索引期间会显示进度和状态。<span class="zoom-hint">点击图片查看原始尺寸</span></figcaption>
+</figure>
+<div class="table-wrap"><table><thead><tr><th>页面/控件</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>Open</strong></td><td>选择 DSPF/SPF 文件并建立或读取索引。</td><td>源文件变化后需要重建；不要把索引文件当成源网表继续编辑。</td></tr>
+<tr><td><strong>Rebuild</strong></td><td>强制重新建立当前文件的索引。</td><td>源文件被替换或索引损坏时使用；重建期间取消不会保留半成品。</td></tr>
+<tr><td><strong>Cancel</strong></td><td>取消正在进行的索引。</td><td>取消后保留上一次可用索引，不会删除源文件。</td></tr>
+<tr><td><strong>Use OA Selection</strong></td><td>把当前 Virtuoso OA 选中对象带入分析视图。</td><td>需要有效的布局上下文和 OA 桥接；未连接时保持禁用。</td></tr>
+<tr><td><strong>Highlight in Layout</strong></td><td>在网络右键菜单中把当前网络高亮到版图。</td><td>仅在有 OA 上下文且已选中网络时可用；不会修改版图。</td></tr>
+<tr><td><strong>Nets</strong> 过滤与列表</td><td>按名称筛选网络；列表显示网络及统计字段。</td><td>单击选中网络后，右侧 Summary、R Network、Nodes 等页会同步。</td></tr>
+<tr><td><strong>Summary</strong></td><td>显示节点/电阻/电容数量、总电阻、最大电阻、接地/耦合电容、计算与声明电容差、悬空节点、连通分量和诊断数。</td><td>“Loading...”表示查询仍在后台；不要用尚未完成的值做结论。</td></tr>
+<tr><td><strong>R Network</strong></td><td>绘制选中网络的电阻网络，支持 Labels、Short &lt;= 阈值、Check、缩放和 Fit。</td><td>Short 阈值用于把低阻连接视为短路；改变阈值后重新执行 Check。</td></tr>
+<tr><td><strong>Nodes / Resistors / Capacitors</strong></td><td>分页表格显示当前网络的节点、电阻和电容明细，可用 ◀ / ▶ 翻页。</td><td>先选中网络再看明细；分页状态与网络选择绑定。</td></tr>
+<tr><td><strong>Diagnostics</strong></td><td>列出解析和拓扑诊断。</td><td>摘要中的诊断计数非零时先看这里，再判断网络结果。</td></tr>
+<tr><td><strong>Path</strong> → Start node / End node / <strong>Analyze Path</strong></td><td>查询同一网络内两点之间的电阻路径，结果以 JSON 文本显示。</td><td>输入的是网络内节点名；运行中按钮和输入会锁定，完成后恢复。</td></tr>
+<tr><td>状态栏</td><td>显示索引状态、进度和 Warnings/Errors 计数。</td><td>Warnings 不一定阻断分析；Errors 需要先解决索引或文件格式问题。</td></tr>
+</tbody></table></div>
 <div class="code-block"><div class="code-label">Shell · 无 GUI 的索引与信息查询</div><pre><code>rce dspf-index /path/to/amplifier.dspf --json
 rce dspf-info /path/to/amplifier.dspf --json</code></pre></div>
 
-<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="lsf.html">LSF 配置 →</a></footer>
+<footer class="page-footer"><span>内容基线 ed47e32e · 界面核对 2026-10-24</span><a href="lsf.html">LSF 配置 →</a></footer>
 </main>
 <aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#lef">LEF Generator</a><a href="#gds-cdl">Stream GDS 与 Export CDL</a><a href="#netlist-view">Netlist to View</a><a href="#dspf">DSPF Analyzer</a></aside>
 </div></div>

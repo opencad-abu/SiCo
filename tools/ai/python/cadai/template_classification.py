@@ -15,7 +15,7 @@ CLASSIFICATIONS = TARGET["classifications"]
 def graphic_role(instance):
     """Only observed installed, available symbol masters are builtin graphics."""
     if (not instance.get("master_available")
-            or instance.get("master_view_type") != "schematicSymbol"):
+            or instance.get("master_oa_view_type") != "schematicSymbol"):
         return None
     builtin, cell = instance.get("builtin_library"), instance["cellName"]
     if builtin == "basic":
@@ -39,7 +39,7 @@ def classify(instance, pin_names, evidence=None):
             instance.get("builtin_library") == "analogLib"
             and instance["cellName"] in {"gnd", "vdd"}):
         observed = dict(instance, builtin_library=None)
-    if instance.get("master_view_type") == "schematic":
+    if instance.get("master_oa_view_type") == "schematic":
         observed = dict(observed, schematic_available=True)
     return classify_v1(observed, pin_names, evidence)
 

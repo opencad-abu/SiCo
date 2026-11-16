@@ -9,7 +9,7 @@ from typing import Mapping
 from sicoresources import icon as resource_icon
 
 
-FALLBACK_LOGO = "SiCo"
+FALLBACK_LOGO = "Silicon Copilot"
 _LEGACY_LOGO_VALUES = ("OCAD",)
 
 
@@ -18,7 +18,7 @@ def logo_text(environ: Mapping[str, str] | None = None) -> str:
 
     ``LOGO`` wins over ``COMPANY``.  Unset values, empty strings, and the
     legacy ``OCAD`` placeholder are ignored, so an unconfigured environment
-    reads ``SiCo``.  This mirrors the SKILL ``SICO_logo`` resolution used by
+    reads ``Silicon Copilot``.  This mirrors the SKILL ``SICO_logo`` resolution used by
     the menu and form banners.
     """
 

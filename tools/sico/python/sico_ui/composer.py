@@ -67,6 +67,7 @@ class QuickComposer(SiDialog):
         self.status.setWordWrap(True)
         layout.addWidget(self.status)
         buttons = QHBoxLayout()
+        buttons.setContentsMargins(0, 0, 0, 8)
         buttons.addStretch()
         self.cancel = QPushButton("取消")
         self.submit_button = QPushButton("发送")
@@ -79,9 +80,11 @@ class QuickComposer(SiDialog):
         self.submit_button.clicked.connect(self.submit)
         self.cancel.clicked.connect(self.reject)
         self.input.submitted.connect(self.submit)
-        if object_request is not None and isinstance(initial.get("context"), dict):
+        context = initial.get("context")
+        if object_request is not None:
             self._ask_window = AskObjectWindow(
-                self, self.input, initial["context"], object_request
+                self, self.input, context if isinstance(context, dict) else {},
+                object_request,
             )
             self.object_mentions = ObjectMentionController(self._ask_window)
             self._ask_window.object_mentions = self.object_mentions

@@ -1,0 +1,84 @@
+{
+  "actions": {
+    "catalog": {
+      "capability": "calibre.drc",
+      "request": {
+        "fields": ["runset_path", "offset", "limit"],
+        "required": ["runset_path"]
+      },
+      "response": {
+        "schema": "calibre.drc.catalog.v1"
+      }
+    },
+    "check": {
+      "capability": "calibre.drc",
+      "request": {
+        "fields": ["run_ref", "config_path", "work_root", "candidate_path", "bbox"],
+        "required": ["run_ref", "config_path", "work_root", "candidate_path"]
+      },
+      "response": {
+        "schema": "calibre.drc.check.v1"
+      }
+    },
+    "probe": {
+      "capability": "calibre.drc",
+      "request": {
+        "fields": ["tool_root"],
+        "required": ["tool_root"]
+      },
+      "response": {
+        "schema": "calibre.drc.probe.v1"
+      }
+    },
+    "result": {
+      "capability": "calibre.drc",
+      "request": {
+        "fields": ["run_ref", "offset", "limit"],
+        "required": ["run_ref"]
+      },
+      "response": {
+        "schema": "calibre.drc.result.v1"
+      }
+    },
+    "status": {
+      "capability": "calibre.drc",
+      "request": {
+        "fields": ["run_ref"],
+        "required": ["run_ref"]
+      },
+      "response": {
+        "schema": "calibre.drc.status.v1"
+      }
+    },
+    "submit": {
+      "capability": "calibre.drc",
+      "request": {
+        "fields": ["run_ref", "config_path", "work_root"],
+        "required": ["run_ref", "config_path", "work_root"]
+      },
+      "response": {
+        "schema": "calibre.drc.submit.v1"
+      }
+    }
+  },
+  "errors": [
+    "invalid_arguments",
+    "unsupported_contract",
+    "version_mismatch",
+    "capability_not_available",
+    "stale_context",
+    "read_failed",
+    "source_not_captured",
+    "result_too_large",
+    "timeout",
+    "cancelled",
+    "internal"
+  ],
+  "limits": {
+    "max_bytes": 55000,
+    "max_items": 200,
+    "max_text": 4096
+  },
+  "name": "sico.calibre.drc.v1",
+  "version": 1
+}

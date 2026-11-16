@@ -50,7 +50,7 @@ def audit(config_path):
             'remaining_failures':[c['id'] for c in summary['cases'] if c['diagnostic_status']!='PASS']})
     request={'kind':'public-transition-evidence-audit','config_sha256':sha256_file(config_path),'auditor_sha256':sha256_file(Path(__file__)),'inputs':rows}
     digest=stable_digest(request)
-    run=allocate_split_run(resolve_launch_paths(),Path('/path/to/xh/amsVerify/data/ams').resolve(),library='aivw',cell='transition_checkpoint',view='evidence',kind='transition-audit',request_digest=digest)
+    run=allocate_split_run(resolve_launch_paths(),Path('/workarea/xh/amsVerify/data/ams').resolve(),library='aivw',cell='transition_checkpoint',view='evidence',kind='transition-audit',request_digest=digest)
     summary={'status':'PASS_EVIDENCE_AUDIT','qualification':'NOT_ESTABLISHED','holdout_evaluated':False,'inputs':rows}
     write_json_once(run.control_root/'request.json',request);write_json_once(run.payload_root/'summary.json',summary)
     publish_split_manifests(run,request_digest=digest,status=summary['status'],control_details={'payload_root':str(run.payload_root)},

@@ -219,12 +219,12 @@ class CircuitClient(ProjectReadClient):
             or len(expected) != 7
         ):
             raise PreflightRequired(description.get("message") or "Native operation binding unavailable")
-        task, mode, target, view_type, _, library_path, run_dir = expected
+        task, mode, target, oa_view_type, _, library_path, run_dir = expected
         requirements = deepcopy(self.requirements)
         required_target = dict(zip(("library", "cell", "view"), target))
         required_target.update(
             intent=description.get("target_intent", "read" if operation == "run_simulation_setup" else "create"),
-            view_type=view_type
+            oa_view_type=oa_view_type
         )
         missing = []
         if mode != requirements["presentation"] or required_target not in requirements["targets"]:

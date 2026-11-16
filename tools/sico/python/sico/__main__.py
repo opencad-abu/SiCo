@@ -1,4 +1,4 @@
-"""Development entrypoint; run with SICO_PYTHON -m sico."""
+"""Development entrypoint; run with $SICO_HOME/runtime/python/bin/python3 -m sico."""
 
 from __future__ import annotations
 

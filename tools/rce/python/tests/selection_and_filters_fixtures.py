@@ -16,6 +16,7 @@ def _config(
     *,
     selection: dict[str, object] | None = None,
     filters: dict[str, object] | None = None,
+    extract: dict[str, object] | None = None,
     legacy: dict[str, object] | None = None,
 ) -> RceConfig:
     tech_dir = tmp_path / "tech"
@@ -46,6 +47,7 @@ def _config(
             "output_type": "dspf",
             "top_cell_source": "layout",
             "name_source": "schematic",
+            **(extract or {}),
         },
         "runtime": {"lvs_cpus": "1", "ext_cpus": "1"},
         "netlist": {},

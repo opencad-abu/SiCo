@@ -39,7 +39,7 @@ def main():
                "audit_module_sha256": sha256_file(Path(__file__).resolve().parents[1]/"python/aivworkbench/qualification/dynamic_admission.py")}
     digest = stable_digest(request)
     target = summary["candidate"]["target"]
-    run = allocate_split_run(resolve_launch_paths(), Path("/path/to/xh/amsVerify/data/ams").resolve(),
+    run = allocate_split_run(resolve_launch_paths(), Path("/workarea/xh/amsVerify/data/ams").resolve(),
         library=target["library"], cell=target["cell"], view="dynamic_admission",
         kind="dynamic-admission-audit", request_digest=digest)
     write_json_once(run.control_root/"request.json", request)

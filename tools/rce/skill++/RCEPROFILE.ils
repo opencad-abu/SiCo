@@ -107,6 +107,7 @@ procedure(rceProfileCollect(form)
       list("input.cdl_include_enable" and(form~>cdlIncludeBtn~>value t))
       list("lvs.virtual_connect_enable" and(car(values) t))
       list("lvs.virtual_connect_name_enable" and(cadr(values) t))
+      list("lvs.svdb_query" lvsSvdbQueryFromForm(form))
       list("extract.output_type" or(form~>outType~>value "dspf"))
       list("extract.corners" SICO_profileStringList(rceSelectedProcessCorners(form)))
       list("extract.corner_temperatures"
@@ -174,6 +175,8 @@ procedure(rceProfileRestoreCorners(form corners temperatures scope)
 procedure(rceProfileViewKindLabel(value)
   case(lowerCase(or(value ""))
     ("smart" || "smart_view" || "smartview" "Smart View")
+    ("idspf" || "interactive_dspf" || "interactive dspf (idspf)"
+      "Interactive DSPF (iDSPF)")
     ("extracted" || "extracted_view" || "extview" "Extracted View")
     ("calibre" || "calibre_view" || "calibreview" "Calibre View")
     ("oa" || "oa_view" || "openaccess" || "openaccess_parasitic"
@@ -185,6 +188,7 @@ procedure(rceProfileViewKindLabel(value)
 procedure(rceProfileOutputViewKind(outputType configuredKind)
   case(lowerCase(or(outputType ""))
     ("smartview" "Smart View")
+    ("idspf" "Interactive DSPF (iDSPF)")
     ("extview" "Extracted View")
     ("calibreview" "Calibre View")
     ("starrcview" "OpenAccess Parasitic View")
@@ -220,7 +224,7 @@ procedure(rceProfileSetChoice(field value)
     unless(choice
       normalized=lowerCase(or(value ""))
       when(and(member(normalized
-                      '("extview" "smartview" "calibreview" "starrcview"))
+                      '("extview" "smartview" "idspf" "calibreview" "starrcview"))
                member("view" choices))
         choice="view"))
     when(choice
@@ -275,8 +279,8 @@ procedure(rceProfileApply(form data)
     savedCreateView=SICO_profileDataValue(data "netlist.create_view" nil)
     savedStartRve=SICO_profileDataValue(data "extract.start_rve" nil)
     savedViewKind=rceProfileOutputViewKind(outputType
-      SICO_profileDataValue(data "extract.view.kind" "Smart View"))
-    savedViewName=SICO_profileDataValue(data "extract.view.name" "av_extracted")
+      SICO_profileDataValue(data "extract.view.kind" "Interactive DSPF (iDSPF)"))
+    savedViewName=SICO_profileDataValue(data "extract.view.name" "idspf")
     savedViewLibrary=SICO_profileDataValue(data "extract.view.library" "")
     savedViewCell=SICO_profileDataValue(data "extract.view.cell" "")
     cornerScope=SICO_profileDataValue(data "extract.corner_scope" "Single Corner")
@@ -313,6 +317,8 @@ procedure(rceProfileApply(form data)
       data "lvs.virtual_connect_name_enable" t)
     form~>lvsVirtualConn~>value=list(virtualConnect nameConnect)
     rceLvsVirtualConnCB(form)
+    SICO_profileSetFormValue(
+      form 'svdbQuery lvsSvdbQueryFlags(data '("CCI")))
     cadCustomSvrfCB(form)
 
     unless(RCE_setExtToolName(form
@@ -399,7 +405,7 @@ procedure(rceProfileApply(form data)
 )
 
 procedure(rceProfileRevision()
-  "20261019.floating.net.include.all.v1"
+  "20261103.svdb.query.v1"
 )
 
 SICO_profileRegisterAdapter("RCE" 'rceProfileCollect 'rceProfileApply)

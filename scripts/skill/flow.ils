@@ -6,8 +6,8 @@ let((entryDirectory)
   load(strcat(entryDirectory "/../sicoSkillLoader.ils"))
   load(strcat(entryDirectory "/../../tools/common/skill++/LSF.ils"))
   load(strcat(entryDirectory "/common_gui.ils"))
-  SICO_sourceRequire("flow" "7f64835ffc90727a29edcc249edd2749e9800e70e492a8578c0d575340b987c0" '(
-    ("tools/common/skill" "SICO_profile.il" "8248a31608d009d0a7fbbc0e5b0404fcb3426ac905fe79b87f4a7aa8823084b5"
+  SICO_sourceRequire("flow" "496a2b1a7271bf862823d45ec7c470c79f484b04d8289d0f69ab722ed865f5bb" '(
+    ("tools/common/skill" "SICO_profile.il" "54ddfc943e5a9283ad710d2a0fc92d32c91408e2b800284410ac333594869136"
       (SICO_profileFlowKey SICO_profileRegisterAdapter SICO_profileAdapter SICO_profileDataValue
        SICO_profileFormValue SICO_profileSetFormValue SICO_profilePathValue SICO_profileCollectFields
        SICO_profileApplyFields SICO_profileSetLoadData SICO_profileDefaultPath SICO_profilePythonExe
@@ -21,11 +21,13 @@ let((entryDirectory)
        SICO_profileRevision)
       ((SICO_profileRevision "20261022.profile.environment.v6"))
       (sicoProfileVersion)
+      ()
       ())
     ("tools/common/skill" "SICO_envOptions.il" "3e6be1bb82da6e513d6ad6e0a0904621b3944beba14aca8eb8100cc3d18a68e4"
       (SICO_parseEnvPairs SICO_envPairNames SICO_envPairValue SICO_envOptionsRevision)
       ((SICO_envOptionsRevision "20260924.flow.environment.v2"))
       (sicoEnvOptionsVersion)
+      ()
       ())
     ("tools/common/skill" "SICO_batchAdapter.il" "ac1764cffc06b1259bcf761b69a56d9e64540cc114d7faafd96950f612e5705b"
       (cadBatchFlowKey cadBatchRegisterFlowAdapter cadBatchFlowAdapter cadBatchAdapterCallback
@@ -33,6 +35,7 @@ let((entryDirectory)
        cadBatchAdapterOpenResult cadBatchAdapterPythonExe cadBatchAdapterRevision)
       ((cadBatchAdapterRevision "20260812.common.v1"))
       (cadBatchAdapterVersion)
+      ()
       ())
     ("tools/common/skill" "SICO_batchGui.il" "2936bed6bb24bd743d33cf4a1bce935dd75ff56fcaba49c631bf9272e04ab1f4"
       (cadBatchPairedFlowP cadBatchMessage cadBatchCreateLcvEditor cadBatchCreateSyncButtons
@@ -41,6 +44,7 @@ let((entryDirectory)
        cadBatchGuiSharedRevision)
       ((cadBatchGuiSharedRevision "20260812.common.v1"))
       (cadBatchGuiVersion)
+      ()
       ())
     ("tools/common/skill" "SICO_batchRows.il" "83b4c64e1dc5179c541f37d47c1ab5d04dabb577cc8836869e5cb2e5d51c2035"
       (cadBatchFieldValue cadBatchCopyLcvCB cadBatchEditorValues cadBatchSetEditorValues
@@ -51,57 +55,66 @@ let((entryDirectory)
        cadBatchValidateTasks cadBatchRowsRevision)
       ((cadBatchRowsRevision "20260812.common.v1"))
       (cadBatchRowsVersion)
+      ()
       ())
-    ("tools/common/skill" "SICO_batchCore.il" "70f3575326a75d3463a6620ba5de2f1046fba29ca17f40ea2d2b89a4299dbc0b"
+    ("tools/common/skill" "SICO_batchCore.il" "a9c5ce63f8cebe7877fd384b03e9732ab40ee45cefbcf21b4aaa0f45003e1ac8"
       (cadBatchDispatchStart cadBatchSafeToken cadBatchNewId cadBatchCreateRoot cadBatchMakeSpec
        cadBatchSpecSet cadBatchTaskId cadBatchJobName cadBatchPythonExe cadBatchPythonEntry
        cadBatchControllerCommand cadBatchWriteManifest cadBatchBuildMeta cadBatchSpecById
        cadBatchSpecsIndependentP cadBatchLaunch cadBatchCancel cadBatchIpcDataHandler
        cadBatchIpcErrHandler cadBatchIpcPostFunc cadBatchCoreRevision)
-      ((cadBatchCoreRevision "20261020.batch.commands.v4"))
+      ((cadBatchCoreRevision "20261024.batch.commands.v5"))
       (sicoBatchCoreVersion)
+      ()
       ())
-    ("tools/common/skill" "SICO_batchMonitor.il" "84c5583d6294ebbb07c6cc489f319ffdeeb14f82e627214fae7f8012b2476add"
+    ("tools/common/skill" "SICO_batchMonitor.il" "fa8de019ae9b78e80f9b10e0057834eb664b1205ae9a53d8820c39d46a939b48"
       (cadBatchMonitorFormValidP cadBatchMonitorDropStaleForm cadBatchMonitorReadRows
        cadBatchMonitorInitialRows cadBatchMonitorChoices cadBatchMonitorSummary
        cadBatchMonitorSelectedRow cadBatchMonitorSelectedSpec cadBatchMonitorOpenResultCB
        cadBatchMonitorOpenLogCB cadBatchMonitorCancelCB cadBatchMonitorRefreshCB cadBatchMonitorRefresh
        cadBatchMonitorTimer cadBatchMonitorDisplay cadBatchMonitorRevision cadBatchMonitorAuditRevision)
-      ((cadBatchMonitorRevision "20260902.form.lifecycle.v1") (cadBatchMonitorAuditRevision
-       "20260911.flow.audit.v1"))
+      ((cadBatchMonitorRevision "20261024.form.lifecycle.v2") (cadBatchMonitorAuditRevision
+       "20261024.flow.audit.v2"))
       (sicoBatchMonitorAuditVersion)
+      ()
       ())
     ("tools/common/skill++" "BATCHGUI.ils" "03469891ea04c332e533749c19e386d297f3a65d4f6c17700a7f79074b1438ef"
       (makeBatchControls makeBatchParallelCells cadBatchGuiRevision)
       ((cadBatchGuiRevision "20260812.common.v1"))
       ()
-      (BATCHGUI))
+      (BATCHGUI)
+      (makeBatchControls makeBatchParallelCells))
     ("tools/common/skill++" "PROFILEGUI.ils" "52ca0cd1b7a1e7ecb7967b59727bfe6f025b4edbdcf5008f20d702436479a26d"
       (makeProfileControls SICO_profileGuiRevision)
       ((SICO_profileGuiRevision "20260818.profile.gui.v2"))
       ()
-      (PROFILEGUI))
-    ("tools/utility/skill" "UI_messageApp.il" "c18059abe7eea9a1732e5191f5152e790c89a16c95af353407c6cfa32698fe0d"
+      (PROFILEGUI)
+      (makeProfileControls))
+    ("tools/utility/skill" "UI_messageApp.il" "05e485cc50d41adb89e9601cff06ed635e38c0a84dfc20060a7b98e072aa916a"
       (GUI_messageApp)
       ()
       (sicoGuiMessageAppVersion)
+      ()
       ())
-    ("tools/utility/skill" "UI_askApp.il" "da2f0fadc7134c1080c1928444d3a694fff27621be6f0dfc29ad68bf5e03c814"
+    ("tools/utility/skill" "UI_askApp.il" "4966b5203726401f46b339ce43ca397de637827642c3d019928c60f9d603155d"
       (GUI_askApp)
       ()
       (sicoGuiAskAppVersion)
+      ()
       ())
-    ("tools/utility/skill" "UI_windowIcon.il" "aa994884e43c073f2106d8764b0c5535453bf359a62623a17fdbe15b0204345f"
+    ("tools/utility/skill" "UI_windowIcon.il" "bb5dc30b48cd1b7e162df6375b8052260aa8930b0b44bfa07f7ce6714eef6c45"
       (SICO_windowIconRevision SICO_windowIconBrand SICO_windowIconPath SICO_windowIcon
        SICO_setWindowIcon)
-      ((SICO_windowIconRevision "20260921.sico.flow.icon.v1"))
+      ((SICO_windowIconRevision "20261024.sico.flow.icon.v2"))
       (sicoWindowIconVersion)
+      ()
       ())
-    ("tools/utility/skill" "UI_flowLog.il" "fa1227aac8aafcba39e675306b8ba22ec34140fbf9939b1687c3422650bcc65c"
+    ("tools/utility/skill" "UI_flowLog.il" "a4462b093f44066d21c29428a0204e6f83d328bd1bd2fd70875b6194d66242df"
       (GUI_flowLogBrand GUI_flowLogWindowClosed GUI_flowLogCreate GUI_flowLogOpenRequest GUI_flowLogOpen
        GUI_flowLogShow GUI_flowLogClose GUI_flowLogRevision)
-      ((GUI_flowLogRevision "20260721.flow.log.owned.v2"))
+      ((GUI_flowLogRevision "20261024.flow.log.owned.v3"))
       (sicoFlowLogVersion)
+      ()
       ())
   ))
 )

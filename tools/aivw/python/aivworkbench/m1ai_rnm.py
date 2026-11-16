@@ -109,7 +109,7 @@ def _xrun_version(xrun: str, work: Path) -> str:
 
 def _run_checker(check_script: Path, source: Path, spec: Path) -> dict[str, Any]:
     command = (
-        production_python(require_environment=True),
+        production_python(),
         str(check_script),
         str(source),
         "--spec",

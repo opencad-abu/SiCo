@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SiCo 使用手册：连接后的客户端主界面、左侧导航、右侧工作台、详情与设置页面。">
+<title>SiCo 工作区页面 · SiCo 使用手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b4543a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='sans-serif' font-size='24' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/manual.css">
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
+  <span class="edition">使用手册 / 2026.10</span>
+  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+</header>
+<noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="手册目录">
+<p class="rail-label">SICO DOCUMENTATION</p>
+<a href="index.html">开始阅读</a>
+<p class="nav-group">开始使用</p>
+<a href="sico-gui.html">SiCo · 客户端界面</a>
+<a href="sico-workspace.html" aria-current="page">SiCo · 工作区页面</a>
+<a href="installation.html">01 · 安装</a>
+<a href="environment.html">02 · 环境变量</a>
+<a href="virtuoso.html">03 · Virtuoso 集成</a>
+<a href="flows.html">04 · CAD flows</a>
+<p class="nav-group">流程指南</p>
+<a href="drc.html">DRC · 规则检查</a>
+<a href="lvs.html">LVS · 连接检查</a>
+<a href="rce.html">RCE · 寄生提取</a>
+<a href="mts.html">MTS · 多工艺网表</a>
+<a href="utilities.html">LEF / GDS / CDL</a>
+<a href="lsf.html">LSF · 运行与资源</a>
+<p class="nav-group">参考附录</p>
+<a href="appendix-pdk-data-standard.html">PDK 数据标准</a>
+<a href="appendix-circuit-template-standard.html">电路模板标准</a>
+<a href="appendix-symbol-template-standard.html">Symbol 模板标准</a>
+<a href="environment-internal.html">环境接口附录</a>
+<div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
+</nav>
+<div class="reading">
+<main id="main">
+<p class="eyebrow">SICO / CONNECTED WORKSPACE</p>
+<h1>连接之后：主界面与全部工作区页面。</h1>
+<p class="lead">这是日常使用 SiCo 的主界面。左侧选会话和任务，中间对话，右侧审阅、汇报、数据、进程和终端，底部输入新任务。本页覆盖每一个核心子页面及可见按钮。</p>
+<div class="meta"><span class="tag">已连接 CDNS-IC</span><span class="tag">10 个工作区子页面</span><span class="tag">界面核对 · 2026.10.24</span></div>
+
+<figure class="figure">
+  <a href="assets/screenshots/sico-connected.png" aria-label="查看连接后的 SiCo 主界面原图"><img src="assets/screenshots/sico-connected.png" alt="连接后的 SiCo 主界面：左侧导航、中间对话、右侧审阅和底部任务输入" loading="lazy"></a>
+  <figcaption><strong>连接后的 SiCo 主界面。</strong>示例已连接 CDNS-IC 并绑定 <code>adc_top/adc_8bit/layout</code>；会话、任务、审阅、汇报、进程和终端均为演示数据。<span class="zoom-hint">点击图片查看原始尺寸</span></figcaption>
+</figure>
+
+<h2 id="connection">怎样确认已经连接</h2>
+<div class="table-wrap"><table><thead><tr><th>位置</th><th>连接后的表现</th><th>说明</th></tr></thead><tbody>
+<tr><td>对话顶部目标行</td><td>显示当前目标，例如 <code>adc_top / adc_8bit / layout</code></td><td>目标来自当前绑定的 Virtuoso，不是手填文本；提交前核对。</td></tr>
+<tr><td>底部状态行</td><td>显示 CDNS-IC、实例、主机与当前模型</td><td>状态文字为连接和运行的最终读回；不要只看表单默认值。</td></tr>
+<tr><td>左侧会话行</td><td>显示会话名称、状态圆点和活动状态</td><td>当前会话与历史记录分区显示；历史行在未继续前是只读的。</td></tr>
+<tr><td>窗口绑定页</td><td>列出已绑定目标及“当前 / 默认”状态</td><td>没有绑定目标时先连接或选择 CDNS-IC，再提交设计任务。</td></tr>
+<tr><td>发送按钮</td><td>取得写控制权后可用</td><td>另一个窗口持有控制权时，本窗口只读并显示原因。</td></tr>
+<tr><td>服务菜单</td><td>出现重试、停止等入口</td><td>普通关闭窗口是挂起；结束服务才停止后台会话和作业。</td></tr>
+</tbody></table></div>
+
+<div class="ui-map" aria-label="主界面四个区域">
+  <div><b>左侧 / 导航</b>会话历史、任务队列、窗口绑定、后台检查。</div>
+  <div><b>中间 / 工作区</b>“对话”与“详情”两个中心页面。</div>
+  <div><b>右侧 / 中心</b>审阅、汇报、数据、进程、终端五个工作台页面。</div>
+  <div><b>底部 / 输入</b>附件、执行权限、模型、推理强度、目标、回合设置、发送与停止。</div>
+</div>
+
+<h2 id="nav">左侧导航的四个子页面</h2>
+<p>左侧面板可收成窄条；双击面板分割条或点击窄条上的三角可以展开。页签下方的行支持单击选中、双击/回车浏览，以及右键菜单操作。</p>
+<div class="screenshot-pair">
+  <figure class="figure portrait">
+    <a href="assets/screenshots/sico-nav-history.png" aria-label="查看会话历史原图"><img src="assets/screenshots/sico-nav-history.png" alt="SiCo 会话历史页：当前会话与历史记录" loading="lazy"></a>
+    <figcaption><strong>会话历史。</strong>上方当前会话，下方未打开记录。</figcaption>
+  </figure>
+  <figure class="figure portrait">
+    <a href="assets/screenshots/sico-nav-tasks.png" aria-label="查看任务队列原图"><img src="assets/screenshots/sico-nav-tasks.png" alt="SiCo 任务队列页：任务、状态和来源设计" loading="lazy"></a>
+    <figcaption><strong>任务队列。</strong>显示运行中、已完成和排队任务。</figcaption>
+  </figure>
+</div>
+<h3 id="nav-history">会话历史</h3>
+<div class="table-wrap"><table><thead><tr><th>控件/操作</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>会话历史</strong>页签</td><td>同时显示本窗口已打开的会话和未打开的历史会话。</td><td>单击只选中；双击或回车才浏览；浏览历史不会改变当前任务的写控制权。</td></tr>
+<tr><td>上方“当前会话”树</td><td>列出已打开会话及其活动/空闲/待核对状态。</td><td>状态圆点颜色与任务活动相关；切换会话前确认是否有运行中任务。</td></tr>
+<tr><td>下方“历史记录”树</td><td>列出未在当前窗口打开的会话记录。</td><td>双击打开会建立只读浏览；需要继续会话时使用“继续”或相应入口。</td></tr>
+<tr><td>行右键菜单</td><td>根据状态提供继续、重命名、删除、新建标签、移动到标签、删除标签等操作。</td><td>运行中的活动会话不能直接重命名或删除；先停止任务。</td></tr>
+<tr><td><strong>返回当前会话</strong></td><td>会话菜单或快捷键返回正在执行的会话。</td><td>在历史浏览中只读查看后使用，不会重新提交任务。</td></tr>
+<tr><td>标签分组</td><td>可新建标签并把会话拖入标签；标签名和顺序保存在工作区布局中。</td><td>标签只组织历史，不改变会话内容或项目绑定。</td></tr>
+</tbody></table></div>
+
+<h3 id="nav-tasks">任务队列</h3>
+<div class="table-wrap"><table><thead><tr><th>控件/操作</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>任务队列</strong>页签</td><td>展示当前会话的任务树或扁平任务行，包含状态和来源设计。</td><td>忙碌时发送的新输入进入待办队列，不会覆盖当前任务。</td></tr>
+<tr><td>任务行</td><td>显示任务标题、状态和来源设计；行可展开查看阶段/执行。</td><td>单击/回车打开详情；不要把“已完成”当作验收通过，仍要看结果与审阅。</td></tr>
+<tr><td>右键菜单</td><td>可取消排队请求、筛选任务…、清除筛选。</td><td>只有仍在队列中的请求可直接取消；已经开始的任务用输入区的停止按钮。</td></tr>
+<tr><td>筛选</td><td>按任务文本过滤当前显示，不改变会话状态。</td><td>清除筛选后核对完整队列。</td></tr>
+</tbody></table></div>
+
+<div class="screenshot-pair">
+  <figure class="figure portrait">
+    <a href="assets/screenshots/sico-nav-bindings.png" aria-label="查看窗口绑定原图"><img src="assets/screenshots/sico-nav-bindings.png" alt="SiCo 窗口绑定页：绑定目标、默认目标、释放和自动绑定策略" loading="lazy"></a>
+    <figcaption><strong>窗口绑定。</strong>选择默认目标并管理已绑定窗口。</figcaption>
+  </figure>
+  <figure class="figure portrait">
+    <a href="assets/screenshots/sico-nav-background.png" aria-label="查看后台检查原图"><img src="assets/screenshots/sico-nav-background.png" alt="SiCo 后台检查页：当前设计、提交检查、任务列表和校验结果" loading="lazy"></a>
+    <figcaption><strong>后台检查。</strong>在独立 Virtuoso 中检查已保存设计。</figcaption>
+  </figure>
+</div>
+<h3 id="nav-bindings">窗口绑定</h3>
+<div class="table-wrap"><table><thead><tr><th>控件/按钮</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>绑定目标</strong>树</td><td>列出当前会话可用的 Virtuoso 目标、资源预留和状态。</td><td>“当前 / 默认”是任务提交时使用的目标；其它目标是可选绑定。</td></tr>
+<tr><td><strong>设为默认</strong></td><td>把选中目标设为当前默认并提交绑定决定。</td><td>切换默认目标会改变后续任务上下文；正在运行的任务不一定自动迁移。</td></tr>
+<tr><td><strong>释放绑定</strong></td><td>释放选中目标或资源预留。</td><td>不会关闭 Virtuoso，只解除 SiCo 的使用关系。</td></tr>
+<tr><td><strong>操作回执</strong>下拉 + 核对按钮</td><td>列出待核对/未知/执行中的请求；按钮核对原请求回执。</td><td>结果未知时先核对，不要重放写入或换目标重试。</td></tr>
+<tr><td><strong>超时自动绑定工作流新窗口</strong></td><td>允许在指定秒数后自动绑定新出现的工作流窗口。</td><td>只在站点工作流明确需要时开启；秒数决定等待窗口。</td></tr>
+<tr><td>绑定提案区</td><td>显示“加入绑定并切换默认目标？”及剩余时间。</td><td>这是需要答复的绑定决定；不要忽略倒计时。</td></tr>
+</tbody></table></div>
+
+<h3 id="nav-background">后台检查</h3>
+<div class="table-wrap"><table><thead><tr><th>控件/按钮</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td>当前设计行</td><td>显示本次检查使用的 library / cell / view。</td><td>只检查已保存设计；前台未保存修改不在结果中。</td></tr>
+<tr><td><strong>后台检查当前原理图</strong></td><td>提交独立 Virtuoso 的只读检查任务。</td><td>需要原理图 view 和可用的后台资源；不会占用前台对话。</td></tr>
+<tr><td><strong>取消所选任务</strong></td><td>取消选中的排队或运行中后台任务。</td><td>只对可控制的任务启用；已结束任务保持记录。</td></tr>
+<tr><td><strong>查看校验结果</strong></td><td>读取已完成任务并显示经校验的 JSON 结果。</td><td>结果失败或校验不一致时不会打开为已保存设计结论。</td></tr>
+<tr><td>任务表</td><td>列出设计、状态和提交时间。</td><td>状态包括已接收、排队、检查中、已完成、超时、结果未确认等。</td></tr>
+<tr><td>结果区</td><td>显示实例、网络、警告等校验数据。</td><td>读取结果前确认当前选择仍是目标任务。</td></tr>
+</tbody></table></div>
+
+<h2 id="centers">右侧工作台的五个子页面</h2>
+<p>审阅、汇报、数据、进程、终端共享顶部的工程任务/阶段/执行筛选行。筛选只影响显示和查询，不改变已有会话或设计。</p>
+<div class="screenshot-pair">
+  <figure class="figure">
+    <a href="assets/screenshots/sico-center-audit.png" aria-label="查看审阅页原图"><img src="assets/screenshots/sico-center-audit.png" alt="SiCo 审阅页：审阅事项、详情、问题和提交答复" loading="lazy"></a>
+    <figcaption><strong>审阅。</strong>待答复事项、命令详情和提交答复。</figcaption>
+  </figure>
+  <figure class="figure">
+    <a href="assets/screenshots/sico-center-reports.png" aria-label="查看汇报页原图"><img src="assets/screenshots/sico-center-reports.png" alt="SiCo 汇报页：搜索、来源筛选、时间、标题、状态和分页" loading="lazy"></a>
+    <figcaption><strong>汇报。</strong>报告列表、来源筛选和打开详情。</figcaption>
+  </figure>
+</div>
+<h3 id="center-audit">审阅</h3>
+<div class="table-wrap"><table><thead><tr><th>控件/按钮</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td>审阅记录列表</td><td>按时间显示审阅事项、来源设计和状态；待答复事项使用强调色。</td><td>逐条答复；不要只看对话中的摘要。</td></tr>
+<tr><td>详情区</td><td>显示工具请求、命令、依据、建议和问题描述。</td><td>关注“命令/参数/目标”和影响范围，而不是只选推荐项。</td></tr>
+<tr><td>问题选项与补充输入</td><td>每个问题有单选选项和文本框；Enter 提交，Shift+Enter 换行。</td><td>推荐项是宿主建议，不一定是你要的答案；必要时填写补充说明。</td></tr>
+<tr><td><strong>提交答复</strong></td><td>把选择/文本提交给等待中的任务。</td><td>提交后回执可能延迟；不要重复提交同一请求。</td></tr>
+<tr><td>只读历史审阅</td><td>浏览历史会话时显示只读标记，答复表单不提交。</td><td>需要答复时先“继续”回到当前会话。</td></tr>
+</tbody></table></div>
+
+<h3 id="center-reports">汇报</h3>
+<div class="table-wrap"><table><thead><tr><th>控件/按钮</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td>搜索报告</td><td>按标题/内容关键字过滤当前汇报页。</td><td>清空搜索后重新核对总数。</td></tr>
+<tr><td>全部来源</td><td>按数据来源过滤汇报记录。</td><td>来源筛选与搜索可以叠加。</td></tr>
+<tr><td>报告表</td><td>列时间、报告标题和状态；点击表头排序。</td><td>状态不是质量结论，打开详情确认实际产物。</td></tr>
+<tr><td>上一页 / 下一页</td><td>分页加载汇报记录；显示当前范围和总数。</td><td>页码切换会重新查询，不要连续快速点击。</td></tr>
+<tr><td>打开详情按钮</td><td>打开选中汇报的完整内容。</td><td>在“详情”页查看字段、Markdown、图片和输出。</td></tr>
+</tbody></table></div>
+
+<div class="screenshot-pair">
+  <figure class="figure">
+    <a href="assets/screenshots/sico-center-data.png" aria-label="查看数据页原图"><img src="assets/screenshots/sico-center-data.png" alt="SiCo 数据页：搜索、类别、来源、记录和分页" loading="lazy"></a>
+    <figcaption><strong>数据。</strong>结构化数据条目、类别和来源。</figcaption>
+  </figure>
+  <figure class="figure">
+    <a href="assets/screenshots/sico-center-processes.png" aria-label="查看进程页原图"><img src="assets/screenshots/sico-center-processes.png" alt="SiCo 进程页：进程名称、PID、状态和分页" loading="lazy"></a>
+    <figcaption><strong>进程。</strong>SiCo 启动的进程、PID 和当前状态。</figcaption>
+  </figure>
+</div>
+<h3 id="center-data">数据</h3>
+<div class="table-wrap"><table><thead><tr><th>控件/按钮</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td>搜索数据</td><td>按名称/内容关键字过滤数据条目。</td><td>清空搜索后再判断数据是否缺失。</td></tr>
+<tr><td>类别下拉</td><td>全部数据或具体数据类别。</td><td>类别来自当前数据契约，不是文件扩展名。</td></tr>
+<tr><td>全部来源</td><td>按工具/服务来源过滤。</td><td>结合类别和搜索缩小范围。</td></tr>
+<tr><td>数据表</td><td>显示时间、数据标题和状态；可排序。</td><td>选中后打开详情；可校验状态会明确显示。</td></tr>
+<tr><td>分页与打开详情</td><td>翻页加载记录，用打开按钮查看完整字段。</td><td>数据读取失败时保留原列表，不自动把失败当空结果。</td></tr>
+</tbody></table></div>
+
+<h3 id="center-processes">进程</h3>
+<div class="table-wrap"><table><thead><tr><th>控件/按钮</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td>搜索进程</td><td>按名称/命令过滤 SiCo 启动的进程。</td><td>只读列表，不直接结束系统进程。</td></tr>
+<tr><td>进程表</td><td>显示名称、PID（或“—”）、状态标签。</td><td>PID 缺失表示无法确认系统身份，不代表进程不存在。</td></tr>
+<tr><td>上一页 / 下一页</td><td>分页加载最多 200 条记录。</td><td>摘要显示运行中数量和总数。</td></tr>
+<tr><td>打开进程详情</td><td>进入“详情”查看命令、运行时长、日志和相关产物。</td><td>排查前先记录进程名称与 PID。</td></tr>
+</tbody></table></div>
+
+<figure class="figure">
+  <a href="assets/screenshots/sico-center-terminal.png" aria-label="查看终端页原图"><img src="assets/screenshots/sico-center-terminal.png" alt="SiCo 终端页：命令列表、输出、输入、取得输入权、发送和取消" loading="lazy"></a>
+  <figcaption><strong>终端。</strong>读取已记录的命令输出，并向当前 PTY 发送输入。<span class="zoom-hint">点击图片查看原始尺寸</span></figcaption>
+</figure>
+<h3 id="center-terminal">终端</h3>
+<div class="table-wrap"><table><thead><tr><th>控件/按钮</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td>命令列表</td><td>显示时间、状态和命令；选中后读取已记录输出。</td><td>命令记录只保存 owner 和字节数，不保存输入明文。</td></tr>
+<tr><td>输出区</td><td>只读显示 PTY/日志输出，处理回车、退格和控制字符。</td><td>输出超过上限时分页读取，不自动截断成成功结论。</td></tr>
+<tr><td><strong>刷新</strong> / <strong>下一页</strong> / <strong>读取更多输出</strong></td><td>刷新命令列表、翻页或继续读取当前输出。</td><td>长任务运行中优先看最新输出和状态，不重复启动命令。</td></tr>
+<tr><td><strong>输入</strong></td><td>向当前命令 stdin 发送文本。</td><td>只有在取得输入权后才可发送；不要输入密码或一次性凭据。</td></tr>
+<tr><td><strong>取得输入权</strong></td><td>请求成为当前终端命令的输入 owner。</td><td>其他窗口可能持有输入权；失败时等待或核对 owner。</td></tr>
+<tr><td><strong>发送输入</strong></td><td>提交输入行到当前命令。</td><td>发送后观察输出确认命令实际接收。</td></tr>
+<tr><td><strong>取消命令</strong></td><td>请求取消当前终端命令。</td><td>取消是请求，不保证瞬时结束；以状态和输出为准。</td></tr>
+</tbody></table></div>
+
+<h2 id="detail">中间的“详情”页面</h2>
+<figure class="figure">
+  <a href="assets/screenshots/sico-detail.png" aria-label="查看详情页原图"><img src="assets/screenshots/sico-detail.png" alt="SiCo 详情页：预检字段表、结果说明和输出区" loading="lazy"></a>
+  <figcaption><strong>详情。</strong>展示汇报、数据、进程、审阅对象的结构化字段、文档与输出。<span class="zoom-hint">点击图片查看原始尺寸</span></figcaption>
+</figure>
+<div class="table-wrap"><table><thead><tr><th>控件/按钮</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td>返回按钮</td><td>返回打开详情前的对话或列表页面。</td><td>返回不会关闭当前会话或删除详情。</td></tr>
+<tr><td>标题与图片按钮</td><td>显示对象标题；有图片时打开图片库。</td><td>图片是产物证据，仍需核对来源与版本。</td></tr>
+<tr><td>刷新按钮</td><td>重新核验来源数据。</td><td>不会盲目重放写入操作；只刷新读取。</td></tr>
+<tr><td>分页审阅栏</td><td>页面下拉、搜索、上一页/下一页和状态；仅多页对象显示。</td><td>审阅页选择与来源文件绑定，切换前先确认当前页。</td></tr>
+<tr><td>文档区</td><td>显示字段表、Markdown、代码、图片或结构化结果。</td><td>表格/命令可能包含完整路径；复制前确认目标。</td></tr>
+<tr><td>输出区</td><td>只读终端/工具输出；无输出时整块隐藏。</td><td>输出是证据，不是自动质量判定。</td></tr>
+<tr><td>文档链接</td><td>链接可打开相关汇报、数据、审阅、图片或工具回执。</td><td>单 click 打开对象；不要把它当作外部网页链接。</td></tr>
+</tbody></table></div>
+
+<h2 id="settings">设置页面</h2>
+<p>设置位于菜单栏“设置”。外观立即应用；智能体设置和 Codex 特性影响新会话或当前会话的后续运行时，已有任务不会自动改变。</p>
+<div class="screenshot-pair">
+  <figure class="figure">
+    <a href="assets/screenshots/sico-settings-appearance.png" aria-label="查看外观设置原图"><img src="assets/screenshots/sico-settings-appearance.png" alt="SiCo 外观设置：主题、正文字号和界面标签字号" loading="lazy"></a>
+    <figcaption><strong>外观设置。</strong>主题、正文字号和界面标签字号。</figcaption>
+  </figure>
+  <figure class="figure">
+    <a href="assets/screenshots/sico-settings-features.png" aria-label="查看 Codex 特性原图"><img src="assets/screenshots/sico-settings-features.png" alt="SiCo Codex 特性：功能组、必要性与恢复说明、开关和保存" loading="lazy"></a>
+    <figcaption><strong>Codex 特性。</strong>按功能组启停内建能力。</figcaption>
+  </figure>
+</div>
+<h3 id="settings-appearance">外观设置</h3>
+<div class="table-wrap"><table><thead><tr><th>控件</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>主题</strong></td><td>选择明亮/深色主题及家族配色。</td><td>只影响当前工程窗口的显示；保存后立即应用。</td></tr>
+<tr><td><strong>正文字号</strong></td><td>作用于聊天、汇报、JSON/Markdown 和终端文字。</td><td>过大会减少可视行数；保存前可预览。</td></tr>
+<tr><td><strong>界面标签字号</strong></td><td>作用于控件标签和按钮文字。</td><td>与正文字号独立；窄窗口下建议适中。</td></tr>
+<tr><td><strong>保存 / 取消</strong></td><td>保存并应用，或放弃本次修改。</td><td>保存写入当前工程设置文件。</td></tr>
+</tbody></table></div>
+
+<h3 id="settings-features">Codex 特性</h3>
+<div class="table-wrap"><table><thead><tr><th>控件</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td>功能组列表</td><td>每组显示用途、必要性、恢复方式和可配置布尔选项。</td><td>不要关闭理解不足的组；先看“恢复”说明。</td></tr>
+<tr><td>布尔开关</td><td>覆盖该组的内建特性开关。</td><td>保存后新运行时生效；已绑定运行时的会话请新建会话。</td></tr>
+<tr><td>只读选项</td><td>非布尔值（如字节上限、文件名列表）显示为只读。</td><td>只读值需要工程/站点配置，不在本对话框修改。</td></tr>
+<tr><td><strong>保存 / 取消</strong></td><td>保存覆盖项或放弃。</td><td>当前会话已绑定运行时，保存按钮会保持禁用并说明原因。</td></tr>
+</tbody></table></div>
+
+<h3 id="settings-agent">智能体设置</h3>
+<p>智能体设置按“知识源 / MCP 与插件 / 技能 / 数据源”四类管理工程默认资源。顶部可切换工程默认、当前来源默认和当前会话只读视图。</p>
+<div class="screenshot-pair">
+  <figure class="figure">
+    <a href="assets/screenshots/sico-settings-agent-knowledge.png" aria-label="查看智能体设置知识源页原图"><img src="assets/screenshots/sico-settings-agent-knowledge.png" alt="智能体设置知识源页：本地资料、远程知识库、隔离检查和索引预览" loading="lazy"></a>
+    <figcaption><strong>知识源。</strong>本地资料与远程知识库。</figcaption>
+  </figure>
+  <figure class="figure">
+    <a href="assets/screenshots/sico-settings-agent-mcp.png" aria-label="查看智能体设置 MCP 与插件页原图"><img src="assets/screenshots/sico-settings-agent-mcp.png" alt="智能体设置 MCP 与插件页：本地插件、STDIO 和 HTTP 服务" loading="lazy"></a>
+    <figcaption><strong>MCP 与插件。</strong>本地插件和独立 MCP 服务。</figcaption>
+  </figure>
+  <figure class="figure">
+    <a href="assets/screenshots/sico-settings-agent-skills.png" aria-label="查看智能体设置技能页原图"><img src="assets/screenshots/sico-settings-agent-skills.png" alt="智能体设置技能页：技能目录、能力目录和单技能设置" loading="lazy"></a>
+    <figcaption><strong>技能。</strong>技能目录、能力目录与单技能覆盖。</figcaption>
+  </figure>
+  <figure class="figure">
+    <a href="assets/screenshots/sico-settings-agent-data.png" aria-label="查看智能体设置数据源页原图"><img src="assets/screenshots/sico-settings-agent-data.png" alt="智能体设置数据源页：PDK 数据和电路模板目录" loading="lazy"></a>
+    <figcaption><strong>数据源。</strong>PDK 数据与电路模板目录。</figcaption>
+  </figure>
+</div>
+<div class="table-wrap"><table><thead><tr><th>控件/按钮</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>查看</strong>下拉</td><td>工程默认（可编辑）、当前来源默认（只读）、当前会话（只读）。</td><td>编辑工程默认前先确认当前来源是否被外部清单覆盖。</td></tr>
+<tr><td><strong>隔离检查…</strong></td><td>对资源配置做隔离/可用性检查。</td><td>检查通过不代表任务已运行；仍需在会话中验证。</td></tr>
+<tr><td><strong>重新读取</strong></td><td>重新读取服务端设置与 revision。</td><td>不要用重复读取替代处理冲突。</td></tr>
+<tr><td><strong>知识源</strong>页</td><td>添加本地资料/远程知识库，启用/禁用、编辑、移除，打开索引与搜索预览。</td><td>PDK 器件资格和 CDF 参数规则继续以结构化接口为准。</td></tr>
+<tr><td><strong>MCP 与插件</strong>页</td><td>添加本地插件、STDIO 或 Streamable HTTP 服务。</td><td>派生 MCP 由会话管理，不要在这里重复登记。</td></tr>
+<tr><td><strong>技能</strong>页</td><td>添加技能目录、能力目录，或配置单技能覆盖。</td><td>显式使用技能通过输入框附件选择。</td></tr>
+<tr><td><strong>数据源</strong>页</td><td>编辑工程 PDK 数据/电路模板路径和生效来源。</td><td>路径必须是服务端可解析的绝对位置；保存前检查来源。</td></tr>
+<tr><td><strong>查看配置差异</strong></td><td>比较草稿与最新默认或会话生效配置。</td><td>有差异时先决定采用最新默认还是保留草稿。</td></tr>
+<tr><td><strong>采用最新默认 / 核对后保留草稿</strong></td><td>解决重新读取与未保存草稿的冲突。</td><td>保留草稿后仍需重新核对保存结果。</td></tr>
+<tr><td><strong>保存工程默认 / 关闭</strong></td><td>保存当前可编辑页面，或关闭对话框。</td><td>关闭不保存未提交草稿；已提交保存必须重新读取核对。</td></tr>
+</tbody></table></div>
+
+<h2 id="buttons">主界面按钮与菜单总表</h2>
+<div class="table-wrap"><table><thead><tr><th>区域</th><th>按钮/菜单</th><th>作用</th></tr></thead><tbody>
+<tr><td>标题栏</td><td>最小化 / 最大化 / 关闭</td><td>关闭默认挂起窗口；是否结束服务由关闭对话框决定。</td></tr>
+<tr><td>菜单栏</td><td><strong>会话</strong></td><td>返回当前会话、会话历史与操作、执行待办、关闭 SiCo。</td></tr>
+<tr><td>菜单栏</td><td><strong>视图</strong></td><td>恢复默认布局。</td></tr>
+<tr><td>菜单栏</td><td><strong>工作区</strong></td><td>打开预览产物、会话历史与操作。</td></tr>
+<tr><td>菜单栏</td><td><strong>设置</strong></td><td>外观设置、智能体设置、Codex 特性、工程记忆。</td></tr>
+<tr><td>菜单栏</td><td><strong>工具</strong></td><td>终端。</td></tr>
+<tr><td>菜单栏</td><td><strong>帮助</strong></td><td>用户手册、版本信息。</td></tr>
+<tr><td>菜单栏</td><td><strong>通信 / 服务</strong></td><td>连接/启动/断开 CDNS-IC，查看连接信息；重试或停止项目服务。</td></tr>
+<tr><td>输入区</td><td>附件</td><td>添加图片、音频、技能或文件引用。</td></tr>
+<tr><td>输入区</td><td>执行权限</td><td>选择 Codex 本地操作范围。</td></tr>
+<tr><td>输入区</td><td>模型 / 推理强度</td><td>覆盖本回合模型和推理强度；“模型默认”不覆盖。</td></tr>
+<tr><td>输入区</td><td>上下文用量</td><td>显示当前任务上下文消耗；不是模型费用。</td></tr>
+<tr><td>输入区</td><td>持续目标</td><td>为会话设置跨回合目标。</td></tr>
+<tr><td>输入区</td><td>回合设置</td><td>修改模型、权限、推理和附件选项。</td></tr>
+<tr><td>输入区</td><td><strong>发送</strong></td><td>发送任务；Enter 发送，Shift+Enter 换行。</td></tr>
+<tr><td>输入区</td><td>停止</td><td>停止当前任务并暂停待办队列；未提交草稿保留。</td></tr>
+<tr><td>输入区</td><td>执行待办任务</td><td>队列暂停/中断后恢复执行。</td></tr>
+<tr><td>输入区</td><td>结束中断任务</td><td>结束中断任务，不重放已发出的写入。</td></tr>
+<tr><td>输入区</td><td>回到最新</td><td>历史浏览后回到会话最新位置。</td></tr>
+</tbody></table></div>
+
+<div class="notice"><strong>截图说明。</strong>本页截图使用演示工程、示例会话和临时 Virtuoso 连接生成，用于展示界面结构与按钮位置；实际队列、主机、模型和路径以当前工程为准。</div>
+
+<footer class="page-footer"><span>内容基线 ed47e32e · 界面核对 2026-10-24</span><a href="drc.html">DRC 版图规则检查 →</a></footer>
+</main>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#connection">确认连接</a><a href="#nav">左侧导航</a><a href="#nav-history">会话历史</a><a href="#nav-tasks">任务队列</a><a href="#nav-bindings">窗口绑定</a><a href="#nav-background">后台检查</a><a href="#centers">右侧工作台</a><a href="#center-audit">审阅</a><a href="#center-reports">汇报</a><a href="#center-data">数据</a><a href="#center-processes">进程</a><a href="#center-terminal">终端</a><a href="#detail">详情页</a><a href="#settings">设置页面</a><a href="#buttons">按钮与菜单总表</a></aside>
+</div></div>
+</body>
+</html>

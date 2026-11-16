@@ -18,11 +18,11 @@ sys.path.insert(0, str(ROOT / "python"))
 
 
 def _validate_production_interpreter() -> dict[str, object] | None:
-    """Require the explicit CAD_PYTHON contract before doing any work."""
+    """Require the installation-owned Python runtime before doing any work."""
     from aivworkbench.runtime_info import validate_production_runtime
 
     try:
-        return validate_production_runtime(require_environment=True)
+        return validate_production_runtime()
     except RuntimeError as exc:
         print(json.dumps({"status": "BLOCKED_ENVIRONMENT", "error": str(exc)}, sort_keys=True))
         return None

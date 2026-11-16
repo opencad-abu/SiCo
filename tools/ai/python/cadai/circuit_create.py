@@ -25,11 +25,11 @@ GEOMETRY_ARGS = {
 CREATE_TOOLS = [
     tool(
         "inspect_circuit_target",
-        "Read-only inspection of the exact schematic, including unsaved editor contents. Retain "
-        "target_ref for write preparation; changed content invalidates it. Inspection itself "
-        "never asks about existing content.",
+        "Read-only inspection of the exact schematic and unsaved contents. No circuit task/"
+        "task_ref required; an Ask entry can inspect its captured target. Writes must "
+        "begin_circuit_task and re-inspect before using target_ref.",
         {"target": TARGET, "task_ref": REF, "request_id": REQUEST},
-        ("target", "task_ref", "request_id"),
+        ("target", "request_id"),
     ),
     tool(
         "prepare_circuit_creation",
@@ -246,7 +246,7 @@ def build_create_call(name, args, workspace=None):
     validate(args, schema)
     if name == "inspect_circuit_target":
         function, values = "aiCrInspectTarget", [
-            args["task_ref"],
+            args.get("task_ref"),
             args["request_id"],
             [args["target"][k] for k in ("library", "cell", "view")],
         ]

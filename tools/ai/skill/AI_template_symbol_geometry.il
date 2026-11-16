@@ -23,7 +23,7 @@ procedure(aiTsCheckPorts(atcCv atcRows atcSymbol)
     return(t)))
 
 procedure(aiTsSnapshot(atsCv)
-  when(and(atsCv~>cellViewType=="schematicSymbol" or(atsCv~>instances atsCv~>mosaics))
+  when(and(atsCv~>viewType=="schematicSymbol" or(atsCv~>instances atsCv~>mosaics))
     error("unexpected symbol instances/mosaics"))
   append(list(aiTsPorts(atsCv)
     sort(foreach(mapcar atsShape atsCv~>shapes aiTplFigure(atsShape)) 'alphalessp)

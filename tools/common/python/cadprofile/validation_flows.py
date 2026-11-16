@@ -37,9 +37,7 @@ def _validate_drc(raw: Mapping[str, Any]) -> None:
             raise ProfileError(f"drc.{key} must be an array of strings")
 
 
-def _validate_lvs(raw: Mapping[str, Any]) -> None:
-    lvs = _require_table(raw, "lvs")
-    _validate_run_mode(lvs, "lvs")
+def _validate_svdb_query(lvs: Mapping[str, Any]) -> None:
     query = lvs.get("svdb_query")
     if query is not None:
         if not isinstance(query, list) or not all(
@@ -68,7 +66,15 @@ def _validate_lvs(raw: Mapping[str, Any]) -> None:
                 )
 
 
+def _validate_lvs(raw: Mapping[str, Any]) -> None:
+    lvs = _require_table(raw, "lvs")
+    _validate_run_mode(lvs, "lvs")
+    _validate_svdb_query(lvs)
+
+
 def _validate_rce(raw: Mapping[str, Any]) -> None:
+    lvs = _require_table(raw, "lvs")
+    _validate_svdb_query(lvs)
     extract = _require_table(raw, "extract")
     view = extract.get("view", {})
     if view is None:
@@ -182,7 +188,7 @@ def _validate_rce(raw: Mapping[str, Any]) -> None:
     output_type = str(extract.get("output_type", "dspf")).strip().casefold()
     tool = str(extract.get("tool", "QRC")).strip().casefold()
     configured_kind = (
-        str(view.get("kind", "Smart View")).strip().casefold()
+        str(view.get("kind", "Interactive DSPF (iDSPF)")).strip().casefold()
         if isinstance(view, Mapping)
         else "smart view"
     )

@@ -36,7 +36,8 @@ class ContextDemoProvider:
             data = result.get("data")
             if isinstance(data, dict) and isinstance(data.get("cellview"), dict):
                 target = " / ".join(
-                    str(data["cellview"].get(key) or "未提供") for key in ("lib", "cell", "view")
+                    str(data["cellview"].get(key) or "未提供")
+                    for key in ("lib", "cell", "view_name")
                 )
                 text += "\n\n设计目标：" + target
             if result.get("truncated"):

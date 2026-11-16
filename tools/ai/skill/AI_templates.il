@@ -109,7 +109,7 @@ procedure(aiTplBuiltinLibrary(atbLib)
 ; Only installed, available symbol masters can be ignored electrical graphics.
 procedure(aiTplGraphicRole(atgInst)
   let((atgBuiltin atgCell)
-    when(and(atgInst~>master atgInst~>master~>cellViewType=="schematicSymbol")
+    when(and(atgInst~>master atgInst~>master~>viewType=="schematicSymbol")
       atgBuiltin=aiTplBuiltinLibrary(atgInst~>libName) atgCell=atgInst~>cellName
       cond((and(atgBuiltin=="basic" member(atgCell list("ipin" "opin" "iopin"))) "port_graphic")
         (and(atgBuiltin=="basic" atgCell=="noConn") "no_connect")
@@ -128,7 +128,7 @@ procedure(aiTplCaptureAsset(lib cell view asset port expectedSchView @optional (
       unless(cv error("Cannot read template view %s/%s/%s" lib cell view))
       unwindProtect(
         progn(
-          unless(cv~>cellViewType==viewType error("Template source has an unexpected view type"))
+          unless(cv~>viewType==viewType error("Template source has an unexpected view type"))
           cv=aiTplSavedView(cv)
           counts=makeTable("aiTplCounts" 0)
           kinds=list("instance" "instance_terminal" "instance_property" "net" "terminal" "pin" "shape"
@@ -189,7 +189,7 @@ procedure(aiTplCaptureAsset(lib cell view asset port expectedSchView @optional (
             aiTplRecord(port counts "instance"
               strcat(aiTplFields(instance '(name libName cellName viewName xy orient))
                 ",\"builtin_library\":" aiTplJson(aiTplBuiltinLibrary(instance~>libName))
-                ",\"master_view_type\":" aiTplJson(when(masterView masterView~>cellViewType))
+                ",\"master_oa_view_type\":" aiTplJson(when(masterView masterView~>viewType))
                 ",\"bbox\":" aiTplJson(instance~>bBox)
                 ",\"terminal_names\":" aiTplJson(when(masterView masterView~>terminals~>name))
                 ",\"master_available\":" if(masterAvailable "true" "false")

@@ -1,7 +1,7 @@
 ; Evaluation and context collection in the current Virtuoso process.
 
 unless(and(boundp('aiEvaluatorVersion)
-             aiEvaluatorVersion=="20260922.ai.eval.v5")
+             aiEvaluatorVersion=="20261101.ai.eval.v6")
 
 procedure(aiReadTextFile(path @optional maxBytes)
   let((port line text)
@@ -158,22 +158,31 @@ procedure(aiWorkingDirectory()
 )
 
 procedure(aiCellViewJson(cellView)
-  let((protected values)
+  let((protected values viewType)
     if(!cellView then
       "null"
     else
       protected=errset(
-        list(cellView~>libName cellView~>cellName cellView~>viewName) nil)
+        list(cellView~>libName cellView~>cellName cellView~>viewName cellView~>viewType) nil)
       if(!protected then
         "null"
       else
         values=car(protected)
-        sprintf(nil "{\"lib\":\"%s\",\"cell\":\"%s\",\"view\":\"%s\"}"
+        viewType=cadddr(values)
+        sprintf(nil "{\"lib\":\"%s\",\"cell\":\"%s\",\"view_name\":\"%s\",\"oa_view_type\":%s,\"oa_view_type_source\":\"%s\"}"
           aiJsonEscape(or(car(values) ""))
           aiJsonEscape(or(cadr(values) ""))
-          aiJsonEscape(or(caddr(values) "")))))
+          aiJsonEscape(or(caddr(values) ""))
+          if(viewType aiJsonEscape(aiCellViewText(viewType)) "null")
+          if(viewType "platform_api" "unknown"))))
   )
 )
+
+procedure(aiCellViewText(value)
+  cond((null(value) nil)
+    (stringp(value) value)
+    (symbolp(value) symbolToString(value))
+    (t nil)))
 
 procedure(aiGetContext(outputPath)
   let((window displayCellView editCellView selectionCount protected payload)
@@ -202,8 +211,8 @@ procedure(aiGetContext(outputPath)
 )
 
 procedure(aiEvaluatorRevision()
-  "20260922.ai.eval.v5"
+  "20261101.ai.eval.v6"
 )
 
-aiEvaluatorVersion="20260922.ai.eval.v5"
+aiEvaluatorVersion="20261101.ai.eval.v6"
 )

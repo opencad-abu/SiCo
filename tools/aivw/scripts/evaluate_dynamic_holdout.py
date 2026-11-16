@@ -18,7 +18,7 @@ from aivworkbench.qualification.candidate_freeze import _pair
 from aivworkbench.qualification.dynamic_admission import _json
 from aivworkbench.profiles import load_profile
 from aivworkbench.toolchain import capture_module_environment, probe_tools
-from aivworkbench.qualification.private_boundary import run_boundary
+from aivworkbench.qualification.private_boundary import run_boundary, runtime_python
 from aivworkbench.workspace import allocate_split_run, resolve_launch_paths, sha256_file, stable_digest, write_json_once
 
 
@@ -68,7 +68,7 @@ def main():
                    str(Path(__file__).resolve()): sha256_file(Path(__file__)),
                    str(schedule_plugin): sha256_file(schedule_plugin)}}
     digest = stable_digest(request)
-    run = allocate_split_run(resolve_launch_paths(), Path("/path/to/xh/amsVerify/data/ams").resolve(),
+    run = allocate_split_run(resolve_launch_paths(), Path("/workarea/xh/amsVerify/data/ams").resolve(),
         library=freeze["target"]["library"], cell=freeze["target"]["cell"], view="dynamic_evaluator",
         kind="dynamic-holdout-candidate-repeats", request_digest=digest)
     spool = run.payload_root/"staging"
@@ -113,7 +113,7 @@ def main():
                "case_count": commitment["case_count"], "repeat": {"status": "BLOCKED_REPEAT"}}
     try:
         completed = run_boundary(
-            ["/software/pkgs/python/3.9.13/bin/python3", "-s", "-m", "aivworkbench.qualification.hidden_evaluation"],
+            [str(runtime_python()), "-s", "-m", "aivworkbench.qualification.hidden_evaluation"],
             spool=spool,
             environment={"PATH": "/usr/bin:/bin", "PYTHONDONTWRITEBYTECODE": "1",
                          "PYTHONNOUSERSITE": "1",

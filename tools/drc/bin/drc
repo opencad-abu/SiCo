@@ -15,19 +15,8 @@ if [ ! -f "$entry" ]; then
     exit 2
 fi
 
-python=${DRC_PYTHON-}
-if [ -z "$python" ]; then
-    sico_runtime_python || exit 2
-    python=$sico_runtime_python_value
-fi
-
-case $python in
-    */*) [ -f "$python" ] && [ -x "$python" ] ;;
-    *) command -v "$python" >/dev/null 2>&1 ;;
-esac || {
-    echo "$program: Python is not executable: $python" >&2
-    exit 2
-}
+sico_runtime_python || exit 2
+python=$sico_runtime_python_value
 
 if [ -z "${DRC_ORIG_LD_LIBRARY_PATH+x}" ]; then
     export DRC_ORIG_LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}

@@ -12,6 +12,16 @@ from sico.core.window_refs import normalize_window_list
 
 from .commands import outcome
 
+ASK_ERROR_TEXT = {
+    "capability_not_available":
+        "对象读取未加载，请重新加载 SICO.ils（不要只加载 SICO_quick.il）",
+    "source_not_captured": "Ask 未能捕获当前窗口；请重新打开 Ask",
+    "stale_context": "窗口已变化，请重新打开 Ask",
+    "read_failed": "当前窗口对象读取失败，请稍后重试",
+    "invalid_arguments": "对象读取参数无效，请重新打开 Ask",
+    "result_too_large": "对象过多，请缩小搜索范围",
+}
+
 
 class AskObjectProvider:
     """Resolve picker requests through the Ask SKILL IPC socket."""
@@ -51,9 +61,10 @@ class AskObjectProvider:
             raise ValueError("Invalid object offset")
         if type(max_items) is not int or not 1 <= max_items <= 50:
             raise ValueError("Invalid object limit")
+        encoded = str(query).encode("utf-8").hex() or "-"
         return self._request([
             "objects", window_ref, kind, str(offset), str(max_items),
-            str(query).encode("utf-8").hex(),
+            encoded,
         ], "objects")
 
     def window_list(self):
@@ -75,18 +86,23 @@ class AskObjectProvider:
             future.set_exception(exc)
             return
         if value.get("ok") is False:
+            code = value.get("code")
+            message = ASK_ERROR_TEXT.get(code) if isinstance(code, str) else None
             future.set_exception(ValueError(
-                str(value.get("message") or value.get("code") or "Ask 对象读取失败")
+                str(message or value.get("message") or code or "Ask 对象读取失败")
             ))
         else:
             future.set_result(value)
 
     def close(self):
-        self.closed = True
         for future, _kind in self.pending.values():
             if not future.done():
                 future.cancel()
         self.pending.clear()
+
+    def shutdown(self):
+        self.closed = True
+        self.close()
 
 
 def watch(future, *, success=None, failure=None, settled=None, scope=None):
@@ -108,14 +124,19 @@ class AskObjectWindow(QObject):
 
     def __init__(self, parent, input_widget, context, send_request):
         super().__init__(parent)
+        context = dict(context or {})
+        # Recapture the bound window when @ is used. A reference captured when
+        # the Ask window opened can already be stale after a hierarchy change.
+        context["window_ref"] = "-"
         self.popup_parent = parent
         self.input = input_widget
+        self.window_ref = "-"
         self.presentation = SimpleNamespace(
-            submission_context=SimpleNamespace(snapshot=dict(context or {}))
+            submission_context=SimpleNamespace(snapshot=context)
         )
         self.lifecycle = SimpleNamespace(closing=False)
         self.provider = AskObjectProvider(
-            str((context or {}).get("window_ref") or ""), send_request
+            self.window_ref, send_request
         )
         self.actions = SimpleNamespace(
             target_picker_provider=lambda: self.provider,
@@ -132,7 +153,7 @@ class AskObjectWindow(QObject):
         if self.object_mentions is not None:
             self.object_mentions.close()
             self.object_mentions = None
-        self.provider.close()
+        self.provider.shutdown()
 
 
 __all__ = ["AskObjectProvider", "AskObjectWindow"]

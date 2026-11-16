@@ -15,6 +15,10 @@ for root in (RCE_PYTHON, COMMON_PYTHON):
     if str(root) not in sys.path:
         sys.path.insert(0, str(root))
 
+from sicoruntimebootstrap import ensure_runtime
+
+ensure_runtime(HERE, SICO_TOOLS_ROOT.parent)
+
 from lvspy.cli import main
 
 

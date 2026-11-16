@@ -41,7 +41,7 @@ def run(config_path,python_only=False):
         ('plugins/transition_response.py','plugins/endpoint_sampling.py','plugins/transition_tail.py','waveform_metrics.py')]]
     request={'kind':'public-candidate-endpoint-refinement','config_sha256':sha256_file(config_path),'sources':[pair,rp],
         'implementation':{str(p):sha256_file(p) for p in files},'holdout_evaluated':False}
-    digest=stable_digest(request);out=allocate_split_run(resolve_launch_paths(),Path('/path/to/xh/amsVerify/data/ams').resolve(),
+    digest=stable_digest(request);out=allocate_split_run(resolve_launch_paths(),Path('/workarea/xh/amsVerify/data/ams').resolve(),
         library=plan['target']['library'],cell=plan['target']['cell'],view='endpoint_response',kind='endpoint-response',request_digest=digest)
     write_json_once(out.control_root/'request.json',request)
     print(json.dumps({'run_id':out.run_id,'payload':str(out.payload_root)}),flush=True)

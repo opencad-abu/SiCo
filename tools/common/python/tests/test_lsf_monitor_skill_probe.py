@@ -6,6 +6,7 @@ from lsf_monitor_contract_cases import (
     test_lsf_monitor_selector_is_owned_validated_and_shared,
 )
 from lsf_monitor_frontend_cases import (
+    test_lsf_monitor_python_selection_prefers_dev_runtime,
     test_flow_form_monitor_apply_cancel_and_stale_with_virtuoso,
     test_monitor_selected_host_survives_real_combo_callbacks,
 )

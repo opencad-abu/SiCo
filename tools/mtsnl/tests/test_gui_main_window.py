@@ -47,6 +47,10 @@ from gui_defaults_dialect_cases import (
 )
 
 from gui_layout_cases import (
+    test_main_window_opens_on_the_left_half,
+    test_model_actions_share_one_row,
+    test_simulator_actions_share_one_row,
+    test_settings_fields_stay_readable_when_window_height_shrinks,
     test_process_tabs_host_plain_pages_without_their_own_title_bar,
     test_source_lists_and_resizable_splitters,
     test_selected_cell_titles_the_right_side_settings_frame,

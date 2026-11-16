@@ -1,11 +1,12 @@
 """gui layout cases regressions."""
 
 from __future__ import annotations
-from PyQt5.QtCore import QPoint, Qt  # noqa: E402
+from PyQt5.QtCore import QPoint, QRect, Qt  # noqa: E402
 from PyQt5.QtWidgets import (  # noqa: E402
     QApplication,
     QFormLayout,
     QHeaderView,
+    QLabel,
     QListWidget,
     QSizePolicy,
     QTreeWidget,
@@ -68,6 +69,92 @@ def test_source_lists_and_resizable_splitters(application: QApplication) -> None
         assert window.run_button.y() > window.log.y()
         assert window.cancel_button.y() == window.run_button.y()
         assert window.run_button.x() < window.cancel_button.x()
+    finally:
+        window.close()
+        window.controller.close()
+
+
+def test_main_window_opens_on_the_left_half(application: QApplication, monkeypatch) -> None:
+    from cadgui import chrome
+
+    expected = QRect(11, 22, 1200, 800)
+    monkeypatch.setattr(
+        chrome,
+        "half_screen_rect",
+        lambda side, anchor=None: expected if side == "left" else None,
+    )
+    window = MtsMainWindow(session=None)
+    try:
+        assert window.launch_half == "left"
+        window.show()
+        application.processEvents()
+        assert window.geometry() == expected
+    finally:
+        window.close()
+        window.controller.close()
+
+
+def test_settings_fields_stay_readable_when_window_height_shrinks(
+    application: QApplication,
+) -> None:
+    window = MtsMainWindow(session=None)
+    try:
+        assert window.settings_scroll.widget() is window.workspace_splitter
+        assert window.settings_scroll.widgetResizable() is True
+        window.show()
+        application.processEvents()
+        form = window._simulator_form
+        layout = form.layout()
+        baseline = [
+            layout.itemAt(index, layout.FieldRole).widget().height()
+            for index in range(layout.rowCount())
+        ]
+        assert all(height > 0 for height in baseline)
+
+        window.resize(window.width(), 500)
+        application.processEvents()
+        heights = [
+            layout.itemAt(index, layout.FieldRole).widget().height()
+            for index in range(layout.rowCount())
+        ]
+        assert heights == baseline
+        assert window.settings_scroll.verticalScrollBar().maximum() > 0
+    finally:
+        window.close()
+        window.controller.close()
+
+
+def test_model_actions_share_one_row(
+    application: QApplication,
+) -> None:
+    window = MtsMainWindow(session=None)
+    try:
+        window.show()
+        application.processEvents()
+        assert window.add_model.y() == window.remove_model.y()
+        assert window.add_model.y() == window.move_model_up.y()
+        assert window.move_model_up.y() == window.move_model_down.y()
+        assert window.move_model_up.y() == window.duplicate_model.y()
+    finally:
+        window.close()
+        window.controller.close()
+
+
+def test_simulator_actions_share_one_row(
+    application: QApplication,
+) -> None:
+    window = MtsMainWindow(session=None)
+    try:
+        window.show()
+        application.processEvents()
+        assert window.add_option.y() == window.remove_option.y()
+        assert window.add_option.y() == window.move_option_up.y()
+        assert window.add_option.y() == window.move_option_down.y()
+        assert window.add_option.y() == window.duplicate_option.y()
+        assert (
+            window.add_option.mapTo(window, QPoint(0, 0)).x()
+            == window.add_model.mapTo(window, QPoint(0, 0)).x()
+        )
     finally:
         window.close()
         window.controller.close()
@@ -145,7 +232,7 @@ def test_process_tabs_host_plain_pages_without_their_own_title_bar(
         assert not hasattr(page, "title_bar")
         assert not page.isWindow()
         assert window.windowFlags() & Qt.FramelessWindowHint
-        assert window.title_bar.title.text() == "SiCo::MTS Netlistor"
+        assert window.title_bar.title.text() == "Silicon Copilot::MTS Netlistor"
         # 窗口里只有一条标题栏：标签页不再各自画 Silicon Copilot 抬头和红线。
         assert len(window.findChildren(SiTitleBar)) == 1
     finally:
@@ -204,6 +291,10 @@ def test_simulator_form_only_exposes_requested_process_controls(
             label = form.itemAt(row, QFormLayout.LabelRole)
             if label is not None:
                 labels.append(label.widget().text())
+                continue
+            field = form.itemAt(row, QFormLayout.FieldRole)
+            if field is not None and isinstance(field.widget(), QLabel):
+                labels.append(field.widget().text())
         assert labels == ["Simulator", "Temperature", "Scale", "Gmin", "Advanced Options"]
     finally:
         window.close()

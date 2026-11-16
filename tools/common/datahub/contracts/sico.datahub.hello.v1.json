@@ -1,0 +1,32 @@
+{
+  "actions": {
+    "hello": {
+      "capability": "datahub.endpoint",
+      "request": {
+        "fields": ["token", "session_ref"],
+        "required": ["token", "session_ref"]
+      },
+      "response": {
+        "schema": "datahub.hello.v1"
+      }
+    }
+  },
+  "errors": [
+    "invalid_arguments",
+    "unsupported_contract",
+    "version_mismatch",
+    "capability_not_available",
+    "read_failed",
+    "result_too_large",
+    "timeout",
+    "cancelled",
+    "internal"
+  ],
+  "limits": {
+    "max_bytes": 55000,
+    "max_items": 32,
+    "max_text": 4096
+  },
+  "name": "sico.datahub.hello.v1",
+  "version": 1
+}

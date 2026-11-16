@@ -10,7 +10,7 @@ let((commonSkill)
 ;------------------------------------------------------------------------------
 
 unless(and(boundp('witMenuLoaderVersion)
-             witMenuLoaderVersion=="20261020.sico.menu.v5"
+             witMenuLoaderVersion=="20261024.sico.menu.v7"
              isCallable('witMenuLoadRelative)
              isCallable('witMenuInstallAgent)
              isCallable('witMenuReload))
@@ -73,7 +73,7 @@ procedure(witMenuTryLoadData(path)
       else
         detail=errset.errset
         warn("%s menu data could not be loaded from %s: %L\n"
-              witMenuLogo() path detail)
+              sicoMenuLogo() path detail)
         nil
       )
     )
@@ -92,45 +92,45 @@ procedure(witMenuLoadRelative(relativePath)
     if(and(path isFile(path)) then
       load(path)
     else
-      warn("%s menu cannot find CAD tool: %L\n" witMenuLogo() path)
+      warn("%s menu cannot find CAD tool: %L\n" sicoMenuLogo() path)
       nil
     )
   )
 )
 
 procedure(witMenuGenerateData()
-  let((python installed cadPython pythonRoot helper config output cmd status)
+  let((python installed helper config output cmd status)
     installed=SICO_installedPython()
-    cadPython=when(not(installed) SICO_envValue("SICO_PYTHON"))
-    pythonRoot=when(and(not(installed) not(cadPython))
-      SICO_envValue("SICO_PYTHON_ROOT"))
-    python=or(installed cadPython
-      when(and(pythonRoot strlen(pythonRoot)>0)
-        simplifyFilename(strcat(pythonRoot "/bin/python3") t))
-      "python3")
-    when(and(boundp('witMenuRoot)
-               witMenuRoot
-               strlen(witMenuRoot)>0)
-      helper=strcat(witMenuRoot "/menu_to_skill.py")
-      config=strcat(witMenuRoot "/menu.toml")
-    )
-    output=witMenuCacheDataPath()
-    when(and(helper config output isFile(helper) isFile(config))
-      cmd=strcat("env -u PYTHONHOME -u PYTHONPATH LD_LIBRARY_PATH="
-                  witMenuShellQuote(witMenuPythonLibraryPath())
-                  " "
-                  witMenuShellQuote(python) " "
-                  witMenuShellQuote(helper) " "
-                  witMenuShellQuote(config) " "
-                  witMenuShellQuote(output))
-      status=system(cmd)
-    )
-    if(and(status status==0 output isFile(output)) then
-      witMenuTryLoadData(output)
-    else
-      warn("%s menu data generation failed (status=%L, output=%L).\n"
-            witMenuLogo() status output)
+    python=installed
+    if(not(python) then
+      warn("%s menu generation requires $SICO_HOME/runtime/python/bin/python3.\n"
+            sicoMenuLogo())
       nil
+    else
+      when(and(boundp('witMenuRoot)
+                 witMenuRoot
+                 strlen(witMenuRoot)>0)
+        helper=strcat(witMenuRoot "/menu_to_skill.py")
+        config=strcat(witMenuRoot "/menu.toml")
+      )
+      output=witMenuCacheDataPath()
+      when(and(helper config output isFile(helper) isFile(config))
+        cmd=strcat("env -u PYTHONHOME -u PYTHONPATH LD_LIBRARY_PATH="
+                    witMenuShellQuote(witMenuPythonLibraryPath())
+                    " "
+                    witMenuShellQuote(python) " "
+                    witMenuShellQuote(helper) " "
+                    witMenuShellQuote(config) " "
+                    witMenuShellQuote(output))
+        status=system(cmd)
+      )
+      if(and(status status==0 output isFile(output)) then
+        witMenuTryLoadData(output)
+      else
+        warn("%s menu data generation failed (status=%L, output=%L).\n"
+              sicoMenuLogo() status output)
+        nil
+      )
     )
   )
 )
@@ -146,17 +146,17 @@ procedure(witMenuLoadData()
         t
       else
         warn("%s installed menu data is unavailable; generating user cache: %L\n"
-              witMenuLogo() installed)
+              sicoMenuLogo() installed)
         witMenuGenerateData()
       )
     )
   )
 )
 
-procedure(witMenuLogo()
+procedure(sicoMenuLogo()
   let((logo company logoEnv defaultLogo)
     logoEnv=if(boundp('witMenuLogoEnv) witMenuLogoEnv "LOGO")
-    defaultLogo=if(boundp('witMenuDefaultLogo) witMenuDefaultLogo "SiCo")
+    defaultLogo=if(boundp('witMenuDefaultLogo) witMenuDefaultLogo "Silicon Copilot")
     logo=getShellEnvVar(logoEnv)
     company=getShellEnvVar("COMPANY")
     unless(and(logo strlen(logo)>0)
@@ -167,7 +167,7 @@ procedure(witMenuLogo()
       company=nil)
     when(and(company upperCase(company)=="OCAD")
       company=nil)
-    or(logo company defaultLogo "SiCo")
+    or(logo company defaultLogo "Silicon Copilot")
   )
 )
 
@@ -218,7 +218,7 @@ procedure(witMenuBuildMenu(prefix section)
       menuSym=witMenuSymbol(prefix title)
       hiCreatePulldownMenu(
         menuSym
-        strcat("&" witMenuLogo())
+        strcat("&" sicoMenuLogo())
         witMenuBuildItems(prefix title itemSpecs)
       )
     )
@@ -318,23 +318,23 @@ procedure(witMenuRegenerate()
   )
 )
 
-witMenuLoaderVersion="20261020.sico.menu.v5"
+witMenuLoaderVersion="20261024.sico.menu.v7"
 )
 
 witMenuRoot=SICO_installationPath(SICO_installationRoot() "tools/utility")
 
 if(witMenuRoot then
   unless(and(boundp('witMenuInitVersion)
-               witMenuInitVersion=="20261020.sico.menu.v5"
+               witMenuInitVersion=="20261024.sico.menu.v7"
                boundp('witMenuAgentInitVersion)
                witMenuAgentInitVersion=="20260909.menu.agent.v1"
                boundp('witMenuInitRoot)
                witMenuInitRoot==witMenuRoot)
     when(witMenuReload()
       witMenuInitRoot=witMenuRoot
-      witMenuInitVersion="20261020.sico.menu.v5"
+      witMenuInitVersion="20261024.sico.menu.v7"
     )
   )
 else
-  warn("%s menu root is not configured. Set SICO_HOME first.\n" witMenuLogo())
+  warn("%s menu root is not configured. Set SICO_HOME first.\n" sicoMenuLogo())
 )

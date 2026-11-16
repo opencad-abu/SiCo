@@ -35,7 +35,7 @@ procedure(aiProjectTarget(aptTarget)
     when(aptObj aptType=aiCircuitViewType(aptLib aptCell aptView))
     foreach(aptCv dbGetOpenCellViews()
       when(aiCircuitCvMatches(aptCv aptTarget)
-        aptOpen=t aptType=aptCv~>cellViewType when(dbIsCellViewModified(aptCv) aptModified=t)))
+        aptOpen=t aptType=aptCv~>viewType when(dbIsCellViewModified(aptCv) aptModified=t)))
     when(isCallable('maeGetSessions)
       foreach(aptSession aiCircuitSessions(list(aptLib aptCell aptView))
         aptOpen=t when(maeIsSetupModified(?session aptSession) aptModified=t)))
@@ -241,7 +241,7 @@ procedure(aiLibraryPrepare(alpTask alpId alpName alpSelected alpWorkspace alpRea
         list("technology_library" nth(2 alpFacts)) list("technology_path" nth(3 alpFacts))
         list("current_technology_path"
           if(nth(7 alpFacts) nth(7 alpFacts) "not_applicable"))
-        list("library_view_types"
+        list("library_oa_view_types"
           if(nth(7 alpFacts) if(nth(8 alpFacts) nth(8 alpFacts) "empty") "not_scanned"))
         list("reattach_required" aiCircuitBool(nth(7 alpFacts)))
         list("library_ready" cadr(alpFacts)) list("user_input_required" 'jsonFalse)

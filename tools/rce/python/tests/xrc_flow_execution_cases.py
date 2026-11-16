@@ -24,7 +24,7 @@ from xrc_test_support import (  # noqa: E402
 def test_xrc_enabled_stages_own_lvs_and_skip_query(tmp_path: Path) -> None:
     cfg, _ = make_xrc_config(tmp_path)
 
-    assert cfg.is_xrc
+    assert cfg.is_calibre_pex
     assert cfg.enabled_stages() == ["extract"]
 
 
@@ -57,9 +57,18 @@ def test_xrc_start_rve_uses_svdb_and_detaches_from_ipc(
     monkeypatch.setenv("MGC_HOME", str(calibre.parents[1]))
     monkeypatch.setenv("RCE_ORIG_LD_LIBRARY_PATH", "/original/eda/lib")
     launch_temp = tmp_path / ".cad"
-    monkeypatch.setenv("CAD_TEMP_DIR", str(launch_temp))
-    for name in ("TMPDIR", "TMP", "TEMP", "SQLITE_TMPDIR"):
-        monkeypatch.setenv(name, str(launch_temp))
+    monkeypatch.setenv("SICO_TEMP_DIR", str(launch_temp))
+    # Mirror the frontend injection the detached RVE launch must undo.
+    injected = {
+        "TMPDIR": str(launch_temp),
+        "TMP": str(launch_temp),
+        "TEMP": str(launch_temp),
+        "SQLITE_TMPDIR": str(launch_temp),
+        "XDG_CACHE_HOME": str(launch_temp / "cache"),
+        "XDG_RUNTIME_DIR": str(launch_temp / "runtime"),
+    }
+    for name, value in injected.items():
+        monkeypatch.setenv(name, value)
     monkeypatch.setattr(runner_module.subprocess, "Popen", fake_popen)
 
     RceRunner(cfg)._start_rve()
@@ -75,8 +84,7 @@ def test_xrc_start_rve_uses_svdb_and_detaches_from_ipc(
     assert kwargs["close_fds"] is True
     assert kwargs["env"]["LD_LIBRARY_PATH"] == "/original/eda/lib"
     assert all(
-        name not in kwargs["env"]
-        for name in ("TMPDIR", "TMP", "TEMP", "SQLITE_TMPDIR")
+        name not in kwargs["env"] for name in (*injected, "SICO_TEMP_DIR", "CAD_TEMP_DIR")
     )
 
 

@@ -110,7 +110,7 @@ procedure(aiCircuitOpen(acoLib acoCell acoView acoType acoPresentation acoAccess
     acoObj=ddGetObj(acoLib acoCell acoView)
     unless(acoObj return(aiCircuitError("view_not_found" "open_design_view does not create views")))
     unless(aiCircuitViewType(acoLib acoCell acoView)==acoType
-      return(aiCircuitError("view_type_mismatch" "Actual view type differs from requested type")))
+      return(aiCircuitError("oa_view_type_mismatch" "Actual OA view type differs from requested type")))
     unless(ddIsObjReadable(acoObj) return(aiCircuitError("not_readable" "Target is not readable")))
     when(and(acoAccess=="edit" !ddIsObjWritable(acoObj))
       return(aiCircuitError("not_writable" "Target is not writable")))

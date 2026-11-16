@@ -17,15 +17,11 @@ if ( ! $?PROJECT_ROOT ) setenv PROJECT_ROOT "$cwd"
 if ( ! $?PDK_ROOT ) setenv PDK_ROOT "$PROJECT_ROOT/PDK_V1.0"
 if ( ! $?RCE_RUN_ROOT ) setenv RCE_RUN_ROOT "$PROJECT_ROOT/.rce"
 
-if ( ! $?RCE_PYTHON ) then
-  if ( $?SICO_PYTHON ) then
-    setenv RCE_PYTHON "$SICO_PYTHON"
-  else if ( $?SICO_PYTHON_ROOT ) then
-    setenv RCE_PYTHON "$SICO_PYTHON_ROOT/bin/python3"
-  else
-    setenv RCE_PYTHON python3
-  endif
+if ( ! -x "$SICO_HOME/runtime/python/bin/python3" ) then
+  echo "<ERROR> SiCo Python is unavailable: $SICO_HOME/runtime/python/bin/python3" > /dev/stderr
+  goto rce_env_done
 endif
+setenv RCE_PYTHON "$SICO_HOME/runtime/python/bin/python3"
 if ( ! $?RCE_PYTHON_ENTRY ) setenv RCE_PYTHON_ENTRY "$SICO_HOME/tools/rce/python/rce"
 if ( ! $?PYTHONDONTWRITEBYTECODE ) setenv PYTHONDONTWRITEBYTECODE 1
 
@@ -43,10 +39,10 @@ if ( $_rce_logo_valid == 0 ) then
   if ( $_rce_company_valid == 1 ) then
     setenv LOGO "$COMPANY"
   else
-    setenv LOGO SiCo
+    setenv LOGO "Silicon Copilot"
   endif
 endif
-if ( $_rce_company_valid == 0 ) setenv COMPANY SiCo
+if ( $_rce_company_valid == 0 ) setenv COMPANY "Silicon Copilot"
 unset _rce_logo_valid
 unset _rce_company_valid
 if ( $?_rce_logo_upper ) unset _rce_logo_upper

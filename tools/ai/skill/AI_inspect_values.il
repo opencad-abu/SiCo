@@ -1,7 +1,7 @@
 ; Bounded JSON values, budgets and read-only target handles.
 ; Loaded with AI_inspect.il by the versioned AI parent.
 unless(and(boundp('aiInspectVersion)
-             aiInspectVersion=="20261022.ai.inspect.v11")
+             aiInspectVersion=="20261101.ai.inspect.v12")
 
 procedure(aiInspectMaxItems(value)
   let((limit)
@@ -134,18 +134,21 @@ procedure(aiInspectLppJson(lpp budget)
 )
 
 procedure(aiInspectCellViewJson(cellView budget)
-  let((protected values)
+  let((protected values viewType)
     if(!cellView then
       "null"
     else
       protected=errset(
-        list(cellView~>libName cellView~>cellName cellView~>viewName) nil)
+        list(cellView~>libName cellView~>cellName cellView~>viewName cellView~>viewType) nil)
       if(protected then
         values=car(protected)
-        sprintf(nil "{\"lib\":%s,\"cell\":%s,\"view\":%s}"
+        viewType=cadddr(values)
+        sprintf(nil "{\"lib\":%s,\"cell\":%s,\"view_name\":%s,\"oa_view_type\":%s,\"oa_view_type_source\":\"%s\"}"
           aiInspectJsonString(car(values) budget)
           aiInspectJsonString(cadr(values) budget)
-          aiInspectJsonString(caddr(values) budget))
+          aiInspectJsonString(caddr(values) budget)
+          if(viewType aiInspectJsonString(viewType budget) "null")
+          if(viewType "platform_api" "unknown"))
       else "null"))
   )
 )

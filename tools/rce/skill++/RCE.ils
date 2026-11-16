@@ -9,41 +9,48 @@ let((entryDirectory)
   rceSkillRoot=strcat(SICO_sourceRoot() "/tools/rce")
   rceCommonRoot=strcat(SICO_sourceRoot() "/tools/common")
   rceUtilityRoot=strcat(SICO_sourceRoot() "/tools/utility")
-  SICO_sourceRequire("rce" "065bb134f31c0a6bd3a3fe065d3fd2420efa2799e56eb030eea00fe6eb474efd" '(
+  SICO_sourceRequire("rce" "7dec5c8b40ce5ecf7e033ca9b69ed95cc4ffde1b1dc3ce4dfe2a7c9e5b3eb3f0" '(
     ("tools/rce/skill++" "RCEBASEGUI.ils" "fcae4264ca4475c88f8987cbd3344b82dc9a86506c53f8bd102f58481e28fcbc"
       ()
       ()
       (RCEBASEGUIVersion)
-      (EXTOPTGUI))
+      (EXTOPTGUI)
+      ())
     ("tools/rce/skill++" "RCECORNERGUI.ils" "64a64e36ff26610a3e73b51cd751301c892b9b6ba0da626d107722361dd0a1b1"
       (makeExtBasicOpt makeExtRcTechDir cadBaseMultiCornerRevision)
       ((cadBaseMultiCornerRevision "20260803.multi.corner.align.v4"))
       (RCECORNERGUIVersion)
-      ())
+      ()
+      (makeExtBasicOpt makeExtRcTechDir))
     ("tools/rce/skill++" "RCESELECTIONGUI.ils" "29321d9892b86d503bb0f28bff7c7a58287cd42632cb4e7e2f25b330b750e6a9"
       (makeExtNetSelOpt makeExtCellSelOpt makeExtFilterOpt makeExtMoreOpt makeExtRemoveFloatingNets)
       ()
       (RCESELECTIONGUIVersion)
-      ())
+      ()
+      (makeExtNetSelOpt makeExtCellSelOpt makeExtFilterOpt makeExtMoreOpt makeExtRemoveFloatingNets))
     ("tools/rce/skill++" "RCENETLISTGUI.ils" "1a9bdad0f67018f257b74d973b6e2b34142f90f744c88e6b82481a3a95ea4e95"
       (makeExtOutType makeNlPinCtrl makeNlBrackets makeNlHierDeli makeNlBasic makeNlMoreInfo makeNlMore
        makeNlOpt)
       ()
       (RCENETLISTGUIVersion)
-      ())
+      ()
+      (makeExtOutType makeNlPinCtrl makeNlBrackets makeNlHierDeli makeNlBasic makeNlMoreInfo makeNlMore
+       makeNlOpt))
     ("tools/rce/skill++" "RCEEXTRACTGUI.ils" "99d1382ca740c0670ff59d2522714f9ff3d53a5d66e986d54b42beacce7c98e2"
       (makeExtopt rceBaseGuiRevision rceGuiModulesRevision)
       ((rceBaseGuiRevision "20260909.pin.order.v1") (rceGuiModulesRevision
        "20261019.floating.net.include.all.v1"))
       (RCEEXTRACTGUIVersion)
-      ())
-    ("tools/rce/skill" "RCE_toml.il" "c63bf6045f30139aaf5a7c490c9971881763d0584e0df16b0253a2a2fc6b6f4f"
+      ()
+      (makeExtopt))
+    ("tools/rce/skill" "RCE_toml.il" "89ac009bd60205324be0ccfc406f4e640ff820a2d51b86d4b275bdc0b87872a7"
       (RCE_tomlString RCE_tomlBool RCE_shellQuote RCE_envValue RCE_absolutePath RCE_fileStem RCE_logo
        RCE_cadToolsRoot RCE_pythonLibraryPath RCE_tomlWriteSection RCE_tomlWriteString
        RCE_tomlWriteStringList RCE_tomlWriteBool RCE_tomlDefaultOutput RCE_pythonEntry RCE_pythonExe
        RCE_tomlRevision)
-      ((RCE_tomlRevision "20261020.multi.corner.v6"))
+      ((RCE_tomlRevision "20261027.idspf.view.v7"))
       (rceTomlVersion)
+      ()
       ())
     ("tools/rce/skill" "RCE_envOptions.il" "eab00fdf2cbd0e560863e81410bff54053d32e25dc2a1120bd5788bd6cb2e3ee"
       (RCE_parseEnvPairs RCE_envPairNames RCE_envPairValue RCE_extTechEnvName RCE_extTechNames
@@ -51,11 +58,13 @@ let((entryDirectory)
        RCE_setExtToolName)
       ()
       (rceEnvOptionsVersion)
+      ()
       ())
     ("tools/utility/skill" "DM_textCellView.il" "eeebeb929c840bf5d95c96431f2a7807a51e59c06d61107653db617a01b0d89b"
       (SICO_importTextCellView)
       ()
       (sicoTextCellViewVersion)
+      ()
       ())
     ("tools/rce/skill" "RCE_termOrder.il" "5e0ea88da7facd4ca489ec9f29416cb2f81a7103e6056814a5f059d5bf2e206a"
       (rceTermOrderSamePins rceTermOrderSnapshot rceTermOrderMismatchP rceTermOrderUnchangedP
@@ -63,11 +72,13 @@ let((entryDirectory)
        rceTermOrderRevision)
       ((rceTermOrderRevision "20260911.view.term.order.v2"))
       (rceTermOrderVersion)
+      ()
       ())
     ("tools/rce/skill" "RCE_dspfRegionCodec.il" "1c990cb9e6475cf9e1f9f74fcb53fa3501d6d123025774c33501293f5b9d9e9d"
       (rceDspfJsonDigitP rceDspfJsonParseNumber rceDspfJsonParseRegions rceDspfRegionCodecRevision)
       ((rceDspfRegionCodecRevision "20260721.dspf.regions.v1"))
       (rceDspfRegionCodecVersion)
+      ()
       ())
     ("tools/rce/skill" "RCE_dspfProtocol.il" "e01dd152462920ce4816aac5c73026765d71289289e934eedf43651e973f5015"
       (rceDspfJsonWhitespaceP rceDspfJsonSkipWhitespace rceDspfJsonParseString
@@ -76,6 +87,7 @@ let((entryDirectory)
        rceDspfProtocolRevision)
       ((rceDspfProtocolRevision "20260721.dspf.protocol.v3"))
       (rceDspfProtocolVersion)
+      ()
       ())
     ("tools/rce/skill" "RCE_dspfGeometry.il" "e494aca2f61b668275c76d1833ea3add75dfca0249efdf2a00cf376ff4188803"
       (rceDspfBBoxValues rceDspfBBoxIntersectsRegionP rceDspfFigureInRegionsP rceDspfFiguresInRegions
@@ -83,99 +95,116 @@ let((entryDirectory)
        rceDspfGeometryRevision)
       ((rceDspfGeometryRevision "20260721.dspf.geometry.v1"))
       (rceDspfGeometryVersion)
+      ()
       ())
-    ("tools/rce/skill" "RCE_dspfLauncher.il" "39c0c96089a8c2a53860971737ac89dbfa5324317beb4354079784f60301ac4b"
+    ("tools/rce/skill" "RCE_dspfLauncher.il" "267bccfe495c0d51b08364cac4b878a1c415a464352145643a20dc74682244f3"
       (rceDspfLaunchEnvironment rceDspfLauncherSelectionPath rceDspfLauncherDataHandler
        rceDspfLauncherErrHandler rceDspfLauncherPostFunc rceDspfLauncherStopAll rceDspfExitCleanup
        rceDspfRegisterExitCleanup rceDspfStandaloneStart rceDspfAnalyzerChooseFile
        rceDspfLauncherRevision rceDspfInitializeRuntime)
-      ((rceDspfLauncherRevision "20260814.dspf.launcher.v5"))
+      ((rceDspfLauncherRevision "20261024.dspf.launcher.v6"))
       (rceDspfLauncherVersion)
+      ()
       ())
-    ("tools/rce/skill" "RCE_dspfAnalyzer.il" "a935ee4e5ff7d778d3fa4805cb91baa6dfffa566509d7842d9309175c0a607d8"
+    ("tools/rce/skill" "RCE_dspfAnalyzer.il" "843fe3772a1217b8e8f7e04782fdc377e256aef7fa96e17e47214d688f451db6"
       (rceDspfOaName rceDspfLayoutMatches rceDspfClearHighlight rceDspfLayoutWindow rceDspfHighlightNet
        rceDspfCurrentNet rceDspfHandleRequest rceDspfHandleLine rceDspfAnalyzerDataHandler
        rceDspfAnalyzerErrHandler rceDspfAnalyzerCleanup rceDspfAnalyzerPostFunc rceDspfAnalyzerStop
        rceDspfAnalyzerStart rceDspfAnalyzerRevision)
-      ((rceDspfAnalyzerRevision "20260722.dspf.analyzer.v5"))
+      ((rceDspfAnalyzerRevision "20261024.dspf.analyzer.v6"))
       (rceDspfAnalyzerVersion)
+      ()
       ())
     ("tools/rce/skill" "RCE_summaryValues.il" "afee08ca8e053d2b4f4cd24a2056f4af923fa9736854d2da057c0d96ef003911"
       (rceSummaryString rceSummaryFileReady rceSummaryPath rceSummaryLcv rceSummaryJoin
        rceSummaryNormalizedPaths rceSummaryPathsReady rceSummaryPathSizes rceSummaryFirstLine)
       ()
       (RCEsummaryValuesVersion)
+      ()
       ())
     ("tools/rce/skill" "RCE_summaryRun.il" "d63111d0082df43941ed311716105bb0c97c4510bd00049f13fe8d24da07aafb"
       (rceSummaryInputText rceSummaryViewTargetText rceSummaryCaptureRun rceSummaryIgnoredLvsMismatchP
        rceSummaryFailureReason)
       ()
       (RCEsummaryRunVersion)
+      ()
       ())
     ("tools/rce/skill" "RCE_summaryHtml.il" "9512981816f6679cb176fd6596874362c3c8ac9ebf3049e7b2f9022ef067d99d"
       (rceSummaryHtmlEscape rceSummaryRow rceSummaryDetailsHtml)
       ()
       (RCEsummaryHtmlVersion)
+      ()
       ())
     ("tools/rce/skill" "RCE_summaryResults.il" "47b70b7306fe76ddb9a0fa09f9b5ccec96c6aa02e890282e1cdba9bf51ddddbf"
       (rceSummaryDspfOutputP rceSummaryAnalyzableP rceSummaryAppendOutputRecords rceSummaryOutputRecords
        rceSummarySelectedPath rceSummaryResultCB)
       ()
       (RCEsummaryResultsVersion)
+      ()
       ())
     ("tools/rce/skill" "RCE_summaryActions.il" "aa041c28d1e68a797b27f920892a2d89f3ad7e37da4a33139ca6f1f1e00cff08"
       (rceSummaryAnalyzeCB rceSummaryOpenLogCB rceSummaryOpenCB rceSummaryCopyFile rceSummaryCopyCB)
       ()
       (RCEsummaryActionsVersion)
+      ()
       ())
-    ("tools/rce/skill" "UI_rceSummary.il" "66e6e5239d13a3fea91b4c80b15ca999880285b6d7076f64b54e7fc9ced3f86d"
+    ("tools/rce/skill" "UI_rceSummary.il" "08d8192a7bf98f6ffb0a7bbf704187245bdc107c93a6dac3d08b307198e44e2a"
       (rceSummaryFormValidP rceSummaryEnsureForm rceSummaryDisplay rceSummaryUiRevision
        rceSummaryModulesRevision)
-      ((rceSummaryUiRevision "20260911.flow.audit.v1") (rceSummaryModulesRevision
+      ((rceSummaryUiRevision "20261024.flow.audit.v2") (rceSummaryModulesRevision
        "20261011.calibre.pex.tool.v1"))
       (UIrceSummaryVersion)
+      ()
       ())
     ("tools/rce/skill" "CMD_rceSelectNetAddDone.il" "6d851af312d84a85aa56f0e8467f54895e5bbb771706ffe2859da25186b303ee"
       (rceSelectNetOwnerSet rceSelectNetOwnerGet rceSelectNetOwnerClear rceSelectNetOwnerValidP
        CMD_rceSelectNetAdd CMD_rceSelectNetDone)
       ()
       (rceSelectNetCommandVersion)
+      ()
       ())
     ("tools/rce/skill" "UI_rceSelectCellForm.il" "6764a1b7306e4bafb79accbe180ee24e5975d0236552b49d922972c9c5f5cf74"
       (rceSelectCellFormValidP rceSelectCellOwnerForm UI_rceFinishSelectCellCB UI_rceCleanSelectCellCB
        UI_rceCreateSelCellForm)
       ()
       (rceSelectCellFormVersion)
+      ()
       ())
     ("tools/rce/skill" "UI_rceCleanSelectCell.il" "4afb76dde66b6612cd9b96e2d2840081d49e0ef4b42c0e359e4bb1c888c8bde4"
       (UI_rceCleanSelectCell)
       ()
       (rceCleanSelectCellVersion)
+      ()
       ())
     ("tools/rce/skill" "UI_rceFinishSelectCell.il" "642ef8557b4bd786eeee09aa3904e0ce7a80bee1849213b9c7c598a75724d255"
       (UI_rceFinishSelectCell)
       ()
       (rceFinishSelectCellVersion)
+      ()
       ())
     ("tools/rce/skill" "UI_rceSelectCell.il" "0d9af6df0379f6aadc83a1b8059f97b11c50762eeb81a2dc6c33c0b29875549b"
       (UI_rceSelectCell)
       ()
       (rceSelectCellVersion)
+      ()
       ())
     ("tools/rce/skill" "UI_rceSelectNetFromView.il" "7aabf74d5b441df1d0d071afa21e6291c10b43f4a3e091d9327c1cc92aca9321"
       (UI_rceSelectNetFromView)
       ()
       (rceSelectNetFromViewVersion)
+      ()
       ())
     ("tools/rce/skill" "UI_rceUpdateSelectCell.il" "6678b0842089370d9f2152e272cff58ff9e7167c3f82a4c1a19c4590590c8ecd"
       (UI_rceUpdateSelectCell)
       ()
       (rceUpdateSelectCellVersion)
+      ()
       ())
-    ("tools/rce/skill++" "RCECFG.ils" "67ed1af2cadaf69c120deb6470cf137edd3011da464d97335aac3526b8a3cd72"
+    ("tools/rce/skill++" "RCECFG.ils" "be7140f83080e1c01bd2beab2e4ba4a42fa20e9b6f3c2e51912f91a061b9c142"
       (rceInitializeConfig rceConfigRevision rceCdlIncludeConfigRevision)
       ((rceConfigRevision "20261019.floating.net.include.all.v1") (rceCdlIncludeConfigRevision
        "20260812.cdl.include.v2"))
+      ()
       ()
       ())
     ("tools/rce/skill++" "RCEREDUCTION.ils" "1224c72120526c44cfae23804f0fe4958ae2f6b928db390c6452ff5f2ecedbd2"
@@ -186,18 +215,21 @@ let((entryDirectory)
        rceReductionRevision)
       ((rceReductionRevision "20260908.recognize.gates.v1"))
       ()
-      (RCEREDUCTIONGUI))
-    ("tools/rce/skill++" "RCEVIEWTARGET.ils" "032d4a6d88b7981b44a7cfe0123f62bcf6fbb54277d081136d791937391aedb1"
+      (RCEREDUCTIONGUI)
+      (makeReductionOptions))
+    ("tools/rce/skill++" "RCEVIEWTARGET.ils" "1ad8596415549332148852b081f4165174b2ff4efda037a288b02ac6f4f42f6d"
       (rceNativeViewOutputP rceNativeViewKindItems rceNativeViewKindValue rceNativeViewDefaultName
        rceEffectiveCornerDir rceFirstExistingFile rceNativeViewDeviceMapDefault
        rceNativeViewLayerMapDefault rceNativeViewImplicitTarget rceNativeViewExplicitTargetP
        rceNativeViewTargetString rceParseNativeViewTarget rceNativeViewTarget rceNativeViewLayoutView)
       ()
       ()
+      ()
       ())
-    ("tools/rce/skill++" "RCEVIEWSYNC.ils" "20b45b6a158305a95c9bafada2e08cc17389c8d5d5897c3037afa07e2eb8a372"
+    ("tools/rce/skill++" "RCEVIEWSYNC.ils" "0a7ac88fde41354542df77cbc6e9a21c8255faa894737e148b33a63cdecb5470"
       (rceViewTargetCB rceNeedsCdlRunDirectory rceValidateCdlRunDirectory rceSyncNativeView rceViewKindCB
        rceViewNameCB)
+      ()
       ()
       ()
       ())
@@ -206,16 +238,19 @@ let((entryDirectory)
        rceCdlFileCB rceGdsFileCB rceSvdbDirCB rceCciDirCB rceOutDirCB rceCdsLibPath)
       ()
       ()
+      ()
       ())
     ("tools/rce/skill++" "RCEPINORDER.ils" "b954275fff2d0410967341937747f0e0922e2de7bf310bd1d2e22ad87ebdb5d8"
       (rcePinOrderSupportedP rcePinOrderSourceChoices rceSyncPinOrder rceRestorePinOrder
        rceValidatePinOrder rcePinOrderBtnCB rcePinOrderTypeCB rcePinOrderFileCB)
       ()
       ()
+      ()
       ())
-    ("tools/rce/skill++" "RCENETLISTCB.ils" "70d2b50aa73b16e8bce14792add626bc4fd3893011584a7f6b94aaf2c8c76d8e"
+    ("tools/rce/skill++" "RCENETLISTCB.ils" "6f0cec0e10dfbf289266ee87b70ca627c0bca16d51e0db8ed132c25deaec8dbb"
       (rceSyncNetlistCustomize rceParasiticInfoCB rceNameSourceCB rceRcTypeCB rceOutTypeCB
        rceBracketBtnCB rceHierDeliBtnCB)
+      ()
       ()
       ()
       ())
@@ -225,6 +260,7 @@ let((entryDirectory)
        rceSyncStartRve rceNetlistViewTarget rceExpectedOutputPaths)
       ()
       ()
+      ()
       ())
     ("tools/rce/skill++" "RCEOPTIONCB.ils" "fc25302f45a019513d6afa7048541263eccf8e837b28729213715298dd02a815"
       (rceLvsIgnoreErrorCB rceLvsRunsetCB rceLvsHcellCB rceLvsVirtualConnFieldCB rceLvsVirtualConnCB
@@ -232,11 +268,13 @@ let((entryDirectory)
        rceCellLibSelBtnCB rceRelFilterCapBtnCB rceAbsFilterCapBtnCB rceAbsFilterResBtnCB)
       ()
       ()
+      ()
       ())
-    ("tools/rce/skill++" "RCECORNERPATH.ils" "816eca2e3715e526d9ceed4bca538f71488c60f15598db03b73faddb2f1f07da"
+    ("tools/rce/skill++" "RCECORNERPATH.ils" "4b5a02d91f1e7f08a265903ab919db6c95c154c07ed1e2fcc6f73fd209c1748c"
       (rceDirectoryHasNamedFile rceSafeDirFiles rceDirectorySuffixFileCount rceStarCornerDirP
        rceProcessCornerDirP rceProcessPathTail rceProcessCornerNames rceMatchingProcessCorner
        rcePreferredProcessCorner rceDefaultCornerTemperature)
+      ()
       ()
       ()
       ())
@@ -247,10 +285,12 @@ let((entryDirectory)
        rceRcTechDirPathCB rceCornerCB)
       ()
       ()
+      ()
       ())
     ("tools/rce/skill++" "RCEVIEWIMPORT.ils" "9edd2b233de1ba82928639e6bb11d7b0d330064c373049460f3e4a90f9b2e658"
       (rceSessionLibraryPath rceCreateNetlistViewFromRequest rceNativeViewStamp
        rceCreateNativeViewFromRequest rceCompleteViewRequest)
+      ()
       ()
       ()
       ())
@@ -258,9 +298,11 @@ let((entryDirectory)
       (rceIpcSetMeta rceIpcGetMeta rceIpcDataHandler rceIpcErrHandler rceAppendLaunchLog rceIpcPostFunc)
       ()
       ()
+      ()
       ())
     ("tools/rce/skill++" "RCERUNLOCK.ils" "57a8fe32ec498d05cd2cc7821442ece2b3a5d98133de1ab8c0eb2f2a5cfc7409"
       (rceRunDirectory rceRunLockCommand rceReserveRun rceReleaseRun rcePrint)
+      ()
       ()
       ()
       ())
@@ -268,21 +310,30 @@ let((entryDirectory)
       (rceBackupRunData rceStart rceStartReserved)
       ()
       ()
+      ()
       ())
-    ("tools/rce/skill++" "RCETOMLWRITE.ils" "69996345bafd67c002785886e363b7c18f9d5c6fd66ccf9797c048b908349764"
+    ("tools/rce/skill++" "RCEPROCESS.ils" "c967c1293462e37e0d5efee500d998420db0174ed707d622096f5f6cb4f9f60e"
+      (rceFinfetFlowP rceProcessEnvPath rceWriteProcessInputsToml)
+      ()
+      ()
+      ()
+      ())
+    ("tools/rce/skill++" "RCETOMLWRITE.ils" "a4ec9ef526152093381fd4c65fd1de7db6abafa29c14e8230866706c29ba3c7f"
       (rceWriteRunToml rceWriteInputTypeToml rceWriteSchematicToml rceWriteLayoutToml rceWriteCdlToml
        rceWriteGdsToml rceWriteSvdbToml rceWriteCciToml rceWriteLvsToml rceWriteExtractToml
        rceWriteViewToml rceWriteReductionToml rceWriteRuntimeToml rceWriteSelectionToml
        rceWriteFilterToml rceWriteNetlistToml)
       ()
       ()
+      ()
       ())
-    ("tools/rce/skill++" "RCECONFIGWRITE.ils" "ff2de88c0888960e288d9af7c020bb5bfc1f05b44167ad0e666a9fc4572a8929"
+    ("tools/rce/skill++" "RCECONFIGWRITE.ils" "8f74f1338b1e52854b515f55e3b155e624d9a27736708cdb33d1fdf021eee83c"
       (rcePrintReserved)
       ()
       ()
+      ()
       ())
-    ("tools/rce/skill++" "RCECB.ils" "71af593939ffee64b2586c86ffb48febf147229c95349344365dece351aad20c"
+    ("tools/rce/skill++" "RCECB.ils" "dedf7fe226a856ff0e4eb9dada4e2d3014b510e91615343175b9ea6c1edfaa64"
       (rceFormValidP rceFormDoneCB rceRunCB rceRunCloseCB timeFormatter rceFrontendRevision
        rceFlowAuditRevision rceNetlistViewRevision rceAbsolutePathRevision rceUsesCadTempPath
        rceCustomSvrfRevision rceCdlIncludeRevision rceCallbackModulesRevision)
@@ -291,6 +342,7 @@ let((entryDirectory)
        (rceAbsolutePathRevision "20260812.toml.absolute.paths.v1") (rceCustomSvrfRevision
        "20260813.custom.svrf.common.v1") (rceCdlIncludeRevision "20260812.cdl.include.v2")
        (rceCallbackModulesRevision "20261019.floating.net.include.all.v1"))
+      ()
       ()
       ())
     ("tools/rce/skill++" "RCEBATCH.ils" "85a96f8235d93404d80ed48a6de3e6e08541cd9f462a9b7fa113ec9f9cdb9663"
@@ -301,23 +353,27 @@ let((entryDirectory)
       ((rceBatchAdapterRevision "20261011.calibre.pex.tool.v1") (rceCdlIncludeBatchRevision
        "20260812.cdl.include.v2"))
       ()
+      ()
       ())
-    ("tools/rce/skill++" "RCEPROFILE.ils" "cfd880860589f03915d52ec54b197b10a2f567457be7e2e7e97b7bbe893da4cf"
+    ("tools/rce/skill++" "RCEPROFILE.ils" "491082f003a52bad2903605dda3b15a1ac392624e1a17e5eb39d11aa3bb47c8c"
       (rceProfileFieldSpecs rceProfileCollect rceProfileRestoreCorners rceProfileViewKindLabel
        rceProfileOutputViewKind rceProfileSelectionValue rceProfileSetChoice rceProfileApply
        rceProfileRevision)
-      ((rceProfileRevision "20261019.floating.net.include.all.v1"))
+      ((rceProfileRevision "20261103.svdb.query.v1"))
+      ()
       ()
       ())
-    ("tools/rce/skill++" "RCEGUI.ils" "8da196ca4c8c36e5aba90d1e52cc272adfec5b0e70be99a28f3ab1b249673878"
+    ("tools/rce/skill++" "RCEGUI.ils" "db17cf31bdd2c187c33049a8694ad1ead8ac3c8dcec8ba12e2b7776e8844f326"
       (makeInputNameSync makeInpLay makeLvsOptLay makeExtOptLay makeCreateNetlistView makeStartRve
        makeNativeViewOptions makeOutLay makeNlLay makeToolLay makeHardwareLay makeMainLay makeForm
        rceBindCornerRows cadDisplayRceForm rceGuiRevision rceCustomSvrfGuiRevision
        rceCdlIncludeGuiRevision rceAdvancedOptionsGuiRevision)
-      ((rceGuiRevision "20261019.floating.net.include.all.v1") (rceCustomSvrfGuiRevision
+      ((rceGuiRevision "20261103.svdb.query.v2") (rceCustomSvrfGuiRevision
        "20260813.custom.svrf.common.v1") (rceCdlIncludeGuiRevision "20260812.cdl.include.layout.v3")
        (rceAdvancedOptionsGuiRevision "20260817.advanced.options.v1"))
       ()
-      (RCEGUI))
+      (RCEGUI)
+      (makeInputNameSync makeInpLay makeLvsOptLay makeExtOptLay makeCreateNetlistView makeStartRve
+       makeNativeViewOptions makeOutLay makeNlLay makeToolLay makeHardwareLay makeMainLay makeForm))
   ))
 )

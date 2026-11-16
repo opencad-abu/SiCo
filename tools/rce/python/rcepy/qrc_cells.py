@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import os
 import re
 from pathlib import Path
 
 from .config import DesignContext, RceConfig
 from .pathutil import resolve_path
 from .textutil import q, write_text
+from .qrc_technology import extract_tech_dirs
 
 
 QRC_BLOCK_CELL_ENV = "RCE_QUANTUS_BLOCK_CELL_FILE"
@@ -17,7 +17,8 @@ QRC_BLOCK_CELL_ENV = "RCE_QUANTUS_BLOCK_CELL_FILE"
 def qrc_cell_options(cfg: RceConfig, ctx: DesignContext, tech_dir: Path) -> list[str]:
     """Return the dynamic blocking-cell file option, if a list is selected."""
     user_cells = cfg.blocked_cells()
-    foundry_file = _foundry_cell_file(tech_dir)
+    foundry_file = qrc_foundry_cell_file(cfg, (tech_dir,) if not cfg.flag("extract", "finfet_flow")
+                                         else extract_tech_dirs(cfg))
 
     cells_file: Path | None = foundry_file
     if user_cells and foundry_file is not None:
@@ -33,6 +34,31 @@ def qrc_cell_options(cfg: RceConfig, ctx: DesignContext, tech_dir: Path) -> list
     return [
         f'-parasitic_blocking_device_cells_file "{q(str(cells_file))}"'
     ]
+
+
+def qrc_foundry_cell_file(cfg: RceConfig, tech_dirs: tuple[Path, ...]) -> Path | None:
+    configured = cfg.text("extract", "qrc", "block_cell_file").strip()
+    files = [_foundry_cell_file(cfg, directory) for directory in tech_dirs]
+    if not configured and cfg.flag("extract", "finfet_flow"):
+        fallback = []
+        for directory in tech_dirs:
+            path = next(
+                (candidate / "hcell_qci"
+                 for candidate in (directory, directory.parent, directory.parent.parent)
+                 if (candidate / "hcell_qci").is_file()),
+                None,
+            )
+            if path is None:
+                return None
+            fallback.append(path)
+        if len({path.read_bytes() for path in fallback}) > 1:
+            raise ValueError("Quantus FinFET corners have incompatible hcell_qci files")
+        return fallback[0]
+    if any(file is None for file in files):
+        return None
+    if len({file.read_bytes() for file in files}) > 1:
+        raise ValueError("Quantus FinFET corners have incompatible blocking-cell files")
+    return files[0]
 
 
 def _merged_cell_list(foundry_file: Path, user_cells: list[str]) -> str:
@@ -65,17 +91,14 @@ def _matches_quantus_pattern(pattern: str, cell: str) -> bool:
     return re.fullmatch(expression, cell) is not None
 
 
-def _foundry_cell_file(tech_dir: Path) -> Path | None:
-    configured = os.environ.get(QRC_BLOCK_CELL_ENV, "").strip()
+def _foundry_cell_file(cfg: RceConfig, tech_dir: Path) -> Path | None:
+    configured = cfg.text("extract", "qrc", "block_cell_file").strip()
     if not configured:
         return None
     try:
         path = resolve_path(configured, tech_dir)
-    except ValueError as exc:
-        raise ValueError(f"Invalid {QRC_BLOCK_CELL_ENV}: {exc}") from exc
+    except ValueError:
+        return None
     if not path.is_file():
-        raise FileNotFoundError(
-            f"Cannot access Quantus block-cell file configured by "
-            f"{QRC_BLOCK_CELL_ENV}: {path}"
-        )
+        return None
     return path

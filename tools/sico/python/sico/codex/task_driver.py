@@ -2,6 +2,7 @@
 
 import json
 
+from ..context.shadow import record_entry_context_shadow
 from ..core.contracts import NeedsReconcile
 from .backend_source import attachment_instruction
 from .goals import GoalStopped
@@ -65,7 +66,22 @@ class TaskDriver:
                     "后续操作会按明确的库、单元和视图重新预检。",
                 })
             elif "get_entry_context" in names and context.snapshot.get("window_ref"):
+                method = "get_entry_context"
                 facts = self.execute("get_entry_context", {})
+        if facts and not facts["isError"] and method == "get_entry_context":
+            try:
+                document = json.loads(facts["content"][0]["text"])
+                entry = document.get("data") if isinstance(document, dict) else None
+                if isinstance(entry, dict):
+                    record_entry_context_shadow(
+                        self.journal, context.record(), entry,
+                        turn_step="session_start" if origin == "startup" else "follow_up",
+                    )
+            except Exception as exc:
+                self.journal.emit("context.shadow.failed", {
+                    "code": type(exc).__name__,
+                    "message": str(exc)[:300],
+                })
         yield from self.journal.drain()
         if cancelled():
             if turn_options:

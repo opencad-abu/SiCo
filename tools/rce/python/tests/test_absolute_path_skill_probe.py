@@ -13,6 +13,48 @@ from absolute_path_probe_support import (
 
 
 @pytest.mark.skipif(not RUN_PROBE, reason="set RCE_RUN_SKILL_PROBE=1")
+def test_rce_svdb_query_defaults_and_profile_mapping(tmp_path: Path) -> None:
+    install = _install_tree(tmp_path)
+    launch = tmp_path / "launch"
+    run_root = tmp_path / "runs"
+    run_root.mkdir()
+    _write(launch / "cds.lib")
+    _write(launch / "rules/rce_lvs.cal")
+    _write(launch / "tech/RCmax/qrcTechFile")
+
+    _run_probe(
+        tmp_path,
+        flow="RCE",
+        entry=f"{install}/tools/rce/skill++/RCE.ils",
+        commands=(
+            "cadDisplayRceForm()",
+            "form=rceForm",
+            "unless(equal(form~>svdbQuery~>value '(t nil nil nil nil)) error(\"Wrong SVDB query value\"))",
+            "unless(equal(form~>svdbQuery~>defValue '(t nil nil nil nil)) error(\"Wrong SVDB query default\"))",
+            "unless(equal(lvsSvdbQueryFromForm(form) '(\"CCI\")) error(\"Wrong SVDB query selection\"))",
+            "unless(equal(cadr(assoc(\"lvs.svdb_query\" rceProfileCollect(form))) '(\"CCI\")) error(\"Wrong SVDB query profile value\"))",
+            "form~>svdbQuery~>value='(nil t nil nil t)",
+            "unless(equal(lvsSvdbQueryFromForm(form) '(\"SI\" \"PINLOC\")) error(\"Wrong multi-select value\"))",
+            "form~>svdbQuery~>value='(nil nil nil nil nil)",
+            "unless(null(lvsSvdbQueryFromForm(form)) error(\"Cleared query was not empty\"))",
+            "when(form hiFormDone(form) hiDeleteForm(form))",
+        ),
+        env_updates={
+            "CAD_HOME": str(install),
+            "CDS_LIB": "cds.lib",
+            "RCE_DB_DIR": str(run_root),
+            "RCE_LVS_FILE": "probe,rules/rce_lvs.cal",
+            "HCELL_FILE": "",
+            "CDL_HEADER_FILE": "",
+            "QUANTUS_TECH_DIR": "probe,tech/RCmax",
+            "RCE_DEF_TOOL": "QRC",
+            "RCE_OUTPUT_CHOICES": "dspf",
+            "RCE_CORNER": "RCmax",
+        },
+    )
+
+
+@pytest.mark.skipif(not RUN_PROBE, reason="set RCE_RUN_SKILL_PROBE=1")
 def test_drc_writer_makes_selected_paths_absolute(tmp_path: Path) -> None:
     install = _install_tree(tmp_path)
     launch = tmp_path / "launch"

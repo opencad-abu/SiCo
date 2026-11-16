@@ -21,19 +21,23 @@ def test_xrc_none_disables_parasitic_controls_with_dbaccess() -> None:
         pytest.skip("dbAccess is unavailable")
 
     toml_helper = CAD_ROOT / "rce/skill/RCE_toml.il"
+    env_helper = CAD_ROOT / "rce/skill/RCE_envOptions.il"
     skill = "\n".join(
         (
             f'load("{toml_helper}")',
+            f'load("{env_helper}")',
             rce_callback_loads(),
             "defstruct(mockNoRcField value enabled invisible items)",
             "defstruct(mockNoRcParInfo value parasiticCoordinates "
             "parasiticResLayer parasiticResDimensions)",
-            "defstruct(mockNoRcForm extTool rcType outType nameSource nlLay inpType "
+            "defstruct(mockNoRcForm extTool rcType outType nameSource "
+            "nlLay inpType "
             "rcePinOrderSuspended "
             "pinOrderBtn pinOrderType pinOrderFile bracketBtn bracketChoices "
             "hierDeliBtn hierDeliChoices netSelBtn netSelChoices netSelFile "
             "netSchSelBtn relFilterCapBtn relFilterCapValue absFilterCapBtn "
-            "absFilterCapValue absFilterResBtn absFilterResValue nlParInfo nlRmInst)",
+            "absFilterCapValue absFilterResBtn absFilterResValue rmFloatNetsBtn "
+            "nlParInfo nlRmInst)",
             "procedure(makeNoRcField(value) "
             "make_mockNoRcField(?value value ?enabled t ?invisible nil))",
             "coords=makeNoRcField(t)",
@@ -60,7 +64,8 @@ def test_xrc_none_disables_parasitic_controls_with_dbaccess() -> None:
             '?absFilterCapBtn makeNoRcField(t) '
             '?absFilterCapValue makeNoRcField("0.02") '
             '?absFilterResBtn makeNoRcField(t) '
-            '?absFilterResValue makeNoRcField("0.002") ?nlParInfo parInfo '
+            '?absFilterResValue makeNoRcField("0.002") '
+            '?rmFloatNetsBtn makeNoRcField(t) ?nlParInfo parInfo '
             '?nlRmInst makeNoRcField("TRUE"))',
             "rceSyncNetlistCustomize(form)",
             "noneState=and(!form~>netSelBtn~>value "
@@ -72,6 +77,7 @@ def test_xrc_none_disables_parasitic_controls_with_dbaccess() -> None:
             "!form~>absFilterCapValue~>enabled "
             "!form~>absFilterResBtn~>value !form~>absFilterResBtn~>enabled "
             "!form~>absFilterResValue~>enabled "
+            "!form~>rmFloatNetsBtn~>value !form~>rmFloatNetsBtn~>enabled "
             'form~>nlRmInst~>value=="FALSE" !form~>nlRmInst~>enabled '
             "form~>nlParInfo~>value==list(nil nil nil) "
             "!coords~>enabled !resLayer~>enabled !resDimensions~>enabled)",
@@ -80,7 +86,8 @@ def test_xrc_none_disables_parasitic_controls_with_dbaccess() -> None:
             "rcState=and(form~>netSelBtn~>enabled "
             "form~>relFilterCapBtn~>enabled form~>absFilterCapBtn~>enabled "
             "form~>absFilterResBtn~>enabled coords~>enabled "
-            "resLayer~>enabled resDimensions~>enabled form~>nlRmInst~>enabled)",
+            "resLayer~>enabled resDimensions~>enabled "
+            "form~>rmFloatNetsBtn~>enabled form~>nlRmInst~>enabled)",
             'if(and(noneState rcState) then printf("RCE_XRC_NONE_UI_OK\\n"))',
             "exit()",
         )

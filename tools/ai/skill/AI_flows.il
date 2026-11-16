@@ -1,7 +1,7 @@
 ; Asynchronous adapters for existing headless CAD workflows.
 
 unless(and(boundp('aiWorkflowVersion)
-             aiWorkflowVersion=="20261020.sico.flow.v7"
+             aiWorkflowVersion=="20261024.sico.flow.v8"
              boundp('aiWorkflowState)
              aiWorkflowState['exitCleanupRegistered])
 
@@ -336,9 +336,9 @@ procedure(aiWorkflowRegisterExitCleanup()
   aiWorkflowState['exitCleanupRegistered])
 
 procedure(aiWorkflowRevision()
-  "20261020.sico.flow.v7")
+  "20261024.sico.flow.v8")
 
 unless(and(boundp('cadContextBuilding) cadContextBuilding)
   aiWorkflowRegisterExitCleanup())
-aiWorkflowVersion="20261020.sico.flow.v7"
+aiWorkflowVersion="20261024.sico.flow.v8"
 )

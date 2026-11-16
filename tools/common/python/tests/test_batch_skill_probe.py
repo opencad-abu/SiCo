@@ -76,7 +76,7 @@ def test_batch_source_contracts() -> None:
     assert "rceCompleteViewRequest(request spec['launchLog])" in rce
     assert "isCallable('rceBatchAdapterRevision)" in rce_loader
     assert (
-        'rceBatchAdapterRevision()=="20260924.flow.environment.v3"'
+        'rceBatchAdapterRevision()=="20261011.calibre.pex.tool.v1"'
         in rce_loader
     )
     assert rce_loader.index('"/skill++/RCECB.ils"') < rce_loader.index(

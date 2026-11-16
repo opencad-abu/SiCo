@@ -61,7 +61,7 @@ def audit(recipe_path):
     request={'kind':recipe['kind'],'recipe_sha256':sha256_file(recipe_path),'parent':pair,'tools':[t.to_dict() for t in qualified],
         'implementation_sha256':sha256_file(Path(__file__)),'source_generation':evidence['source_generation'],'live_source_rechecked':False,'holdout_evaluated':False}
     digest=stable_digest(request)
-    run=allocate_split_run(resolve_launch_paths(),Path('/path/to/xh/amsVerify/data/ams').resolve(),library='amsLDO',cell='LDO_MASTER',view='startup_fidelity',kind='startup-fidelity',request_digest=digest)
+    run=allocate_split_run(resolve_launch_paths(),Path('/workarea/xh/amsVerify/data/ams').resolve(),library='amsLDO',cell='LDO_MASTER',view='startup_fidelity',kind='startup-fidelity',request_digest=digest)
     write_json_once(run.control_root/'request.json',request)
     print(json.dumps({'run_id':run.run_id,'payload':str(run.payload_root)}),flush=True)
     summary={'status':'FAIL_EXECUTION','qualification':'NOT_ESTABLISHED','holdout_evaluated':False}
@@ -90,7 +90,7 @@ def audit(recipe_path):
             log=(local/'spectre.log').read_text()
             if not re.search('spectre completes with 0 errors',log,re.I):raise ValueError('Spectre completion absent')
             script=local/'export.ocn';csv=local/'waveforms.csv';script.write_text(ocean_export(psf,csv,signals))
-            execute('ocean',('-nograph','-nocdsinit','-cdslib','/path/to/xh/amsVerify/cds.lib','-log',local/'ocean.log','-replay',script))
+            execute('ocean',('-nograph','-nocdsinit','-cdslib','/workarea/xh/amsVerify/cds.lib','-log',local/'ocean.log','-replay',script))
             if 'AIVW_WAVEFORM_EXPORT_COMPLETE' not in (local/'ocean.log').read_text():raise ValueError('export completion absent')
             waves[spec['id']]=read_waveform(csv,signals,stop)
             records.append({'id':spec['id'],'spec':spec,'csv_sha256':sha256_file(csv),'samples':len(waves[spec['id']].times)})

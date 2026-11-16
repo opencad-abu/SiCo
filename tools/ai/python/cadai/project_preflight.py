@@ -111,7 +111,7 @@ def preflight(args, identity, observe):
             {**expected, "actual_path": actual},
         )
     for expected, row in zip(args["targets"], observe["targets"]):
-        target, exists, view_type, readable, parent_writable, opened, modified = row
+        target, exists, oa_view_type, readable, parent_writable, opened, modified = row
         add(
             "target_identity",
             target == [expected[k] for k in ("library", "cell", "view")],
@@ -120,9 +120,10 @@ def preflight(args, identity, observe):
         good = (
             not exists and not opened and parent_writable
             if expected["intent"] == "create"
-            else (exists or opened) and parent_writable and view_type == expected["view_type"] == "schematic"
+            else (exists or opened) and parent_writable
+            and oa_view_type == expected["oa_view_type"] == "schematic"
             if expected["intent"] == "edit"
-            else exists and readable and view_type == expected["view_type"] and not modified
+            else exists and readable and oa_view_type == expected["oa_view_type"] and not modified
         )
         add(
             "target_" + expected["intent"],
@@ -130,7 +131,7 @@ def preflight(args, identity, observe):
             {
                 "target": target,
                 "exists": exists,
-                "actual_view_type": view_type,
+                "actual_oa_view_type": oa_view_type,
                 "readable": readable,
                 "parent_writable": parent_writable,
                 "open_in_session": opened,

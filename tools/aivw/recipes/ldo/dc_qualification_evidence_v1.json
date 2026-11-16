@@ -4,7 +4,7 @@
   "scope": "static_dc_only",
   "runs": [
     {
-      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T072336.041824Z-dc-qualification-4e75b9893f3f/manifest.json",
+      "control_manifest": "/zone.disk/ssd1/workarea/ai/openclaw/cad/.aivw/runs/20260907T072336.041824Z-dc-qualification-4e75b9893f3f/manifest.json",
       "control_sha256": "15ace9c44f1ed1ac06f5036d9b70f8638907d2e356e3f3d83b15b4a011431aea",
       "audit": {
         "status": "PASS",
@@ -19,7 +19,7 @@
       }
     },
     {
-      "control_manifest": "/zone.disk/ssd1/path/to/sico-src/.aivw/runs/20260907T072733.697225Z-dc-qualification-4cbc6d500868/manifest.json",
+      "control_manifest": "/zone.disk/ssd1/workarea/ai/openclaw/cad/.aivw/runs/20260907T072733.697225Z-dc-qualification-4cbc6d500868/manifest.json",
       "control_sha256": "db7db45c8dbad33b3c71fd754f4411788085e303253cd0d4fa03d32c69963b79",
       "audit": {
         "status": "PASS",

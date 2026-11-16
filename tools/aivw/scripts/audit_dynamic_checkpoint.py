@@ -87,7 +87,7 @@ def main():
         "publication": "NOT_PERFORMED"}
     request = {"kind": summary["kind"], "input_manifests": index, "audit_script_sha256": sha256_file(Path(__file__))}
     digest = stable_digest(request)
-    run = allocate_split_run(launch, Path("/path/to/xh/amsVerify/data/ams").resolve(),
+    run = allocate_split_run(launch, Path("/workarea/xh/amsVerify/data/ams").resolve(),
         library="aivw", cell="dynamic_checkpoint", view="evidence", kind="dynamic-todo-audit", request_digest=digest)
     write_json_once(run.control_root/"request.json", request)
     write_json_once(run.payload_root/"summary.json", summary)

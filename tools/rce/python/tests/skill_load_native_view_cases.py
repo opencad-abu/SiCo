@@ -1,3 +1,4 @@
+from skill_loader_test_support import loader_contract
 import re
 
 from skill_load_fixtures import (
@@ -35,7 +36,7 @@ def test_rce_top_cell_and_name_source_gui_and_toml_are_wired() -> None:
     )
     assert '?labelText   "More Extraction Options"' in base
     assert (
-        "?onFields    '(extractTopCellRow nameSource netSel cellSel filter)"
+        "?onFields    '(extractTopCellRow nameSource netSel cellSel filter rmFloatNets)"
         in base
     )
 
@@ -65,24 +66,26 @@ def test_rce_top_cell_and_name_source_gui_and_toml_are_wired() -> None:
 def test_rce_advanced_options_are_grouped_under_disclosures() -> None:
     base = read_skill_source(CAD_ROOT / "rce/skill++/RCEBASEGUI.ils")
     gui = read_skill_source(CAD_ROOT / "rce/skill++/RCEGUI.ils")
-    entry = read_skill_source(CAD_ROOT / "rce/skill++/RCE.ils")
+    entry = loader_contract("rce/skill++/RCE.ils")
 
     assert '?labelText   "More Extraction Options"' in base
     assert (
-        "?onFields    '(extractTopCellRow nameSource netSel cellSel filter)"
+        "?onFields    '(extractTopCellRow nameSource netSel cellSel filter rmFloatNets)"
         in base
     )
     assert "'inputMoreContents list(inst->cdlInclude" in gui
     assert '?labelText   "More Input Options"' in gui
     assert "?onFields    '(inputMoreContents)" in gui
-    assert "'lvsMoreContents list(inst->lvsRecognizeGates inst->customSvrf)" in gui
+    assert (
+        "'lvsMoreContents list(inst->svdbQuery "
+        "inst->lvsRecognizeGates inst->customSvrf)" in gui
+    )
     assert '?labelText   "More LVS Options"' in gui
     assert "?onFields    '(lvsMoreContents)" in gui
     assert gui.count("?persistent  nil") >= 2
     assert "procedure(rceAdvancedOptionsGuiRevision()" in gui
     assert (
-        'rceAdvancedOptionsGuiRevision()=="20260817.advanced.options.v1"'
-        in entry
+        entry.revision("rceAdvancedOptionsGuiRevision") == "20260817.advanced.options.v1"
     )
 
 
@@ -90,7 +93,7 @@ def test_rce_oa_input_names_can_be_synchronized_in_either_direction() -> None:
     base = read_skill_source(CAD_ROOT / "common/skill++/BASEGUI.ils")
     gui = read_skill_source(CAD_ROOT / "rce/skill++/RCEGUI.ils")
     callback = read_skill_source(CAD_ROOT / "rce/skill++/RCECB.ils")
-    entry = read_skill_source(CAD_ROOT / "rce/skill++/RCE.ils")
+    entry = loader_contract("rce/skill++/RCE.ils")
 
     for slot in ("inputSync", "schToLay", "layToSch"):
         assert f"({slot}" in gui
@@ -108,7 +111,7 @@ def test_rce_oa_input_names_can_be_synchronized_in_either_direction() -> None:
     lay_view_end = base.index("inst->layInp=", lay_view_start)
     assert '?defValue "layout"' in base[lay_view_start:lay_view_end]
     assert "procedure(cadBaseInputRevision()" in base
-    assert 'cadBaseInputRevision()=="20260716.input.sync.v1"' in entry
+    assert entry.revision("cadBaseInputRevision") == "20260716.input.sync.v1"
 
     assert "procedure(rceSyncInputNames(form source)" in callback
     assert "form~>layLib~>value=libName" in callback
@@ -119,13 +122,13 @@ def test_rce_oa_input_names_can_be_synchronized_in_either_direction() -> None:
     assert "form~>schView~>value=viewName" in callback
     assert "form->inputSync->invisible=(form->inpType->value!=\"OA\")" in callback
     assert "rceSyncExtractTopCell(form)" in callback
-    assert "isCallable('rceSyncInputNames)" in entry
+    assert entry.requires("rceSyncInputNames")
 
 
 def test_lvs_oa_input_names_can_be_synchronized_in_either_direction() -> None:
     gui = read_skill_source(CAD_ROOT / "lvs/skill++/LVSGUI.ils")
     callback = read_skill_source(CAD_ROOT / "lvs/skill++/LVSCB.ils")
-    entry = read_skill_source(CAD_ROOT / "lvs/skill++/LVS.ils")
+    entry = loader_contract("lvs/skill++/LVS.ils")
 
     for slot in ("inputSync", "schToLay", "layToSch"):
         assert f"({slot}" in gui
@@ -153,10 +156,10 @@ def test_lvs_oa_input_names_can_be_synchronized_in_either_direction() -> None:
     assert "form~>schView~>value=viewName" in sync
 
     revision = "20260817.input.sync.v1"
-    assert 'cadBaseInputRevision()=="20260716.input.sync.v1"' in entry
-    assert f'lvsInputSyncRevision()=="{revision}"' in entry
-    assert f'lvsInputSyncGuiRevision()=="{revision}"' in entry
-    assert "isCallable('lvsSyncInputNames)" in entry
+    assert entry.revision("cadBaseInputRevision") == "20260716.input.sync.v1"
+    assert entry.revision(f"lvsInputSyncRevision") == f"{revision}"
+    assert entry.revision(f"lvsInputSyncGuiRevision") == f"{revision}"
+    assert entry.requires("lvsSyncInputNames")
 
 
 def test_rce_native_oa_views_are_wired_to_gui_toml_and_completion() -> None:
@@ -164,7 +167,7 @@ def test_rce_native_oa_views_are_wired_to_gui_toml_and_completion() -> None:
     config = read_skill_source(CAD_ROOT / "rce/skill++/RCECFG.ils")
     gui = read_skill_source(CAD_ROOT / "rce/skill++/RCEGUI.ils")
     callback = read_skill_source(CAD_ROOT / "rce/skill++/RCECB.ils")
-    entry = read_skill_source(CAD_ROOT / "rce/skill++/RCE.ils")
+    entry = loader_contract("rce/skill++/RCE.ils")
 
     for slot in (
         "nativeViewLay",
@@ -177,6 +180,9 @@ def test_rce_native_oa_views_are_wired_to_gui_toml_and_completion() -> None:
     ):
         assert f"({slot}" in gui
     assert '?prompt   "View Type:"' in gui
+    assert '?items    \'("Interactive DSPF (iDSPF)" "Extracted View")' in gui
+    assert '?items    \'("Smart View"' not in gui
+    assert 'member(form~>inpType~>value \'("OA" "SCH+GDS"))' in callback
     assert 'rceSyncNativeView hiGetCurrentForm()' in gui
     assert "inst->nativeViewLay->invisible=t" in gui
     assert gui.index("inst->viewKind=hiCreateComboField(") < gui.index(
@@ -184,9 +190,10 @@ def test_rce_native_oa_views_are_wired_to_gui_toml_and_completion() -> None:
     )
 
     assert "procedure(rceNativeViewOutputP" in callback
-    for output_type in ("view", "extview", "smartview", "calibreview", "starrcview"):
+    for output_type in ("view", "extview", "smartview", "idspf", "calibreview", "starrcview"):
         assert f'"{output_type}"' in callback
     for label, name in (
+        ("Interactive DSPF (iDSPF)", "idspf"),
         ("Smart View", "smart_view"),
         ("Extracted View", "av_extracted"),
         ("Calibre View", "calibre"),
@@ -224,7 +231,7 @@ def test_rce_native_oa_views_are_wired_to_gui_toml_and_completion() -> None:
     assert "outPath=if(nativeView then" in callback
     assert "member(normalized" in helper
     assert all(f'"{value}"' in helper for value in (
-        "view", "extview", "smartview", "calibreview", "starrcview"
+        "view", "extview", "smartview", "idspf", "calibreview", "starrcview"
     ))
 
     assert "procedure(rceNativeViewStamp" in callback
@@ -247,8 +254,8 @@ def test_rce_native_oa_views_are_wired_to_gui_toml_and_completion() -> None:
         "rceCreateNativeViewFromRequest",
         "rceCompleteViewRequest",
     ):
-        assert f"isCallable('{callable_name})" in entry
-    assert "isCallable('RCE_tomlRevision)" in entry
-    assert 'RCE_tomlRevision()=="20260803.multi.corner.v5"' in entry
-    outer_guard = entry[: entry.index("procedure(rceLoaderRevision")]
-    assert 'RCE_tomlRevision()=="20260803.multi.corner.v5"' in outer_guard
+        assert entry.requires(f"{callable_name}")
+    assert entry.requires("RCE_tomlRevision")
+    assert entry.revision("RCE_tomlRevision") == "20261027.idspf.view.v7"
+    outer_guard = entry
+    assert outer_guard.revision("RCE_tomlRevision") == "20261027.idspf.view.v7"

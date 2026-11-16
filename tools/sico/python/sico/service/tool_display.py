@@ -143,7 +143,7 @@ def _result_html(result, *, context=False):
                         "是" if test.get("enabled") else "否",
                         " / ".join(
                             str(test.get("testbench", {}).get(key, ""))
-                            for key in ("lib", "cell", "view")
+                            for key in ("lib", "cell", "view_name")
                         ),
                         test.get("simulator"),
                         test.get("output_count"),

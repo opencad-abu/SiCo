@@ -18,6 +18,13 @@ DEFAULT_RECORD_LIMIT = 16 * 1024
 INVENTORY_RECORD_LIMIT = 64 * 1024 * 1024
 
 
+def _unsafe_directory_bits(private):
+    # A setgid project directory makes new children inherit S_ISGID. It grants
+    # no group or other access and must not turn a private 0700 root into an
+    # admission failure.
+    return stat.S_ISUID | stat.S_ISVTX | (0o077 if private else 0o022)
+
+
 def local_host_id():
     machine = Path("/etc/machine-id").read_text(encoding="ascii").strip()
     if re.fullmatch("[a-f0-9]{32}", machine) is None:
@@ -28,7 +35,7 @@ def local_host_id():
 def directory(path, *, private=True):
     info = path.lstat()
     if (not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid()
-            or info.st_mode & (0o7077 if private else 0o7022)):
+            or info.st_mode & _unsafe_directory_bits(private)):
         raise ValueError("Migration directory ownership or permissions changed")
     return info
 
@@ -54,7 +61,7 @@ def read_bytes(root, relative, limit):
             os.close(parent)
             parent = child
             info = os.fstat(parent)
-            if info.st_uid != os.getuid() or info.st_mode & 0o7077:
+            if info.st_uid != os.getuid() or info.st_mode & _unsafe_directory_bits(True):
                 raise ValueError("Unsafe migration record parent")
         fd = os.open(parts[-1], flags | os.O_NONBLOCK, dir_fd=parent)
         with os.fdopen(fd, "rb") as stream:

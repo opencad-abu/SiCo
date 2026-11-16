@@ -12,7 +12,7 @@ procedure(aiPdkIdentity(apIdLib apIdCell apIdView)
       list("cell" apIdCell) list("view" apIdView))))
       list("available_views" aiPdkArray(sort(apIdViews 'alphalessp)))
       list("resolved_view_path" ddGetObjReadPath(apIdViewObj))
-      list("view_type" when(apIdFile ddMapGetFileViewType(apIdFile)))
+      list("oa_view_type" when(apIdFile ddMapGetFileViewType(apIdFile)))
       list("master_file_modified" if(apIdModified aiPdkRaw(car(apIdModified)) nil))
       list("master_version_source" "ddGetObjLastModify; observed file timestamp, not a content hash")
       list("source" "ddGetObj; ddMapGetFileViewType")))))
@@ -70,6 +70,76 @@ procedure(aiPdkDevice(apDevLib apDevCell apDevView)
           list("simulators" aiPdkSection("unavailable" "cdfGetCellCDF" nil))
           list("cell_metadata" aiPdkObj(nil)) list("cell_metadata_status" "unavailable")))))
       list("project_models" aiPdkSection("not_requested" "project ADE/setup adapter pending" nil))))))
+
+; Process-level layout facts from the OA technology database. The ASCII
+; techfile is not used here; units come from tech.db and all rule lists are
+; returned as observed values for the Python compiler.
+procedure(aiPdkLayoutProcess(apLayLib)
+  let((apLayLibObj apLayTf apLayUnits apLayLps apLayRows apLayVias apLayViaRows
+       apLayRouting apLayRoutingRows apLayGrids apLaySpacing apLayElectrical)
+    apLayLibObj=ddGetObj(apLayLib)
+    unless(apLayLibObj error("layout technology library unavailable"))
+    apLayTf=techGetTechFile(apLayLibObj)
+    unless(apLayTf error("layout technology database unavailable"))
+    apLayUnits=aiPdkObj(list(
+      list("view_type_units" aiPdkRaw(techGetViewTypeUnits(apLayTf)))
+      list("dbu_per_uu" aiPdkRaw(techGetDBUPerUU(apLayTf "maskLayout")))
+      list("user_unit" aiPdkRaw(techGetUserUnit(apLayTf "maskLayout")))
+      list("mfg_grid" aiPdkRaw(techGetMfgGridResolution(apLayTf)))))
+    apLayLps=techGetLPsByPriority(apLayTf)
+    when(length(apLayLps)>4096 error("layer-purpose limit"))
+    apLayRows=nil
+    foreach(apLayLp apLayLps
+      let((apLayName apLayPurpose apLayMask apLayFunction apLayPacket)
+        apLayName=errset(apLayLp~>layer~>name nil)
+        apLayPurpose=errset(apLayLp~>purpose nil)
+        apLayMask=errset(techGetLayerMaskNumber(apLayTf car(apLayName)) nil)
+        apLayFunction=errset(techGetLayerFunction(apLayTf car(apLayName)) nil)
+        apLayPacket=errset(techGetLPPacketName(apLayLp) nil)
+        apLayRows=cons(aiPdkObj(list(
+          list("layer" aiPdkRaw(if(apLayName car(apLayName) nil)))
+          list("purpose" aiPdkRaw(if(apLayPurpose car(apLayPurpose) nil)))
+          list("mask_number" aiPdkRaw(if(apLayMask car(apLayMask) nil)))
+          list("function" aiPdkRaw(if(apLayFunction car(apLayFunction) nil)))
+          list("packet" aiPdkRaw(if(apLayPacket car(apLayPacket) nil)))
+          list("priority" aiPdkRaw(car(techGetLPAttr(apLayLp))))
+        )) apLayRows)))
+    apLayVias=techGetPrGenViaRules(apLayTf)
+    when(length(apLayVias)>512 error("via rule limit"))
+    apLayViaRows=nil
+    foreach(apLayVia apLayVias
+      apLayViaRows=cons(aiPdkObj(list(
+        list("name" aiPdkRaw(apLayVia))
+        list("params" aiPdkRaw(techGetPrGenViaParams(apLayTf apLayVia)))))
+        apLayViaRows))
+    apLayRouting=techGetPrRoutingLayers(apLayTf)
+    apLayRoutingRows=nil
+    foreach(apLayRoute apLayRouting
+      let((apLayRouteLayer apLayPitch apLayOffset)
+        apLayRouteLayer=car(apLayRoute)
+        apLayPitch=errset(techGetPrRoutingPitch(apLayTf apLayRouteLayer) nil)
+        apLayOffset=errset(techGetPrRoutingOffset(apLayTf apLayRouteLayer) nil)
+        apLayRoutingRows=cons(aiPdkObj(list(
+          list("layer" aiPdkRaw(apLayRouteLayer))
+          list("direction" aiPdkRaw(cadr(apLayRoute)))
+          list("pitch" aiPdkRaw(if(apLayPitch car(apLayPitch) nil)))
+          list("offset" aiPdkRaw(if(apLayOffset car(apLayOffset) nil)))
+        )) apLayRoutingRows)))
+    apLayGrids=techGetLayerRoutingGrids(apLayTf)
+    apLaySpacing=techGetOrderedSpacingRules(apLayTf)
+    apLayElectrical=techGetElectricalRules(apLayTf)
+    aiPdkObj(list(
+      list("technology_library" apLayLib)
+      list("units" apLayUnits)
+      list("lpps" aiPdkArray(reverse(apLayRows)))
+      list("routing_layers" aiPdkRaw(apLayRouting))
+      list("routing_details" aiPdkArray(reverse(apLayRoutingRows)))
+      list("routing_grids" aiPdkRaw(apLayGrids))
+      list("via_rules" aiPdkArray(reverse(apLayViaRows)))
+      list("spacing_rules" aiPdkRaw(apLaySpacing))
+      list("electrical_rules" aiPdkRaw(apLayElectrical))
+      list("source" "techGetViewTypeUnits/techGetDBUPerUU/techGetUserUnit/techGetMfgGridResolution/techGetLPsByPriority/techGetLayerMaskNumber/techGetLayerFunction/techGetLPPacketName/techGetLPAttr/techGetPrGenViaRules/techGetPrGenViaParams/techGetPrRoutingLayers/techGetLayerRoutingGrids/techGetOrderedSpacingRules/techGetElectricalRules"))))
+  )
 
 ; Front-end netlist/model view locations. Paths only: no deck content is read here.
 procedure(aiPdkViewPaths(apVpLib apVpCell)
@@ -169,6 +239,7 @@ procedure(aiPdkCapture(apCapToken apCapSession apCapOperation apCapLib apCapCell
         (apCapOperation=="categories" aiPdkCategories(apCapLib))
         (apCapOperation=="directory" aiPdkDirectory(apCapLib apCapCell apCapView apCapOffset apCapLimit))
         ((apCapOperation=="device") aiPdkDevice(apCapLib apCapCell apCapView))
+        ((apCapOperation=="layout") aiPdkLayoutProcess(apCapLib))
         (t error("unsupported discovery operation")))
       apCapText=aiPdkJson(aiPdkObj(list(list("context" apCapContext) list("data" apCapData))))
       when(strlen(apCapText)>8388608 error("discovery capture exceeds 8 MiB"))

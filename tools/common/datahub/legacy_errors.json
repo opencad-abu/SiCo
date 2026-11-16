@@ -1,0 +1,7 @@
+{
+  "context_unavailable": "source_not_captured",
+  "highlight_failed": "read_failed",
+  "object_changed": "stale_object",
+  "target_not_open": "source_not_captured",
+  "unsupported_object": "invalid_arguments"
+}

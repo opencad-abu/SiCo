@@ -1,0 +1,18 @@
+{
+  "actions": {},
+  "errors": [
+    "invalid_arguments",
+    "unsupported_contract",
+    "version_mismatch",
+    "result_too_large",
+    "internal"
+  ],
+  "limits": {
+    "max_bytes": 55000,
+    "max_items": 64,
+    "max_text": 4096
+  },
+  "name": "sico.cad.object_ref.v1",
+  "schema": "cad.object_ref.v1",
+  "version": 1
+}

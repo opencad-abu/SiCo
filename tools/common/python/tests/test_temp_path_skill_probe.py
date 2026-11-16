@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 from skill_test_support import read_skill_source
+from skill_loader_test_support import loader_contract
 
 CAD_ROOT = Path(__file__).resolve().parents[3]
 
@@ -47,19 +48,20 @@ def test_skill_temp_paths_delegate_to_the_shared_state_authority() -> None:
         ("drc/skill++/DRC.ils", "drcLoaderRevision", loader_revision),
         ("lvs/skill++/LVS.ils", "lvsLoaderRevision", "20260924.flow.environment.v3"),
         ("lef/skill++/LEF.ils", "lefLoaderRevision", "20260924.flow.environment.v3"),
+        # RCE leads the shared flow frontend step; DRC/LVS/LEF still report
+        # the previous shared step token.
         (
             "rce/skill++/RCE.ils",
             "rceLoaderRevision",
-            "20260924.flow.environment.v3",
+            "20261019.floating.net.include.all.v1",
         ),
     ):
-        loader = read_skill_source(CAD_ROOT / relative)
-        assert f'{revision_function}()=="{revision}"' in loader, relative
-        assert f'procedure({revision_function}()\n  "{revision}"' in loader
-        assert 'SICO_tomlRevision()=="20260922.sico.temp.v6"' in loader, relative
-        assert "isCallable('SICO_tempDir)" in loader, relative
-        assert "isCallable('SICO_tempPath)" in loader, relative
-        assert "isCallable('SICO_tempEnvironment)" in loader, relative
+        loader = loader_contract(relative)
+        assert loader.requires(revision_function)
+        assert loader.revision("SICO_tomlRevision") == "20261024.sico.temp.v7"
+        assert loader.requires("SICO_tempDir")
+        assert loader.requires("SICO_tempPath")
+        assert loader.requires("SICO_tempEnvironment")
     assert "procedure(SICO_tempEnvironment()" in helper
     for relative, revision_function, revision in (
         ("drc/skill++/DRCCB.ils", "drcFrontendRevision", loader_revision),
@@ -68,35 +70,31 @@ def test_skill_temp_paths_delegate_to_the_shared_state_authority() -> None:
         (
             "rce/skill++/RCECB.ils",
             "rceFrontendRevision",
-            "20260924.flow.environment.v3",
+            "20261019.floating.net.include.all.v1",
         ),
         (
             "rce/skill++/RCECFG.ils",
             "rceConfigRevision",
-            "20260909.pin.order.v1",
+            "20261019.floating.net.include.all.v1",
         ),
         (
             "rce/skill++/RCEGUI.ils",
             "rceGuiRevision",
-            "20260909.pin.order.v1",
+            "20261019.floating.net.include.all.v1",
         ),
     ):
         source = read_skill_source(CAD_ROOT / relative)
         assert f'procedure({revision_function}()\n  "{revision}"' in source
     batch_core = read_skill_source(CAD_ROOT / "common/skill/SICO_batchCore.il")
-    assert 'sicoBatchCoreVersion=="20260923.batch.commands.v3"' in batch_core
+    assert 'sicoBatchCoreVersion=="20261024.batch.commands.v5"' in batch_core
     for relative, loader_revision in (
         ("drc/skill++/DRC.ils", "drcLoaderRevision"),
         ("lvs/skill++/LVS.ils", "lvsLoaderRevision"),
         ("rce/skill++/RCE.ils", "rceLoaderRevision"),
     ):
-        loader = read_skill_source(CAD_ROOT / relative)
-        assert 'cadBatchCoreRevision()=="20260923.batch.commands.v3"' in loader
-        entry_guard = loader.split(f"procedure({loader_revision}()", 1)[0]
-        assert "isCallable('cadBatchCoreRevision)" in entry_guard, relative
-        assert (
-            'cadBatchCoreRevision()=="20260923.batch.commands.v3"' in entry_guard
-        ), relative
+        loader = loader_contract(relative)
+        assert loader.revision("cadBatchCoreRevision") == "20261024.batch.commands.v5"
+        assert loader.requires("cadBatchCoreRevision")
 
     production_sources = {
         "drc/skill++/DRCCB.ils": ('SICO_tempPath("drcXXXX")',),
@@ -176,7 +174,7 @@ def test_cad_temp_helper_stays_at_launch_cwd_with_dbaccess(tmp_path: Path) -> No
         )
     )
     output = _run_dbaccess(skill, cwd=launch_dir)
-    assert "CAD_TEMP_REV=20260922.sico.temp.v6" in output
+    assert "CAD_TEMP_REV=20261024.sico.temp.v7" in output
     assert f"CAD_TEMP_DIR={expected_dir}" in output
     assert f"CAD_TEMP_FILE={expected_file}" in output
     assert "CAD_TEMP_ESCAPE=nil" in output
@@ -233,6 +231,6 @@ def test_cad_temp_helper_hot_reload_rejects_unsafe_directory_without_chmod(
 
     output = _run_dbaccess(skill, cwd=launch_dir)
 
-    assert "CAD_TEMP_REV=20260922.sico.temp.v6" in output
+    assert "CAD_TEMP_REV=20261024.sico.temp.v7" in output
     assert "TEMP_REJECTED=t" in output
     assert expected_dir.stat().st_mode & 0o777 == 0o777

@@ -1,7 +1,7 @@
 ; Create and display the native RCE completion form.
 
 unless(and(boundp('UIrceSummaryVersion)
-             UIrceSummaryVersion=="20261011.calibre.pex.tool.v1")
+             UIrceSummaryVersion=="20261024.calibre.pex.tool.v2")
 procedure(rceSummaryFormValidP(form)
   and(form
       if(isCallable('hiIsForm) then hiIsForm(form) else t))
@@ -41,8 +41,8 @@ procedure(rceSummaryEnsureForm()
         'rceSummaryForm
         strcat(cond(
                  (isCallable('SICO_logo) SICO_logo())
-                 (isCallable('witMenuLogo) witMenuLogo())
-                 (t "SiCo"))
+                 (isCallable('sicoMenuLogo) sicoMenuLogo())
+                 (t "Silicon Copilot"))
                 "::RCE Extraction Summary")
         layout
         ?buttonLayout list(
@@ -130,7 +130,7 @@ procedure(rceSummaryDisplay(meta exitStatus viewOk)
 )
 
 procedure(rceSummaryUiRevision()
-  "20260911.flow.audit.v1"
+  "20261024.flow.audit.v2"
 )
 
 when(and(boundp('rceSummaryForm) rceSummaryForm
@@ -139,6 +139,6 @@ when(and(boundp('rceSummaryForm) rceSummaryForm
 procedure(rceSummaryModulesRevision()
   "20261011.calibre.pex.tool.v1"
 )
-rceSummaryUiVersion="20260911.flow.audit.v1"
-UIrceSummaryVersion="20261011.calibre.pex.tool.v1"
+rceSummaryUiVersion="20261024.flow.audit.v2"
+UIrceSummaryVersion="20261024.calibre.pex.tool.v2"
 )

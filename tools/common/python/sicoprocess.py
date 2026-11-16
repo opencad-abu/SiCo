@@ -82,7 +82,7 @@ def require_pidfds():
     if not hasattr(os, "pidfd_open") or not hasattr(signal, "pidfd_send_signal"):
         raise ValueError(
             "SiCo requires Python with os.pidfd_open and signal.pidfd_send_signal; "
-            "select a compatible SICO_PYTHON and restart the project service")
+            "restore $SICO_HOME/runtime/python before restarting the project service")
     fd = None
     try:
         fd = os.pidfd_open(os.getpid())

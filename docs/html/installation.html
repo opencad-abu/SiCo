@@ -14,7 +14,7 @@
 <a class="skip" href="#main">跳到正文</a>
 <header class="topbar">
   <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
-  <span class="edition">使用手册 / 2026.09</span>
+  <span class="edition">使用手册 / 2026.10</span>
   <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
 </header>
 <noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
@@ -23,6 +23,8 @@
 <p class="rail-label">SICO DOCUMENTATION</p>
 <a href="index.html">开始阅读</a>
 <p class="nav-group">开始使用</p>
+<a href="sico-gui.html">SiCo · 客户端界面</a>
+<a href="sico-workspace.html">SiCo · 工作区页面</a>
 <a href="installation.html" aria-current="page">01 · 安装</a>
 <a href="environment.html">02 · 环境变量</a>
 <a href="virtuoso.html">03 · Virtuoso 集成</a>
@@ -35,6 +37,9 @@
 <a href="utilities.html">LEF / GDS / CDL</a>
 <a href="lsf.html">LSF · 运行与资源</a>
 <p class="nav-group">参考附录</p>
+<a href="appendix-pdk-data-standard.html">PDK 数据标准</a>
+<a href="appendix-circuit-template-standard.html">电路模板标准</a>
+<a href="appendix-symbol-template-standard.html">Symbol 模板标准</a>
 <a href="environment-internal.html">环境接口附录</a>
 <div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
 </nav>
@@ -47,7 +52,7 @@
 <div class="table-wrap"><table><thead><tr><th>组件</th><th>何时需要</th><th>要求</th></tr></thead><tbody>
 <tr><td>Linux x86_64</td><td>全部功能</td><td>使用经站点确认的平台组合。当前运行包已有 EL7 / EL8 及当前 EL9 主机验收记录，具体资格以所选包为准。</td></tr>
 <tr><td>Cadence Virtuoso / OpenAccess</td><td>OA 输入、菜单、MTS、文本 view</td><td>站点提供工具和许可证；context 必须匹配发行验证的 Cadence 版本，当前验证基于 IC23.1。</td></tr>
-<tr><td>Python / Qt</td><td>SiCo 与图形工具</td><td>二进制安装使用 <code>runtime/python/</code>；源码测试使用配置好依赖的站点 Python。当前 Assistant 要求 Python 3.9.13。</td></tr>
+<tr><td>Python / Qt</td><td>SiCo 与图形工具</td><td>所有安装和源码测试树都只使用 <code>runtime/python/bin/python3</code>。当前 Assistant 要求 Python 3.9.13。</td></tr>
 <tr><td>X11 与系统图形库</td><td>GUI</td><td>有效的 <code>DISPLAY</code> 与 X11 授权。中文输入所需的 IBus/libpinyin、D-Bus、Qt 插件及安装命令见<a href="#pinyin">拼音输入法</a>。</td></tr>
 <tr><td>Calibre / Quantus / StarRC / Abstract</td><td>对应 CAD flow</td><td>按使用范围配置 PATH、许可证和 PDK 规则；SiCo 安装不代替这些 EDA 工具。</td></tr>
 <tr><td>LSF / Environment Modules</td><td>集群运行 / MTS 项目选择</td><td>LSF 按需启用；MTS 项目选择要求可用的 <code>modulecmd</code> 与明确的 modulefiles 目录。</td></tr>
@@ -64,10 +69,6 @@ tar -xzf /path/to/sico-release.tar.gz -C /path/to/new-sico-install</code></pre><
 <p>以下示例使用二进制安装 <code>/software/sico/latest-bin</code>。先加载站点项目 setup，再执行这些设置；将安装路径替换为实际位置。</p>
 <div class="code-block"><div class="code-label">Bash · 二进制安装</div><pre><code>source /path/to/project/setup.bashrc
 export SICO_HOME="/software/sico/latest-bin"
-export SICO_PYTHON_ROOT="$SICO_HOME/runtime/python"
-export SICO_PYTHON="$SICO_PYTHON_ROOT/bin/python3"
-export SICO_SYSTEM_LD_LIBRARY_PATH="$SICO_PYTHON_ROOT/lib:$SICO_HOME/lib"
-export SICO_AI_PYTHON_LIBRARY_PATH="$SICO_SYSTEM_LD_LIBRARY_PATH"
 export SICO_RUNTIME_TOOLS="$SICO_HOME/tools"
 export LD_LIBRARY_PATH="$SICO_HOME/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export PATH="$SICO_HOME/bin:$PATH"
@@ -75,10 +76,6 @@ unset SICO_AI_PYQT_ROOT SICO_AI_QTERMWIDGET_RUNTIME
 unset SICO_AI_RELEASE_ROOT SICO_AI_CONTEXT SICO_AI_QT_PLUGIN_PATH</code></pre></div>
 <details><summary>Csh / Tcsh 的等价配置</summary><div class="code-block"><div class="code-label">Csh · 先加载站点项目环境</div><pre><code>source /path/to/project/setup.cshrc
 setenv SICO_HOME "/software/sico/latest-bin"
-setenv SICO_PYTHON_ROOT "$SICO_HOME/runtime/python"
-setenv SICO_PYTHON "$SICO_PYTHON_ROOT/bin/python3"
-setenv SICO_SYSTEM_LD_LIBRARY_PATH "$SICO_PYTHON_ROOT/lib:$SICO_HOME/lib"
-setenv SICO_AI_PYTHON_LIBRARY_PATH "$SICO_SYSTEM_LD_LIBRARY_PATH"
 setenv SICO_RUNTIME_TOOLS "$SICO_HOME/tools"
 if ( $?LD_LIBRARY_PATH ) then
     setenv LD_LIBRARY_PATH "$SICO_HOME/lib:$LD_LIBRARY_PATH"
@@ -119,7 +116,7 @@ unsetenv SICO_AI_QT_PLUGIN_PATH</code></pre></div></details>
   wqy-zenhei-fonts glibc-common</code></pre></div>
 <p>EL8/EL9 将 D-Bus 守护进程单独放在 <code>dbus-daemon</code> 包中；EL7 由 <code>dbus</code> 包提供。若节点采用其他中文字体，可使用站点已确认覆盖中文字形的字体包。</p>
 <p>若启动时提示缺少 <code>libxcb-cursor.so.0</code>，且所选安装的 <code>lib/</code> 未提供兼容库，EL8/EL9 执行 <code>sudo dnf install -y xcb-util-cursor</code>，EL7 执行 <code>sudo yum install -y xcb-util-cursor</code>。该包在部分版本需要补充仓库，由管理员启用站点批准的软件源；不要从其他操作系统版本复制动态库。</p>
-<p>源码测试安装还需站点 Python 自身具备匹配的 Qt 插件。系统包 <code>qt5-qtbase-gui</code> 提供的是系统 Qt 插件，不能用于补齐另一套 Python/Qt；缺失包内插件时，应修复对应的 SiCo 或站点 Python 安装。</p>
+<p>源码测试安装也使用 <code>$SICO_HOME/runtime/python</code>。系统包 <code>qt5-qtbase-gui</code> 提供的是系统 Qt 插件，不能用于补齐安装内 Python/Qt；缺失包内插件时，应修复 SiCo 运行包。</p>
 <h3 id="pinyin-check">安装后检查与使用</h3>
 <p>在实际执行节点、与 SiCo 相同的用户环境中检查。下面五个命令都应能找到；IBus schema 应有匹配输出，字符集应为 UTF-8，字体查询应列出可显示中文的字体。</p>
 <div class="code-block"><div class="code-label">Bash · 系统输入法依赖检查</div><pre><code>command -v ibus ibus-daemon dbus-daemon dbus-run-session gsettings
@@ -132,7 +129,7 @@ fc-list :lang=zh family | head</code></pre></div>
 <p>先加载上面的 SiCo shell 环境，再用所选 Python 查询真实插件目录。两个插件都应存在，<code>ldd</code> 输出中不应有 <code>not found</code>，Qt 库应来自匹配的运行环境。</p>
 <div class="code-block"><div class="code-label">Bash · 使用当前 SiCo 的 Python/Qt 检查</div><pre><code>sico_qt_plugins=$(
   LD_LIBRARY_PATH="$SICO_SYSTEM_LD_LIBRARY_PATH" \
-    "$SICO_PYTHON" -I -B -c 'from PyQt5.QtCore import QLibraryInfo; print(QLibraryInfo.location(QLibraryInfo.PluginsPath))'
+    "$SICO_HOME/runtime/python/bin/python3" -I -B -c 'from PyQt5.QtCore import QLibraryInfo; print(QLibraryInfo.location(QLibraryInfo.PluginsPath))'
 )
 ls "$sico_qt_plugins/platforminputcontexts/libibusplatforminputcontextplugin.so"
 LD_LIBRARY_PATH="$SICO_SYSTEM_LD_LIBRARY_PATH" \
@@ -151,15 +148,15 @@ LD_LIBRARY_PATH="$SICO_SYSTEM_LD_LIBRARY_PATH" \
 <h2 id="project">进入个人工程并检查安装</h2>
 <div class="code-block"><div class="code-label">Bash · 首次检查</div><pre><code>cd /path/to/my/project
 test -f "$SICO_HOME/etc/config/sico-install.json"
-test -x "$SICO_PYTHON"
+test -x "$SICO_HOME/runtime/python/bin/python3"
 command -v sico virtuoso
-"$SICO_PYTHON" -I -B -c 'import sys; print(sys.version)'
+"$SICO_HOME/runtime/python/bin/python3" -I -B -c 'import sys; print(sys.version)'
 sico --help
 drc --help
 lvs --help
 rce --help
 mts-netlistor --help</code></pre></div>
-<p>共享安装时，每个用户在自己的工程工作目录启动。通常保持 <code>SICO_TEMP_DIR</code> 未设置，SiCo 自动使用 <code>&lt;启动目录&gt;/.sico</code>。若旧环境指定了错误的状态根，可在启动前清除 <code>SICO_TEMP_DIR</code> 和已退出的 <code>CAD_TEMP_DIR</code>。不要删除已有会话目录来解决配置错误。</p>
+<p>共享安装时，每个用户在自己的工程工作目录启动。通常保持 <code>SICO_TEMP_DIR</code> 未设置，SiCo 自动使用 <code>&lt;启动目录&gt;/.sico</code>。若启动环境指定了错误的状态根，可在启动前清除 <code>SICO_TEMP_DIR</code>。不要删除已有会话目录来解决配置错误。</p>
 <h2 id="launch">启动与模型配置</h2>
 <p>执行 <code>sico</code> 打开独立首页，启动或复用当前工程服务。它不会自动启动 Virtuoso。要在 Virtuoso 内使用菜单，请继续<a href="virtuoso.html">配置 .cdsinit</a>。</p>
 <div class="code-block"><div class="code-label">Bash · 需要 AI 功能时，在工程服务启动前设置</div><pre><code>export SICO_BACKEND="codex"
@@ -207,9 +204,9 @@ bsub -I -XF -q sico "$SICO_HOME/bin/sico"</code></pre></div>
 <h2 id="upgrade">更新、切换与排错</h2>
 <ol class="steps"><li>结束或核对现有任务，关闭 SiCo 窗口，正常停止工程服务。</li><li>关闭旧 Virtuoso，在新 shell 加载目标版本环境。单纯修改 shell 变量不会更新已经运行的服务。</li><li>使用同一套安装入口重新启动，检查版本与连接。回退时成套切换到保留的旧安装。</li></ol>
 <div class="code-block"><div class="code-label">Bash · 正常停止当前工程服务</div><pre><code>sico service-stop --project-dir /path/to/my/project</code></pre></div>
-<p>若仍有活动或待核对任务，停止可能被拒绝；先处理这些任务。出现 <code>SICO_HOME conflicts</code> 时检查 <code>command -v sico</code> 与 <code>SICO_HOME</code> 是否属于同一安装；出现旧变量迁移错误时按<a href="environment.html#retired">迁移表</a>修改启动脚本。</p>
+<p>若仍有活动或待核对任务，停止可能被拒绝；先处理这些任务。出现 <code>SICO_HOME conflicts</code> 时检查 <code>command -v sico</code> 与 <code>SICO_HOME</code> 是否属于同一安装；出现旧变量迁移错误时按<a href="environment.html">环境变量速查</a>中的现行名称修改启动脚本。</p>
 
-<footer class="page-footer"><span>内容基线 8ef8482a · 核对 2026-09-28</span><a href="environment.html">环境变量速查 →</a></footer>
+<footer class="page-footer"><span>内容基线 920e8282 · 核对 2026-10-21</span><a href="environment.html">环境变量速查 →</a></footer>
 </main>
 <aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#requirements">准备运行环境</a><a href="#install-package">部署完整运行包</a><a href="#shell">配置启动 shell</a><a href="#pinyin">拼音输入法要求</a><a href="#pinyin-packages">输入法与 lib 安装命令</a><a href="#pinyin-check">输入法检查与排错</a><a href="#project">进入个人工程并检查安装</a><a href="#launch">启动与模型配置</a><a href="#model-deployment">模型集中部署建议</a><a href="#model-access">两层访问权限</a><a href="#model-network">转发节点网络边界</a><a href="#model-queue-launch">专用队列启动示例</a><a href="#source-test">源码测试安装</a><a href="#upgrade">更新、切换与排错</a></aside>
 </div></div>

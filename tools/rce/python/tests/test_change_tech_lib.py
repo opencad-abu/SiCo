@@ -262,7 +262,7 @@ def test_change_tech_lib_skill_sources_are_balanced_and_guarded() -> None:
     for path, version, revision in (
         (CORE, "sicoChangeTechLibCoreVersion", "20260811."),
         (VIA_CORE, "cadChangeTechLibViaVersion", "20260814.via.v6"),
-        (CALLBACKS, "sicoChangeTechLibGuiVersion", "20260902.form.lifecycle.v1"),
+        (CALLBACKS, "sicoChangeTechLibGuiVersion", "20261024.form.lifecycle.v2"),
         (VIA_CALLBACKS, "sicoChangeTechLibViaGuiVersion", "20260811."),
         (FORM, "cadChangeTechLibFormVersion", "20260902.form.lifecycle.v1"),
     ):

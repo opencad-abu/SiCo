@@ -145,7 +145,7 @@ def deck_order(terms, mapping, deck):
 def geometry_rows(device, args, rule=None):
     source = device["geometry"]
     require(device["master_state"]["modified"] is False, "saved master required")
-    require(device["identity"]["items"][0]["view_type"] == "schematicSymbol", "symbol required")
+    require(device["identity"]["items"][0]["oa_view_type"] == "schematicSymbol", "symbol required")
     require(
         source.get("parameterized_master") is False
         and source.get("hierarchical_instance_count") == 0,

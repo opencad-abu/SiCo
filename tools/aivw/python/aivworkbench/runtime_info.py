@@ -276,8 +276,13 @@ def bundle_dependency_info(bundle_root: str | Path | None = None) -> dict[str, A
 def collect_runtime_info(bundle_root: str | Path | None = None) -> dict[str, Any]:
     """Build the acceptance report consumed by launchers and qualification."""
 
-    configured_root = environment_value(os.environ, "SICO_PYTHON_ROOT", ("CAD_PYTHON_ROOT",))
-    configured_python = environment_value(os.environ, "SICO_PYTHON", ("CAD_PYTHON",))
+    home = environment_value(os.environ, "SICO_HOME", ("CAD_HOME",))
+    configured_root = os.path.join(home, "runtime", "python") if home else None
+    configured_python = (
+        os.path.join(configured_root, "bin", "python3")
+        if configured_root
+        else None
+    )
     root_real = os.path.realpath(configured_root) if configured_root else None
     configured_python_real = os.path.realpath(configured_python) if configured_python else None
     root_entry = os.path.join(root_real, "bin", "python3") if root_real else None
@@ -355,38 +360,38 @@ def collect_runtime_info(bundle_root: str | Path | None = None) -> dict[str, Any
     }
 
 
-def validate_production_runtime(*, require_environment: bool = True) -> dict[str, Any]:
+def validate_production_runtime() -> dict[str, Any]:
     """Fail closed when the configured production interpreter is unsafe."""
 
     report = collect_runtime_info()
-    if require_environment and (not report["CAD_PYTHON_ROOT"] or not report["CAD_PYTHON"]):
-        raise RuntimeError("SICO_PYTHON_ROOT and SICO_PYTHON must be set")
+    if not report["CAD_PYTHON_ROOT"] or not report["CAD_PYTHON"]:
+        raise RuntimeError("SICO_HOME must select one SiCo installation")
     if not report["CAD_PYTHON_ROOT_absolute"]:
-        raise RuntimeError("SICO_PYTHON_ROOT must be an absolute path")
+        raise RuntimeError("$SICO_HOME/runtime/python must be an absolute path")
     if not report["CAD_PYTHON_ROOT_directory"]:
-        raise RuntimeError("SICO_PYTHON_ROOT is not a directory")
+        raise RuntimeError("$SICO_HOME/runtime/python is not a directory")
     if not report["CAD_PYTHON_absolute"]:
-        raise RuntimeError("SICO_PYTHON must be an absolute path")
+        raise RuntimeError("$SICO_HOME/runtime/python/bin/python3 must be an absolute path")
     if not report["CAD_PYTHON_executable_file"]:
-        raise RuntimeError("SICO_PYTHON is not an executable file")
+        raise RuntimeError("$SICO_HOME/runtime/python/bin/python3 is not executable")
     if not report["version_exact"]:
         raise RuntimeError("production Python must be exactly 3.9.13")
     if not report["CAD_PYTHON_matches_sys_executable"]:
-        raise RuntimeError("sys.executable does not match SICO_PYTHON")
+        raise RuntimeError("sys.executable does not match $SICO_HOME/runtime/python/bin/python3")
     if not report["CAD_PYTHON_matches_root_entry"]:
-        raise RuntimeError("SICO_PYTHON does not match SICO_PYTHON_ROOT/bin/python3")
+        raise RuntimeError("$SICO_HOME/runtime/python/bin/python3 does not match its root")
     if not report["executable_inside_root"]:
-        raise RuntimeError("production Python resolves outside SICO_PYTHON_ROOT")
+        raise RuntimeError("production Python resolves outside $SICO_HOME/runtime/python")
     if not report["stdlib_inside_root"]:
-        raise RuntimeError("Python standard library resolves outside SICO_PYTHON_ROOT")
+        raise RuntimeError("Python standard library resolves outside $SICO_HOME/runtime/python")
     if not report["python_root_libraries_allowed"]:
-        raise RuntimeError("Python libraries do not resolve inside SICO_PYTHON_ROOT")
+        raise RuntimeError("Python libraries do not resolve inside $SICO_HOME/runtime/python")
     if report["user_site_packages_enabled"]:
         raise RuntimeError("user site-packages are enabled; launch with -s/PYTHONNOUSERSITE=1")
     return report
 
 
-def production_python(*, require_environment: bool = True) -> str:
+def production_python() -> str:
     """Return the only interpreter allowed for AIVW Python child processes.
 
     This check is intentionally independent of ``PATH``.  A module imported
@@ -394,16 +399,12 @@ def production_python(*, require_environment: bool = True) -> str:
     interpreter merely because the parent process happens to be Python.
     """
 
-    report = validate_production_runtime(require_environment=require_environment)
+    report = validate_production_runtime()
     configured = report.get("CAD_PYTHON")
     if not isinstance(configured, str) or not configured or not os.path.isabs(configured):
-        raise RuntimeError("SICO_PYTHON must be an absolute executable path")
+        raise RuntimeError("$SICO_HOME/runtime/python/bin/python3 must be an absolute executable path")
     if not os.path.isfile(configured) or not os.access(configured, os.X_OK):
-        raise RuntimeError("SICO_PYTHON is not an executable file")
-    # ``validate_production_runtime`` already compares realpath(CAD_PYTHON)
-    # with realpath(sys.executable), and checks containment/version.  Return
-    # the configured spelling so a symlink such as bin/python3 remains the
-    # documented production entry point.
+        raise RuntimeError("$SICO_HOME/runtime/python/bin/python3 is not executable")
     return configured
 
 

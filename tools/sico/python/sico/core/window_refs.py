@@ -28,7 +28,7 @@ def normalize_window_list(value):
         raise ValueError("Invalid window list fields")
     if value["ok"] is not True or value["valid"] is not True:
         raise ValueError("Window list is not valid")
-    if value["schema"] != "cad.cv.windows.v1":
+    if value["schema"] != "cad.windows.v1":
         raise ValueError("Unsupported window list schema")
     if not isinstance(value["session_ref"], str) or not _SESSION.fullmatch(value["session_ref"]):
         raise ValueError("Invalid window list session")
@@ -51,18 +51,27 @@ def normalize_window_list(value):
         ref = row.get("window_ref")
         window = row.get("window") or row.get("id")
         if not isinstance(ref, str) or not _WINDOW.fullmatch(ref):
-            raise ValueError("Invalid window list reference")
+            # Text/dialog windows are visible to hiGetWindowList but are not
+            # capturable design targets. Skip them instead of rejecting the
+            # whole inventory.
+            continue
         if not isinstance(window, str) or not window:
-            raise ValueError("Invalid window list identity")
+            continue
         cellview = row.get("cellview")
         if not isinstance(cellview, dict):
             continue
-        target = normalize_target({
-            "library": cellview.get("lib"),
-            "cell": cellview.get("cell"),
-            "view": cellview.get("view"),
-            "view_type": cellview.get("view_type"),
-        })
+        try:
+            target = normalize_target({
+                "library": cellview.get("lib"),
+                "cell": cellview.get("cell"),
+                "view_name": cellview.get("view_name"),
+                "oa_view_type": cellview.get("oa_view_type"),
+                "oa_view_type_source": cellview.get(
+                    "oa_view_type_source", "unknown"
+                ),
+            })
+        except ValueError:
+            continue
         title = None
         raw = row.get("title_bytes_hex")
         if isinstance(raw, str) and _TITLE_BYTES.fullmatch(raw):

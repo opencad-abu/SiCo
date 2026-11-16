@@ -121,7 +121,7 @@ def qrc_filter_res(cfg: RceConfig) -> str:
 
 
 QRC_PARASITIC_INFO_SUPPORT = {
-    "R&C Coordinates": {"dspf", "sp", "spef", "smartview"},
-    "Parasitic R Layer Name": {"dspf", "sp", "spef", "extview", "smartview"},
-    "Parasitic R Size (W&L)": {"dspf", "sp", "spef", "extview", "smartview"},
+    "R&C Coordinates": {"dspf", "sp", "spef", "smartview", "idspf"},
+    "Parasitic R Layer Name": {"dspf", "sp", "spef", "extview", "smartview", "idspf"},
+    "Parasitic R Size (W&L)": {"dspf", "sp", "spef", "extview", "smartview", "idspf"},
 }

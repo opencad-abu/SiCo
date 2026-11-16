@@ -8,7 +8,7 @@ from pathlib import Path
 
 SICO_TOOLS_ROOT = Path(__file__).resolve().parents[3]
 LAUNCHER = SICO_TOOLS_ROOT.parent / "bin/lsfmonitor"
-ENTRY = SICO_TOOLS_ROOT / "common/python/sico-lsf"
+ENTRY_RELATIVE = "tools/common/python/sico-lsf"
 
 
 def _interpreter(path: Path) -> Path:
@@ -34,37 +34,52 @@ def _interpreter(path: Path) -> Path:
     return path
 
 
-def _environment(**overrides: str) -> dict[str, str]:
-    environment = dict(os.environ)
-    for name in (
-        "SICO_LSF_MONITOR_ORIG_LD_LIBRARY_PATH",
-        "SICO_PYTHON",
-        "SICO_PYTHON_ROOT",
-        "SICO_SYSTEM_LD_LIBRARY_PATH",
-    ):
-        environment.pop(name, None)
-        environment.pop("CAD_" + name[5:], None)
-    environment.pop("CAD_HOME", None)
-    environment.pop("SICO_HOME", None)
+def _installation(tmp_path: Path, *, entry=True):
+    root = tmp_path / "sico"
+    (root / "bin").mkdir(parents=True)
+    (root / "etc/config").mkdir(parents=True)
+    (root / "tools/common/sh").mkdir(parents=True)
+    shutil.copy2(LAUNCHER, root / "bin/lsfmonitor")
+    shutil.copy2(
+        SICO_TOOLS_ROOT / "common/sh/sico-installation.sh",
+        root / "tools/common/sh/sico-installation.sh",
+    )
+    shutil.copy2(
+        SICO_TOOLS_ROOT.parent / "etc/config/sico-install.json",
+        root / "etc/config/sico-install.json",
+    )
+    if entry:
+        target = root / ENTRY_RELATIVE
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("", encoding="ascii")
+    return root
+
+
+def _environment(root: Path, **overrides: str) -> dict[str, str]:
+    environment = {
+        "PATH": "/usr/bin:/bin",
+        "SICO_HOME": str(root),
+        "LD_LIBRARY_PATH": "/eda/tool/lib",
+        "PYTHONHOME": "/bad/home",
+        "PYTHONPATH": "/bad/path",
+        "LD_PRELOAD": "/bad/preload.so",
+        "LD_AUDIT": "/bad/audit.so",
+    }
     environment.update(overrides)
     return environment
 
 
-def test_lsfmonitor_uses_sico_python_and_forwards_monitor_options(
-    tmp_path: Path,
-) -> None:
-    python = _interpreter(tmp_path / "python")
+def test_lsfmonitor_uses_only_the_installation_python(tmp_path: Path) -> None:
+    root = _installation(tmp_path)
+    python = _interpreter(root / "runtime/python/bin/python3")
 
     result = subprocess.run(
-        [str(LAUNCHER), "--queue", "queue with spaces", "--refresh-interval", "30"],
+        [str(root / "bin/lsfmonitor"), "--queue", "queue with spaces",
+         "--refresh-interval", "30"],
         env=_environment(
-            SICO_PYTHON=str(python),
-            SICO_SYSTEM_LD_LIBRARY_PATH="/cad/python/lib",
-            LD_LIBRARY_PATH="/eda/tool/lib",
-            PYTHONHOME="/bad/home",
-            PYTHONPATH="/bad/path",
-            LD_PRELOAD="/bad/preload.so",
-            LD_AUDIT="/bad/audit.so",
+            root,
+            SICO_PYTHON="/stale/python3",
+            SICO_PYTHON_ROOT="/stale/python",
         ),
         check=False,
         text=True,
@@ -77,14 +92,14 @@ def test_lsfmonitor_uses_sico_python_and_forwards_monitor_options(
         f"interpreter={python}",
         "pythonhome=unset",
         "pythonpath=unset",
-        "ld=/cad/python/lib",
+        f"ld={root}/runtime/python/lib:{root}/lib",
         "original_ld=/eda/tool/lib",
         "dontwrite=1",
         "nousersite=1",
         "ld_preload=unset",
         "ld_audit=unset",
         "argument=-s",
-        f"argument={ENTRY}",
+        f"argument={root / ENTRY_RELATIVE}",
         "argument=monitor",
         "argument=--queue",
         "argument=queue with spaces",
@@ -93,37 +108,29 @@ def test_lsfmonitor_uses_sico_python_and_forwards_monitor_options(
     ]
 
 
-def test_lsfmonitor_uses_sico_python_root(tmp_path: Path) -> None:
-    python_root = tmp_path / "python-root"
-    python = _interpreter(python_root / "bin/python3")
+def test_lsfmonitor_rejects_missing_installation_python(tmp_path: Path) -> None:
+    root = _installation(tmp_path)
 
     result = subprocess.run(
-        [str(LAUNCHER), "--help"],
-        env=_environment(SICO_PYTHON_ROOT=str(python_root)),
+        [str(root / "bin/lsfmonitor")],
+        env=_environment(root, SICO_PYTHON="/bin/sh"),
         check=False,
         text=True,
         capture_output=True,
         timeout=10,
     )
 
-    assert result.returncode == 0, result.stderr
-    assert f"interpreter={python}" in result.stdout.splitlines()
-    assert result.stdout.splitlines()[-4:] == [
-        "argument=-s",
-        f"argument={ENTRY}",
-        "argument=monitor",
-        "argument=--help",
-    ]
+    assert result.returncode == 2
+    assert "SiCo Python is unavailable" in result.stderr
 
 
-def test_lsfmonitor_preserves_existing_original_library_path(
-    tmp_path: Path,
-) -> None:
-    python = _interpreter(tmp_path / "python")
+def test_lsfmonitor_preserves_existing_original_library_path(tmp_path: Path) -> None:
+    root = _installation(tmp_path)
+    _interpreter(root / "runtime/python/bin/python3")
     result = subprocess.run(
-        [str(LAUNCHER)],
+        [str(root / "bin/lsfmonitor")],
         env=_environment(
-            SICO_PYTHON=str(python),
+            root,
             SICO_LSF_MONITOR_ORIG_LD_LIBRARY_PATH="/eda/original/lib",
             LD_LIBRARY_PATH="/already/sanitized/lib",
         ),
@@ -138,20 +145,13 @@ def test_lsfmonitor_preserves_existing_original_library_path(
 
 
 def test_lsfmonitor_reports_missing_entry(tmp_path: Path) -> None:
-    installed = tmp_path / "bin/lsfmonitor"
-    installed.parent.mkdir(parents=True)
-    shutil.copy2(LAUNCHER, installed)
-    support = tmp_path / "tools/common/sh/sico-installation.sh"
-    support.parent.mkdir(parents=True)
-    shutil.copy2(SICO_TOOLS_ROOT / "common/sh/sico-installation.sh", support)
-    marker = tmp_path / "etc/config/sico-install.json"
-    marker.parent.mkdir(parents=True)
-    shutil.copy2(SICO_TOOLS_ROOT.parent / "etc/config/sico-install.json", marker)
-    expected = tmp_path / "tools/common/python/sico-lsf"
+    root = _installation(tmp_path, entry=False)
+    _interpreter(root / "runtime/python/bin/python3")
+    expected = root / ENTRY_RELATIVE
 
     result = subprocess.run(
-        [str(installed)],
-        env=_environment(SICO_PYTHON="/bin/sh"),
+        [str(root / "bin/lsfmonitor")],
+        env=_environment(root),
         check=False,
         text=True,
         capture_output=True,
@@ -159,6 +159,6 @@ def test_lsfmonitor_reports_missing_entry(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 2
-    assert result.stderr.strip() == (
+    assert result.stderr.strip().endswith(
         f"lsfmonitor: Python entry is unavailable: {expected}"
     )

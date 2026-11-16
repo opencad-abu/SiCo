@@ -252,6 +252,40 @@ class WindowActions:
         return self.api.target_source(self.api.handle(controller or self.page.session),
                                       task_id=task_id, audit_id=audit_id)
 
+    def object_picker_provider(self, controller=None):
+        """Read-only object queries do not require target mutation authority."""
+        source = getattr(self.api, "object_source", None)
+        if source is None:
+            return self.target_picker_provider(controller)
+        return source(self.api.handle(controller or self.page.session))
+
+    def open_object_target(self, ref, *, candidate=None, controller=None):
+        """Open one linked target only after an explicit user request."""
+        opener = getattr(self.api, "open_object_target", None)
+        if opener is None:
+            raise ValueError("当前连接不支持打开并定位目标")
+        token = self.api.handle(controller or self.page.session)
+        if candidate is None:
+            return opener(token, ref)
+        return opener(token, ref, candidate=candidate)
+
+    def object_instances(self, ref, *, controller=None):
+        """Find a target window on other project instances."""
+        finder = getattr(self.api, "object_instances", None)
+        if finder is None:
+            raise ValueError("当前连接不支持跨实例对象查找")
+        return finder(self.api.handle(controller or self.page.session), ref)
+
+    def highlight_object_instance(self, ref, candidate, window_ref, *, controller=None):
+        """Highlight an object on a user-selected project instance."""
+        locator = getattr(self.api, "highlight_object_instance", None)
+        if locator is None:
+            raise ValueError("当前连接不支持跨实例对象定位")
+        return locator(
+            self.api.handle(controller or self.page.session),
+            ref, candidate, window_ref,
+        )
+
     def pick_design_target(self, completed, provider=None, *, controller=None,
                            task_id="", audit_id=""):
         """Present the picker without a nested event loop or a synchronous bridge call."""
@@ -282,7 +316,7 @@ class WindowActions:
             if self.current(scope):
                 if target:
                     self.ui.notices.info("设计目标已绑定", target["library"]
-                                        + " / " + target["cell"] + " / " + target["view"])
+                                        + " / " + target["cell"] + " / " + target["view_name"])
                     self.poll()
 
             completed(target if self.current(scope) else None)
@@ -301,7 +335,7 @@ class WindowActions:
                 completed(None)
                 return
             answer = pending.pop(0)
-            label = target["library"] + " / " + target["cell"] + " / " + target["view"]
+            label = target["library"] + " / " + target["cell"] + " / " + target["view_name"]
             note = "已在 Virtuoso 打开并绑定 " + label
             if target.get("window"):
                 note += "（窗口 " + str(target["window"]) + "）"

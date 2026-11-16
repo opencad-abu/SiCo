@@ -35,7 +35,10 @@ def generate_all(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | Non
         ctx.input_type == "CCI"
         and cfg.ext_tool.upper() in {"STARRC", "STARXTRACT"}
     ):
-        outputs["query"] = generate_star_query(ctx)
+        outputs["query"] = (
+            generate_query(cfg, ctx, defaults=defaults)
+            if cfg.flag("extract", "finfet_flow") else generate_star_query(ctx)
+        )
     for stage in cfg.enabled_stages():
         if stage == "cdl":
             outputs["cdl"] = generate_cdl(cfg, ctx, defaults=defaults)

@@ -14,13 +14,14 @@ from cadconfig.values import MISSING, freeze, thaw
 from .config_input import execution_values
 from .config_context import DesignContext
 from .pex_engine import calibre_pex_tool
+from .process_environment import process_environment
 
 
 INPUTS_NEED_CDL = {"OA", "SCH+GDS"}
 INPUTS_NEED_GDS = {"OA", "CDL+LAY"}
 INPUTS_NEED_LVS = {"OA", "SCH+GDS", "CDL+LAY", "CDL+GDS"}
 PAIRED_INPUT_TYPES = {"OA", "SCH+GDS", "CDL+LAY", "CDL+GDS"}
-VIEW_OUTPUT_TYPES = {"view", "extview", "smartview", "calibreview", "starrcview"}
+VIEW_OUTPUT_TYPES = {"view", "extview", "smartview", "idspf", "calibreview", "starrcview"}
 def load_config(path: str | Path, *, legacy: bool = False) -> "RceConfig":
     cfg_path = Path(path).expanduser().resolve()
     with cfg_path.open("rb") as fh:
@@ -45,8 +46,10 @@ class RceConfig:
     config_path: Path
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "raw", freeze(execution_values(self.raw)))
-        object.__setattr__(self, "config_path", Path(self.config_path).expanduser().resolve())
+        path = Path(self.config_path).expanduser().resolve()
+        values = process_environment(execution_values(self.raw), path.parent)
+        object.__setattr__(self, "raw", freeze(execution_values(values)))
+        object.__setattr__(self, "config_path", path)
     def to_dict(self) -> dict[str, Any]:
         """Return a detached projection suitable for constructing a new request."""
         return thaw(self.raw)

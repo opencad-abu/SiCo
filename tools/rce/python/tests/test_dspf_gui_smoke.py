@@ -35,8 +35,22 @@ def test_gui_indexes_fixture_and_selects_net(tmp_path: Path, monkeypatch) -> Non
     app = application()
     source = write_small_dspf(tmp_path / "small.dspf")
     window = DspfMainWindow(cache_dir=str(tmp_path / "cache"))
-    assert window.windowTitle() == "SiCo::RCE DSPF Analyzer"
+    assert window.windowTitle() == "Silicon Copilot::RCE DSPF Analyzer"
     assert window.windowIcon().isNull() is False
+    assert all(
+        action.icon().isNull()
+        for action in (
+            window.open_action,
+            window.rebuild_action,
+            window.cancel_action,
+            window.highlight_action,
+            window.oa_selection_action,
+        )
+    )
+    assert window.ui.net_pane.previous.text() == "\u25c0"
+    assert window.ui.net_pane.next.text() == "\u25b6"
+    assert window.ui.net_pane.previous.icon().isNull()
+    assert window.ui.net_pane.next.icon().isNull()
     loaded = []
     window.indexLoaded.connect(loaded.append)
     window.show()
@@ -44,7 +58,7 @@ def test_gui_indexes_fixture_and_selects_net(tmp_path: Path, monkeypatch) -> Non
 
     assert wait_until(lambda: bool(loaded))
     assert window.windowTitle() == (
-        f"SiCo::RCE DSPF Analyzer--{window.index_path.name}"
+        f"Silicon Copilot::RCE DSPF Analyzer--{window.index_path.name}"
     )
     assert window.models["nets"].total_rows == 2
     assert window.select_net_by_name("A")

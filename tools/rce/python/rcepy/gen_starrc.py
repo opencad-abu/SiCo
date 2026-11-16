@@ -28,7 +28,11 @@ from .starrc_options import (
     starrc_pin_order_file,
     starrc_selection_lines,
 )
-from .textutil import clean_lines, write_text
+from .textutil import clean_lines, path_token, write_text
+from .finfet_lvs import finfet_lvs_deck
+from .finfet_starrc import apply_starrc_process
+from .finfet_query import generate_finfet_star_query
+from .starrc_paths import starrc_path_lines
 
 
 def generate_starrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | None = None) -> Path:
@@ -161,6 +165,8 @@ def generate_starrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | 
         "extract", "starrc", "coupling_report_file", default="cc.rep", base=ctx.run_dir
     )
     out_path = cfg.output_path(ctx)
+    if cfg.is_multi_corner and any(char.isspace() for char in Path(out_path).name):
+        raise ValueError("StarRC multi-corner output filename must not contain whitespace")
     temperature = cfg.text(
         "extract", "temperature"
     ).strip()
@@ -173,16 +179,16 @@ def generate_starrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | 
             corners_file_lines.extend(
                 [
                     f"CORNER_NAME: {corner}",
-                    f"TCAD_GRD_FILE: {grid}",
+                    f"TCAD_GRD_FILE: {path_token(grid)}",
                     f"OPERATING_TEMPERATURE: {dict(cfg.corner_temperature_pairs()).get(corner, temperature)}",
-                    f"MAPPING_FILE: {mapping}",
+                    f"MAPPING_FILE: {path_token(mapping)}",
                     "",
                 ]
             )
-        write_text(corners_file, clean_lines(corners_file_lines))
+        write_text(corners_file, clean_lines(starrc_path_lines(ctx, corners_file_lines)))
         corner_control_lines = [
             "SIMULTANEOUS_MULTI_CORNER: YES",
-            f"CORNERS_FILE: {corners_file}",
+            f"CORNERS_FILE: {path_token(corners_file)}",
             f"SELECTED_CORNERS: {' '.join(cfg.corners)}",
         ]
     lines = [
@@ -192,15 +198,15 @@ def generate_starrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | 
         f"BLOCK: {ctx.top_cell}",
         "",
         "*** CCI flow",
-        f"CALIBRE_RUNSET: {calibre_runset}",
-        f"CALIBRE_QUERY_FILE: {calibre_query_file}",
+        f"CALIBRE_RUNSET: {path_token(calibre_runset)}",
+        f"CALIBRE_QUERY_FILE: {path_token(calibre_query_file)}",
         "",
         f"CASE_SENSITIVE: {'YES' if cfg.lvs_case_sensitive() else 'NO'}",
         f"HIERARCHICAL_SEPARATOR: {hierarchy}",
         "",
         "*** RC Extraction options",
-        *([] if cfg.is_multi_corner else [f"TCAD_GRD_FILE: {tcad_grd_file}"]),
-        *([] if cfg.is_multi_corner else [f"MAPPING_FILE: {mapping_file}"]),
+        *([] if cfg.is_multi_corner else [f"TCAD_GRD_FILE: {path_token(tcad_grd_file)}"]),
+        *([] if cfg.is_multi_corner else [f"MAPPING_FILE: {path_token(mapping_file)}"]),
         *([] if cfg.is_multi_corner else temperature_lines),
         *corner_control_lines,
         f"EXTRACTION: {rc_type}",
@@ -209,7 +215,7 @@ def generate_starrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | 
         "*** Coupling Caps options",
         *baseline.lines("coupling"),
         "COUPLE_TO_GROUND: NO" if "COUPLING_ABS_THRESHOLD" in filter_requirements and baseline.value("COUPLE_TO_GROUND") is None else "",
-        f"COUPLING_REPORT_FILE: {coupling_report}",
+        f"COUPLING_REPORT_FILE: {path_token(coupling_report)}",
         "",
         "*** XREF options",
         f"XREF: {xref}",
@@ -227,19 +233,20 @@ def generate_starrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | 
         f"NETLIST_FORMAT: {netlist_format}",
         *oa_output_lines,
         *([] if view_output else baseline.lines("netlist.file")),
-        "" if view_output else f"NETLIST_FILE: {out_path}",
+        "" if view_output else f"NETLIST_FILE: {path_token(out_path)}",
         *([] if view_output else parasitic_info_lines),
         *filter_lines,
     ]
     if pin_order_file:
-        lines.append(f"SPICE_SUBCKT_FILE: {pin_order_file}")
+        lines.append(f"SPICE_SUBCKT_FILE: {path_token(pin_order_file)}")
     if star.get("three_d_ic", False):
         lines.extend(["", "*** 3DIC flow", "3D_IC : YES"])
         if star.get("three_d_ic_subckt_file"):
             subckt_file = cfg.path("extract", "starrc", "three_d_ic_subckt_file")
-            lines.append(f"3D_IC_SUBCKT_FILE:{subckt_file}")
+            lines.append(f"3D_IC_SUBCKT_FILE:{path_token(subckt_file)}")
     if common_options:
         lines.extend(["", *common_options])
+    lines = starrc_path_lines(ctx, apply_starrc_process(cfg, ctx, lines))
     return write_text(ctx.log_dir / "star.cmd", clean_lines(lines))
 
 
@@ -272,10 +279,15 @@ def _starrc_calibre_inputs(cfg: RceConfig, ctx: DesignContext) -> tuple[Path, Pa
             )
         runset_file = cfg.resolve_path(runset_raw)
         require_starrc_file(runset_file, "CALIBRE_RUNSET", nonempty=True)
+        if cfg.flag("extract", "finfet_flow"):
+            runset_file = Path(finfet_lvs_deck(cfg, ctx))
         # CCI has no Calibre query stage; generate its command file alongside
         # the StarRC command so CALIBRE_QUERY_FILE always names a real file.
-        if not query_file.is_file() or query_file.stat().st_size == 0:
-            generate_star_query(ctx, query_file)
+        if cfg.flag("extract", "finfet_flow") or not query_file.is_file() or query_file.stat().st_size == 0:
+            if cfg.flag("extract", "finfet_flow"):
+                generate_finfet_star_query(ctx, query_file)
+            else:
+                generate_star_query(ctx, query_file)
         require_starrc_file(query_file, "CALIBRE_QUERY_FILE", nonempty=True)
         return runset_file, query_file
 

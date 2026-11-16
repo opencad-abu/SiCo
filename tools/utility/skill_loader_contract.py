@@ -138,6 +138,19 @@ def declarations(source):
     return exports, revisions, guards
 
 
+def method_names(source):
+    """Return generic functions extended by this source.
+
+    The specialization belongs to this member, but the generic function is
+    shared by every member that adds another method. Loader state must not
+    clear or identity-check the shared generic when this member is replaced.
+    """
+    return list(dict.fromkeys(
+        frame.children[0].text for frame in parse(source)[1]
+        if frame.operator == "defmethod" and not frame.quoted
+    ))
+
+
 def contract(root, group):
     rows = []
     for path in members(root, group):

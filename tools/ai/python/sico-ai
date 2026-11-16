@@ -5,6 +5,14 @@ from pathlib import Path
 
 # Development bootstrap only. Runtime installations execute the native ELF.
 root = Path(__file__).resolve().parents[3]
+common = root / "tools/common/python"
+if str(common) not in sys.path:
+    sys.path.insert(0, str(common))
+
+from sicoruntimebootstrap import ensure_runtime
+
+ensure_runtime(Path(__file__).resolve(), root)
+
 for relative in ("tools/common/python", "tools/sico/python"):
     sys.path.insert(0, str(root / relative))
 

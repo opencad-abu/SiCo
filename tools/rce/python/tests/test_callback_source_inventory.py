@@ -17,7 +17,7 @@ def test_callback_inventory_matches_development_loader_order():
     positions = [loader.index(f'"/skill++/{name}"') for name in names]
     assert positions == sorted(positions)
     assert positions[-1] < loader.index('"/skill++/RCEBATCH.ils"')
-    assert loader.count('rceCallbackModulesRevision()=="20260919.callback.modules.v1"') == 2
+    assert loader.count('rceCallbackModulesRevision()=="20261019.floating.net.include.all.v1"') == 2
     definitions = Counter()
     for path in paths:
         assert path.suffix == '.ils'
@@ -44,6 +44,11 @@ def test_config_serializers_use_explicit_lexical_arguments():
     assert caller.index('close(outFile)') < caller.index('system(strcat("mv "')
 
 
+# The gui group keeps its step token; the summary group moved with the
+# Calibre PEX tool change.
+GROUP_TOKENS = {"gui": "20261019.floating.net.include.all.v1", "summary": "20261011.calibre.pex.tool.v1"}
+
+
 @pytest.mark.parametrize("group,suffix", [("gui", ".ils"), ("summary", ".il")])
 def test_gui_source_groups_preserve_language_order_and_guards(group, suffix):
     paths = rce_source_paths(group)
@@ -59,11 +64,11 @@ def test_gui_source_groups_preserve_language_order_and_guards(group, suffix):
         assert all(frame.close_token for frame in frames)
         guard = re.search(r"boundp\('([A-Za-z]+Version)\)", source)
         assert guard is not None
-        assert f'{guard[1]}="20260919.gui.modules.v1"' in source
+        assert f'{guard[1]}="{GROUP_TOKENS[group]}"' in source
         offsets.append(loader.index(f'"/{path.parent.name}/{path.name}"'))
         names.update(re.findall(r"^(?:procedure|defclass|defmethod)\((\w+)", source, re.M))
     assert offsets == sorted(offsets)
     assert all(count == 1 for count in names.values())
     assert len({p.name for p in paths}) == len(paths)
     revision = "rceGuiModulesRevision" if group == "gui" else "rceSummaryModulesRevision"
-    assert loader.count(f'{revision}()=="20260919.gui.modules.v1"') >= 2
+    assert loader.count(f'{revision}()=="{GROUP_TOKENS[group]}"') >= 2

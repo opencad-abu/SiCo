@@ -6,12 +6,13 @@ procedure(aiBackgroundProbe(abpLib abpCell abpView abpType abpMax abpPlacement)
   prog((abpCv abpExisting abpProtected abpClosed abpReason abpTarget abpBudget abpInspection
         abpTech abpDependencies abpInst abpMaster abpMasterLib abpCdf abpBase abpCount abpApi)
     abpReason="explicit_target_required" abpDependencies="" abpCount=0
-    abpTarget=sprintf(nil "{\"lib\":\"%s\",\"cell\":\"%s\",\"view\":\"%s\"}"
-      aiJsonEscape(or(abpLib "")) aiJsonEscape(or(abpCell "")) aiJsonEscape(or(abpView "")))
+    abpTarget=sprintf(nil "{\"lib\":\"%s\",\"cell\":\"%s\",\"view_name\":\"%s\",\"oa_view_type\":\"%s\"}"
+      aiJsonEscape(or(abpLib "")) aiJsonEscape(or(abpCell "")) aiJsonEscape(or(abpView ""))
+      aiJsonEscape(or(abpType "")))
     abpProtected=errset(unwindProtect(progn(
       unless(and(stringp(abpLib) strlen(abpLib)>0 stringp(abpCell) strlen(abpCell)>0
         stringp(abpView) strlen(abpView)>0) error("Explicit database target required"))
-      abpReason="unsupported_view_type"
+      abpReason="unsupported_oa_view_type"
       unless(abpType=="schematic" error("Only schematic inspection is qualified"))
       abpReason="api_unavailable"
       foreach(abpApi list('dbOpenCellViewByType 'dbFindOpenCellViewByName 'dbClose 'dbIsCellViewModified 'ddGetObj
@@ -31,8 +32,8 @@ procedure(aiBackgroundProbe(abpLib abpCell abpView abpType abpMax abpPlacement)
       unless(abpCv~>mode=="r" error("Existing writable target cannot be reused"))
       abpReason="modified_target"
       when(dbIsCellViewModified(abpCv) error("Only saved OA data is supported"))
-      abpReason="view_type_mismatch"
-      unless(abpCv~>cellViewType=="schematic" error("Target is not a schematic"))
+      abpReason="oa_view_type_mismatch"
+      unless(abpCv~>viewType=="schematic" error("Target is not a schematic"))
       abpReason="unsupported_dependency"
       when(or(abpCv~>isParamCell abpCv~>superMaster abpCv~>mosaics)
         error("Parametric or mosaic targets are not qualified"))
@@ -50,7 +51,7 @@ procedure(aiBackgroundProbe(abpLib abpCell abpView abpType abpMax abpPlacement)
         unless(and(abpMaster ddGetObj(abpMaster~>libName abpMaster~>cellName abpMaster~>viewName))
           error("Instance master unavailable"))
         abpReason="unsupported_dependency"
-        unless(and(abpMaster~>cellViewType=="schematicSymbol" !abpMaster~>isParamCell
+        unless(and(abpMaster~>viewType=="schematicSymbol" !abpMaster~>isParamCell
           !abpMaster~>superMaster !abpMaster~>instances !abpMaster~>mosaics)
           error("Only static flat symbol dependencies are qualified"))
         abpReason="writable_handle"

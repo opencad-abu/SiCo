@@ -121,12 +121,12 @@ def test_ignored_lvs_mismatch_does_not_hide_formatter_errors(
     monkeypatch.setenv("FAKE_LVS_INCORRECT", "1")
     monkeypatch.setenv("FAKE_FMT_XRC_ERRORS", "2")
 
-    with pytest.raises(RuntimeError, match="Calibre XRC reported errors"):
+    with pytest.raises(RuntimeError, match="Calibre xRC reported errors"):
         RceRunner(cfg).run()
 
     assert paths["output"].is_file()
     assert not (paths["run_dir"] / "log" / "lvs-ignored-mismatch").exists()
-    assert "Calibre XRC reported errors" in (
+    assert "Calibre xRC reported errors" in (
         paths["run_dir"] / "log" / "exit-abnormally"
     ).read_text(encoding="utf-8")
 

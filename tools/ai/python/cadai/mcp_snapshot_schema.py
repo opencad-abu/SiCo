@@ -15,8 +15,8 @@ SNAPSHOT_SCHEMATIC = {
         "properties": {
             "lib": {"type": "string", "minLength": 1, "maxLength": 256},
             "cell": {"type": "string", "minLength": 1, "maxLength": 256},
-            "view": {"type": "string", "minLength": 1, "maxLength": 256},
-            "view_type": {"type": "string", "minLength": 1, "maxLength": 256},
+            "view_name": {"type": "string", "minLength": 1, "maxLength": 256},
+            "oa_view_type": {"type": "string", "minLength": 1, "maxLength": 256},
             "include_placement": {"type": "boolean"},
         },
         "additionalProperties": False,

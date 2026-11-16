@@ -2,7 +2,7 @@
  * User text crosses SKILL as bounded base64, never as evaluated source. */
 
 unless(and(boundp('sicoQuickVersion)
-           sicoQuickVersion=="20261021.sico.quick.v7")
+           sicoQuickVersion=="20261023.sico.quick.v11")
 
 unless(boundp('sicoQuickWindows) sicoQuickWindows=makeTable("sicoQuickWindows" nil))
 unless(boundp('sicoQuickChildren) sicoQuickChildren=makeTable("sicoQuickChildren" nil))
@@ -98,8 +98,24 @@ procedure(sicoQuickAsk(binding)
       anchor aiJsonEscape(windowRef) contextJson))
     return(composer)))
 
+procedure(sicoQuickObjectError(code message @optional (action "objects"))
+  if(isCallable('datahubLegacyError)
+    datahubLegacyError("sico.ask.objects.v1" action code message)
+    if(isCallable('aiPdkError)
+      aiPdkError(code message)
+      sprintf(nil "{\"ok\":false,\"code\":\"%s\",\"message\":\"%s\"}" code message))))
+
+procedure(sicoQuickObjectFailure(composer request)
+  let((fields id)
+    fields=parseString(or(request "") " ")
+    id=cadr(fields)
+    when(and(stringp(id) rexMatchp("^[A-Za-z0-9_-]+$" id))
+      sicoQuickSend(composer "objects"
+        sprintf(nil "{\"id\":\"%s\",\"value\":%s}" id
+          sicoQuickObjectError("read_failed" "Ask object query failed"))))))
+
 procedure(sicoQuickObjects(composer request)
-  prog((fields op id ref kind offset limit query value)
+  prog((fields op id ref kind offset limit query value payload checked)
     fields=parseString(request " ")
     when(!fields return(nil))
     op=car(fields) id=cadr(fields)
@@ -108,28 +124,91 @@ procedure(sicoQuickObjects(composer request)
     cond(
       (and(op=="selection" length(fields)==5)
         ref=nth(2 fields) offset=atoi(nth(3 fields)) limit=atoi(nth(4 fields))
-        value=if(and(isCallable('aiSelectionInspect)
-                     fixp(offset) offset>=0 offset<=4096
-                     fixp(limit) limit>=1 limit<=50)
-          aiSelectionInspect(ref offset limit)
-          aiPdkError("invalid_arguments" "Invalid Ask selection request")))
-      (and(op=="objects" length(fields)==7)
+        when(ref=="-"
+          if(!isCallable('aiWindowCapture)
+            value=sicoQuickObjectError("capability_not_available"
+              "Object queries are not loaded; reload SICO.ils (not only SICO_quick.il)")
+            ref=when(composer['target]
+              car(errset(aiWindowCapture(composer['target]['window]) nil)))))
+        value=cond(
+          (stringp(value) value)
+          (!ref sicoQuickObjectError("source_not_captured"
+            "The Ask window is unavailable; reopen Ask"))
+          (!isCallable('aiSelectionInspect) sicoQuickObjectError(
+            "capability_not_available"
+            "Object queries are not loaded; reload SICO.ils (not only SICO_quick.il)"))
+          (!and(fixp(offset) offset>=0 offset<=4096
+                fixp(limit) limit>=1 limit<=50)
+            sicoQuickObjectError("invalid_arguments" "Invalid Ask selection request"))
+          (t
+            payload=aiPdkObj(list(
+              list("window_ref" ref)
+              list("offset" offset)
+              list("limit" limit)))
+            checked=if(isCallable('datahubCheckRequest)
+              datahubCheckRequest("sico.ask.objects.v1" 1 "selection"
+                payload nil)
+              list('ok))
+            unless(car(checked)=='ok
+              sicoQuickObjectError(cadr(checked) caddr(checked) "selection"))
+            aiSelectionInspect(ref offset limit))))
+      (and(op=="objects" or(length(fields)==6 length(fields)==7))
         ref=nth(2 fields) kind=nth(3 fields)
         offset=atoi(nth(4 fields)) limit=atoi(nth(5 fields))
-        query=if(isCallable('aiCopilotHex) aiCopilotHex(nth(6 fields)) "")
-        value=if(and(isCallable('aiSelectionList)
-                     fixp(offset) offset>=0 offset<=4096
-                     fixp(limit) limit>=1 limit<=50)
-          aiSelectionList(ref kind query offset limit)
-          aiPdkError("invalid_arguments" "Invalid Ask object request")))
+        query=if(length(fields)==6 ""
+          if(nth(6 fields)=="-" ""
+            if(isCallable('aiCopilotHex) aiCopilotHex(nth(6 fields)) "")))
+        when(ref=="-"
+          if(!isCallable('aiWindowCapture)
+            value=sicoQuickObjectError("capability_not_available"
+              "Object queries are not loaded; reload SICO.ils (not only SICO_quick.il)")
+            ref=when(composer['target]
+              car(errset(aiWindowCapture(composer['target]['window]) nil)))))
+        value=cond(
+          (stringp(value) value)
+          (!ref sicoQuickObjectError("source_not_captured"
+            "The Ask window is unavailable; reopen Ask"))
+          (!isCallable('aiSelectionList) sicoQuickObjectError(
+            "capability_not_available"
+            "Object queries are not loaded; reload SICO.ils (not only SICO_quick.il)"))
+          (!and(fixp(offset) offset>=0 offset<=4096
+                fixp(limit) limit>=1 limit<=50)
+            sicoQuickObjectError("invalid_arguments" "Invalid Ask object request"))
+          (t
+            payload=aiPdkObj(list(
+              list("window_ref" ref)
+              list("kind" kind)
+              list("query" query)
+              list("offset" offset)
+              list("limit" limit)))
+            checked=if(isCallable('datahubCheckRequest)
+              datahubCheckRequest("sico.ask.objects.v1" 1 "objects"
+                payload nil)
+              list('ok))
+            unless(car(checked)=='ok
+              sicoQuickObjectError(cadr(checked) caddr(checked) "objects"))
+            aiSelectionList(ref kind query offset limit))))
       (and(op=="windows" length(fields)==4)
         offset=atoi(nth(2 fields)) limit=atoi(nth(3 fields))
-        value=if(and(isCallable('aiWindowList)
-                     fixp(offset) offset>=0 offset<=4096
-                     fixp(limit) limit>=1 limit<=200)
-          aiWindowList(offset limit)
-          aiPdkError("invalid_arguments" "Invalid Ask window request")))
-      (t value=aiPdkError("invalid_arguments" "Invalid Ask object operation")))
+        value=cond(
+          (!isCallable('aiWindowList) sicoQuickObjectError(
+            "capability_not_available"
+            "Object queries are not loaded; reload SICO.ils (not only SICO_quick.il)"))
+          (!and(fixp(offset) offset>=0 offset<=4096
+                fixp(limit) limit>=1 limit<=200)
+            sicoQuickObjectError("invalid_arguments" "Invalid Ask window request"))
+          (t
+            payload=aiPdkObj(list(
+              list("offset" offset)
+              list("limit" limit)))
+            checked=if(isCallable('datahubCheckRequest)
+              datahubCheckRequest("sico.ask.objects.v1" 1 "windows"
+                payload nil)
+              list('ok))
+            unless(car(checked)=='ok
+              sicoQuickObjectError(cadr(checked) caddr(checked) "windows"))
+            aiWindowList(offset limit))))
+      (t value=sicoQuickObjectError("invalid_arguments" "Invalid Ask object operation")))
     when(stringp(value)
       sicoQuickSend(composer "objects"
         sprintf(nil "{\"id\":\"%s\",\"value\":%s}" id value)))))
@@ -298,7 +377,10 @@ procedure(sicoQuickData(child data)
             when(and(strlen(line)>6 substring(line 1 6)=="@text ")
               sicoQuickSubmit(composer substring(line 7)))
             when(and(strlen(line)>9 substring(line 1 9)=="@objects ")
-              sicoQuickObjects(composer substring(line 10)))
+              prog((aoRequest aoOk)
+                aoRequest=substring(line 10)
+                aoOk=errset(sicoQuickObjects(composer aoRequest) t)
+                unless(aoOk sicoQuickObjectFailure(composer aoRequest))))
             start=position+1))
         composer['buffer]=if(start<=size then substring(buffer start) else "")))))
 
@@ -346,8 +428,37 @@ procedure(sicoQuickChildExit(child status)
     sicoQuickChildren[child]=nil
     when(status!=0 warn("Silicon Copilot quick input exited with status %L.\n" status))))
 
-procedure(sicoQuickRevision()
-  "20261021.sico.quick.v7")
+procedure(sicoQuickTerminateChild(child)
+  when(child
+    sicoQuickChildren[child]=nil
+    when(ipcIsAliveProcess(child)
+      errset(ipcSignalProcess(child 'TERM) nil))))
 
-sicoQuickVersion="20261021.sico.quick.v7"
+procedure(sicoQuickExitCleanup()
+  let((child cids)
+    foreach(child sicoQuickChildren cids=cons(child cids))
+    foreach(child cids sicoQuickTerminateChild(child))
+    cids=nil
+    foreach(child sicoQuickHostChildren cids=cons(child cids))
+    foreach(child cids
+      sicoQuickHostChildren[child]=nil
+      sicoQuickHostBuffers[child]=nil
+      when(ipcIsAliveProcess(child)
+        errset(ipcSignalProcess(child 'TERM) nil)))
+    t))
+
+procedure(sicoQuickRegisterExitCleanup()
+  unless(boundp('sicoQuickExitCleanupRegistered)
+    when(isCallable('regExitBefore)
+      regExitBefore('sicoQuickExitCleanup)
+      sicoQuickExitCleanupRegistered=t))
+  sicoQuickExitCleanupRegistered)
+
+unless(and(boundp('cadContextBuilding) cadContextBuilding)
+  sicoQuickRegisterExitCleanup())
+
+procedure(sicoQuickRevision()
+  "20261023.sico.quick.v11")
+
+sicoQuickVersion="20261023.sico.quick.v11"
 )

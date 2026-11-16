@@ -3,7 +3,7 @@
 Run from the repository root; it imports source only and touches no EDA,
 service, session or model:
 
-    /software/pkgs/python/3.9.13/bin/python3 \\
+    "$SICO_HOME/runtime/python/bin/python3" \\
         tools/utility/mcp_catalog_report.py --output /path/report.json
 
 Optional inputs:

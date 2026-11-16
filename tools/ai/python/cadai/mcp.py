@@ -38,6 +38,7 @@ from .pdk_session import PdkSession
 from .protocol import MAX_LINE_BYTES
 from .schematic_snapshot import SchematicSnapshotStore, SnapshotError
 from .skill_reference import SkillReference
+from .visible_drc import VisibleDrcService
 
 
 class McpServer:
@@ -65,11 +66,13 @@ class McpServer:
         self._candidate_ledger: CandidateLedger | None = None
         self._pdk_session: PdkSession | None = None
         self._pdk_bindings = None
+        self._visible_drc: VisibleDrcService | None = None
         self._tools = create_bindings(
             client=client, workspace=workspace, skill_reference=self.skill_reference,
             get_pdk_session=self.pdk_session, get_pdk_bindings=self.pdk_bindings,
             get_snapshot_store=self._snapshot_store,
             get_candidate_ledger=self._candidate_store,
+            get_visible_drc_service=self.visible_drc_service,
         )
 
     def pdk_session(self):
@@ -93,6 +96,13 @@ class McpServer:
         preparation = getattr(self._pdk_session, "preparation", None)
         return preparation.guard(name) if preparation is not None else None
 
+    def visible_drc_service(self):
+        if self._visible_drc is None:
+            self._visible_drc = VisibleDrcService(
+                client=self.client, workspace=self.workspace
+            )
+        return self._visible_drc
+
     def run(self) -> int:
         try:
             serve(self.reader, self.writer, self.handle, max_line_bytes=MAX_LINE_BYTES)
@@ -103,7 +113,10 @@ class McpServer:
     def close(self) -> None:
         """Release in dependency order, attempting every close even after failure."""
         failure = None
-        for resource in (self._pdk_session, self.snapshot_store, self.skill_reference, self.client):
+        for resource in (
+            self._visible_drc, self._pdk_session, self.snapshot_store,
+            self.skill_reference, self.client,
+        ):
             if resource is not None:
                 try:
                     resource.close()

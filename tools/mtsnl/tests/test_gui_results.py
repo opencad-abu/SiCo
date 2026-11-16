@@ -13,6 +13,7 @@ pytest.importorskip("PyQt5")
 
 from PyQt5.QtWidgets import QApplication  # noqa: E402
 
+from cadgui.palette import active  # noqa: E402
 from mtsnetlistor.errors import RequestValidationError  # noqa: E402
 from mtsnetlistor.gui.host_requests import (  # noqa: E402
     emit_open_view_request,
@@ -105,6 +106,7 @@ def test_result_browser_lists_cells_and_dispatches_double_clicks(
         assert dialog.table.item(0, 3).text() == "target/first_mts/spectreText"
         assert dialog.table.item(1, 2).text() == "-"
         assert dialog.table.item(1, 3).text() == "-"
+        assert dialog.table.item(1, 2).foreground().color().name() == active().muted.lower()
 
         dialog._open_cell(0, 0)
         dialog._open_cell(0, 1)

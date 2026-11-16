@@ -14,7 +14,7 @@
 <a class="skip" href="#main">跳到正文</a>
 <header class="topbar">
   <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
-  <span class="edition">使用手册 / 2026.09</span>
+  <span class="edition">使用手册 / 2026.10</span>
   <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
 </header>
 <noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
@@ -23,6 +23,8 @@
 <p class="rail-label">SICO DOCUMENTATION</p>
 <a href="index.html">开始阅读</a>
 <p class="nav-group">开始使用</p>
+<a href="sico-gui.html">SiCo · 客户端界面</a>
+<a href="sico-workspace.html">SiCo · 工作区页面</a>
 <a href="installation.html">01 · 安装</a>
 <a href="environment.html">02 · 环境变量</a>
 <a href="virtuoso.html">03 · Virtuoso 集成</a>
@@ -35,6 +37,9 @@
 <a href="utilities.html">LEF / GDS / CDL</a>
 <a href="lsf.html">LSF · 运行与资源</a>
 <p class="nav-group">参考附录</p>
+<a href="appendix-pdk-data-standard.html">PDK 数据标准</a>
+<a href="appendix-circuit-template-standard.html">电路模板标准</a>
+<a href="appendix-symbol-template-standard.html">Symbol 模板标准</a>
 <a href="environment-internal.html">环境接口附录</a>
 <div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
 </nav>
@@ -43,6 +48,42 @@
 <p class="eyebrow">CAD FLOW / DESIGN RULE CHECK</p>
 <h1>DRC · 版图规则检查</h1>
 <p class="lead">使用 Calibre 检查 OA layout 或已有 GDS。先准备正确的工艺 runset，再选择输入、运行模式与结果目录。</p>
+<h2 id="gui">图形界面：DRC 主表单</h2>
+<figure class="figure">
+  <a href="assets/screenshots/drc-form.png" aria-label="查看 DRC 主表单原图"><img src="assets/screenshots/drc-form.png" alt="SiCo DRC 主表单：Profile、Layout Input、DRC Options、输出和硬件配置" loading="lazy"></a>
+  <figcaption><strong>SiCo DRC 主表单。</strong>示例填写了演示 library / cell / view 和规则文件；实际候选、路径和主机以当前工程环境为准。<span class="zoom-hint">点击图片查看原始尺寸</span></figcaption>
+</figure>
+<p>从 <strong>SiCo → DRC</strong> 打开。表单从上到下分为 Profile、Layout Input、DRC Options、Output、Tool 和 Hardware；初次使用时先展开并核对所有三角形区域，再运行。</p>
+<div class="table-wrap"><table><thead><tr><th>页面/控件</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>Config File</strong> + <strong>Load / Save / Save As…</strong></td><td>选择 DRC Profile；Load 回填业务选项，Save 覆盖当前文件，Save As… 新建文件。</td><td>Profile 只保存可复用设置；运行目录、设计身份和最终 TOML 仍由本次 Run 生成。</td></tr>
+<tr><td><strong>Run Scope</strong></td><td><strong>Single Cell</strong> 检查一组 layout；<strong>Multiple Cells</strong> 显示 Multiple Cell Mappings。</td><td>多 cell 模式共用同一规则、输出和硬件设置；每个映射单独生成任务。</td></tr>
+<tr><td><strong>Multiple Cell Mappings</strong></td><td>报告表列出 library / cell / view；编辑区填写下一组身份，<strong>Add / Update</strong> 加入或更新，右键可删除选中映射。</td><td>只接受完整的 library / cell / view；重复身份不要手工制造。</td></tr>
+<tr><td><strong>Layout / Library / Cell / View</strong></td><td>指定 OA layout 输入。OA 输入需要当前工程的 <code>CDS_LIB</code> 和 <code>TECH_LAYER_MAP</code>。</td><td>先确认 view 是 <code>layout</code>，且属于当前 PDK；不要用 symbol 或 schematic 代替。</td></tr>
+<tr><td><strong>Run Mode</strong></td><td><strong>Hier</strong> 使用层次化运行并允许选择 CPU；<strong>Flat</strong> 固定 1 CPU。</td><td>按 runset 与设计规模选择；Flat 可能显著更慢且更占资源。</td></tr>
+<tr><td><strong>Rule File</strong> 下拉与路径</td><td>下拉项来自 <code>DRC_FILE</code> 的显示名，路径字段指向实际 Calibre runset。</td><td>核对显示名和路径属于同一工艺版本；修改路径后 Rule Select 结果会失效。</td></tr>
+<tr><td><strong>More DRC Options</strong></td><td>展开后显示 Rule Select 与 Customized SVRF Command。</td><td>不展开不代表选项生效；展开后逐项确认开关、文件与文本。</td></tr>
+<tr><td><strong>Rule Select</strong> 开关、<strong>Select…</strong>、摘要</td><td>只运行选定的 rule group / check。开关关闭时使用完整 runset；开启后可打开选择窗口。</td><td>摘要必须与本次目标一致；空选择不能提交。详见下一小节。</td></tr>
+<tr><td><strong>Customized SVRF Command</strong></td><td>在标准 runset 之外追加用户 SVRF 命令。</td><td>只填写已确认的工艺命令；不要用自定义片段掩盖 runset 缺失项。</td></tr>
+<tr><td><strong>Save Data to</strong> + 路径</td><td>选择 Project Directory、Current Directory 或 Customize Directory，并显示最终输出根。</td><td>确认最末级路径和写权限；未设置 <code>DRC_DB_DIR</code> 时 Project Directory 可能落到当前目录。</td></tr>
+<tr><td><strong>DRC Engine</strong></td><td>当前为 Calibre；实际可执行文件来自 PATH 与站点环境。</td><td>运行前用 <code>command -v calibre</code> 检查；<code>MGC_HOME</code> 不会自动选择程序。</td></tr>
+<tr><td><strong>Run at / Queue / Host / LSF</strong></td><td>Current Host 在本机执行；LSF Farm 允许选择队列和主机，<strong>LSF</strong> 按钮打开负载监控器核对选择。</td><td>队列/主机候选未加载完成时不要强行提交；使用已验证的 queue 与 host。</td></tr>
+<tr><td><strong>CPU Number / Parallel Cells</strong></td><td>Hier 模式选择 CPU；多 cell 模式设置同时处理的 cell 数。</td><td>CPU 和并行数受队列槽位与许可证限制；并行数不是越大越快。</td></tr>
+<tr><td><strong>Run+Close / Run / Report / Close</strong></td><td>运行后关闭、运行并保留、打开已有报告、只关闭表单。</td><td>Report 只读取已完成结果；没有成功运行时不要用它判断 DRC 通过。</td></tr>
+</tbody></table></div>
+<figure class="figure compact">
+  <a href="assets/screenshots/drc-rule-select.png" aria-label="查看 DRC Rule Select 原图"><img src="assets/screenshots/drc-rule-select.png" alt="DRC Rule Select 窗口：规则组树、过滤、Select Visible、Clear Visible、Apply 和 Cancel" loading="lazy"></a>
+  <figcaption><strong>DRC Rule Select。</strong>规则组和检查项以树形显示；示例已选中部分组和检查。<span class="zoom-hint">点击图片查看原始尺寸</span></figcaption>
+</figure>
+<h3 id="rule-select">Rule Select 窗口的每个控件</h3>
+<div class="table-wrap"><table><thead><tr><th>控件</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>Filter groups and checks</strong></td><td>按名称大小写不敏感地筛选规则组和检查项，保留匹配项的父组。</td><td>过滤只改变显示，不自动改变已选内容；筛选后仍要核对摘要。</td></tr>
+<tr><td>规则树与复选框</td><td>父组三态表示子项全选、部分选择或未选；可逐项选择。</td><td>组和部分检查可以同时存在；重叠组会合并为一次选择。</td></tr>
+<tr><td><strong>Select Visible</strong></td><td>选中当前过滤结果中可见的组和检查。</td><td>先缩小过滤范围，避免一次选中大量无关规则。</td></tr>
+<tr><td><strong>Clear Visible</strong></td><td>清除当前可见项，不影响不可见项。</td><td>用于撤销错误过滤下的选择；不会删除 runset。</td></tr>
+<tr><td>状态行</td><td>显示当前可见组数、总组数、已选组数、已选检查数及规则来源（可能标注 cached）。</td><td>Apply 前确认来源和数量；TVF 展开失败时应检查 Calibre 而不是继续空选。</td></tr>
+<tr><td><strong>Apply</strong></td><td>把选择写入结果文件并关闭窗口；空选择会提示并保持窗口。</td><td>Apply 后主表单摘要更新；如果随后修改 Rule File，旧选择会失效。</td></tr>
+<tr><td><strong>Cancel</strong> / 关闭窗口</td><td>不写结果，保留主表单原选择。</td><td>取消不会修改 runset 或已有运行目录。</td></tr>
+</tbody></table></div>
 <h2 id="prepare">准备工具与工艺文件</h2>
 <div class="code-block"><div class="code-label">Bash · 在启动 Virtuoso 前配置</div><pre><code>export DRC_FILE="default,$PDK_ROOT/pv/drc.cal;signoff,$PDK_ROOT/pv/drc-signoff.cal"
 export DRC_DB_DIR="$PROJECT_ROOT/runs/drc"
@@ -73,9 +114,9 @@ drc report /path/to/run/drc.toml</code></pre></div>
 <tr><td>结果目录无法创建</td><td>检查 DRC_DB_DIR 或自定义根的最近存在父目录是否可写。</td></tr>
 </tbody></table></div>
 
-<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="lvs.html">LVS 连接一致性 →</a></footer>
+<footer class="page-footer"><span>内容基线 ed47e32e · 界面核对 2026-10-24</span><a href="lvs.html">LVS 连接一致性 →</a></footer>
 </main>
-<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#prepare">准备工具与工艺文件</a><a href="#run">在 GUI 中运行</a><a href="#rules">Rule Select 的使用边界</a><a href="#cli">命令行与结果</a><a href="#troubleshoot">遇到问题时</a></aside>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#gui">图形界面：DRC 主表单</a><a href="#rule-select">Rule Select 控件</a><a href="#prepare">准备工具与工艺文件</a><a href="#run">在 GUI 中运行</a><a href="#rules">Rule Select 的使用边界</a><a href="#cli">命令行与结果</a><a href="#troubleshoot">遇到问题时</a></aside>
 </div></div>
 </body>
 </html>

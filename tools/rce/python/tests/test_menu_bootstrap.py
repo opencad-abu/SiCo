@@ -24,7 +24,7 @@ def _load_menu_generator():
 
 def test_menu_callbacks_use_the_menu_local_loader() -> None:
     top_loader = (CAD_ROOT / "common/skill/sicoToolRegister.il").read_text(encoding="utf-8")
-    legacy_loader = (CAD_ROOT.parent / "loadThisFirst.il").read_text(encoding="utf-8")
+    legacy_loader = (CAD_ROOT.parent / "scripts/sicoAutoLoad.il").read_text(encoding="utf-8")
     menu = (CAD_ROOT / "utility/menu.il").read_text(encoding="utf-8")
     config = (CAD_ROOT / "utility/menu.toml").read_text(encoding="utf-8")
     generated = (CAD_ROOT / "utility/menu.generated.il").read_text(encoding="utf-8")
@@ -36,12 +36,15 @@ def test_menu_callbacks_use_the_menu_local_loader() -> None:
     assert "procedure(witMenuTryLoadData" in menu
     assert "procedure(witMenuLoadData" in menu
     assert "procedure(witMenuRegenerate" in menu
+    assert "procedure(sicoMenuLogo" in menu
+    assert "witMenuLogo(" not in menu
+    assert 'or(logo company defaultLogo "Silicon Copilot")' in menu
     assert "procedure(sicoToolRegister" in top_loader
     assert "procedure(cadLoadToolScripts" in top_loader
     assert 'scriptsRoot=cadPath("scripts")' in top_loader
-    assert 'sicoToolRegisterVersion="20260922.sico.register.v2"' in top_loader
-    assert 'witMenuInitVersion=="20260922.sico.menu.v4"' in top_loader
-    assert 'witMenuLoaderVersion="20260922.sico.menu.v4"' in menu
+    assert 'sicoToolRegisterVersion="20261024.sico.register.v5"' in top_loader
+    assert 'witMenuInitVersion=="20261024.sico.menu.v7"' in top_loader
+    assert 'witMenuLoaderVersion="20261024.sico.menu.v7"' in menu
     assert "isCallable('cadLoadRelative)" in top_loader
     assert "isCallable('witMenuLoadRelative)" in menu
     assert "when(witMenuLoadData()" in menu
@@ -51,7 +54,7 @@ def test_menu_callbacks_use_the_menu_local_loader() -> None:
     assert "status==0" in menu
     assert 'output=witMenuCacheDataPath()' in menu
     assert 'output=strcat(witMenuRoot "/menu.generated.il")' not in menu
-    assert "scripts/sicoAutoLoad.il" in legacy_loader
+    assert "procedure(sicoAutoLoadSkill" in legacy_loader
     assert "(defun" not in legacy_loader
     assert "cadLoadRelative" not in config
     assert "cadLoadRelative" not in generated
@@ -59,6 +62,8 @@ def test_menu_callbacks_use_the_menu_local_loader() -> None:
     assert config.count("(rceDspfAnalyzerChooseFile)") == 2
     assert generated.count("(witMenuLoadRelative") == config.count("(witMenuLoadRelative")
     assert generated.count('"aiAssistantAgent" "Silicon Copilot"') == 3
+    assert generated.count('witMenuDefaultLogo="Silicon Copilot"') == 1
+    assert generated.count('=list(t "Silicon Copilot"') == 3
     assert generated.count('"dspfAnalyzer" "DSPF Analyzer..."') == 2
     assert generated.count("(rceDspfAnalyzerChooseFile)") == 2
     assert config.count("ai/skill++/AI.ils") == 3
@@ -71,19 +76,7 @@ def test_menu_callbacks_use_the_menu_local_loader() -> None:
     assert generated.count('"lsfLoadMonitor" "LSF Load Monitor"') == 3
     assert generated.count("(SICO_lsfMonitorStart)") == 3
     monitor_callback = (
-        '(witMenuLoadRelative "common/skill/SICO_environment.il") '
-        '(witMenuLoadRelative "common/skill/SICO_installation.il") '
-        '(witMenuLoadRelative "common/skill/SICO_toml.il") '
-        '(witMenuLoadRelative "common/skill/SICO_guiProtocol.il") '
-        '(witMenuLoadRelative "common/skill/SICO_lsf.il") '
-        '(witMenuLoadRelative "common/skill/SICO_lsfSelection.il") '
-        '(witMenuLoadRelative "common/skill/SICO_lsfProtocol.il") '
-        '(witMenuLoadRelative "common/skill/SICO_lsfProcess.il") '
-        '(witMenuLoadRelative "common/skill/SICO_lsfCommands.il") '
-        '(witMenuLoadRelative "common/skill/SICO_lsfHosts.il") '
-        '(witMenuLoadRelative "common/skill/SICO_lsfQueues.il") '
-        '(witMenuLoadRelative "common/skill/SICO_lsfChoices.il") '
-        '(witMenuLoadRelative "common/skill/SICO_lsfMonitor.il") '
+        '(witMenuLoadRelative "common/skill++/LSF.ils") '
         "(when (isCallable 'SICO_lsfMonitorStart) (SICO_lsfMonitorStart))"
     )
     assert config.count('"lefGenerator"') == 2
@@ -93,7 +86,7 @@ def test_menu_callbacks_use_the_menu_local_loader() -> None:
     assert generated.count("(cadDisplayLefForm)") == 2
     assert config.count('name = "cadChangeTechLib"') == 3
     assert config.count('text = "Change Tech Library..."') == 3
-    assert config.count("utility/skill/cadChangeTechLibForm.il") == 3
+    assert config.count("utility/skill++/TECHLIB.ils") == 3
     assert generated.count('"cadChangeTechLib" "Change Tech Library..."') == 3
     assert generated.count("(cadChangeTechLibGui)") == 3
     assert config.count('name = "nl2view"') == 3

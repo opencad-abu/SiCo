@@ -1,14 +1,14 @@
 """Bounded service frontend dispatch; project/session ownership stays authoritative."""
 
 import threading
-import uuid
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
 
-from ..core.contracts import BoundContext
+from ..core.contracts import BoundContext, identifier
+from ..core.cad_ref import normalize_ref, normalize_target, normalize_window_ref
 from ..transport.framing import ProtocolError
 from .cleanup_task import DEFAULT_CLEANUP_SECONDS, CleanupTask
-from .frontend_attach import FrontendAttach, session_record
+from .frontend_attach import FrontendAttach, create_from_source, session_record
 from .frontend_replay import FrontendReplay
 from .project_workspace import ProjectWorkspace
 from .service_inputs import ServiceInputs
@@ -103,6 +103,12 @@ class FrontendHub:
 
                 exact_fields(params, set())
                 return read(self.owner.project)
+            if operation == "visible_drc_jobs":
+                from .visible_drc_query import query
+
+                return query(
+                    self.owner.project, params, requester=self.descriptor.service_id
+                )
             if operation == "ask_head":
                 from .service_values import name
 
@@ -151,6 +157,44 @@ class FrontendHub:
                                                               *args, **kwargs).result()
                 self.controller(params["address"])
                 return result
+            if operation == "object_context":
+                exact_fields(params, {"address", "operation", "args"})
+                address, controller = self.controller(params["address"])
+                method, args = params["operation"], params["args"]
+                if method not in {
+                    "selection", "objects", "windows", "window_list", "highlight",
+                } or not isinstance(args, list):
+                    raise ProtocolError("Invalid object query")
+                broker = controller.bindings.broker
+                if broker is None:
+                    raise ValueError("当前会话没有桥接连接")
+                from .targets import BridgeTargetProvider, TargetBridgeError
+
+                provider = BridgeTargetProvider(
+                    broker, controller.current, controller.session_id
+                )
+                try:
+                    result = getattr(provider, method)(*args)
+                except TargetBridgeError as exc:
+                    return {
+                        "ok": False,
+                        "code": str(exc.code or "read_failed")[:128],
+                        "message": str(exc)[:512],
+                    }
+                self.controller(params["address"])
+                return result
+            if operation == "object_instances":
+                exact_fields(params, {"address", "ref"})
+                address, controller = self.controller(params["address"])
+                from .object_instances import instance_windows
+
+                ref = normalize_ref(params["ref"])
+                rows = instance_windows(
+                    self.owner.project, ref, controller.current.instance_id,
+                    cancelled=wire.closed.is_set,
+                )
+                self.controller(params["address"])
+                return {"instances": rows}
             return self.replay.query(wire, operation, params)
         return self.command(wire, operation, params)
 
@@ -231,6 +275,69 @@ class FrontendHub:
                     or params["kwargs"] or not isinstance(args[0], BoundContext)):
                 raise ProtocolError("Invalid session creation")
             return self._create(wire, address, args[0])
+        if operation == "open_object_target":
+            exact_fields(
+                params,
+                {"address", "ref", "candidate"} if "candidate" in params
+                else {"address", "ref"},
+            )
+            address, controller = self.controller(params["address"])
+            ref = normalize_ref(params["ref"])
+            candidate = (
+                identifier(params["candidate"]) if "candidate" in params else None
+            )
+
+            def open_target():
+                from .object_instances import (
+                    open_target_on_candidate,
+                    open_target_on_instance,
+                )
+
+                if candidate is None:
+                    opened = open_target_on_instance(
+                        self.owner.project, controller.current.instance_id, ref,
+                        cancelled=wire.closed.is_set,
+                    )
+                else:
+                    opened = open_target_on_candidate(
+                        self.owner.project, candidate, ref,
+                        cancelled=wire.closed.is_set,
+                    )
+                try:
+                    window_ref = normalize_window_ref(opened.get("window_ref"))
+                except ValueError as exc:
+                    raise ValueError(
+                        "目标窗口已打开，但无法取得窗口引用；请重新打开目标后重试"
+                    ) from exc
+                self.controller(params["address"])
+                return {
+                    "target": normalize_target(ref["target"]),
+                    "window_ref": window_ref,
+                    "window": opened.get("window", ""),
+                }
+
+            return self.control.run(
+                address, wire.connection, wire.control, open_target
+            )
+        if operation == "highlight_object_instance":
+            exact_fields(params, {"address", "candidate", "ref", "window_ref"})
+            address, controller = self.controller(params["address"])
+            from .object_instances import highlight_instance
+
+            ref = normalize_ref(params["ref"])
+            window_ref = normalize_window_ref(params["window_ref"])
+
+            def highlight_elsewhere():
+                result = highlight_instance(
+                    self.owner.project, params["candidate"], ref, window_ref,
+                    cancelled=wire.closed.is_set,
+                )
+                self.controller(params["address"])
+                return result
+
+            return self.control.run(
+                address, wire.connection, wire.control, highlight_elsewhere
+            )
         exact_fields(params, {"address", "args", "kwargs"})
         address, controller = self.controller(params["address"])
         args, kwargs = params["args"], params["kwargs"]
@@ -303,16 +410,10 @@ class FrontendHub:
     def _create(self, wire, address, context):
         # Preserve the source runtime while capturing dependencies for the new session.
         with self.owner._mutation:
-            if address.session.session_id in self.owner.controllers:
-                new = self.control.run(address, wire.connection, wire.control,
-                    lambda: self.owner.create_from(address.session.session_id,
-                                                    uuid.uuid4().hex, context))
-            else:
-                new = self.owner.creation.create(address.session, uuid.uuid4().hex, context)
-            row = session_record(new, self.descriptor)
-            granted = self.control.execute(wire.connection, dict(address=row["address"],
-                action="acquire", generation=0, previous=None))
-            return dict(session=row, control=granted.record())
+            return create_from_source(
+                self.owner, self.descriptor, self.control, wire, address, context,
+                record=session_record,
+            )
 
     def retire(self, wire):
         self.replay.retire(wire)

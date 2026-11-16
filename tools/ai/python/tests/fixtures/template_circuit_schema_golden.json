@@ -1,0 +1,1304 @@
+{
+ "type": "object",
+ "additionalProperties": true,
+ "oneOf": [
+  {
+   "type": "object",
+   "properties": {
+    "template_ref": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 69,
+     "pattern": "^(?:tpl_|ctpl_)[0-9a-f]{64}$"
+    },
+    "target": {
+     "type": "object",
+     "properties": {
+      "library": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 96,
+       "pattern": "^[A-Za-z_][A-Za-z0-9_.@-]*$"
+      },
+      "cell": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 96,
+       "pattern": "^[A-Za-z_][A-Za-z0-9_.@-]*$"
+      },
+      "view": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 96,
+       "pattern": "^[A-Za-z_][A-Za-z0-9_.@-]*$"
+      }
+     },
+     "required": [
+      "library",
+      "cell",
+      "view"
+     ],
+     "additionalProperties": false
+    },
+    "bindings": {
+     "type": "object",
+     "properties": {
+      "schema": {
+       "type": "string",
+       "enum": [
+        "cad.circuit.bindings.v1"
+       ]
+      },
+      "project_ref": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 256
+      },
+      "snapshot_ref": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 256
+      },
+      "source_ref": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 256
+      },
+      "evidence_kind": {
+       "type": "string",
+       "enum": [
+        "session_capture",
+        "test_fixture"
+       ]
+      },
+      "masters": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+         },
+         "target": {
+          "type": "object",
+          "properties": {
+           "library": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96,
+            "pattern": "^[A-Za-z_][A-Za-z0-9_.@-]*$"
+           },
+           "cell": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96,
+            "pattern": "^[A-Za-z_][A-Za-z0-9_.@-]*$"
+           },
+           "view": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96,
+            "pattern": "^[A-Za-z_][A-Za-z0-9_.@-]*$"
+           }
+          },
+          "required": [
+           "library",
+           "cell",
+           "view"
+          ],
+          "additionalProperties": false
+         },
+         "library_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+         },
+         "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+         },
+         "kind": {
+          "type": "string",
+          "enum": [
+           "device",
+           "design"
+          ]
+         },
+         "terminals": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "properties": {
+            "name": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 96,
+             "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:<[0-9]+>)?!?$"
+            },
+            "direction": {
+             "type": "string",
+             "enum": [
+              "input",
+              "output",
+              "inputOutput"
+             ]
+            }
+           },
+           "required": [
+            "name",
+            "direction"
+           ],
+           "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 64
+         },
+         "terminals_complete": {
+          "type": "boolean"
+         },
+         "parameters": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "properties": {
+            "name": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 96,
+             "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "type": {
+             "type": "string",
+             "enum": [
+              "string",
+              "integer",
+              "number",
+              "boolean"
+             ]
+            },
+            "editable": {
+             "type": "boolean"
+            },
+            "unit": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 512
+            },
+            "choices": {
+             "type": "array",
+             "items": {
+              "type": [
+               "string",
+               "number",
+               "boolean"
+              ],
+              "maxLength": 1024
+             },
+             "minItems": 1,
+             "maxItems": 64
+            }
+           },
+           "required": [
+            "name",
+            "type",
+            "editable"
+           ],
+           "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 256
+         },
+         "parameters_complete": {
+          "type": "boolean"
+         },
+         "callbacks": {
+          "type": "object",
+          "properties": {
+           "status": {
+            "type": "string",
+            "enum": [
+             "none",
+             "required",
+             "unknown"
+            ]
+           },
+           "extension_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+           },
+           "order": {
+            "type": "array",
+            "items": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 96,
+             "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "minItems": 1,
+            "maxItems": 16
+           }
+          },
+          "required": [
+           "status"
+          ],
+          "additionalProperties": false
+         },
+         "classification": {
+          "type": "object",
+          "properties": {
+           "kind": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96,
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+           },
+           "attributes": {
+            "type": "object",
+            "propertyNames": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 96,
+             "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "maxProperties": 32,
+            "additionalProperties": {
+             "type": [
+              "string",
+              "number",
+              "boolean"
+             ],
+             "maxLength": 1024
+            }
+           },
+           "source_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+           },
+           "revision": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+           }
+          },
+          "required": [
+           "kind",
+           "attributes",
+           "source_ref",
+           "revision"
+          ],
+          "additionalProperties": false
+         },
+         "pdk_binding": {
+          "type": "object",
+          "properties": {
+           "adapter_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+           },
+           "snapshot_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+           },
+           "device_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+           },
+           "revision": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+           },
+           "netlist_terminal_map": {
+            "type": "object",
+            "maxProperties": 64,
+            "propertyNames": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 96,
+             "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "additionalProperties": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 256
+            }
+           },
+           "netlist_terminal_map_status": {
+            "type": "string",
+            "enum": [
+             "confirmed",
+             "matched_by_name",
+             "unverified"
+            ]
+           },
+           "model_deck_terminals": {
+            "type": "array",
+            "items": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 256
+            },
+            "minItems": 0,
+            "maxItems": 64
+           }
+          },
+          "required": [
+           "adapter_ref",
+           "snapshot_ref",
+           "device_ref",
+           "revision"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "id",
+         "target",
+         "library_path",
+         "revision",
+         "kind",
+         "terminals",
+         "terminals_complete",
+         "parameters",
+         "parameters_complete",
+         "callbacks"
+        ],
+        "additionalProperties": false
+       },
+       "minItems": 0,
+       "maxItems": 64
+      }
+     },
+     "required": [
+      "schema",
+      "project_ref",
+      "snapshot_ref",
+      "source_ref",
+      "evidence_kind",
+      "masters"
+     ],
+     "additionalProperties": false
+    },
+    "devices": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "source_device": {
+        "type": "string",
+        "pattern": "^d[0-9]+$",
+        "maxLength": 96
+       },
+       "instance": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 96,
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+       },
+       "master": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 96,
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+       },
+       "terminal_map": {
+        "type": "object",
+        "propertyNames": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 256
+        },
+        "maxProperties": 64,
+        "additionalProperties": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 96,
+         "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:<[0-9]+>)?!?$"
+        }
+       },
+       "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 96,
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+       },
+       "parameters": {
+        "type": "object",
+        "propertyNames": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 96,
+         "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "maxProperties": 64,
+        "additionalProperties": {
+         "type": [
+          "string",
+          "number",
+          "boolean"
+         ],
+         "maxLength": 1024
+        }
+       },
+       "unconnected": {
+        "type": "object",
+        "propertyNames": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 256
+        },
+        "maxProperties": 64,
+        "additionalProperties": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 512
+        }
+       }
+      },
+      "required": [
+       "source_device",
+       "instance",
+       "master",
+       "parameters"
+      ],
+      "additionalProperties": false
+     },
+     "minItems": 1,
+     "maxItems": 64
+    },
+    "net_map": {
+     "type": "object",
+     "propertyNames": {
+      "type": "string",
+      "pattern": "^n[0-9]+$",
+      "maxLength": 96
+     },
+     "maxProperties": 256,
+     "additionalProperties": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:<[0-9]+>)?!?$"
+     }
+    },
+    "port_map": {
+     "type": "object",
+     "propertyNames": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+     },
+     "maxProperties": 128,
+     "additionalProperties": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:<[0-9]+>)?!?$"
+     }
+    },
+    "net_scope_map": {
+     "type": "object",
+     "propertyNames": {
+      "type": "string",
+      "pattern": "^n[0-9]+$",
+      "maxLength": 96
+     },
+     "maxProperties": 256,
+     "additionalProperties": {
+      "type": "string",
+      "enum": [
+       "local"
+      ]
+     }
+    }
+   },
+   "required": [
+    "template_ref",
+    "target",
+    "bindings",
+    "devices"
+   ],
+   "additionalProperties": false
+  },
+  {
+   "type": "object",
+   "properties": {
+    "request_schema": {
+     "type": "string",
+     "enum": [
+      "cad.template.adapt-request.v2"
+     ]
+    },
+    "spec": {
+     "type": "object",
+     "properties": {
+      "schema": {
+       "type": "string",
+       "enum": [
+        "cad.circuit.spec.v1"
+       ]
+      },
+      "project_ref": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 256
+      },
+      "binding_snapshot": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 256
+      },
+      "kind": {
+       "type": "string",
+       "enum": [
+        "circuit",
+        "testbench"
+       ]
+      },
+      "target": {
+       "type": "object",
+       "properties": {
+        "library": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 96,
+         "pattern": "^[A-Za-z_][A-Za-z0-9_.@-]*$"
+        },
+        "cell": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 96,
+         "pattern": "^[A-Za-z_][A-Za-z0-9_.@-]*$"
+        },
+        "view": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 96,
+         "pattern": "^[A-Za-z_][A-Za-z0-9_.@-]*$"
+        }
+       },
+       "required": [
+        "library",
+        "cell",
+        "view"
+       ],
+       "additionalProperties": false
+      },
+      "instances": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+         },
+         "master": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+         },
+         "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+         },
+         "role": {
+          "type": "string",
+          "enum": [
+           "device",
+           "dut",
+           "stimulus",
+           "load",
+           "auxiliary"
+          ]
+         },
+         "parameters": {
+          "type": "object",
+          "propertyNames": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 96,
+           "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "maxProperties": 64,
+          "additionalProperties": {
+           "type": [
+            "string",
+            "number",
+            "boolean"
+           ],
+           "maxLength": 1024
+          }
+         },
+         "connections": {
+          "type": "object",
+          "propertyNames": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 96,
+           "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:<[0-9]+>)?!?$"
+          },
+          "maxProperties": 64,
+          "additionalProperties": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 96,
+           "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:<[0-9]+>)?!?$"
+          }
+         },
+         "unconnected": {
+          "type": "object",
+          "propertyNames": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 96,
+           "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:<[0-9]+>)?!?$"
+          },
+          "maxProperties": 64,
+          "additionalProperties": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 512
+          }
+         }
+        },
+        "required": [
+         "id",
+         "master",
+         "role",
+         "parameters",
+         "connections",
+         "unconnected"
+        ],
+        "additionalProperties": false
+       },
+       "minItems": 1,
+       "maxItems": 64
+      },
+      "nets": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:<[0-9]+>)?!?$"
+         },
+         "scope": {
+          "type": "string",
+          "enum": [
+           "local",
+           "global",
+           "ground"
+          ]
+         }
+        },
+        "required": [
+         "name",
+         "scope"
+        ],
+        "additionalProperties": false
+       },
+       "minItems": 1,
+       "maxItems": 256
+      },
+      "ports": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:<[0-9]+>)?!?$"
+         },
+         "direction": {
+          "type": "string",
+          "enum": [
+           "input",
+           "output",
+           "inputOutput"
+          ]
+         },
+         "net": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:<[0-9]+>)?!?$"
+         }
+        },
+        "required": [
+         "name",
+         "direction",
+         "net"
+        ],
+        "additionalProperties": false
+       },
+       "minItems": 0,
+       "maxItems": 128
+      },
+      "notes": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+         },
+         "instances": {
+          "type": "array",
+          "items": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 96,
+           "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "minItems": 1,
+          "maxItems": 64
+         }
+        },
+        "required": [
+         "text",
+         "instances"
+        ],
+        "additionalProperties": false
+       },
+       "minItems": 0,
+       "maxItems": 32
+      },
+      "global_net_authorization": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      }
+     },
+     "required": [
+      "schema",
+      "project_ref",
+      "binding_snapshot",
+      "kind",
+      "target",
+      "instances",
+      "nets",
+      "ports"
+     ],
+     "additionalProperties": false
+    },
+    "template_ref": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 69,
+     "pattern": "^(?:tpl_|ctpl_)[0-9a-f]{64}$"
+    },
+    "mapping": {
+     "type": "object",
+     "properties": {
+      "device_map": {
+       "type": "object",
+       "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^[^\\s/\\\\]+$"
+       },
+       "maxProperties": 64,
+       "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 96,
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+       }
+      },
+      "terminal_map": {
+       "type": "object",
+       "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^[^\\s/\\\\]+$"
+       },
+       "maxProperties": 64,
+       "additionalProperties": {
+        "type": "object",
+        "propertyNames": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 256,
+         "pattern": "^[^\\s/\\\\]+$"
+        },
+        "maxProperties": 64,
+        "additionalProperties": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 96,
+         "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:<[0-9]+>)?!?$"
+        }
+       }
+      },
+      "net_map": {
+       "type": "object",
+       "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^[^\\s/\\\\]+$"
+       },
+       "maxProperties": 256,
+       "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 96,
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:<[0-9]+>)?!?$"
+       }
+      },
+      "port_map": {
+       "type": "object",
+       "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^[^\\s/\\\\]+$"
+       },
+       "maxProperties": 128,
+       "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 96,
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:<[0-9]+>)?!?$"
+       }
+      },
+      "omitted_groups": {
+       "type": "array",
+       "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^[^\\s/\\\\]+$"
+       },
+       "minItems": 0,
+       "maxItems": 8,
+       "uniqueItems": true
+      }
+     },
+     "required": [
+      "device_map",
+      "terminal_map",
+      "net_map",
+      "port_map",
+      "omitted_groups"
+     ],
+     "additionalProperties": false
+    },
+    "allowed_rule_refs": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^[^\\s/\\\\]+$"
+       },
+       "version": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^[^\\s/\\\\]+$"
+       },
+       "implementation_digest": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$",
+        "maxLength": 64
+       }
+      },
+      "required": [
+       "id",
+       "version",
+       "implementation_digest"
+      ],
+      "additionalProperties": false
+     },
+     "minItems": 0,
+     "maxItems": 3
+    },
+    "bindings": {
+     "type": "object",
+     "properties": {
+      "schema": {
+       "type": "string",
+       "enum": [
+        "cad.circuit.bindings.v1"
+       ]
+      },
+      "project_ref": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 256
+      },
+      "snapshot_ref": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 256
+      },
+      "source_ref": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 256
+      },
+      "evidence_kind": {
+       "type": "string",
+       "enum": [
+        "session_capture",
+        "test_fixture"
+       ]
+      },
+      "masters": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+         },
+         "target": {
+          "type": "object",
+          "properties": {
+           "library": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96,
+            "pattern": "^[A-Za-z_][A-Za-z0-9_.@-]*$"
+           },
+           "cell": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96,
+            "pattern": "^[A-Za-z_][A-Za-z0-9_.@-]*$"
+           },
+           "view": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96,
+            "pattern": "^[A-Za-z_][A-Za-z0-9_.@-]*$"
+           }
+          },
+          "required": [
+           "library",
+           "cell",
+           "view"
+          ],
+          "additionalProperties": false
+         },
+         "library_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+         },
+         "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+         },
+         "kind": {
+          "type": "string",
+          "enum": [
+           "device",
+           "design"
+          ]
+         },
+         "terminals": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "properties": {
+            "name": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 96,
+             "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:<[0-9]+>)?!?$"
+            },
+            "direction": {
+             "type": "string",
+             "enum": [
+              "input",
+              "output",
+              "inputOutput"
+             ]
+            }
+           },
+           "required": [
+            "name",
+            "direction"
+           ],
+           "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 64
+         },
+         "terminals_complete": {
+          "type": "boolean"
+         },
+         "parameters": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "properties": {
+            "name": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 96,
+             "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "type": {
+             "type": "string",
+             "enum": [
+              "string",
+              "integer",
+              "number",
+              "boolean"
+             ]
+            },
+            "editable": {
+             "type": "boolean"
+            },
+            "unit": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 512
+            },
+            "choices": {
+             "type": "array",
+             "items": {
+              "type": [
+               "string",
+               "number",
+               "boolean"
+              ],
+              "maxLength": 1024
+             },
+             "minItems": 1,
+             "maxItems": 64
+            }
+           },
+           "required": [
+            "name",
+            "type",
+            "editable"
+           ],
+           "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 256
+         },
+         "parameters_complete": {
+          "type": "boolean"
+         },
+         "callbacks": {
+          "type": "object",
+          "properties": {
+           "status": {
+            "type": "string",
+            "enum": [
+             "none",
+             "required",
+             "unknown"
+            ]
+           },
+           "extension_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+           },
+           "order": {
+            "type": "array",
+            "items": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 96,
+             "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "minItems": 1,
+            "maxItems": 16
+           }
+          },
+          "required": [
+           "status"
+          ],
+          "additionalProperties": false
+         },
+         "classification": {
+          "type": "object",
+          "properties": {
+           "kind": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96,
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+           },
+           "attributes": {
+            "type": "object",
+            "propertyNames": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 96,
+             "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "maxProperties": 32,
+            "additionalProperties": {
+             "type": [
+              "string",
+              "number",
+              "boolean"
+             ],
+             "maxLength": 1024
+            }
+           },
+           "source_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+           },
+           "revision": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+           }
+          },
+          "required": [
+           "kind",
+           "attributes",
+           "source_ref",
+           "revision"
+          ],
+          "additionalProperties": false
+         },
+         "pdk_binding": {
+          "type": "object",
+          "properties": {
+           "adapter_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+           },
+           "snapshot_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+           },
+           "device_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+           },
+           "revision": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+           },
+           "netlist_terminal_map": {
+            "type": "object",
+            "maxProperties": 64,
+            "propertyNames": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 96,
+             "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "additionalProperties": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 256
+            }
+           },
+           "netlist_terminal_map_status": {
+            "type": "string",
+            "enum": [
+             "confirmed",
+             "matched_by_name",
+             "unverified"
+            ]
+           },
+           "model_deck_terminals": {
+            "type": "array",
+            "items": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 256
+            },
+            "minItems": 0,
+            "maxItems": 64
+           }
+          },
+          "required": [
+           "adapter_ref",
+           "snapshot_ref",
+           "device_ref",
+           "revision"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "id",
+         "target",
+         "library_path",
+         "revision",
+         "kind",
+         "terminals",
+         "terminals_complete",
+         "parameters",
+         "parameters_complete",
+         "callbacks"
+        ],
+        "additionalProperties": false
+       },
+       "minItems": 0,
+       "maxItems": 64
+      }
+     },
+     "required": [
+      "schema",
+      "project_ref",
+      "snapshot_ref",
+      "source_ref",
+      "evidence_kind",
+      "masters"
+     ],
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "request_schema",
+    "spec",
+    "template_ref",
+    "mapping",
+    "allowed_rule_refs",
+    "bindings"
+   ],
+   "additionalProperties": false
+  }
+ ]
+}

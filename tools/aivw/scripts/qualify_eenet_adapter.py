@@ -44,7 +44,7 @@ def qualify(control_path, nominal):
                "package_sha256": sha256_file(package), "nominal_supply_v": nominal,
                "scope": "grounded_resistor_load_finite_supply_resistance_only"}
     digest = stable_digest(request)
-    run = allocate_split_run(resolve_launch_paths(), Path("/path/to/xh/amsVerify/data/ams").resolve(),
+    run = allocate_split_run(resolve_launch_paths(), Path("/workarea/xh/amsVerify/data/ams").resolve(),
         library="aivw", cell=model["module"], view="eenet_adapter", kind="eenet-adapter", request_digest=digest)
     write_json_once(run.control_root/"request.json", request)
     root = run.payload_root

@@ -1,17 +1,20 @@
 # AI Assistant for Virtuoso
 
-当前版本、状态根和操作入口见[现行文档索引](../docs/SICO_CURRENT_DOCUMENTATION.md)。
+当前版本、状态根和操作入口见[现行文档索引](../../docs/SICO_CURRENT_DOCUMENTATION.md)。
 带日期的验收记录是历史证据；本文的当前默认值以该索引和
-[环境配置](../docs/ENVIRONMENT.md)为准。
+[环境配置](../../docs/ENVIRONMENT.md)为准。
 
 SiCo PDK data follows [《面向智能体的定制电路工艺数据标准（试行）》](docs/SICO_PDK_DATA_STANDARD.md)
-(SICO-PDK-DATA 1.0.0, effective 2026-09-22). It defines the authoritative compact
-format, confirmed device/CDF usage rules, workspace updates and bounded reads.
+(current package format SICO-PDK-DATA 1.1.0; layout chapter is the
+1.2.0-draft appendix). It defines the authoritative compact format, confirmed
+device/CDF usage rules, workspace updates and bounded reads. The draft
+[layout appendix](docs/SICO_PDK_DATA_STANDARD_LAYOUT.md) starts the layout
+data standard but is not yet a published/consumed capability.
 The [standard collection workflow](docs/PDK_COLLECTION_STANDARD_WORKFLOW.md) documents
 the implemented tools, confirmation flow, compatibility paths and remaining capability limits.
 Runtime distribution qualification remains separate.
 
-Deployment packages follow the [CAD runtime release policy](../deploy/RUNTIME_RELEASE_POLICY.md):
+Deployment packages follow the [CAD runtime release policy](../../deploy/RUNTIME_RELEASE_POLICY.md):
 no project docs, AI skill/prompt/reference/catalog assets, or proprietary source.
 SKILL ships as protected Virtuoso contexts; Python ships as qualified native
 artifacts. Operational instructions are supplied by the program and MCP server.
@@ -183,9 +186,9 @@ the setting only changes the read root and never the private write tier.
 ## Production Requirements
 
 - Linux with Virtuoso and `ipcBeginProcess`.
-- Production Python 3.9.13 derived from `$SICO_HOME/runtime/python`. Source test
-  trees point `$SICO_HOME/etc/config/dev-runtime` at the site interpreter. The
-  same path must be available on local and LSF execution hosts.
+- Production Python 3.9.13 is the single interpreter at
+  `$SICO_HOME/runtime/python/bin/python3`. The same path must be available on
+  local and LSF execution hosts.
 - PyQt5, `PyQt5.sip`, and their Qt 5 libraries, XCB/input-context plugins, and
   matching ICU installed in the production Python tree. User-site PyQt wheels
   and PyQt6/Qt 6 are not supported.
@@ -586,8 +589,8 @@ Claude retains its existing site-managed order: `$SICO_HOME/bin/claude`, then
 
 | Variable | Purpose |
 | --- | --- |
-| `SICO_PYTHON` | Deprecated source-tree compatibility override; release launchers use `$SICO_HOME/runtime/python/bin/python3`. |
-| `SICO_PYTHON_ROOT` | Deprecated source-tree compatibility override; use `etc/config/dev-runtime` instead. |
+| `SICO_PYTHON` | Launcher-published interpreter path; external values never select another interpreter. |
+| `SICO_PYTHON_ROOT` | Launcher-published runtime root; external values never select another interpreter. |
 | `SICO_CODEX_CLI` | Optional Codex executable override; the bundled native runtime is the default. |
 | `SICO_CLAUDE_CLI` | Optional Claude fallback when the site Claude command is unavailable. |
 | `NODEJS_HOME` | Optional Node.js prefix or `bin` directory used when an npm Codex launcher cannot find `node` in `PATH`. |

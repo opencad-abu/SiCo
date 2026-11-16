@@ -1,8 +1,6 @@
-"""Select a task engine explicitly, without routing Codex through the Python model loop."""
+"""Select a task engine explicitly; the Python model loop has been retired."""
 
 from ..codex.settings import CodexSettings
-from .python_backend import PythonBackend
-from ..storage.journal import BULK_KINDS
 
 
 def create_backend(provider, tools, journal, context, *, workbench=True, terminal=None,
@@ -19,10 +17,9 @@ def create_backend(provider, tools, journal, context, *, workbench=True, termina
 
         backend = CodexBackend(provider, tools, journal, context, terminal=terminal)
     else:
-        if any(row["kind"] == "codex.thread"
-               for row in journal.events(exclude=BULK_KINDS)):
-            raise ValueError("A Codex session cannot be resumed with the Python backend")
-        backend = PythonBackend(provider, tools, journal, context)
+        raise ValueError(
+            "The Python model loop has been retired; configure a Codex provider"
+        )
     if not workbench:
         return backend
     from .workbench import attach_workbench

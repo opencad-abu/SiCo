@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 
-from sico.core.cad_ref import linkify_cad_refs
+from sico.core.cad_linkify import linkify_cad_refs, linkify_object_inputs
 from sico.core.links import object_link
 
 from . import chat_audit as transcript_audit
@@ -67,6 +67,7 @@ class ChatProjection(TranscriptTurns, TranscriptTools, TranscriptHistory):
         self.audits = {}
         self.startup = False
         self._task_target = None
+        self._object_inputs = []
         self.dirty = True
         self.dot_phase = 0
         self.mark_phase = 0
@@ -183,8 +184,10 @@ class ChatProjection(TranscriptTurns, TranscriptTools, TranscriptHistory):
             self.streaming = None
             self.activity = None
             self.calls.clear()
+            self._object_inputs = payload.get("inputs") or []
             if not self.startup:
-                message = self.append("user", payload.get("text", ""))
+                message = self.append("user", linkify_object_inputs(
+                    payload.get("text", ""), self._object_inputs, event.get("session_id", "")))
                 self._start_task_message(event, message)
                 if payload.get("inputs") or payload.get("turn_options"):
                     self.append("notice", "输入资料与回合设置", result={
@@ -196,6 +199,10 @@ class ChatProjection(TranscriptTurns, TranscriptTools, TranscriptHistory):
         elif kind.startswith("codex.steer.") and "id" in payload:
             key = payload["id"]
             text = "补充当前任务 · " + payload["message"] + "\n\n" + payload["text"]
+            text = linkify_object_inputs(
+                text, payload.get("inputs") or self._object_inputs,
+                event.get("session_id", ""),
+            )
             message = self.supplements.get(key)
             if message is None:
                 message = self.supplements[key] = self.append("user", text)
@@ -236,6 +243,9 @@ class ChatProjection(TranscriptTurns, TranscriptTools, TranscriptHistory):
             self._close_tools(event)
             completed = payload.get("text")
             if completed and self._task_target:
+                completed = linkify_object_inputs(
+                    completed, self._object_inputs, event.get("session_id", "")
+                )
                 completed = linkify_cad_refs(
                     completed, self._task_target, event.get("session_id", "")
                 )
@@ -256,7 +266,11 @@ class ChatProjection(TranscriptTurns, TranscriptTools, TranscriptHistory):
                     self._changed(self.streaming)
             elif self.streaming is not None and self._task_target:
                 self.streaming["text"] = linkify_cad_refs(
-                    self.streaming["text"], self._task_target, event.get("session_id", "")
+                    linkify_object_inputs(
+                        self.streaming["text"], self._object_inputs,
+                        event.get("session_id", ""),
+                    ),
+                    self._task_target, event.get("session_id", ""),
                 )
                 self._changed(self.streaming)
             self.streaming = None
@@ -414,6 +428,7 @@ class ChatProjection(TranscriptTurns, TranscriptTools, TranscriptHistory):
                 self._update_audit(row)
         # Unfinished calls are already reported as "未确认" in their counter.
         self.calls.clear()
+        self._object_inputs = []
         self.dirty = True
         if kind in {"task.completed", "task.failed", "task.cancelled"}:
             self._mark_rewindable(event.get("task_id"))

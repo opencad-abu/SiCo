@@ -71,7 +71,10 @@ class ServiceLifecycle:
     def stop(self, reason="requested"):
         now = self._clock()
         work = self._work(now)
-        if not self.stopping and work.empty:
+        # A stop request is an explicit shutdown of this project, not a request
+        # to wait for active sessions to become idle. Cleanup still runs, but
+        # the service must not keep the workspace locked.
+        if not self.stopping:
             self._reason = reason
         return self._snapshot(work, now)
 

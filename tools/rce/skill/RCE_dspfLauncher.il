@@ -1,7 +1,7 @@
 ; Standalone DSPF Analyzer launcher for the SiCo menu.
 
 unless(and(boundp('rceDspfLauncherVersion)
-             rceDspfLauncherVersion=="20260814.dspf.launcher.v5"
+             rceDspfLauncherVersion=="20261024.dspf.launcher.v6"
              boundp('rceDspfExitCleanupRegistered)
              rceDspfExitCleanupRegistered)
 
@@ -97,7 +97,7 @@ procedure(rceDspfStandaloneStart(source)
     unless(and(strlen(path)>0 isFile(path) fileLength(path)>0)
       warn("RCE DSPF analyzer source is missing or empty: %L\n" path)
       return(nil))
-    python=or(SICO_envValue("RCE_ANALYZER_PYTHON") RCE_pythonExe())
+    python=RCE_pythonExe()
     entry=RCE_pythonEntry()
     environment=rceDspfLaunchEnvironment(t)
     unless(environment return(nil))
@@ -133,7 +133,7 @@ procedure(rceDspfAnalyzerChooseFile()
 )
 
 procedure(rceDspfLauncherRevision()
-  "20260814.dspf.launcher.v5"
+  "20261024.dspf.launcher.v6"
 )
 
 unless(getShellEnvVar("VIRTUOSO_CONTEXT_BUILD")=="1"
@@ -143,5 +143,5 @@ unless(getShellEnvVar("VIRTUOSO_CONTEXT_BUILD")=="1"
 procedure(rceDspfInitializeRuntime()
   rceDspfRegisterExitCleanup()
 )
-rceDspfLauncherVersion="20260814.dspf.launcher.v5"
+rceDspfLauncherVersion="20261024.dspf.launcher.v6"
 )

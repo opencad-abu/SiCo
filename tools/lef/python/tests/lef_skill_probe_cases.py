@@ -14,13 +14,10 @@ def test_lef_common_hardware_fields_with_dbaccess(tmp_path: Path) -> None:
     dbaccess = shutil.which(os.environ.get("LEF_DBACCESS", "dbAccess"))
     if dbaccess is None:
         pytest.skip("dbAccess is unavailable")
-    install = tmp_path / "install"
-    install.mkdir()
-    (install / "tools").symlink_to(CAD_ROOT, target_is_directory=True)
     entry = CAD_ROOT / "lef/skill++/LEF.ils"
     skill = "\n".join(
         (
-            f'setShellEnvVar("CAD_HOME" "{install}")',
+            f'setShellEnvVar("SICO_HOME" "{CAD_ROOT.parent}")',
             f'load("{entry}")',
             "defstruct(lefHardwareProbeField name value items enabled callback)",
             "procedure(hiCreateComboField(@key name prompt defValue items "
@@ -55,10 +52,11 @@ def test_lef_common_hardware_fields_with_dbaccess(tmp_path: Path) -> None:
         capture_output=True,
         timeout=30,
         check=False,
+        cwd=tmp_path,
     )
     output = completed.stdout + completed.stderr
     assert completed.returncode == 0, output
-    assert "*Error*" not in output
+    assert "*Error*" not in output, output
     assert "(reader)" not in output
     assert "LEF_COMMON_HARDWARE_OK" in output
 

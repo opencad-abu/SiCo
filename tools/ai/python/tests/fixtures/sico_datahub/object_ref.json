@@ -1,0 +1,19 @@
+{
+  "schema": "cad.object_ref.v1",
+  "target": {
+    "library": "worklib",
+    "cell": "OTA",
+    "view_name": "schematic",
+    "oa_view_type": "schematic",
+    "oa_view_type_source": "platform_api",
+    "library_path": "/project/worklib"
+  },
+  "kind": "instance",
+  "name": "NM1",
+  "master": {
+    "library": "smic18",
+    "cell": "nmos4",
+    "view_name": "symbol"
+  },
+  "hierarchy": []
+}

@@ -9,17 +9,19 @@ let((entryDirectory)
   lefSkillRoot=strcat(SICO_sourceRoot() "/tools/lef")
   lefCommonRoot=strcat(SICO_sourceRoot() "/tools/common")
   lefUtilityRoot=strcat(SICO_sourceRoot() "/tools/utility")
-  SICO_sourceRequire("lef" "a89836c6886079f8b833bd6992510f464c063b15f8d1c8933917cdd956152e2b" '(
-    ("tools/lef/skill" "UI_lefSummary.il" "a89de1c5bfb3198bfd04fa68426681605c0c660348913d7a1e6f424097477388"
+  SICO_sourceRequire("lef" "9318424d18c3c133826241439f9a4e0d7c80b7cd55937e2cf7888eec53723dc8" '(
+    ("tools/lef/skill" "UI_lefSummary.il" "ad2cbf197410e54843a898b7f99986965efcc0ae60bdf8ede210f4c456e3438b"
       (lefSummaryDisposeForm lefSummaryString lefSummaryHtmlEscape lefSummaryFileReady
        lefSummaryFirstLine lefSummaryCellText lefSummaryCaptureRun lefSummaryFailureReason lefSummaryRow
        lefSummaryDetailsHtml lefSummaryEnsureForm lefSummaryOpenCB lefSummaryOpenLogCB lefSummaryCopyFile
        lefSummaryCopyCB lefSummaryDisplay lefSummaryUiRevision)
-      ((lefSummaryUiRevision "20260901.summary.lifecycle.v2"))
+      ((lefSummaryUiRevision "20261024.summary.lifecycle.v3"))
       (lefSummaryUiVersion)
+      ()
       ())
     ("tools/lef/skill++" "LEFCFG.ils" "20dd5f4ac2435bd1a409a05c055ebe612e6875c746d73bed5e6fe73de3641073"
       (lefWorkingDir lefProjectRunRoot lefDefaultBin lefConfig lefInitializeConfig lefMessages)
+      ()
       ()
       ()
       ())
@@ -27,6 +29,7 @@ let((entryDirectory)
       (lefResetLoadedBinOptions lefOptionGroup lefOptionFieldName lefOptionName lefOptionPrompt
        lefOptionKind lefOptionSpecByName lefOptionSpecCount lefCreateOptionField lefCreateOptionGroup
        lefResetOptionFields lefApplyBinOptions lefFormBinOptions lefWriteBinOptions)
+      ()
       ()
       ()
       ())
@@ -37,10 +40,12 @@ let((entryDirectory)
        lefTomlWriteStringArray lefWriteToml)
       ((lefFrontendRevision "20260924.flow.environment.v3"))
       ()
+      ()
       ())
-    ("tools/lef/skill++" "LEFRUN.ils" "c6138037c4f8299c10a1babb274d4ae710ccc3e359d5df058a98d907693e4fcc"
+    ("tools/lef/skill++" "LEFRUN.ils" "1931eda36cca85c0c7a09522440b39d980611f82bd9717edd0489a6f4beebfdf"
       (LEF_pythonEntry lefRunUsesCadTempPath LEF_pythonExe LEF_launchEnvCommand lefBackupRunData
        lefIpcDataHandler lefIpcErrHandler lefIpcPostFunc lefStart)
+      ()
       ()
       ()
       ())
@@ -50,6 +55,7 @@ let((entryDirectory)
        lefResetLoadedFormState lefFormDataValue lefApplyFormData lefLoadConfigCB)
       ()
       ()
+      ()
       ())
     ("tools/lef/skill++" "LEFPROFILE.ils" "b76759767b8e6a19e82f7d50bd0dc6dd8ece8c1e897af30c7b5bf0d25f83418e"
       (lefProfileValue lefProfilePathValue lefProfileFieldNames lefProfileChoiceFieldNames
@@ -57,11 +63,13 @@ let((entryDirectory)
        lefProfileBinOptions lefProfileApplyHardware lefProfileApplyForm lefProfileRevision)
       ((lefProfileRevision "20260820.rce.live.log.v4"))
       ()
+      ()
       ())
     ("tools/lef/skill++" "LEFGUI.ils" "e956cb0dd7fbe02b629e62fd8e93718652792928ef1e7748de6f40a465302a7b"
       (cadDisplayLefForm lefHardwareGuiRevision)
       ((lefHardwareGuiRevision "20260820.lsf.monitor.v1"))
       ()
-      (LEFPROFILEGUI))
+      (LEFPROFILEGUI)
+      ())
   ))
 )

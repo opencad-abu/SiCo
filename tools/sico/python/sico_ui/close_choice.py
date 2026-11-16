@@ -7,14 +7,14 @@ from .receipts import DataReceipt
 from .service_stop_blocked import BlockedServiceStop
 from .si_prompt import CANCEL, SiConfirm
 
-WINDOW_ONLY = "关闭窗口"
+WINDOW_ONLY = "挂起"
 STOP_SERVICE = "结束服务"
 PLATFORM_CLOSE_NOTE = (
     "关闭 SiCo 或结束服务都不会关闭通过 SiCo 启动的 CDNS-IC/Virtuoso；"
     "Virtuoso 只能由用户自行退出。"
 )
-# 关闭对话框的三个选择从左到右：[结束服务] [关闭窗口] [取消]。强制停止只在「服务」菜单里，
-# 不再出现在这个对话框，避免误触。自绘对话框按注册顺序排版，这一排就是权威顺序。
+# 关闭窗口默认挂起：窗口退出，项目服务和会话继续运行；结束服务才彻底停止。
+# 强制停止仍只在「服务」菜单里，避免误触。
 ROW = ((STOP_SERVICE, STOP_SERVICE), (WINDOW_ONLY, WINDOW_ONLY), (CANCEL, CANCEL))
 PARTS = (("sessions", "个会话"), ("queued", "条未开始的输入"), ("approvals", "项待答复"),
          ("jobs", "个后台作业"), ("reconcile", "项待核对"))
@@ -84,15 +84,16 @@ class CloseChoice(QObject):
         try:
             self.receipt.watch(self.window.api.service_status(), observed, lambda _error: None)
         except (ValueError, OSError, RuntimeError):
-            pass  # The window-only option remains usable without a service response.
+            pass  # The suspend option remains usable without a service response.
 
     def _question(self, pending=None):
-        text = (f"{WINDOW_ONLY}：项目服务与各会话继续运行，之后重新打开可以接着用。\n"
-                f"{STOP_SERVICE}：先结束本窗口打开过的会话；收尾完成后请求停止。\n"
-                f"{PLATFORM_CLOSE_NOTE}\n"
-                "项目中其他活动会话或资源尚未收尾时，服务会保留并说明原因。\n"
-                "已归档的中断记录会保留供核对，不阻止关闭服务。\n"
-                f"服务异常或收尾卡住时，可从「服务」菜单选择“{FORCE_STOP}”。")
+        text = (
+            f"{WINDOW_ONLY}：关闭窗口，项目服务与各会话继续在后台运行，之后重新打开可继续。\n"
+            f"{STOP_SERVICE}：先结束本窗口打开过的会话；收尾完成后请求停止，"
+            "活动会话、队列和后台作业会停止。\n"
+            f"{PLATFORM_CLOSE_NOTE}\n"
+            "会话记录和待核对证据会保留。\n"
+            f"服务异常或收尾卡住时，可从「服务」菜单选择“{FORCE_STOP}”。")
         if pending is not None:
             text += "\n项目当前：" + (pending_summary(pending) or "没有未决工作") + "。"
         return text

@@ -1,0 +1,1995 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SiCo 使用手册附录：SICO-PDK-DATA 1.1.0 面向智能体的定制电路工艺数据标准，含附录 A–D 全文。">
+<title>PDK 数据标准 · SiCo 使用手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b4543a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='sans-serif' font-size='24' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/manual.css">
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
+  <span class="edition">使用手册 / 2026.10</span>
+  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+</header>
+<noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用复制与主题切换。</p></noscript>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="手册目录">
+<p class="rail-label">SICO DOCUMENTATION</p>
+<a href="index.html">开始阅读</a>
+<p class="nav-group">开始使用</p>
+<a href="sico-gui.html">SiCo · 客户端界面</a>
+<a href="sico-workspace.html">SiCo · 工作区页面</a>
+<a href="installation.html">01 · 安装</a>
+<a href="environment.html">02 · 环境变量</a>
+<a href="virtuoso.html">03 · Virtuoso 集成</a>
+<a href="flows.html">04 · CAD flows</a>
+<p class="nav-group">流程指南</p>
+<a href="drc.html">DRC · 规则检查</a>
+<a href="lvs.html">LVS · 连接检查</a>
+<a href="rce.html">RCE · 寄生提取</a>
+<a href="mts.html">MTS · 多工艺网表</a>
+<a href="utilities.html">LEF / GDS / CDL</a>
+<a href="lsf.html">LSF · 运行与资源</a>
+<p class="nav-group">参考附录</p>
+<a href="appendix-pdk-data-standard.html" aria-current="page">PDK 数据标准</a>
+<a href="appendix-circuit-template-standard.html">电路模板标准</a>
+<a href="appendix-symbol-template-standard.html">Symbol 模板标准</a>
+<a href="environment-internal.html">环境接口附录</a>
+<div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
+</nav>
+<div class="reading">
+<main id="main">
+<p class="eyebrow">APPENDIX / SICO-PDK-DATA</p>
+<h1>PDK 数据标准</h1>
+<p class="lead">面向智能体的定制电路工艺数据标准，规定目录、文件职责、采集、增量更新、有界读取与验收。</p>
+<div class="meta"><span class="tag">标准全文</span><span class="tag">SICO-PDK-DATA</span><span class="tag">内容核对 · 2026.10.24</span></div>
+<div class="notice"><strong>SICO-PDK-DATA 1.1.0 全文。</strong> 本页收入主文及附录 A–D；附录 A–C 与主文具有同等效力，附录 D 为解释性示例，其中数值不是真实 PDK 依据。</div>
+<p class="appendix-source"><strong>源文档</strong></p><ul class="appendix-source"><li><code>tools/ai/docs/SICO_PDK_DATA_STANDARD.md</code></li><li><code>tools/ai/docs/SICO_PDK_DATA_STANDARD_PACKAGE.md</code></li><li><code>tools/ai/docs/SICO_PDK_DATA_STANDARD_DEVICE.md</code></li><li><code>tools/ai/docs/SICO_PDK_DATA_STANDARD_ACCESS.md</code></li><li><code>tools/ai/docs/SICO_PDK_DATA_STANDARD_EXAMPLES.md</code></li></ul>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>标准编号</td>
+<td>SICO-PDK-DATA</td>
+</tr>
+<tr>
+<td>版本</td>
+<td>1.1.0</td>
+</tr>
+<tr>
+<td>状态</td>
+<td>试行，自发布日起作为 SiCo PDK 数据的权威标准</td>
+</tr>
+<tr>
+<td>发布／生效日期</td>
+<td>2026-09-22</td>
+</tr>
+<tr>
+<td>适用对象</td>
+<td>SiCo 的 PDK 数据采集器、生成器、更新器、读取接口和设计消费者</td>
+</tr>
+<tr>
+<td>实施状态</td>
+<td>标准已生效；现有采集器、存储及工具接口须按本标准适配，不代表已完成实现</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="sec-1">1. 范围与效力</h2>
+<p>本标准规定面向智能体的定制电路工艺数据的组织、语义、生成、增量更新及使用要求。
+适用于器件选型、CDF 参数设置、原理图放置连线和仿真配置；电学特性与 IV 数据为可选扩展。
+版图几何、DRC/LVS/RC 规则内容不在本版范围内，相关文件只登记路径和用途。</p>
+<p>自生效日起，SiCo 新产生、重新生成和增量更新的 PDK 数据必须符合本标准。
+工艺库与 analogLib/basic 等支持库采用相同逻辑格式；不适用的项目必须明确表达。
+历史数据按第 12 节迁移，不能更换格式标记后即宣称符合本标准。</p>
+<p>“必须／不得”为强制要求，“应”为推荐要求，“可”为可选要求。
+附录 A、B、C 与主文具有同等效力；附录 D 是解释性示例，所有数值均非真实 PDK 依据。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>按需阅读</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#appendix-a">附录 A：包级格式</a></td>
+<td>公共编码、index/package/category/device/file/model/sources</td>
+</tr>
+<tr>
+<td><a href="#appendix-b">附录 B：器件格式</a></td>
+<td>cdf/simulation/symbol/properties/iv</td>
+</tr>
+<tr>
+<td><a href="#appendix-c">附录 C：增量与读取</a></td>
+<td>工作区覆盖、分页分片、失效、验收</td>
+</tr>
+<tr>
+<td><a href="#appendix-d">附录 D：示例</a></td>
+<td>虚构器件的 JSON 片段与更新示例</td>
+</tr>
+</tbody>
+</table></div>
+<p>本标准优先于历史 PDK 文档中相冲突的数据格式、纳入规则、数据来源和读取投影要求。
+<span class="source-ref" title="源文档：PDK_COLLECTION_SPEC_V1.md">PDK_COLLECTION_SPEC_V1.md</span> 保留为 legacy 采集链路与验收历史，
+其可复用技术实现不因此作废，但不再定义新数据格式。
+历史“模型 deck 中存在声明即可纳入设计候选”“interface 层即可代表设计可调参数”等判据不得替代本标准。</p>
+<p>本标准不扩大软件发行授权。运行发行物仍遵守
+<span class="source-ref" title="源文档：../../deploy/RUNTIME_RELEASE_POLICY.md">RUNTIME_RELEASE_POLICY.md</span>；现场工艺数据、文档和私有证据
+不得因符合本标准就自动进入 SiCo 软件发行包。内建数据的现有固定清单与哈希约束保持有效。</p>
+<h2 id="sec-2">2. 设计原则</h2>
+<ol>
+<li><strong>扁平、简洁</strong>：目录不无故嵌套；常用记录以一至两层属性为主，复杂条件按语义展开。</li>
+<li><strong>一次读取服务一个决策</strong>：找器件、设参数、连线、配模型、看曲线分别读取。</li>
+<li><strong>单一权威</strong>：一个事实只人工维护一处，其他文件使用 ID 引用；摘要与索引必须可重建。</li>
+<li><strong>完整保存、按需返回</strong>：可追溯不等于默认返回原始 CDF、全文文档或完整波形。</li>
+<li><strong>事实与决定可区分</strong>：运行时观察、官方资料、用户确认、仿真结果分别标注来源。</li>
+<li><strong>缺失不等于允许</strong>：未知、未提供、明确为空及不适用具有不同含义。</li>
+<li><strong>采集与执行分工</strong>：保存已确认规则，避免重复发现；实际写入仍使用受支持的 CDF 流程并校验结果。</li>
+<li><strong>共同信息只记录一次</strong>：格式版本归包、来源可继承、模型路径归 file.json、参数定义归 cdf.json。</li>
+</ol>
+<h2 id="sec-3">3. 标准目录</h2>
+<div class="code-block"><div class="code-label">目录与格式</div><pre><code class="language-text">sico-pdk/                         # 现场 PDK 数据安装根
+├── index.json                    # 已安装包索引与本机路径绑定
+└── cmos28hkmg/                   # 包目录；目录名不充当版本身份
+    ├── package.json             # 包身份、版本、依赖与内容清单
+    ├── category.json            # 分类定义
+    ├── device.json              # 短行器件目录与使用资格
+    ├── file.json                # 外部文件引用；允许空表
+    ├── sources.json             # 简短来源登记，核查时读取
+    ├── model.json               # 可选：模型配置、corner 与模型声明清单
+    └── n09_ckt/                 # device.json 明确指定的器件详情目录
+        ├── cdf.json             # 参数使用规则
+        ├── symbol.json          # 局部几何与可连接位置
+        ├── simulation.json      # 仿真使用时必备的网表接口
+        ├── properties.json      # 可选：电学特性
+        ├── iv.json              # 可选：曲线条件、摘要和数据引用
+        └── iv-data/             # 可选：较大曲线的数值数据
+</code></pre></div>
+<p>同包可包含多个 Virtuoso library。实际 library/cell/view 必须显式记录；同名 cell 使用不同的
+device ID 和目录名，例如 <code>lib_a__n09_ckt</code>，不得依赖目录命名推断真实身份。
+不强制增加 <code>devices/&lt;library&gt;/</code> 层级。分片文件采用同目录后缀命名，见附录 C。
+<code>sources.json</code> 用来隔离追溯信息；不得把日志、原始 CDF 和长文档搬入该文件。</p>
+<h2 id="sec-4">4. 文件职责与权威归属</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>信息</th>
+<th>唯一权威位置</th>
+<th>不得重复人工维护</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>格式版本、PDK 版本、数据修订</td>
+<td>package.json</td>
+<td>每个参数重复包版本</td>
+</tr>
+<tr>
+<td>分类定义</td>
+<td>category.json</td>
+<td>分类文件中的器件名单</td>
+</tr>
+<tr>
+<td>器件分类、用途资格、电压域、推荐</td>
+<td>device.json</td>
+<td>另一份可用／推荐 cell 名单</td>
+</tr>
+<tr>
+<td>外部模型、文档、runset 路径</td>
+<td>file.json</td>
+<td>model/simulation 内重复绝对路径</td>
+</tr>
+<tr>
+<td>模型加载组合及 corner</td>
+<td>model.json</td>
+<td>每个器件复制相同 include 列表</td>
+</tr>
+<tr>
+<td>CDF 参数定义、可写与赋值规则</td>
+<td>器件 cdf.json</td>
+<td>simulation 内复制参数范围和默认值</td>
+</tr>
+<tr>
+<td>网表端口顺序与参数映射</td>
+<td>器件 simulation.json</td>
+<td>按 symbol 几何顺序猜网表顺序</td>
+</tr>
+<tr>
+<td>symbol 端子及连接点</td>
+<td>器件 symbol.json</td>
+<td>根据 cell 名或截图猜坐标</td>
+</tr>
+<tr>
+<td>电学特性、测量条件</td>
+<td>properties.json / iv.json 各自记录</td>
+<td>将测量值写成无条件物理常量</td>
+</tr>
+<tr>
+<td>来源身份</td>
+<td>sources.json</td>
+<td>在每个字段复制整段证据</td>
+</tr>
+</tbody>
+</table></div>
+<p>IV 保存一次仿真实际采用的有效参数属于实验条件，不构成第二份 CDF 参数定义。
+默认读取产生的摘要属于投影，不得成为另一个人工编辑入口。</p>
+<h2 id="sec-5">5. 必备性与可用状态</h2>
+<p>结构合规、采集覆盖完整、可以用于某项设计操作是三个不同结论。
+包允许保留待确认或禁止使用的器件；不得把部分完成的数据报告成全包已确认。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>目标操作</th>
+<th>必须满足</th>
+<th>可缺省</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>浏览／调查目录</td>
+<td>包身份和器件身份有效，状态明确</td>
+<td>详情可尚未完成</td>
+</tr>
+<tr>
+<td>选为设计器件</td>
+<td>当前用途明确 allow，必需的分类／电压语义已确认</td>
+<td>推荐标记</td>
+</tr>
+<tr>
+<td>设置／优化参数</td>
+<td>相关可写性、赋值要求、生效条件、类型与合法值约束已确认</td>
+<td>推荐 step、推荐起始值</td>
+</tr>
+<tr>
+<td>放置连线</td>
+<td>symbol 几何、局部坐标、端子及目标网格兼容</td>
+<td>symbol 完整绘图元素</td>
+</tr>
+<tr>
+<td>配置仿真</td>
+<td>网表接口、所需模型组合、corner/section 明确且可解析</td>
+<td>其他仿真器／其他 corner</td>
+</tr>
+<tr>
+<td>参考 IV／特性</td>
+<td>对应条件、来源、依赖和结果状态有效</td>
+<td>未采集的其他性能项目</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>use</code> 与 CDF 参数使用规则是必备项目。未知值可以作为采集检查点保存，但不能满足对应设计门槛。
+无 CDF 或无可调参数的器件也必须显式记录并确认，不能用缺少 cdf.json 表达。
+设计发布的最小包可以只保留禁止使用器件的目录行及理由；这不代表其事实采集完整。
+全库事实采集不得按器件 use 过滤对象；已存在的原始 CDF、symbol、文档、模型及接口事实
+应保留。“有何事实”和“是否使用”分别查询和验收。CDF 详细补齐以已确认的常用可修改参数为范围；
+无关辅助参数不要求逐一补齐含义、单位、范围和默认值，其 unknown 不计为采集欠账。
+条件及递归依赖实际需要的辅助参数只补必要事实，不据此将全部 CDF 参数纳入详细采集。
+可用性按当前用途和本次参数检查；无关器件或其他可选 corner 的缺失不阻塞当前任务。</p>
+<h3 id="sec-5-1">5.1 circuit-simulation-v1 发布能力</h3>
+<p><code>required_features</code> 包含 <code>qualified-publication-v1</code> 的包表示通过此消费能力验收，
+<code>publication</code> 保存 profile、验收时间、内容摘要和被替代基线摘要，详见附录 A。
+此能力在 1.1.0 中登记，未声明能力的包仍可作为调查/生成检查点；不改变 1.0.0 的
+字段合法性或把 legacy 数据自动转换为允许。当前 SiCo 设计入口要求此能力，旧数据
+需要在生成阶段保留已确认来源、补齐缺项并重新验收后发布。</p>
+<p>验收对象为 <code>use.circuit</code> 或 <code>use.testbench</code> 明确 allow 的全部器件。未纳入的器件仍
+保留 unknown/deny 与理由，不输出为设计候选。CDF 设计接口及完整依赖须有使用规则，
+无关辅助参数可保留原始未知状态且不可写；不能按名称/tier 自动授权或隐藏依赖。</p>
+<p>设计入口还要求 <code>verified-acceptance-v2</code>（附录 A.8.1，2026-10-14 增补）：<code>publication</code> 必须携带与内容摘要、
+器件源指纹、验收器版本和对象范围绑定的验收回执。缺失、失败、过期或覆盖不足的包可继续
+作为调查／生成检查点读取，但不得授予完整设计就绪；不能通过缩小声明可用集合替代验收。</p>
+<h2 id="sec-6">6. 采集与交互确认</h2>
+<ol>
+<li>自动读取当前已解析 PDK 的会话事实和原始安装资源，保留真实源身份。</li>
+<li>基于当前 PDK 版本的用户手册，按器件类型查找核心设计参数，与实际 CDF 名称、表单标签、
+   类型／单位及计算模式交叉核对，形成候选映射和缺失项。不得内置跨 PDK 参数白名单，
+   不得从器件类型、熟悉的参数名或 editable 属性直接推断核心输入。</li>
+<li>向用户展示手册名称／含义、实际 CDF 字段、用户习惯名称及差异，讨论确定本 PDK 的
+   核心输入、可写条件和赋值要求；可按同规则器件批量确认，允许逐器件例外，记录实际确认范围。
+   用户称呼不直接作为写入键，必须明确映射到已采集的实际 CDF 名称。</li>
+<li>校验引用、参数、条件和源版本后保存；存在未知项时明确完成范围。</li>
+<li>生成任务结束前，对声明可用的器件完成原理图创建、参数设置、连线、网表与仿真配置验收，
+   再一次性发布可消费包；IV、全角性能扫描不作为基础发布条件。</li>
+<li>正常设计只读已发布包。必备项缺失表示生成未完成，不得转成设计会话中的连续确认。
+   只有现场源依赖改变、实际结果与已发布数据不符或真实冲突时才进入独立维护任务。
+   生成/维护中的必要用户决定集中处理，已有有效确认不因换会话、换工作区或共享安装而重做。</li>
+</ol>
+<p>用户确认可以作为使用规则及工程建议的来源，但不得冒充官方工艺限制或实测结果。
+正式资料和会话观察可以直接作为客观事实的来源；允许使用的 cell、agent 可写性与赋值要求
+必须有覆盖实际对象的用户确认记录。批量确认应保存所覆盖的对象和规则摘要的指纹。
+重新采集不能覆盖仍然有效的用户决定；存在事实冲突时报告差异并复核。
+不同 PDK、版本或器件类型之间不得仅按同名参数迁移决定；例如宽度可能指单指宽度或总宽度，
+指数量也不能与并联倍率混用。手册缺失、名称映射不唯一或手册与现场冲突时列明疑点并与用户
+讨论；未解决的映射保持未知。手册事实与用户选择分别保存来源，已有有效确认仍直接复用。</p>
+<p>缓存及已有数据包可复用、迁移，但不是新增事实的原始来源。
+新事实可来自会话、原始文件、用户交互或可复现仿真；不得从旧缓存缺字段推断其含义。
+用户指定的额外模型／文档路径须登记来源与用途，不能标成从安装目录自动发现。</p>
+<h2 id="sec-7">7. probe、callback 与辅助仿真</h2>
+<p>已确认且源依赖未变化时，正常设计必须复用规则，不得每次创建临时器件来重新发现同一规则。
+元数据静态采集不执行 CDF callback；确认的规则不能替代实际参数写入所需的 callback 和结果检查。
+未知行为、规则冲突、依赖变化或实际结果不符时，可进入有记录的针对性验证。
+轻量源身份／指纹检查不等于重复行为 probe，也不应强制全库重采。</p>
+<p>IV 生成是可选增量任务，不作为基础采集的隐式副作用。
+所有辅助测试、probe、参数／callback 验证 cell/view 必须在当前工作区 <code>SicoTest</code> 后台创建或复用；
+新 view 使用不冲突的名字，经 <code>dbOpenCellViewByType</code> 创建，不打开、切换或抬升编辑器窗口。
+若 <code>SicoTest</code> 解析到其他工作区，报告冲突，不静默重绑定；不向目标库或 PDK 库写辅助测试。
+已有测试 view 不覆盖；保留结果与错误证据。目标交付视图继续遵守已确认的前台／后台方式。
+需要 TB 时先检查并复用 DUT symbol；缺失则按 schematic 接口创建、保存、校验后再实例化，
+不以复制内部器件替代 DUT symbol；创建失败或接口不一致时停止该 TB 创建。</p>
+<h2 id="sec-8">8. 工作区增量数据</h2>
+<p>共享安装包作为只读基线；交互补充写入当前工作区 <code>.sico/ai/pdk-data/</code>（旧 <code>.cad</code> 工作区按迁移规则显式转换）。
+有效数据 = 已选基线 + 通过基线及依赖检查的当前工作区增量，合并只由统一读取入口执行。
+即使基线由 <code>SICO_PDK_DATA</code> 指定，适配器也必须应用工作区增量，不能因基线优先级而屏蔽更新。
+不得要求 agent 自行拼接文件或补丁链。</p>
+<p>增量只保存改变的逻辑记录、必要来源及基线引用；发布前完成校验并原子提交。
+覆盖、删除、冲突、重定位和失效语义按附录 C 执行。
+更换机器路径且内容相同不应使规则／IV 失效；相关内容或接口改变必须使受影响部分待复核。
+原子提交与基线检查必须防止并发交互互相覆盖。</p>
+<h2 id="sec-9">9. 有界读取</h2>
+<p>默认接口按任务返回，禁止默认输出整包、原始 callback、文档全文或全部 IV 点。
+器件检索默认 20 条、最多 100 条；普通响应目标不超过 8 KiB，UTF-8 JSON 硬上限 16 KiB。
+分页与详情查询同样遵守硬上限；不得用 <code>all</code> 绕过。字节预算不等于 token 数。
+返回完整信封也计入预算，超限必须减少条目或给出可继续查询的引用。</p>
+<p>选中参数所需的硬约束、生效条件、默认值策略与写入依赖必须一并返回或提供显式的未完成状态；
+不得通过删掉限制来满足预算，也不得把未读完参数误报为可以写入。
+小文件直接可读；大型目录分片、曲线分块，详见附录 C。</p>
+<h2 id="sec-10">10. 验收要求</h2>
+<p>生产者与消费者必须分别通过附录 C 的验收矩阵。最低包括：</p>
+<ul>
+<li>编码、必备字段、枚举、唯一 ID、引用及摘要正确。</li>
+<li>cell 使用资格与参数确认确实覆盖当前对象，不靠命名或 CDF editable 猜测。</li>
+<li>范围、单位、网格、条件与参数依赖自洽；推荐不能突破硬约束。</li>
+<li>symbol 连接点可用于已有 master，网表端口映射完整，无顺序猜测。</li>
+<li>可选数据缺失不影响无关操作；必备数据缺失产生生成验收缺项，不创建设计审阅事项。</li>
+<li>工作区增量优先生效，冲突不被吞掉，取消／失败不发布半份更新。</li>
+<li>默认读取及每次继续查询有界，片段不遗漏、不重复，硬约束不被裁掉。</li>
+<li>IV 条件及源指纹可追溯，失败点和降采样明确，过期结果不当作当前结果使用。</li>
+</ul>
+<p>验收报告与原始探测证据保存在私有工作区；报告指出标准版本、检查范围和未完成项。
+本标准文本及示例检查通过不等于真实 PDK 数据、运行实现或发行包已通过验收。</p>
+<h2 id="sec-11">11. 版本与修订</h2>
+<p><code>schema_version</code> 采用 MAJOR.MINOR.PATCH，并对应本标准的版本。
+MAJOR：不兼容字段／语义变更；MINOR：兼容的可选字段和能力扩展；PATCH：不改变数据语义的勘误。
+任何增加必备项、收紧合法值或改变缺省含义的变更均视为不兼容变更，不借 MINOR 暗中强制。
+消费者必须拒绝不支持的 MAJOR；较新 MINOR 的未知可选字段可忽略，未知硬约束／必需能力不得忽略。
+新增字段必须先登记标准；现场扩展仅使用 <code>x_</code> 前缀，且不得承载必备规则或悄悄改变标准字段语义。</p>
+<p><code>pdk_version</code> 是真实 PDK 发布身份，<code>revision</code> 是本数据集修订；补充 step 或确认规则只改变后者。
+各附录随主文共同修订；不得形成多个平行权威版本。
+后续修改应记录动机、兼容性、迁移要求和验收变化，再同步生成器与消费者。</p>
+<h2 id="sec-12">12. 历史数据与实施迁移</h2>
+<p>现有 <code>cad.pdk.directory.v1</code>、<code>cad.pdk.database.v2</code>、历史 <code>cad.pdk.dataset.v3</code> 及内建旧格式
+均为 legacy 输入，不是本标准的别名。兼容层须标记 legacy，且只通过统一读取入口暴露。
+可核验的旧事实可以迁移；用户使用资格、参数规则等缺失项必须列为待确认，不得自动授权。
+新生成器只写标准格式；历史兼容读取不得继续成为第二个正式写入口。
+固定哈希的内建发行资源须按发行策略另行迁移及重新验收，不在本标准发布时直接替换。
+当在用旧数据已转换、生成／消费验收通过且没有剩余依赖时，移除对应 legacy 兼容路径。</p>
+<p>首轮实施顺序：包级与器件格式及校验 → 交互增量和统一读取 → 搜索／绑定／写入共同消费规则
+→ 模型配置与特性／IV 扩展。已有实现中的所有入口必须列入迁移清单，不能只更新文档或搜索结果。</p>
+<h2 id="sec-13">13. 修订记录</h2>
+<p>2026-10-14 EQ-02 增补登记 <code>verified-acceptance-v2</code>、验收器 <code>sico-device-acceptance-v2</code>
+及私有证据 <code>sico.pdk.acceptance-evidence.v2</code>：验收开始前固定受测有效内容与源依赖，
+结束后核对未变并逐对象记录操作结果，发布器只比对、不得补造或改绑被验身份。
+有效内容投影覆盖工作区 overlay，采用同一确定性发布数据布局；排除安装 roots、生成
+revision/时间及验收回执自身，重定位不失效。旧 v1 包仍合法且可调查/维护读取，但
+没有受测绑定证明，不再满足设计发布资格；不得给历史证据补指纹或只改版本标记升级。
+保留既有用户确认，集中执行真实重新验收，不在普通设计反复创建更新审阅。
+这是 1.1.0 中的版本化能力扩展，旧字段语义与合法性不变，迁移规则见附录 A.8.1。</p>
+<p>2026-10-12 P08 增补登记（附录 A.8.2 续）：范围复算中，空接口文档（仅在两个注册目标
+仿真器均实测不贡献网表元件时按全量探针基础记录）按该注册目标集合计入
+<code>scope.simulators</code>；纯支持图形库（全部器件不产生网表元件）因此可正常发布，
+不改变 scope 字段语义、验收覆盖判定或 1.1.0 有效数据格式。
+2026-10-11 P08 增补登记（附录 A.8.2）：<code>publication.scope</code> 声明数据发布的支持范围
+（库、器件数、仿真器、corner）与遗留可选项 <code>unfinished</code>（生成器发布时必备、可空表），
+并固定 <code>covers="data"</code> 表明数据发布不授予运行软件发行；范围声明不改变验收覆盖判定。
+同日增补登记（附录 A.8.1 末段）：无已确认可写输入的器件（全局标记）的
+<code>creation</code>／<code>parameter_roundtrip</code>／<code>netlist</code> 记法与空电路仿真脚手架说明；不改变回执字段
+与覆盖判定，1.1.0 有效数据格式不变。
+2026-10-11 P08 登记 <code>verified-acceptance-v1</code>（附录 A.8.1）：<code>publication</code> 可携带与内容
+摘要、器件源指纹、验收器版本和对象范围绑定的验收回执；生成器自本日起发布的包在首次
+发布前必须提供覆盖全部声明可用器件与必备操作类的回执，缺失、失败、过期或覆盖不足
+不得授予完整设计就绪。该登记为可选字段与能力标记的增补：未声明能力、无回执的既有
+1.1.0 包仍可读取用于调查与维护，但设计入口拒绝并提示重新验收；不改变 1.0.0／1.1.0
+既有字段语义或旧包合法性。
+2026-09-24 实施澄清：用户确认事实保留与使用资格独立，并明确 CDF 详细补齐仅关注常用可修改
+参数。全库保留 deny/unknown 器件与原始辅助参数，但不将无关辅助参数的详细定义计为欠账；
+必要依赖只检查其实际所需事实。设计发布仍按第 5.1 节验收；不改变字段、旧包合法性或设计许可。
+同日进一步明确：核心参数清单须来自对应 PDK 用户手册与实际 CDF 的核对，并与用户讨论确定；
+既有 cmos28 六类清单是该 PDK 的已确认数据，不是通用采集器的默认参数名或写入规则。
+同日补充附录 C.6.1：规范私有手册对照草稿、实际 CDF 核验、有界批次审阅与恢复；
+有效包及许可模型不变，草稿不进入发布包，不变更 1.1.0 的有效数据格式。
+同日补充附录 C.6.2：规范核心参数客观事实入口、范围依据分类、单位换算、未决原因和
+私有报告恢复；不改变有效字段语义，未查明边界不得登记为无界，未知不会因有报告而关闭。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>版本</th>
+<th>日期</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.1.0</td>
+<td>2026-09-23</td>
+<td>增加可选发布能力 qualified-publication-v1、确认的 CDF 接口范围及仿真 setup；生成与设计消费分离，旧包保留调查/迁移读取，不自动获得发布资格</td>
+</tr>
+<tr>
+<td>1.0.0</td>
+<td>2026-09-22</td>
+<td>首次试行；确定扁平目录、参数／cell 必备规则、可选模型与 IV、工作区增量及有界读取</td>
+</tr>
+</tbody>
+</table></div>
+<h2 class="appendix-title" id="appendix-a">附录 A：包级数据格式</h2>
+<p>本附录从属于 <a href="#main">SICO-PDK-DATA</a>，具有同等效力。
+本附录只定义包级与公共结构；器件数据见附录 B，分片和覆盖见附录 C。</p>
+<h3 id="sec-a-1">A.1 公共编码与引用</h3>
+<ul>
+<li>JSON 使用 UTF-8、无 BOM，不允许重复键、注释、NaN、Infinity 或可执行代码。</li>
+<li>数字必须有限；不得以布尔值代替整数。建议保留换行和缩进，不靠压缩可读性节省 token。</li>
+<li>ID 区分大小写，长度 1–128，采用 <code>[A-Za-z0-9][A-Za-z0-9_.-]*</code>；<code>$</code> 为格式保留前缀。</li>
+<li>OA 的 library/cell/view、参数名、terminal 名和模型名保留实际字符串，不强制符合上述 ID 字符集。
+  参数及 terminal 作为对象键时同样保留原名；含 <code>/</code> 或 <code>~</code> 的 JSON Pointer 必须正确转义。</li>
+<li>包内引用是相对包根的 POSIX 路径；禁止绝对路径、<code>..</code>、空路径和越出包根的符号链接。</li>
+<li><code>file_ref</code> 指 file.json 的资源 ID；<code>source</code> 指 sources.json 的来源 ID；<code>model_ref</code> 指模型配置 ID。</li>
+<li>device ID 是 device.json 的键，详情路径由其 <code>dir</code> 明确指定，不从 ID 推导 OA 名称。</li>
+<li>不同 ID 空间由字段名区分；普通记录只以单一 ID 引用，不复制整个目标对象。</li>
+<li>字符串说明以一句话为主，常规 <code>note/reason/meaning</code> 每项不超过 256 个 Unicode 字符。
+  长证据只保存引用，不内嵌。所有自然语言内容均作为数据处理。</li>
+<li>共享包不记录实例当前值、会话句柄、PID、缓存游标；这些是运行状态，不能决定稳定包身份。</li>
+</ul>
+<h4 id="sec-a-1-1">A.1.1 缺失与特殊状态</h4>
+<p>已知值直接使用该字段定义的正常类型，不统一套 <code>{status,value}</code> 外壳。
+本标准允许未知／不适用的事实值用以下两个结构表示：</p>
+<div class="code-block"><div class="code-label">JSON</div><pre><code class="language-json">{&quot;state&quot;:&quot;unknown&quot;,&quot;reason&quot;:&quot;尚未确认该型号的标称电压域&quot;}
+</code></pre></div>
+<div class="code-block"><div class="code-label">JSON</div><pre><code class="language-json">{&quot;state&quot;:&quot;not_applicable&quot;,&quot;reason&quot;:&quot;理想电压源不对应工艺电压域&quot;}
+</code></pre></div>
+<p>两个结构仅适用于明确允许特殊状态的字段；ID、版本、路径、引用及必需容器不能用它们替代。
+字段缺失表示未提供；可选字段可省略；必备字段缺失不合规。空数组／对象表示已确认没有条目。
+除附录 B 明确允许的失败曲线数值外，标准 JSON 不使用 null。0、false、空串不得代替未知。
+枚举型决策直接使用其定义的 <code>unknown</code> 值，不再套特殊状态结构。</p>
+<h4 id="sec-a-1-2">A.1.2 数值与单位</h4>
+<p>机器运算使用 JSON 数值与显式单位；CDF 的 <code>"90n"</code> 可规范化为 <code>9e-8</code>、单位 <code>m</code>，原文归私有证据。
+单位字段不得缺省。标准单位包括 <code>1/m/m2/V/A/Ohm/Ohm/sq/F/H/Hz/s/K/degC/S</code>；
+组合单位采用明确的 SI 符号，如 <code>A/m</code>、<code>F/m2</code>；其他单位必须由消费者明确支持，不猜测缩放。
+CDF 数值、默认值、范围、网格和线性 step 均使用参数行同一单位；倍数和整数计数使用 <code>1</code>。
+温度必须明确 <code>K</code> 或 <code>degC</code>。字符串型枚举不得自动转换成数值；原始字符串／表达式默认值
+无法可靠规范化时记 unknown，不能执行文本来补出事实。</p>
+<h4 id="sec-a-1-3">A.1.3 公共文件信封</h4>
+<p>除 index.json、package.json、sources.json、增量文件和曲线数据块外，内容文件采用以下信封：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>必备</th>
+<th>语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>source</code></td>
+<td>是</td>
+<td>文件事实的默认来源 ID；空表也须指出采集／确认来源</td>
+</tr>
+<tr>
+<td><code>depends_on</code></td>
+<td>是</td>
+<td>package.json 中依赖 ID 的数组；确认不依赖外部源时可为空</td>
+</tr>
+<tr>
+<td><code>evidence</code></td>
+<td>否</td>
+<td>JSON Pointer → 来源 ID；覆盖默认来源，作用于该位置及其子树，最长匹配优先</td>
+</tr>
+<tr>
+<td>业务容器</td>
+<td>是</td>
+<td>下文定义的 items/configs/parameters/terminals 等</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>evidence</code> 的 Pointer 指向合并分片后的逻辑文档，必须指向存在的节点。
+默认来源不能掩盖不同来源；例如 CDF 观察与用户可写确认必须分别引用实际来源。
+以文件级默认来源加少量覆盖表达溯源，不在每个字段复制完整对象。
+其他非必备标准字段可以省略；未列出的字段仅允许不改变语义的 <code>x_</code> 扩展。
+此限制按文件声明的 schema_version 校验；较新 MINOR 已登记的可选字段按主文兼容规则处理。
+同一类记录内的缺省值只采用本标准明确写出的缺省，不允许消费者另造隐式工程默认值。</p>
+<h3 id="sec-a-2">A.2 index.json：现场安装索引</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>必备</th>
+<th>类型／语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>format</code></td>
+<td>是</td>
+<td>固定 <code>sico.pdk.index</code></td>
+</tr>
+<tr>
+<td><code>schema_version</code></td>
+<td>是</td>
+<td>本标准版本</td>
+</tr>
+<tr>
+<td><code>packages</code></td>
+<td>是</td>
+<td>安装 ID → 包索引行；支持同一 PDK 的多个版本</td>
+</tr>
+<tr>
+<td><code>default</code></td>
+<td>否</td>
+<td>packages 中的安装 ID；仅是现场缺省，不覆盖目标工程已绑定的 PDK</td>
+</tr>
+</tbody>
+</table></div>
+<p>每个包索引行：<code>path</code> 为相对 index 所在目录的包路径；<code>roots</code> 为根 ID → 本机绝对目录。
+path 也可指向附录 C 的工作区增量目录；此时包身份由其 base 指向的完整包确定。
+包内目录路径与外部 PDK 资源路径属于不同空间。<code>roots</code> 只在现场索引／工作区绑定中保存一次，
+不得把本机绝对路径散布到每个模型和器件文件中。路径变更不改变包内容身份。
+package_id/pdk_version/revision 由 package.json 权威提供，不在索引重复维护。
+多个候选不能靠目录排序静默选择；工程已有有效技术绑定时直接使用该绑定。</p>
+<h3 id="sec-a-3">A.3 package.json：包身份与清单</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>必备</th>
+<th>类型／语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>format</code></td>
+<td>是</td>
+<td>固定 <code>sico.pdk.package</code></td>
+</tr>
+<tr>
+<td><code>schema_version</code></td>
+<td>是</td>
+<td><code>1.0.0</code> 起；其他内容文件继承本版本</td>
+</tr>
+<tr>
+<td><code>package_id</code></td>
+<td>是</td>
+<td>稳定包族 ID，例如 <code>cmos28hkmg</code></td>
+</tr>
+<tr>
+<td><code>pdk_version</code></td>
+<td>是</td>
+<td>原始 PDK 版本字符串；无法确认可为 unknown，但不得据此匹配任意版本</td>
+</tr>
+<tr>
+<td><code>options</code></td>
+<td>是</td>
+<td>工艺选项名 → 值的短表；确实没有时为 <code>{}</code></td>
+</tr>
+<tr>
+<td><code>revision</code></td>
+<td>是</td>
+<td>本数据集修订的唯一字符串；每次有效内容发布更新</td>
+</tr>
+<tr>
+<td><code>libraries</code></td>
+<td>是</td>
+<td>逻辑 library ID → <code>{name, root, path}</code>；name 为实际 OA 库名</td>
+</tr>
+<tr>
+<td><code>dependencies</code></td>
+<td>是</td>
+<td>依赖 ID → 依赖记录，按下面的规则保存</td>
+</tr>
+<tr>
+<td><code>files</code></td>
+<td>是</td>
+<td>包内路径 → SHA-256 字符串，枚举全部内容文件／分片／数据块</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>是</td>
+<td>本修订生成时间，RFC 3339，含时区</td>
+</tr>
+<tr>
+<td><code>required_features</code></td>
+<td>否</td>
+<td>已登记的必需能力列表；消费者不支持时不得忽略</td>
+</tr>
+</tbody>
+</table></div>
+<p>本版核心字段无需列入 required_features；1.0.0 尚无额外登记能力，该字段省略或为空。
+后续扩展若影响硬约束，必须在新版本登记能力及拒绝语义，不能仅作为未知可选字段发布。</p>
+<p>库路径相对于其 root；实际使用必须与会话解析的库对应，重定位不能把同名异版库当成原库。
+包兼容身份由 package_id、pdk_version、options、已解析的库与依赖指纹共同确定。
+版本未知时必须通过实际依赖指纹核验，不能将 unknown 当成通配符。
+<code>files</code> 不列 package.json 自身；包描述文件的哈希由读取者在外部引用处计算，避免循环摘要。
+清单摘要统一为 <code>sha256:</code> 加 64 位小写十六进制，针对文件原始字节计算，含义不得混用。
+包内未列入清单的数据不属于该修订；临时文件、日志和旧备份不得混入发布目录。</p>
+<p>依赖记录包含 <code>kind</code>、<code>target</code>、<code>fingerprint</code>、<code>method</code>：</p>
+<ul>
+<li><code>kind</code>：<code>library/cdf/callback/symbol/interface/model/file/technology</code>。</li>
+<li><code>target</code>：相应 library ID、file_ref 或 <code>{library, cell, view}</code>；library 引用本包的逻辑 ID。</li>
+<li><code>fingerprint</code>：<code>sha256:</code> 摘要；确实无法获取时用 unknown，此依赖不能支持“已验证未变化”。</li>
+<li><code>method</code>：摘要投影／采集方法及版本的字符串；文件原始字节用 <code>sha256-bytes-v1</code>。</li>
+</ul>
+<p>CDF／symbol 等结构指纹必须有确定且版本化的投影算法，排除采集时间、会话 ID、绝对路径等易变值。
+interface 指纹覆盖仿真器接口的端口顺序、参数映射及实现引用；不得只校验 symbol 图形来代表网表接口未变。
+库目录时间戳只能用于决定是否复核，不可代替模型、CDF 或 symbol 的内容一致性证据。
+器件文件的 depends_on 仅引用相关依赖；不得用一个全包时间戳导致所有确认与 IV 无差别失效。
+大清单／依赖映射按附录 C 分片；清单自身的分片摘要由其 <code>$parts</code> 描述验证，不形成自引用。</p>
+<h3 id="sec-a-4">A.4 category.json：分类定义</h3>
+<p>业务容器 <code>items</code> 为分类 ID → <code>{name, parent?, note?}</code>，<code>name</code> 必备。
+<code>parent</code> 引用同文件另一分类，禁止自引用和环。器件归属只保存在 device.json 的 categories 中。
+分类可反映功能或工艺族，但不能仅凭名称规则把候选归类标为已确认。
+未分类器件使用 unknown，不能用空 categories 数组掩盖尚未完成分类。</p>
+<h3 id="sec-a-5">A.5 device.json：器件目录</h3>
+<p>业务容器 <code>items</code> 为 device ID → 器件行。每行只保存选型必需的信息：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>必备</th>
+<th>类型／语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>library</code></td>
+<td>是</td>
+<td>package.libraries 的 ID</td>
+</tr>
+<tr>
+<td><code>cell</code></td>
+<td>是</td>
+<td>实际 OA cell 名</td>
+</tr>
+<tr>
+<td><code>view</code></td>
+<td>是</td>
+<td>实际 symbol view 名；缺失 symbol 时用 unknown</td>
+</tr>
+<tr>
+<td><code>dir</code></td>
+<td>条件</td>
+<td>有详情时必备的相对包根目录；未采集／禁止项可省略</td>
+</tr>
+<tr>
+<td><code>categories</code></td>
+<td>是</td>
+<td>非空分类 ID 数组，或 unknown</td>
+</tr>
+<tr>
+<td><code>voltage</code></td>
+<td>是</td>
+<td><code>{domain, nominal, unit:"V"}</code>，或 unknown/not_applicable</td>
+</tr>
+<tr>
+<td><code>use</code></td>
+<td>是</td>
+<td>用途 → <code>allow/deny/unknown</code>，必须覆盖 circuit/testbench/extraction/verification</td>
+</tr>
+<tr>
+<td><code>reason</code></td>
+<td>条件</td>
+<td>存在 deny／unknown 时，简短说明或相应用途 → 说明的映射</td>
+</tr>
+<tr>
+<td><code>limits</code></td>
+<td>否</td>
+<td>端间电压等硬限制列表，形状见下文；一旦存在则使用时必须检查</td>
+</tr>
+<tr>
+<td><code>recommended</code></td>
+<td>否</td>
+<td><code>{use, for, priority, reason}</code> 的数组，use 必须在 use 中为 allow</td>
+</tr>
+<tr>
+<td><code>note</code></td>
+<td>否</td>
+<td>器件差异的一句说明</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>nominal</code> 为标称电压域，不代表绝对最大额定值。limits 每项为
+<code>{terminals:[正端,负端], min?, max?, unit:"V", when?}</code>，至少一个边界，边界闭合；
+符号表示 V(正端)-V(负端)，名称对应 symbol terminal，when 使用附录 B 的条件表达式。
+尚有未知但影响本次任务的限制时必须返回缺失项，不能把未记录限制解释为无限安全范围。
+推荐优先级为非负整数，同一用途与场景下数值越小越优先；未推荐不等于禁止。
+同一 <code>{library,cell,view}</code> 不得作为多个独立器件行重复定义，别名放在可选 <code>aliases</code> 字符串数组中。
+静态 primitive／理想器件也必须按用途确认；有模型声明或能实例化都不能自动产生 allow。</p>
+<h3 id="sec-a-6">A.6 file.json：外部资源登记</h3>
+<p>业务容器 <code>items</code> 为资源 ID → 资源行。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>必备</th>
+<th>类型／语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kind</code></td>
+<td>是</td>
+<td><code>model/document/runset/techfile/other</code></td>
+</tr>
+<tr>
+<td><code>root</code></td>
+<td>是</td>
+<td>现场 roots 中的根 ID</td>
+</tr>
+<tr>
+<td><code>path</code></td>
+<td>是</td>
+<td>相对该根的文件或目录路径，不含 <code>..</code></td>
+</tr>
+<tr>
+<td><code>purpose</code></td>
+<td>是</td>
+<td>简短用途</td>
+</tr>
+<tr>
+<td><code>tool</code></td>
+<td>否</td>
+<td>使用该文件的仿真器／验证工具</td>
+</tr>
+<tr>
+<td><code>dependency</code></td>
+<td>条件</td>
+<td>模型作为仿真／IV 的有效依赖时必备，引用 package.dependencies 的 file/model 依赖</td>
+</tr>
+</tbody>
+</table></div>
+<p>文件内容指纹只存于对应 dependency，target 必须回指本资源 ID，不在资源行重复维护 fingerprint。
+目录不能伪装为普通文件哈希；模型入口及其嵌套资源的有效依赖必须覆盖实际加载内容。
+存在性／可读性是现场查询结果，不能将采集时一次成功永久当作当前可用。
+额外资源根由现场配置明确绑定并记录来源；不得静默扫描无关目录。
+允许实际安装路径通过符号链接解析，但须记录并校验实际资源身份，不靠名称相同判断内容相同。
+file.json 只登记引用；文档全文、模型内容、runset 内容不因登记而复制进数据包。</p>
+<h3 id="sec-a-7">A.7 model.json：模型组合与 corner</h3>
+<p>业务容器为 <code>configs</code> 和 <code>corners</code>，均为 ID → 记录。
+config 必备字段：<code>simulator</code>、<code>language</code>、<code>includes</code>；可选 <code>note</code>。
+includes 是有序数组，每项 <code>{file_ref, section?}</code>，只引用 kind=model 的资源；加载顺序具有语义。
+模型本身嵌套的 include 依赖也须被追踪并计入相关依赖指纹，不要求把所有内部文件直接加载一次。
+没有 section 的入口省略 section，不能猜测为 <code>tt</code>。</p>
+<p>corner 必备字段：<code>name</code>、<code>configs</code>（有序配置 ID 数组）；可选 <code>note</code>。
+configs 的组合表示一个明确仿真环境，同一组合内的 simulator/language 必须兼容；
+跨器件族的 MOS/R/C section 组合在这里集中定义，避免在各器件复制。
+corner 不隐含温度和电源；PVT 条件由仿真设置或 IV 条件明确给出。
+corner 名称、文件名和 PDK 型号均不能作为推测 section 的依据。
+文件可缺省；若存在，configs/corners 可为空表，消费者据此报告未提供对应能力。</p>
+<p>可选 <code>cards</code> 是模型声明的派生清单，ID → 记录。每项必备
+<code>name</code>、<code>kind</code>（<code>model</code> 或 <code>subckt</code>）、<code>simulator</code>、<code>file_ref</code>、<code>lines</code>、<code>configs</code>、
+<code>sections</code>；<code>kind=model</code> 可带 <code>element_type</code>，<code>kind=subckt</code> 可带 <code>ports</code>。
+<code>file_ref</code> 指向 file.json 的 kind=model 资源；<code>configs</code>/<code>sections</code> 是该声明在
+哪些已声明配置和 section 的 include 闭包中可达，未进入任何配置的声明保留空数组，
+用于发现“文件已登记但没有被加载”的模型。<code>cards</code> 只是 deck 声明的投影，不复制
+模型路径或参数定义，也不把某个 corner 声明的模型自动视为设计可用。</p>
+<h3 id="sec-a-8">A.8 sources.json：来源登记</h3>
+<p>结构为 <code>{ "items": { 来源ID: 来源记录 } }</code>，不再包含指向自身的 source。
+每个来源记录必备 <code>kind</code>、<code>at</code>、<code>summary</code>；<code>at</code> 为带时区 RFC 3339 时间。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>kind</th>
+<th>额外必备字段</th>
+<th>可选字段</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>session</code></td>
+<td><code>collector</code>（含版本）、<code>target</code>（库／cell/view 选择范围）</td>
+<td><code>evidence_ref</code></td>
+</tr>
+<tr>
+<td><code>document</code></td>
+<td><code>file_ref</code>、<code>locator</code>（页／节／行）</td>
+<td><code>evidence_ref</code></td>
+</tr>
+<tr>
+<td><code>user</code></td>
+<td><code>confirmed_by</code>、<code>scope_ref</code>、<code>scope_digest</code></td>
+<td><code>evidence_ref</code></td>
+</tr>
+<tr>
+<td><code>simulation</code></td>
+<td><code>run_ref</code>、<code>simulator</code>（含版本）</td>
+<td><code>evidence_ref</code></td>
+</tr>
+<tr>
+<td><code>derived</code></td>
+<td><code>inputs</code>（来源 ID 数组）、<code>method</code>（含版本）</td>
+<td><code>evidence_ref</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>scope_ref 指私有确认记录中的对象范围与规则快照；scope_digest 校验该快照，不能只写“用户同意”。
+scope_digest 为该记录原始字节的 <code>sha256:</code> 摘要；确认过程必须固化准确的对象范围和规则快照。
+run_ref／evidence_ref 是可查询的私有证据引用，不是可执行命令；不要求普通读取展开它们。
+derived 输入不得成环。用户确认能确认使用决定，但不会把估计值自动升级为官方事实。
+不要求收集用户敏感身份；confirmed_by 使用可追溯的本地操作者标识即可。
+证据文件不必随共享包携带，但确认范围必须可验证；无法访问时明确返回证据可访问性，不能伪造确认。</p>
+<h3 id="sec-a-8-2">A.8 可消费发布能力（1.1.0）</h3>
+<p>package.json 可选 <code>publication</code> 与 <code>required_features:["qualified-publication-v1"]</code> 必须同时出现。
+publication 字段：<code>profile="circuit-simulation-v1"</code>、<code>at</code>（验收时间）、<code>content_digest</code>
+（SHA-256 清单内容指纹）、<code>based_on</code>（被取代基线 package.json 字节指纹）。
+内容指纹使用既有确定性 JSON 投影（键排序、UTF-8、紧凑分隔符、禁 NaN），对象为
+<code>{package_id,pdk_version,options,libraries,dependencies,files}</code>，其中映射已展开清单分片。
+不纳入 publication 自身、revision 或安装 roots，避免循环与重定位误失效。
+files 包含所有内容及分片摘要；按需读取逐文件检查字节，查询无需为了发布状态读取全部详情。
+发布记录是验收结论，不是新的用户授权来源；所有用途/CDF 决定仍须有原始 user 来源。</p>
+<h4 id="sec-a-8-1">A.8.1 验收回执（1.1.0 增补登记 <code>verified-acceptance-v2</code>）</h4>
+<p>设计入口要求 <code>required_features</code> 同时包含 <code>verified-acceptance-v2</code>；声明该能力的包必须在
+<code>publication</code> 中包含 <code>acceptance</code>，两者必须同时出现。<code>acceptance</code> 字段：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>必备</th>
+<th>语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>verifier</code></td>
+<td>是</td>
+<td>已登记的验收器 ID（含语义版本）；当前登记 <code>sico-device-acceptance-v2</code></td>
+</tr>
+<tr>
+<td><code>operations</code></td>
+<td>是</td>
+<td>必备操作类清单，固定为 <code>creation</code>、<code>parameter_roundtrip</code>、<code>wiring</code>、<code>netlist</code>、<code>simulation_config</code></td>
+</tr>
+<tr>
+<td><code>evidence_ref</code></td>
+<td>是</td>
+<td>产生回执的私有验收证据引用（可查询，不是可执行命令）</td>
+</tr>
+<tr>
+<td><code>evidence_digest</code></td>
+<td>是</td>
+<td>该证据原始字节的 <code>sha256:</code> 摘要</td>
+</tr>
+<tr>
+<td><code>receipts</code></td>
+<td>是</td>
+<td>回执 ID → 回执记录，非空</td>
+</tr>
+</tbody>
+</table></div>
+<p>回执记录：<code>devices</code>（对象范围：非空、去重的器件 ID 数组，每个都必须是包内该用途明确
+allow 的器件）、<code>operations</code>（本回执覆盖的操作类：非空、去重、属于必备清单）、
+<code>subject</code>（受测内容身份，见下）、<code>fingerprints</code>（器件 ID → 该器件验收时依赖 ID 的
+指纹表，必须在运行前记录并在结束时核对）、<code>results</code>（器件 ID → 操作类 →
+<code>passed</code> 或 <code>failed</code>，对象集合与 devices 相同，每对象操作集合与 operations 相同）、
+<code>at</code>、<code>run_ref</code>（私有运行证据引用）、可选 <code>evidence_ref</code>。扩展字段使用 <code>x_</code> 前缀。</p>
+<p><code>subject</code> 必备字段为 <code>projection="sico.pdk.acceptance-subject.v1"</code>、<code>package_id</code>、
+<code>revision</code>（受测 effective revision，含 overlay 修订）、<code>content_digest</code>。受测摘要
+使用 A.8 的确定性 JSON 算法，投影对象为
+<code>{projection,package_id,pdk_version,options,libraries,dependencies,files}</code>。
+<code>files</code> 由所有有效逻辑文档（包含 overlay）使用同一发布 Writer 规划：文档按名称排序，
+映射按既有分片规则写入，之后规划 libraries/dependencies 分片。摘要排除发布后生成的
+保留名称 <code>package.acceptance.*.json</code> 回执分片，其完整性由 A.8 的 publication 摘要绑定。
+不纳入 publication、生成 revision/时间、物理安装路径或 roots；已发布内容无需展开
+全部详情即可按清单核验，单文档读取仍检查文件摘要。</p>
+<p>依赖 ID 不按命名猜测。fingerprints 覆盖器件 cdf/symbol/simulation/properties 文档
+显式 depends_on、共享 device 文档依赖、清单中 target 与器件身份一致的依赖及
+library/technology 依赖。完整共享依赖清单由 subject 摘要统一绑定，不在每器件重复；
+所有 file/model 字节依赖（含嵌套模型 include 与引用手册）仍须在运行前后真实校验。
+指纹表不得为空；未知指纹不能构成通过依据。
+验收器在操作前后执行真实源校验；源、有效内容或修订变化则该次运行不能取得新身份。</p>
+<p>私有证据使用 <code>schema_version="sico.pdk.acceptance-evidence.v2"</code>、上述 <code>verifier</code>
+与非空 <code>runs</code> 数组，每项与回执同形。生产者在操作前保存 subject/fingerprints，
+操作后保存逐对象结果，汇编器只收集已有绑定的运行记录，不能在汇编/发布时从当前包
+补指纹。发布器核对原记录与当前有效修订、摘要、依赖完全一致，保留原 subject 和
+fingerprints；超过单条分片容量时只按器件拆分回执，原 run_ref/evidence_digest 不变。
+单器件指纹表超过 8 KiB 时按既有 <code>$parts</code> 规则分片，名称使用
+<code>package.acceptance.*.json</code>，读取时恢复同一逻辑指纹表；不得丢弃依赖以通过容量检查。</p>
+<p>判定：对每个 <code>use.circuit</code> 或 <code>use.testbench</code> 明确 allow 的器件、每个必备操作类，至少
+一条成功回执覆盖，且 subject 的受测内容摘要与当前数据一致、所有指纹与当前依赖一致。
+缺失、失败、过期（内容或源指纹变化）或对象覆盖不足都不得授予完整设计就绪；发布器在
+写入 <code>publication</code> 前验证覆盖与指纹，读取端用同一规则复核，且不接受缩小声明可用集合
+的做法。回执不改变器件许可、参数规则或用户授权，也不要求普通读取展开私有证据。</p>
+<p>兼容与淘汰：<code>verified-acceptance-v1</code> / <code>sico-device-acceptance-v1</code> 是 legacy 记录。
+旧包仍可调查/维护读取，但不得自动取得 v2 资格；须复用有效用户确认、在生成维护阶段
+按 v2 固定受测身份后执行新的真实验收。旧 v1 证据不得作为新发布输入，不得补造历史
+指纹，也不能只改标记升级。已部署旧包完成迁移且无调查读取依赖后，才移除 v1 解析。
+回执绑定并非数字签名，不认证验收执行者；可信执行器与原始私有证据仍须受控保存。</p>
+<h4 id="sec-a-8-2-2">A.8.2 发布范围声明（1.1.0 增补登记）</h4>
+<p><code>publication</code> 可携带 <code>scope</code>，生成器发布时必备，声明本次发布的支持范围与遗留可选项：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>必备</th>
+<th>语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>covers</code></td>
+<td>是</td>
+<td>固定 <code>data</code>：本次发布只覆盖数据；运行软件的发行授权独立，数据发布不授予软件发行</td>
+</tr>
+<tr>
+<td><code>libraries</code></td>
+<td>是</td>
+<td>实际覆盖的库 ID 数组（非空）</td>
+</tr>
+<tr>
+<td><code>devices</code></td>
+<td>是</td>
+<td>声明可用（circuit/testbench allow）的器件数</td>
+</tr>
+<tr>
+<td><code>simulators</code></td>
+<td>是</td>
+<td>接口覆盖到的仿真器数组（非空）</td>
+</tr>
+<tr>
+<td><code>corners</code></td>
+<td>是</td>
+<td>接口引用的模型配置 ID 数组，无则空表</td>
+</tr>
+<tr>
+<td><code>unfinished</code></td>
+<td>是</td>
+<td>尚未完成的可选项短名数组；空表表示无遗留</td>
+</tr>
+</tbody>
+</table></div>
+<p>发布器按有效包复算 <code>libraries</code>／<code>devices</code>／<code>simulators</code>／<code>corners</code>，调用方显式声明
+<code>unfinished</code>（可为空表）；声明不缩小 A.8.1 的验收覆盖判定，也不能用范围声明绕过验收。
+空接口文档（A.8.1 的不贡献网表元件记法）只在两个注册目标仿真器均实测无元件时记录，
+复算时按该注册目标集合计入 <code>simulators</code>，使纯支持图形库（如 basic 六器件）可以如实
+声明范围，而不是凭空补一个接口或拒绝发布。</p>
+<p>没有已确认可写输入的器件（如全局标记 gnd）不运行参数案例：<code>parameter_roundtrip</code> 以
+“已确认输入集合为空、器件没有可写参数”的事实为记，<code>creation</code> 以同一次实例化证据
+（后台新建、保存与读回）为记；这类器件若同时不贡献网表元件，<code>netlist</code> 以“网表化完成且
+不产生该实例的元件、其端子依确认的全局网络语义归属”为记，<code>simulation_config</code> 允许在
+其空电路上加入一条显式负载作为仿真脚手架并随结果记录。以上记法不改变"每器件每操作类
+必须被覆盖"的判定。</p>
+<p>生成器在私有暂存目录构造完整包，复核当前修订、来源与消费条件后一次切换 index。
+失败/取消/过期修订不得替换索引；重复发布同一已合格修订返回原结果。
+修改已发布内容会撤销其发布状态，须重新验收；原始确认和不可变旧目录继续保留。
+当前工作区发布只替代 <code>based_on</code> 精确匹配的公用基线，其他同名基线仍报冲突。
+公用包与本地包使用同一读取入口，部署位置不构成再次询问的理由。</p>
+<h2 class="appendix-title" id="appendix-b">附录 B：器件数据格式</h2>
+<p>本附录从属于 <a href="#main">SICO-PDK-DATA</a>，具有同等效力。
+所有文件继承包版本及附录 A 的 source/depends_on/evidence 信封；不重复 library/cell 身份。
+以下必备字段可按明确定义保存 unknown 作为待补充数据，但不因此获得设计可用状态。</p>
+<h3 id="sec-b-1">B.1 cdf.json：参数使用规则</h3>
+<p>顶层必备 <code>presence</code>、<code>parameters</code>、<code>execution</code>；可选 <code>rules</code>、<code>interface_parameters</code>（1.1.0）。
+<code>interface_parameters</code> 为经用户确认的设计参数名数组（可为空），必须引用已采集参数；
+允许写入/必须指定的参数、联合规则及其递归依赖始终纳入，不能借该数组隐藏约束。
+数组缺失沿用保守的全参数检查；采集器不得按 interface tier 自动生成已确认范围。
+未纳入范围的辅助参数可供调查，但未知写入策略不能放行。
+核心输入按当前 PDK 用户手册与现场 CDF 的对应关系和用户讨论结果确定，不能按器件类型套用
+固定字段清单。parameters 的键及 interface_parameters 均使用实际 CDF 名称；手册名称、表单
+标签和用户称呼的对照属于采集／确认依据，不能用别名替换真实写入键。
+事实补齐报告与上述设计门槛独立：详细定义只检查 write=allow/conditional 的已确认常用输入；
+已声明接口、条件与递归依赖中的辅助参数只检查必要类型／单位，采用默认策略时再检查默认值，
+不要求其具备优化范围及完整释义。未知输入范围单独提示，不扩成所有参数的详细采集义务。
+原始辅助参数照常保留，任何补齐或过滤均不改变 write 权限。
+presence 为 <code>present/absent/unknown</code>。absent 必须使用空 parameters 与 literal 执行方式，且有确认依据；
+unknown 不得表达成“没有参数”。presence=present 且 parameters 为空表示明确没有设计可调接口。
+parameters 为实际 CDF 参数名 → 参数规则；必须包含所有允许写入／必须指定的参数及其依赖。
+可保留固定／派生参数以解释依赖；未列入允许规则的参数一律不得由 agent 写入。
+button 等执行动作不属于可写参数值，不得以普通参数写入。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>参数字段</th>
+<th>必备</th>
+<th>类型／语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td>是</td>
+<td><code>number/integer/string/boolean</code>；未知用特殊状态</td>
+</tr>
+<tr>
+<td><code>unit</code></td>
+<td>是</td>
+<td>明确单位；字符串／布尔／无量纲使用 <code>1</code></td>
+</tr>
+<tr>
+<td><code>meaning</code></td>
+<td>是</td>
+<td>简短含义，必须说明单指／总宽度、倍率等易混淆语义；未知可显式记录</td>
+</tr>
+<tr>
+<td><code>write</code></td>
+<td>是</td>
+<td><code>allow/deny/conditional/unknown</code></td>
+</tr>
+<tr>
+<td><code>write_when</code></td>
+<td>条件</td>
+<td>write=conditional 时必备的条件</td>
+</tr>
+<tr>
+<td><code>requirement</code></td>
+<td>是</td>
+<td><code>explicit/default/conditional/not_applicable/unknown</code></td>
+</tr>
+<tr>
+<td><code>required_when</code></td>
+<td>条件</td>
+<td>requirement=conditional 时必备的条件</td>
+</tr>
+<tr>
+<td><code>default</code></td>
+<td>是</td>
+<td>与 type 一致的值，或 unknown/not_applicable</td>
+</tr>
+<tr>
+<td><code>domain</code></td>
+<td>是</td>
+<td>合法值域，见 B.2；禁止写入的派生值可用 not_applicable</td>
+</tr>
+<tr>
+<td><code>grid</code></td>
+<td>否</td>
+<td>硬性网格 <code>{step, origin}</code>，step&gt;0，单位继承参数</td>
+</tr>
+<tr>
+<td><code>step</code></td>
+<td>否</td>
+<td>推荐扫描 <code>{mode:"linear"或"ratio", value}</code>，线性 value&gt;0，倍率 value&gt;1</td>
+</tr>
+<tr>
+<td><code>suggested</code></td>
+<td>否</td>
+<td>推荐起始值，必须满足所有硬约束；不代替 PDK default</td>
+</tr>
+<tr>
+<td><code>depends_on</code></td>
+<td>否</td>
+<td>其他参数名的数组；是参数依赖，不是文件信封中的源依赖</td>
+</tr>
+</tbody>
+</table></div>
+<p>explicit 表示设计时必须明确决定值，不要求最终值不同于默认值。
+default 表示允许采用已知合法的默认值；默认值未知时必须提示补充或显式赋值，不能猜测。
+conditional 在条件真时要求显式指定，假时采用 default 策略；条件未知时不能视为假。
+not_applicable 只适用于无需调用方赋值的固定／派生参数；write=allow/conditional 不得同时使用此值。
+write=deny 不得要求调用方 explicit；需改变其值时应修改已确认的输入参数并由既有机制派生。
+type、单位和 meaning 不明时不能自动调参；CDF interface 分层及 editable/display 不直接决定 write。</p>
+<p>execution 为 <code>{mode, order?, implementation_ref?}</code>：</p>
+<ul>
+<li>mode=<code>literal</code>：已确认可以按结构化字面值写入，无须 CDF callback；order 不使用。</li>
+<li>mode=<code>cdf</code>：使用 SiCo 现有受支持的 CDF 执行入口；order 为可写输入的完整编辑顺序。</li>
+<li>mode=<code>unknown</code>：执行方式待确认，不能据此写入。</li>
+<li>implementation_ref 为可选的已登记执行能力引用；不是代码、文件路径或任意函数名。</li>
+</ul>
+<p>order 每个可写参数出现一次，条件可写项也纳入；运行时只保留本次实际写入且条件成立的项。
+输入依赖不能相互循环；PDK 内部 callback 的计算关系不因此被重写为人工依赖图。
+callback 来源变化使相关规则待复核；执行后回读实际值，并检查范围和关联参数。
+本文件保存规则和执行引用，不保存 callback 源代码供 agent 解释执行。</p>
+<h3 id="sec-b-2">B.2 参数取值约束</h3>
+<p>domain 的 kind 与字段：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>kind</th>
+<th>字段</th>
+<th>语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>interval</code></td>
+<td><code>min?</code>, <code>max?</code>, <code>min_closed?</code>, <code>max_closed?</code></td>
+<td>至少一个边界；闭合缺省 true；只能用于数值</td>
+</tr>
+<tr>
+<td><code>set</code></td>
+<td><code>values</code></td>
+<td>非空、去重、与参数类型相符的离散值</td>
+</tr>
+<tr>
+<td><code>unbounded</code></td>
+<td><code>reason</code></td>
+<td>经确认在本接口没有额外值域限制，仍受类型和其他规则限制</td>
+</tr>
+<tr>
+<td><code>conditional</code></td>
+<td><code>cases</code>, <code>otherwise?</code></td>
+<td>按条件选值域，见下文</td>
+</tr>
+<tr>
+<td><code>unknown</code></td>
+<td><code>reason</code></td>
+<td>合法值域未确认，不能作为自动优化范围</td>
+</tr>
+<tr>
+<td><code>not_applicable</code></td>
+<td><code>reason</code></td>
+<td>不可调的固定／派生参数，或当前器件无此概念</td>
+</tr>
+</tbody>
+</table></div>
+<p>interval 省略一个边界表示该侧经确认无界，不能表达“上界尚未查到”；只知部分限制时
+domain=unknown，可在私有证据保留已知边界，交互补充后才形成可调值域。
+整数参数必须整数取值；区间交集为空、网格与离散集合无解等冲突都必须拒绝。
+数值默认值与 suggested 必须落在有效值域和网格内；PDK 默认值本身越界时保留真实观察并报冲突，
+不能静默截断或改写成合法值。布尔参数可用 set 的 <code>[false,true]</code>；字符串使用 set 或经确认的 unbounded。
+grid 的合法值满足 <code>value = origin + n × step</code>，n 为整数；实现应采用十进制语义处理十进制网格，
+不能因二进制浮点误差误拒边界，也不能以宽松容差接受真正离网格的值。
+step 只作建议；推荐取样必须落在硬网格及值域内，不得把推荐步长当作最小制造增量。</p>
+<p>conditional.cases 为 <code>{when, domain, grid?}</code> 数组；子 domain 不再嵌套 conditional。
+已知输入下只允许一个 case 成立，否则是数据冲突；无 case 成立时用 otherwise 值域，未提供即 unknown。
+case 的 grid 若存在则替换该参数顶层 grid，否则继承。未提供网格表示没有声明额外网格约束，
+不能据此掩盖已知存在但尚未确认的限制；此类缺失必须使相关 domain 保持 unknown。</p>
+<p>所有约束须注明实际适用对象和条件。模型分箱范围、PCell 限制、设计规则与推荐设计区间不能混为一谈。
+domain 是经确认的有效输入约束；各来源及合成依据在 evidence 中追溯，不另外维护第二套有效范围。
+只有参数含义、单位、工艺选项与条件相容时才能合并不同源限制。</p>
+<h4 id="sec-b-2-1">B.2.1 条件与联合规则</h4>
+<p>条件使用封闭的结构化表达式，不允许 Python/SKILL/SPICE 字符串表达式：</p>
+<ul>
+<li>比较：<code>{"op":"eq|ne|lt|le|gt|ge|in", "left":操作数, "right":操作数}</code>。</li>
+<li>操作数为 JSON 字面值或 <code>{"param":"实际参数名"}</code>；in 的右侧必须为同类型字面值数组。</li>
+<li>组合：<code>{"all":[条件,...]}</code>、<code>{"any":[条件,...]}</code>、<code>{"not":条件}</code>。</li>
+<li>条件树最多 4 层、32 个比较项；比较两参数时必须类型／单位相容，不做隐式字符串数值转换。</li>
+<li>缺少引用值时结果为 unknown；按三值逻辑传播。all 有 false 即 false，否则有 unknown 为 unknown；
+  any 有 true 即 true，否则有 unknown 为 unknown；not unknown 仍为 unknown。</li>
+</ul>
+<p>rules 为规则 ID → <code>{check, message, when?}</code>；when 缺省 true，check 为上面的条件表达式。
+when=true 时 check 必须 true；unknown 不能放行。when=false 的规则不适用。
+乘积、非线性关系等不能由本版条件语言正确表示时，必须标明相关值域／规则未确认，
+或通过后续版本登记的验证能力表达，不得偷放可执行字符串或悄悄省略约束。</p>
+<h3 id="sec-b-3">B.3 simulation.json：网表接口</h3>
+<p>业务容器 <code>interfaces</code> 为接口 ID → 接口记录；按仿真器区分，支持多个接口。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>必备</th>
+<th>类型／语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>simulator</code></td>
+<td>是</td>
+<td>仿真器名称</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td>是</td>
+<td><code>primitive/model/subckt</code></td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>是</td>
+<td>实际网表 primitive／model／subckt 名称</td>
+</tr>
+<tr>
+<td><code>model_source</code></td>
+<td>是</td>
+<td><code>builtin/external</code>；builtin 需有仿真器内建依据</td>
+</tr>
+<tr>
+<td><code>model_refs</code></td>
+<td>条件</td>
+<td>external 时必备、非空的 model.configs ID 数组，列出适用配置</td>
+</tr>
+<tr>
+<td><code>term_order</code></td>
+<td>是</td>
+<td>有序网表端口名称数组</td>
+</tr>
+<tr>
+<td><code>terminal_map</code></td>
+<td>是</td>
+<td>symbol terminal → 网表端口，必须覆盖全部需接线 terminal</td>
+</tr>
+<tr>
+<td><code>parameters</code></td>
+<td>是</td>
+<td>网表参数名 → 参数传递记录；确实没有时为空表</td>
+</tr>
+<tr>
+<td><code>implicit_terminals</code></td>
+<td>否</td>
+<td>隐式网表端口 → 已确认的全局网络名</td>
+</tr>
+</tbody>
+</table></div>
+<p>参数传递记录恰好选择一种来源：<code>{cdf:"参数名"}</code>、<code>{constant:值, unit:单位}</code>，
+或 <code>{derived:"说明", implementation_ref:"已登记能力"}</code>；使用 cdf 可另带 <code>scale</code> 和 <code>unit</code> 作明确单位换算。
+scale 缺省 1；unit 缺省继承 CDF 定义。不得在这里重新定义默认值、可写性、范围或 step。
+netlister/callback 决定的映射使用 derived 与受支持能力引用；无法确定时以 unknown 明确阻止相关网表化。
+derived 说明不是表达式，消费者不得把它拼接成代码。</p>
+<p>terminal_map 的值加 implicit_terminals 的键须恰好覆盖 term_order，且不重复；不存在的端子引用不合法。
+普通一对一映射之外的模型包装、继承网络或总线展开，必须有受支持的明确处理能力，不能猜测。
+所有端口顺序和映射须经源资料／实际网表依据核对并确认，不能从 symbol 坐标推导。
+选定 corner 必须提供与该接口匹配的模型配置；有 CDF model 字段不证明模型文件可用。</p>
+<h3 id="sec-b-4">B.4 symbol.json：最小连接几何</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>必备</th>
+<th>类型／语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>coordinate_system</code></td>
+<td>是</td>
+<td>固定 <code>master_local</code></td>
+</tr>
+<tr>
+<td><code>unit</code></td>
+<td>是</td>
+<td>固定 <code>schematic_uu</code>，不是工艺尺寸单位</td>
+</tr>
+<tr>
+<td><code>bbox</code></td>
+<td>是</td>
+<td><code>[[xmin,ymin],[xmax,ymax]]</code>，两轴正尺寸</td>
+</tr>
+<tr>
+<td><code>grid</code></td>
+<td>是</td>
+<td><code>{step:[gx,gy], origin:[x0,y0]}</code>，gx/gy&gt;0</td>
+</tr>
+<tr>
+<td><code>terminals</code></td>
+<td>是</td>
+<td>实际 terminal 名 → <code>{direction, anchors}</code></td>
+</tr>
+<tr>
+<td><code>parameterized</code></td>
+<td>是</td>
+<td>布尔值，声明几何是否依赖参数</td>
+</tr>
+<tr>
+<td><code>geometry_parameters</code></td>
+<td>条件</td>
+<td>parameterized=true 时必备：影响本几何快照的有效参数值表</td>
+</tr>
+<tr>
+<td><code>label_boxes</code></td>
+<td>否</td>
+<td>有必要避让的文字区域数组，与主 bbox 分开</td>
+</tr>
+</tbody>
+</table></div>
+<p>bbox 表示已有 symbol 的主体及连接点保守占用范围，包含 anchors，排除动态标签和纯装饰文字。
+不要求保存线条、圆弧和绘图层。本文件服务于实例化已有 symbol；不能据此宣称可以重建原始图形。
+grid 为采集／确认的 symbol 连接与放置参考网格，不等同于制造网格或当前编辑器网格。
+使用前检查实际目标网格与变换后锚点的兼容性，禁止通过坐标四舍五入移动真实引脚。</p>
+<p>direction 为 <code>input/output/inputOutput/passive/unknown</code>，不等于出线方向。
+anchors 为非空数组，每项 <code>{id, xy:[x,y], escape}</code>；id 在该 terminal 内唯一，
+escape 为 <code>left/right/up/down</code>，是已经确认可用的局部推荐出线方向。
+同一 terminal 的多个连接点属于同一逻辑端子；使用时明确选择锚点，不复制为多个电气端子。
+无法确认位置／可出线方向时不发布可连线几何，可保存采集缺失项。
+旋转／镜像统一作用于 bbox、grid、anchors、escape 和 label_boxes，不在包里复制八套方向坐标。</p>
+<p>源 symbol 指纹必须在 depends_on 中。parameterized=true 的快照只对 geometry_parameters 的条件有效；
+无法证明已经覆盖所有几何影响参数时，不能将其当作通用静态 symbol。
+本版每个 symbol.json 表示一个确定几何快照；需要其他条件时按当前工作区增量获取明确的新快照，
+读取器不支持参数化几何时返回 unsupported，不回退成固定坐标。</p>
+<h3 id="sec-b-5">B.5 properties.json：可选电学特性</h3>
+<p>业务容器 <code>items</code> 为特性 ID → <code>{name, value, unit, conditions, method}</code>。
+name 为如 <code>rsheet/capacitance_density/vth</code> 的明确特性名；value 为有限数值。
+method 为 <code>documented/model_parameter/simulated</code>；conditions 为
+<code>{parameters, model_ref?, corner_ref?, temperature?, biases?}</code>，具体约定与 B.6 一致。
+文档确实声明条件无关时 conditions 可为空，不能用空表隐去测量条件。
+rsheet 使用 <code>Ohm/sq</code>；阈值等依赖提取定义的特性，另有必备 <code>definition</code> 简短说明或登记的方法 ID。
+同一特性在不同条件下使用不同条目；不在 simulation.json 维护第二份数值。</p>
+<h3 id="sec-b-6">B.6 iv.json：可选器件表征</h3>
+<p>业务容器 <code>runs</code> 为表征 ID → 一组仿真条件与结果。默认查询只返回条件、覆盖和摘要。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>必备</th>
+<th>类型／语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>analysis</code></td>
+<td>是</td>
+<td>本版 IV 为 <code>dc</code>；非 DC 表征需后续登记格式</td>
+</tr>
+<tr>
+<td><code>interface_ref</code></td>
+<td>是</td>
+<td>simulation.interfaces 的 ID</td>
+</tr>
+<tr>
+<td><code>parameters</code></td>
+<td>是</td>
+<td>callback 处理后的有效参数值，名称／单位引用 cdf.json；额外网表参数放 netlist_parameters</td>
+</tr>
+<tr>
+<td><code>netlist_parameters</code></td>
+<td>否</td>
+<td>实际额外网表参数 → <code>{value,unit}</code>，不能覆盖同名已有定义</td>
+</tr>
+<tr>
+<td><code>corner_ref</code></td>
+<td>条件</td>
+<td>外部模型使用时必备；引用 model.corners；内建无 corner 时省略</td>
+</tr>
+<tr>
+<td><code>temperature</code></td>
+<td>是</td>
+<td><code>{value,unit}</code>，unit 为 K 或 degC</td>
+</tr>
+<tr>
+<td><code>biases</code></td>
+<td>是</td>
+<td>固定偏置定义数组，参见下文</td>
+</tr>
+<tr>
+<td><code>sweeps</code></td>
+<td>是</td>
+<td>非空扫描定义数组，参见下文</td>
+</tr>
+<tr>
+<td><code>connections</code></td>
+<td>是</td>
+<td>symbol terminal → 测试网络名，明确体端和短接关系</td>
+</tr>
+<tr>
+<td><code>simulator</code></td>
+<td>是</td>
+<td><code>{name,version}</code></td>
+</tr>
+<tr>
+<td><code>setup_digest</code></td>
+<td>是</td>
+<td>仿真设置／网表配置的确定摘要</td>
+</tr>
+<tr>
+<td><code>dependencies</code></td>
+<td>是</td>
+<td>本次运行依赖 ID → 当时 fingerprint，至少覆盖相关 CDF、模型、symbol／接口</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>是</td>
+<td><code>complete/partial/failed</code>，指运行结果，不替代当前新鲜度检查</td>
+</tr>
+<tr>
+<td><code>outputs</code></td>
+<td>是</td>
+<td>输出 ID → <code>{quantity,unit,definition}</code>，定义测量对象和符号</td>
+</tr>
+<tr>
+<td><code>data</code></td>
+<td>条件</td>
+<td>有序曲线数据块引用数组，每项 <code>{path, rows}</code>，路径相对包根，rows 为行数</td>
+</tr>
+<tr>
+<td><code>data_index</code></td>
+<td>条件</td>
+<td>与 data 恰好选一，较大块目录按附录 C 保存为索引引用</td>
+</tr>
+<tr>
+<td><code>summary</code></td>
+<td>否</td>
+<td>指标 ID → <code>{value,unit,definition}</code>，注明提取定义和适用点／范围</td>
+</tr>
+</tbody>
+</table></div>
+<p>biases 每项 <code>{quantity, terminals:[正端,负端], value, unit}</code>，quantity 为 voltage/current。
+sweeps 每项 <code>{id, quantity, terminals?, parameter?, unit, values}</code>；quantity 为 voltage/current/parameter，
+电量扫描必须有 terminals，参数扫描必须有 parameter；恰好选择一种目标。
+扫描点少时 values 为数值数组，较多时为 <code>{start,stop,step}</code> 的线性序列且终点必须可整步到达。
+多维扫描每行必须携带所有扫描坐标，不能依赖数组展开顺序猜测；不得把不同 corner 混成一组条件。
+definition 明确电流流入哪个 terminal 为正，电压是哪两个端的差，PMOS 不隐式取绝对值。
+outputs.quantity 使用 current/voltage 等实际量名；gm、gds 等 DC 导出指标必须说明导数／插值方法。
+不允许用纯 DC 数据推导频率、噪声或电容结论。
+实验中固定参数和扫描参数必须可区分：sweeps 指明的参数以逐点坐标为准，parameters 保存其初始有效值；
+若 callback 导致其他参数随扫描变化，必须作为带单位的参数坐标列逐点保存，不能用初始值冒充整组有效值。</p>
+<p>每个数据块为 <code>{columns, units, rows}</code>，可选 <code>failures</code>。columns 按顺序列全部 sweep ID 和 output ID，
+存在逐点关联参数时还列 <code>param:参数名</code>；同一 run 的各块必须采用相同列定义。
+units 等长，rows 为等宽数值数组；失败输出可为 null，但必须由 failures 中的行号和 reason 解释。
+failures 为块内从 0 起的行号字符串 → 说明。成功数值不得为 null，不收敛不能填 0。
+没有任何有效点时 status=failed；部分失败为 partial；status=complete 要求计划点全部成功且无遗漏。
+原始点保留；返回降采样结果时必须附方法、原始／返回点数和实际坐标，禁止不标注的外推。
+模型、CDF、测试设置或相关接口依赖改变后，结果标为 stale，不能当作当前条件下的性能依据。</p>
+<h3 id="sec-b-7">B.7 仿真配置输入（1.1.0）</h3>
+<p>simulation.json 可选 <code>setup:{switch_views,stop_views,options}</code>；对 circuit-simulation-v1
+发布能力必备。两种 view 列表均为明确的非空字符串数组；options 是明确的仿真器设置映射，
+空表表示已核实无需附加选项。当前 Maestro recipe 消费器按登记集支持仿真器设置
+（<code>scale</code> 已实现应用与回读验证）；登记集之外的设置必须报告 unsupported，不能省略设置以通过验收。
+模型 include/section 与 corner 继续由 model.json 唯一持有；不在 setup 重复定义。
+温度、激励、分析与验收指标仍属于设计/TB 任务输入，不得从 PDK 生成器编造。
+每个可用器件的 simulation.json 必须依赖实际 simInfo 接口指纹；模型资源必须有字节依赖。</p>
+<h2 class="appendix-title" id="appendix-c">附录 C：增量更新、有界读取与验收</h2>
+<p>本附录从属于 <a href="#main">SICO-PDK-DATA</a>，具有同等效力。
+本附录规定行为与数据形状；具体 MCP 工具名称由实现统一接入，不能另建绕过校验的入口。</p>
+<h3 id="sec-c-1">C.1 有界文件与分片</h3>
+<p><code>KiB</code> 为 1024 字节。标准 JSON 文件和数值数据块的 UTF-8 原始文件大小均不得超过 16 KiB，
+常规文件应不超过 8 KiB。单个不可再分的业务记录不得超过 8 KiB；超限必须按职责拆成有明确引用的记录，
+不得截断文本或丢掉约束后继续发布。完整响应含信封的大小仍受 16 KiB 上限约束。
+日志、完整原始 CDF、PDF、模型内容和仿真原始结果存放在私有证据或外部资源处，不受伪装成标准 JSON 的例外豁免。</p>
+<p>具有大量条目的对象映射可以将内联映射替换为唯一形状：</p>
+<div class="code-block"><div class="code-label">JSON</div><pre><code class="language-json">{&quot;$parts&quot;:[{&quot;path&quot;:&quot;device.001.json&quot;,&quot;sha256&quot;:&quot;sha256:示例占位&quot;,&quot;count&quot;:2,&quot;first&quot;:&quot;dev_a&quot;,&quot;last&quot;:&quot;dev_b&quot;}]}
+</code></pre></div>
+<p>其中 sha256 必须在真实数据中使用合法摘要；path 相对包根。每个分片的内容就是原映射的一段键值对象，
+不再复制文件信封。片名采用 <code>原文件名.001.json</code> 等后缀，不为分片增加目录层级。
+允许分片容器继续采用 <code>$parts</code>，从原映射至叶子最多 4 层；每层仍受大小上限约束。
+count 为该分片包含的全部叶子业务条目数，first/last 为 Unicode 码点排序下的首尾键。
+叶子键须按此顺序序列化；各分片范围不重叠、按 first 排序，无重复 ID；空表使用 <code>{}</code>，不生成空分片。
+缺片、摘要错误、计数／边界错误均为不完整数据，不可把剩余部分当作完整表返回。</p>
+<p>可分片对象仅限：index.packages、package.libraries/dependencies/files、category/device/file/sources.items、
+model.configs/corners/cards、cdf.parameters/rules、simulation.interfaces、symbol.terminals、properties.items、
+iv.runs、changes.items 和公共 evidence 映射；不允许任意标量变成分片引用。
+源文件信封的 source/depends_on/evidence 作用于重组后的逻辑文档。
+业务 ID 不允许 <code>$</code> 前缀，因此不会把实际记录误认为分片容器。
+<code>package.files</code> 列出所有普通文件与普通分片；其清单分片仅由父级 <code>$parts.sha256</code> 校验，不自我枚举。
+index 的分片由索引自身的 <code>$parts.sha256</code> 校验，不归某个包的清单。</p>
+<p>单条 IV run 的 data 引用列表过长时，可用可选 <code>data_index</code> 引用一个
+<code>{"blocks":[{"path":"...","rows":100}]}</code> 文件，与 data 二选一；索引过长时用
+<code>{"indexes":["iv-data/index.001.json"]}</code> 继续分组，最多 4 层。这是顺序目录，不能作为映射 <code>$parts</code> 处理。
+所有数值块和索引列入清单；块顺序稳定，读取者不必一次加载所有点。</p>
+<h3 id="sec-c-2">C.2 最小查询及响应</h3>
+<p>消费者必须通过一个逻辑读取入口处理安装包、分片、工作区覆盖和失效状态。
+不得把多种物理形状暴露为 agent 需要分别维护的业务模型。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>查询</th>
+<th>默认返回</th>
+<th>可继续查询</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>包定位</td>
+<td>身份、修订、绑定与缺失摘要</td>
+<td>指定依赖或来源</td>
+</tr>
+<tr>
+<td>事实采集覆盖</td>
+<td>全部已登记器件的事实缺项；CDF 详细定义仅检查已确认可修改输入及必要依赖，不按器件 use 过滤</td>
+<td>分页或指定器件；不展开无关辅助参数，未确认输入范围单独提示</td>
+</tr>
+<tr>
+<td>器件搜索</td>
+<td>ID、实际 cell、类别、电压域、指定用途资格、推荐摘要</td>
+<td>分页或指定器件</td>
+</tr>
+<tr>
+<td>CDF</td>
+<td>当前可写／必须指定参数，完整相关约束和依赖闭包</td>
+<td>指定参数、固定／派生参数、证据</td>
+</tr>
+<tr>
+<td>symbol</td>
+<td>bbox、grid、所需 terminal anchors、适用几何条件</td>
+<td>其他 terminal、label_boxes</td>
+</tr>
+<tr>
+<td>模型</td>
+<td>指定 simulator/corner 的 include 配置及解析状态</td>
+<td>其他 corner 或文件资源</td>
+</tr>
+<tr>
+<td>IV／特性</td>
+<td>明确条件、覆盖、状态和少量摘要</td>
+<td>指定 run、坐标区间、输出列、取样点数</td>
+</tr>
+</tbody>
+</table></div>
+<p>一次查询只读其需要的内容，不要求先把整包塞入上下文。
+设计搜索缺省只列通过 circuit-simulation-v1 发布验收且当前用途 allow 的器件；允许调查模式查看 deny/unknown，但结果不得表现成设计候选。
+推荐用于排序，不过滤掉合法但未推荐的器件。索引可缓存，必须由权威内容生成并随有效修订失效。
+CDF 条件可写项在条件尚未知时仍须可发现，明确报告所需输入；不得静默隐藏条件项。</p>
+<p>标准响应的逻辑信封：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>必备</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>schema_version</code></td>
+<td>是</td>
+<td>输出遵循的标准版本</td>
+</tr>
+<tr>
+<td><code>revision</code></td>
+<td>是</td>
+<td>基线及有效增量共同确定的不透明修订引用</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>是</td>
+<td><code>ok/not_available/incomplete/stale/conflict/unsupported</code></td>
+</tr>
+<tr>
+<td><code>items</code></td>
+<td>是</td>
+<td>本次查询结果，列表；详情查询也以一条或数条语义记录返回</td>
+</tr>
+<tr>
+<td><code>returned</code></td>
+<td>是</td>
+<td>本页条数</td>
+</tr>
+<tr>
+<td><code>complete</code></td>
+<td>是</td>
+<td>对本次 query 所需内容是否已全部返回，不代表整个 PDK 已完成</td>
+</tr>
+<tr>
+<td><code>next_cursor</code></td>
+<td>条件</td>
+<td>同一查询还有分页时必备；末页省略</td>
+</tr>
+<tr>
+<td><code>missing</code></td>
+<td>条件</td>
+<td>必备信息不足时的具体对象、字段、原因和补充动作；可分页</td>
+</tr>
+</tbody>
+</table></div>
+<p>可选 <code>total</code> 仅在准确可得时返回；可选 <code>details_ref</code> 指向单项尚未展开的内容。
+包／设备身份、查询过滤和投影选择属于 query，游标必须与 query 及 revision 绑定，不能跨修订拼页。
+可选文件未提供时，直接查询它返回 not_available；对无关操作仍可为 ok。
+页大小默认 20、最多 100；字节上限优先于条数。一次返回不了的一条详情按命名部分继续读取。
+完整性校验不得依赖 agent 看过所有页；写入前由消费者检查相关约束的完整闭包。
+分页正常可为 status=ok、complete=false；必备字段本身缺失才使用 incomplete。
+用户不请求证据时不返回来源全文；相关数据为 stale/conflict 时必须直接报告，不能藏在详情后面。
+缺省不返回全 CDF 原始属性、callback 原文、文档正文或全部曲线点；显式详情请求也不得绕过上限。</p>
+<h3 id="sec-c-3">C.3 工作区组织与优先级</h3>
+<p>当前工作区使用 <code>.sico/ai/pdk-data/index.json</code>（旧 <code>.cad</code> 工作区按迁移规则显式转换），仍按附录 A 的索引格式指向本地包或增量目录。
+没有共享基线时，首次采集可在此保存完整标准包；已有有效基线时只保存增量。
+共享根由 <code>SICO_PDK_DATA</code> 或现场设置指定；环境指定基线不取消工作区覆盖。
+环境值可以指标准根索引或具体完整包；具体包的外部 root 绑定仍由现场索引／工作区明确提供。
+工作区同名 root 的显式绑定优先于共享现场绑定，未指定的继承；覆盖后必须核验实际资源身份。</p>
+<div class="code-block"><div class="code-label">目录与格式</div><pre><code class="language-text">&lt;workspace&gt;/.sico/ai/pdk-data/
+├── index.json
+└── cmos28hkmg.local/
+    ├── package.json             # format=sico.pdk.overlay
+    ├── changes.json             # 针对基线逻辑文档的累计差异
+    └── ...                      # 新曲线块、完整替换文件或分片；仅在需要时出现
+</code></pre></div>
+<p>只允许“一个标准基线 + 一个当前工作区累计增量”；增量不能再以另一个增量为基线。
+多次交互合并到同一累计差异，不要求消费者逐条回放历史；历史留在私有更新记录中。
+同身份出现多个互不相容的有效基线／增量时报告 conflict，不按扫描顺序选择。</p>
+<h3 id="sec-c-4">C.4 增量文件</h3>
+<p>增量 package.json 必备字段：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>format</code></td>
+<td>固定 <code>sico.pdk.overlay</code></td>
+</tr>
+<tr>
+<td><code>schema_version</code></td>
+<td>本标准版本</td>
+</tr>
+<tr>
+<td><code>revision</code></td>
+<td>该累计增量的唯一修订</td>
+</tr>
+<tr>
+<td><code>base</code></td>
+<td><code>{package_id, revision, manifest_digest}</code>，指向完整基线及其 package.json 字节摘要</td>
+</tr>
+<tr>
+<td><code>files</code></td>
+<td>增量内容的相对路径 → 字节 SHA-256；不包含自身</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>本增量修订提交时间，带时区 RFC 3339</td>
+</tr>
+</tbody>
+</table></div>
+<p>changes.json 为 <code>{items: {目标包内路径: 修改记录}}</code>；目标是去分片后的完整逻辑文件，
+不得直接修改基线分片路径或 <code>$parts</code> 元数据。包清单与派生索引由提交器生成，不接受普通业务补丁。
+修改记录必备 <code>expected</code>、<code>dependencies</code>，并且只选 ops、replacement_ref、delete_file 三者之一：</p>
+<ul>
+<li><code>expected</code>：基线目标逻辑文件的 <code>sha256-jcs:</code> 摘要，或新文件固定字符串 <code>absent</code>。
+  JCS 指 RFC 8785 JSON Canonicalization Scheme；散列输入为去分片后的逻辑 JSON，不混用字节摘要。</li>
+<li><code>dependencies</code>：此次修改依据的依赖 ID → fingerprint，可为空；新增依赖须在 dependency_updates 登记。
+  已有基线依赖在此保存适用前提；新增依赖的权威 fingerprint 只需在 dependency_updates 保存一次，
+  替换文档的 depends_on 必须引用它，后续源复核仍检查所有依赖。不得为减少大小删除实际依赖。</li>
+<li><code>ops</code>：JSON Patch 的 add/replace/remove 子集，按序执行；禁用 move/copy/test。</li>
+<li><code>replacement_ref</code>：增量目录内的完整替换内容路径；新文件及较大替换宜使用此方式。</li>
+<li><code>delete_file</code>：固定 true，删除目标文件；不允许删除仍为必需或仍被引用的内容。</li>
+</ul>
+<p>ops 的 path 使用 RFC 6901 JSON Pointer，仅能定位对象成员，数组必须整体替换，不按数组索引插删。
+add 只能添加不存在的对象成员，replace/remove 要求成员存在；不使用隐式覆盖。
+只允许对 JSON 内容文件执行 ops；曲线数值块可完整替换／新建，不对单点静默打补丁。
+新文件的 expected=absent 且使用 replacement_ref；已有文件删除时 expected 必须匹配。
+必备字段删除、悬空来源／参数引用、无效值域等均导致本次提交失败。
+所有 expected 都针对同一个不可变基线，而非先前增量合成结果；编辑已有增量时提交器须重新生成累计差异。</p>
+<p>changes.json 可选 <code>dependency_updates</code>：依赖 ID → 附录 A 依赖记录，用于新增或有来源依据的依赖刷新。
+不得借刷新指纹把已改变内容假装为“已确认”；更新后依赖它的规则、几何与 IV 均须重新评估。
+sources.json 的新增来源通过普通文件差异更新，不把整套基线来源重复复制到增量。
+新增资源路径与现场 roots 绑定同样必须明确；只迁移路径不产生虚假的内容变更。
+package_id、真实 pdk_version、工艺 options 和库身份变化属于更换基线，不能由普通增量改写。</p>
+<h3 id="sec-c-5">C.5 合并、冲突与原子提交</h3>
+<ol>
+<li>校验基线与增量格式、清单摘要及 base 指向，冻结当前工作区增量 revision。</li>
+<li>复核各修改的 expected 与 dependencies；先定位事实变化，再决定相关修改能否应用。</li>
+<li>对逻辑文档应用差异，继承未修改内容，生成新的有效清单／检索索引。</li>
+<li>执行结构、引用、来源、条件和用途门槛检查，形成新有效 revision 及缺失报告。</li>
+<li>在临时修订目录写完、校验完整后，原子切换工作区 index；新旧读者各自持有完整修订。</li>
+<li>提交前比较工作区旧 revision；已被其他更新改变则返回 conflict，不覆盖别人的确认。</li>
+</ol>
+<p>安装包只读。取消或失败不得改变已生效修订；半成品／检查点单独保存在私有采集状态中。
+有些器件尚未确认可形成明确 partial 的标准包，但本次修改涉及的记录必须整体通过结构校验。
+同一提交含多个文件时不可只应用成功的一半；未受影响的旧有效数据仍可使用，并标明冲突范围。</p>
+<p>基线 revision 变化时先报告 base_changed。可重新绑定的条件为：修改目标的 expected 仍匹配、
+所有相关依赖未变、合并检查通过。由提交器记录一次 rebase，不能在读取时静默忽略 base 摘要。
+目标逻辑文件有任何差异时，须比较差异并复核受影响修改；不能只因 cell 名相同就继承决定。
+纯路径重定位只改变现场 roots；内容与接口一致时继续复用确认和 IV，不触发全库重采。</p>
+<h3 id="sec-c-6">C.6 缺失提示与恢复</h3>
+<p>提示至少包含 package/device、缺失逻辑文件／JSON Pointer、原因、影响操作和建议动作。
+标准原因码：<code>missing_required/confirmation_required/source_changed/base_changed/conflicting_update/</code>
+<code>unsupported_feature/resource_unavailable/invalid_data</code>。
+建议动作：<code>pdk_generation_required/revalidate/resolve_conflict/bind_resource/upgrade_reader</code>。
+<code>interactive_update</code> 仅作为 legacy 生成流程动作，普通设计不得据缺项触发更新确认。
+提示不默认附整包或全量错误日志；大量缺失按类别聚合，具体对象可继续查询。</p>
+<p>读取工具不能因发现缺失就擅自启动行为 probe 或 IV 仿真。
+交互更新必须展示实际差异、依据和影响对象；批量确认可复用范围，不能把未答复当作同意。
+确认完成写入工作区，再恢复原设计任务；拒绝／取消保留未满足门槛，不以默认猜测放行。
+相同内容与规则仍有效时，不因新 agent 会话或 Virtuoso 重启重复询问。</p>
+<h4 id="sec-c-6-1">C.6.1 手册参数对照草稿（私有维护过程）</h4>
+<p>维护工具可在工作区 <code>.sico/ai/pdk-drafts/</code> 保存 <code>sico.pdk.parameter-draft.v1</code> 草稿。
+它不是有效 PDK 数据，不进入 package 清单或设计读取入口。草稿绑定实际库、有效修订、
+文档资源 ID／字节依赖／文档版本与页码或章节，逐条记录手册术语、含义、实际 CDF 名称、
+现场表单标签、用户称呼及输入／选择器／派生或器件用途角色。无手册与歧义须显式未决。
+表单标签从保存的现场 CDF 读取；原始捕获留私有证据，草稿不能伪造确认来源。</p>
+<p>草稿每次写入产生不可变版本并原子切换私有 head；更新和取消必须匹配草稿版本。
+映射与批次分别分片、有界分页。草稿读取不执行 callback、probe 或修改有效包。
+批次只承载用途和参数策略，客观参数定义使用事实采集入口，不能借用户确认改写为文档来源。
+名称对照、依据、条件关系和具体规则差异必须共同进入同一审阅范围与摘要；
+当前完整审阅按 2 MiB 保留证据安全上限保存，GUI 分页展示，不得截断映射后请求确认。</p>
+<p>批次沿用既有更新确认与累计增量提交器；草稿本身不能表达授权。有效决定只存在于标准
+cdf/device 及其用户来源。已有同值、源有效的用户确认可复用，复用结果不产生新授权。
+待确认更新可由保存的参数和精确审阅重建，恢复不把模型文字当宿主答复；取消草稿后未提交
+审阅不可继续应用。提交已完成但进程中断时，以有效增量的用户来源识别结果，避免重复提交。
+手册、CDF 来源或不相关的有效修订变化使草稿待复核；本草稿已提交批次可继续作为下一批基线。</p>
+<h4 id="sec-c-6-2">C.6.2 核心参数事实报告（私有维护过程）</h4>
+<p>维护工具可在工作区 <code>.sico/ai/pdk-facts/</code> 保存有界事实报告。报告记录已确认核心输入及
+必要依赖的来源、实际字段、证据类别、原值、规范化值、未决原因或冲突；不成为另一套有效域。
+已知定义、完整输入约束、PCell 限制、模型表征、工程建议和不完整边界须明确区分。
+后四类只能作为上下文或未决证据；不得因资料未说明上界就写成已知无界。
+报告绑定资源字节身份、文档版本／定位和实际 CDF 依赖；有效来源仍使用 A.8 定义。</p>
+<p>有完整依据的 type/unit/meaning/default/domain/grid 经统一约束及来源校验写入累计增量。
+未决 domain 可写入具体原因与来源，未知仍是未知；修正已知但依据不足的范围须匹配精确旧值，
+保留旧值和复核理由。所有使用许可、赋值策略、接口范围及执行规则沿用其权威确认流程。
+字符串或选择器值不按参数名猜量纲，数值换算须显式单位；默认值与约束冲突不得通过夹紧默认值消除。</p>
+<p>记录与字段映射可沿用 C.1 的分片技术，但这些私有报告不进入有效包清单。
+报告内容在提交前冻结并绑定摘要；请求 ID 绑定精确内容，重试不重复生效或覆盖证据。
+提交后中断通过有效字段及其来源核对恢复；提交前中断保留报告并要求新请求。
+分页游标绑定报告／结果和查询；支持按库发现报告。原始捕获继续保存在私有 pdk-evidence。</p>
+<h3 id="sec-c-7">C.7 验收矩阵</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>编号</th>
+<th>场景</th>
+<th>必须观察到的结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>V01</td>
+<td>缺必备字段、重复 JSON 键、无效数值／ID</td>
+<td>结构失败，指出位置，不输出 ready</td>
+</tr>
+<tr>
+<td>V02</td>
+<td>同 cell 不同库／PDK 版本</td>
+<td>身份不混淆，目录名不决定 OA 身份</td>
+</tr>
+<tr>
+<td>V03</td>
+<td>仅有 symbol/CDF/model 声明，无用户用途确认</td>
+<td>可调查，不能列入该用途设计候选</td>
+</tr>
+<tr>
+<td>V04</td>
+<td>推荐 cell 为 deny/unknown</td>
+<td>校验失败，不把推荐提升为 allow</td>
+</tr>
+<tr>
+<td>V05</td>
+<td>缺可写／赋值／值域信息</td>
+<td>提示具体生成缺项；普通设计不创建确认、不自动 probe、不写入</td>
+</tr>
+<tr>
+<td>V06</td>
+<td>CDF editable=true 或 interface 层但 write=deny</td>
+<td>写入仍被拒绝</td>
+</tr>
+<tr>
+<td>V07</td>
+<td>整数、边界、离散值、十进制网格</td>
+<td>合法值通过；越界和离网格拒绝，step 不改变硬约束</td>
+</tr>
+<tr>
+<td>V08</td>
+<td>条件未知、联合约束失败、条件区间重叠</td>
+<td>不放行；指明所需输入或冲突</td>
+</tr>
+<tr>
+<td>V09</td>
+<td>显式决定的值等于 default</td>
+<td>满足 explicit，不强迫无意义改变</td>
+</tr>
+<tr>
+<td>V10</td>
+<td>callback 修改关联参数</td>
+<td>正确执行顺序、回读和校验；规则复用不省略实际执行</td>
+</tr>
+<tr>
+<td>V11</td>
+<td>symbol 多锚点、旋转、镜像、目标网格不同</td>
+<td>坐标和 escape 一致变换，不移动真实引脚</td>
+</tr>
+<tr>
+<td>V12</td>
+<td>网表端口与 symbol 名称／顺序不同</td>
+<td>使用完整明确映射；缺映射拒绝网表化</td>
+</tr>
+<tr>
+<td>V13</td>
+<td>无模型／IV 的基础数据包</td>
+<td>无关浏览／设计不被可选项阻塞，仿真所需项仍检查</td>
+</tr>
+<tr>
+<td>V14</td>
+<td>多文件多 section corner</td>
+<td>按有序配置加载，不按文件名推测 corner</td>
+</tr>
+<tr>
+<td>V15</td>
+<td>IV 失败点、不同偏置、降采样、模型更新</td>
+<td>失败／条件／降采样明确；变化后 stale，不误比较</td>
+</tr>
+<tr>
+<td>V16</td>
+<td>SICO_PDK_DATA 与工作区补充同时存在</td>
+<td>合法工作区差异生效，基线原文件未改变</td>
+</tr>
+<tr>
+<td>V17</td>
+<td>增量删除、基线变化、并发更新</td>
+<td>引用与 expected 检查有效，冲突不被覆盖或吞掉</td>
+</tr>
+<tr>
+<td>V18</td>
+<td>取消／崩溃发生在多文件发布中</td>
+<td>生效索引仍指向完整旧修订或完整新修订</td>
+</tr>
+<tr>
+<td>V19</td>
+<td>超大目录／曲线，分页中途修订变化</td>
+<td>每次响应≤16 KiB；游标绑定修订，不重不漏不混页</td>
+</tr>
+<tr>
+<td>V20</td>
+<td>单参数约束闭包超预算</td>
+<td>明确 incomplete 与继续引用，执行前确认闭包齐备</td>
+</tr>
+<tr>
+<td>V21</td>
+<td>分片缺失、摘要／计数错误</td>
+<td>不将剩余片当成完整数据；可定位问题</td>
+</tr>
+<tr>
+<td>V22</td>
+<td>路径重定位、会话重启而内容未变</td>
+<td>复用有效数据，不全库重采或重复确认</td>
+</tr>
+<tr>
+<td>V23</td>
+<td>probe／IV 创建辅助视图</td>
+<td>当前工作区 SicoTest 后台创建，不覆盖测试，不抬升窗口</td>
+</tr>
+<tr>
+<td>V24</td>
+<td>legacy 转换、较新格式或未知硬约束</td>
+<td>缺失保持未知；不支持的语义明确拒绝，不猜测</td>
+</tr>
+</tbody>
+</table></div>
+<p>真实验收须包含一个经授权的实际 PDK、一个支持库和合成边界数据；环境相关证据保留私有。
+验收记录标明通过的生产／读取／设计／仿真能力，不以单一“通过”暗示所有能力已实现。</p>
+<h2 class="appendix-title" id="appendix-d">附录 D：格式示例（资料性）</h2>
+<p>本附录用于解释 <a href="#main">SICO-PDK-DATA</a>，不增加独立要求。
+以下是分开阅读的格式片段，不构成可安装数据包；引用的分类、来源、依赖和文件清单须由实际采集补齐。
+<code>demo_lib/demo_nmos</code>、数值、模型名、路径与确认 ID 均为虚构，不得用于真实 PDK 设计或迁移补值。
+真实包还必须通过主文及附录 C 的全部相关检查；示例 JSON 可解析不代表语义验收通过。</p>
+<h3 id="sec-d-1">D.1 安装索引</h3>
+<div class="code-block"><div class="code-label">JSON</div><pre><code class="language-json">{
+  &quot;format&quot;: &quot;sico.pdk.index&quot;,
+  &quot;schema_version&quot;: &quot;1.0.0&quot;,
+  &quot;packages&quot;: {
+    &quot;demo-v1&quot;: {
+      &quot;path&quot;: &quot;demo-pdk&quot;,
+      &quot;roots&quot;: {&quot;pdk&quot;: &quot;/example/pdk/demo-v1&quot;}
+    }
+  },
+  &quot;default&quot;: &quot;demo-v1&quot;
+}
+</code></pre></div>
+<p>包身份与内容修订仍从 <code>demo-pdk/package.json</code> 读取，不在索引复制。</p>
+<h3 id="sec-d-2">D.2 器件短行目录</h3>
+<div class="code-block"><div class="code-label">JSON</div><pre><code class="language-json">{
+  &quot;source&quot;: &quot;capture_1&quot;,
+  &quot;depends_on&quot;: [&quot;demo_library&quot;],
+  &quot;evidence&quot;: {
+    &quot;/items/demo_nmos/use&quot;: &quot;confirm_1&quot;,
+    &quot;/items/demo_nmos/recommended&quot;: &quot;confirm_1&quot;,
+    &quot;/items/demo_nmos/voltage&quot;: &quot;manual_1&quot;
+  },
+  &quot;items&quot;: {
+    &quot;demo_nmos&quot;: {
+      &quot;library&quot;: &quot;demo&quot;,
+      &quot;cell&quot;: &quot;demo_nmos&quot;,
+      &quot;view&quot;: &quot;symbol&quot;,
+      &quot;dir&quot;: &quot;demo_nmos&quot;,
+      &quot;categories&quot;: [&quot;nmos&quot;],
+      &quot;voltage&quot;: {&quot;domain&quot;: &quot;demo-low-voltage&quot;, &quot;nominal&quot;: 1.0, &quot;unit&quot;: &quot;V&quot;},
+      &quot;use&quot;: {&quot;circuit&quot;: &quot;allow&quot;, &quot;testbench&quot;: &quot;allow&quot;, &quot;extraction&quot;: &quot;deny&quot;, &quot;verification&quot;: &quot;allow&quot;},
+      &quot;reason&quot;: {&quot;extraction&quot;: &quot;仅用于电路与测试，不是提取器件&quot;},
+      &quot;recommended&quot;: [{&quot;use&quot;: &quot;circuit&quot;, &quot;for&quot;: &quot;演示选型&quot;, &quot;priority&quot;: 1, &quot;reason&quot;: &quot;虚构示例&quot;}]
+    }
+  }
+}
+</code></pre></div>
+<p>实际文件可按每个器件一行排版；不用重复列出 <code>available_cells</code> 或 <code>recommended_cells</code>。</p>
+<h3 id="sec-d-3">D.3 CDF 参数规则</h3>
+<div class="code-block"><div class="code-label">JSON</div><pre><code class="language-json">{
+  &quot;source&quot;: &quot;capture_1&quot;,
+  &quot;depends_on&quot;: [&quot;demo_cdf&quot;, &quot;demo_callback&quot;],
+  &quot;evidence&quot;: {
+    &quot;/parameters/w/write&quot;: &quot;confirm_1&quot;,
+    &quot;/parameters/w/requirement&quot;: &quot;confirm_1&quot;,
+    &quot;/parameters/w/domain&quot;: &quot;manual_1&quot;,
+    &quot;/parameters/w/grid&quot;: &quot;manual_1&quot;,
+    &quot;/parameters/w/step&quot;: &quot;confirm_1&quot;,
+    &quot;/execution&quot;: &quot;confirm_1&quot;
+  },
+  &quot;presence&quot;: &quot;present&quot;,
+  &quot;parameters&quot;: {
+    &quot;w&quot;: {
+      &quot;type&quot;: &quot;number&quot;,
+      &quot;unit&quot;: &quot;m&quot;,
+      &quot;meaning&quot;: &quot;单指宽度；本例没有其他可调输入&quot;,
+      &quot;write&quot;: &quot;allow&quot;,
+      &quot;requirement&quot;: &quot;explicit&quot;,
+      &quot;default&quot;: 0.000001,
+      &quot;domain&quot;: {&quot;kind&quot;: &quot;interval&quot;, &quot;min&quot;: 0.0000005, &quot;max&quot;: 0.00001},
+      &quot;grid&quot;: {&quot;step&quot;: 0.0000001, &quot;origin&quot;: 0},
+      &quot;step&quot;: {&quot;mode&quot;: &quot;linear&quot;, &quot;value&quot;: 0.0000005}
+    }
+  },
+  &quot;execution&quot;: {&quot;mode&quot;: &quot;cdf&quot;, &quot;order&quot;: [&quot;w&quot;]}
+}
+</code></pre></div>
+<p>示例合法网格为 0.1 µm，推荐扫描增量为 0.5 µm，二者用途不同。
+显式选择 1 µm 仍满足 explicit，即使它恰好等于 default。
+这不是对某个真实器件可调参数完整性的声明。</p>
+<h3 id="sec-d-4">D.4 Symbol 最小几何</h3>
+<div class="code-block"><div class="code-label">JSON</div><pre><code class="language-json">{
+  &quot;source&quot;: &quot;symbol_capture_1&quot;,
+  &quot;depends_on&quot;: [&quot;demo_symbol&quot;],
+  &quot;coordinate_system&quot;: &quot;master_local&quot;,
+  &quot;unit&quot;: &quot;schematic_uu&quot;,
+  &quot;bbox&quot;: [[-0.25, -0.5], [0.25, 0.5]],
+  &quot;grid&quot;: {&quot;step&quot;: [0.0625, 0.0625], &quot;origin&quot;: [0, 0]},
+  &quot;parameterized&quot;: false,
+  &quot;terminals&quot;: {
+    &quot;G&quot;: {&quot;direction&quot;: &quot;input&quot;, &quot;anchors&quot;: [{&quot;id&quot;: &quot;p0&quot;, &quot;xy&quot;: [-0.25, 0], &quot;escape&quot;: &quot;left&quot;}]},
+    &quot;D&quot;: {&quot;direction&quot;: &quot;inputOutput&quot;, &quot;anchors&quot;: [{&quot;id&quot;: &quot;p0&quot;, &quot;xy&quot;: [0, 0.5], &quot;escape&quot;: &quot;up&quot;}]},
+    &quot;S&quot;: {&quot;direction&quot;: &quot;inputOutput&quot;, &quot;anchors&quot;: [{&quot;id&quot;: &quot;p0&quot;, &quot;xy&quot;: [0, -0.5], &quot;escape&quot;: &quot;down&quot;}]},
+    &quot;B&quot;: {&quot;direction&quot;: &quot;inputOutput&quot;, &quot;anchors&quot;: [{&quot;id&quot;: &quot;p0&quot;, &quot;xy&quot;: [0.25, 0], &quot;escape&quot;: &quot;right&quot;}]}
+  }
+}
+</code></pre></div>
+<p>这里保存的是现有 master 的连接几何；并不足以重建 MOS 图形。</p>
+<h3 id="sec-d-5">D.5 模型组合与网表接口</h3>
+<p><code>model.json</code>：</p>
+<div class="code-block"><div class="code-label">JSON</div><pre><code class="language-json">{
+  &quot;source&quot;: &quot;model_manual_1&quot;,
+  &quot;depends_on&quot;: [&quot;demo_model&quot;],
+  &quot;configs&quot;: {
+    &quot;mos_tt&quot;: {
+      &quot;simulator&quot;: &quot;spectre&quot;,
+      &quot;language&quot;: &quot;spectre&quot;,
+      &quot;includes&quot;: [{&quot;file_ref&quot;: &quot;mos_entry&quot;, &quot;section&quot;: &quot;tt&quot;}]
+    }
+  },
+  &quot;corners&quot;: {&quot;tt&quot;: {&quot;name&quot;: &quot;TT&quot;, &quot;configs&quot;: [&quot;mos_tt&quot;]}},
+  &quot;cards&quot;: {
+    &quot;card_nmos&quot;: {
+      &quot;name&quot;: &quot;demo_nmos&quot;,
+      &quot;kind&quot;: &quot;model&quot;,
+      &quot;simulator&quot;: &quot;spectre&quot;,
+      &quot;file_ref&quot;: &quot;mos_entry&quot;,
+      &quot;lines&quot;: [12],
+      &quot;configs&quot;: [&quot;mos_tt&quot;],
+      &quot;sections&quot;: [&quot;tt&quot;],
+      &quot;element_type&quot;: &quot;nmos&quot;
+    }
+  }
+}
+</code></pre></div>
+<p><code>demo_nmos/simulation.json</code>：</p>
+<div class="code-block"><div class="code-label">JSON</div><pre><code class="language-json">{
+  &quot;source&quot;: &quot;netlist_capture_1&quot;,
+  &quot;depends_on&quot;: [&quot;demo_cdf&quot;, &quot;demo_model&quot;],
+  &quot;interfaces&quot;: {
+    &quot;spectre&quot;: {
+      &quot;simulator&quot;: &quot;spectre&quot;,
+      &quot;kind&quot;: &quot;subckt&quot;,
+      &quot;name&quot;: &quot;demo_nmos_subckt&quot;,
+      &quot;model_source&quot;: &quot;external&quot;,
+      &quot;model_refs&quot;: [&quot;mos_tt&quot;],
+      &quot;term_order&quot;: [&quot;d&quot;, &quot;g&quot;, &quot;s&quot;, &quot;b&quot;],
+      &quot;terminal_map&quot;: {&quot;D&quot;: &quot;d&quot;, &quot;G&quot;: &quot;g&quot;, &quot;S&quot;: &quot;s&quot;, &quot;B&quot;: &quot;b&quot;},
+      &quot;parameters&quot;: {&quot;w&quot;: {&quot;cdf&quot;: &quot;w&quot;}}
+    }
+  }
+}
+</code></pre></div>
+<p>模型文件路径只在 file.json 的 <code>mos_entry</code> 资源登记。</p>
+<h3 id="sec-d-6">D.6 有失败点的曲线数值块</h3>
+<div class="code-block"><div class="code-label">JSON</div><pre><code class="language-json">{
+  &quot;columns&quot;: [&quot;vgs&quot;, &quot;ids&quot;],
+  &quot;units&quot;: [&quot;V&quot;, &quot;A&quot;],
+  &quot;rows&quot;: [[0, 1e-12], [0.1, 2e-12], [0.2, null]],
+  &quot;failures&quot;: {&quot;2&quot;: &quot;本点未收敛&quot;}
+}
+</code></pre></div>
+<p>对应 iv.json 的 run 还须记录尺寸、固定 Vds/Vbs、体端连接、corner、温度、测量符号、
+模型内容指纹和仿真设置；该块单独不能作为器件性能依据。此 run 的 status 必须为 partial。</p>
+<h3 id="sec-d-7">D.7 工作区增量操作片段</h3>
+<p>以下仅为 changes.items 中某目标文件的 ops 数组；完整提交还需要基线、expected、dependencies、
+源记录及增量清单。这次修改的是推荐 step，同时更新其来源，不改变合法 grid。</p>
+<div class="code-block"><div class="code-label">JSON</div><pre><code class="language-json">[
+  {&quot;op&quot;:&quot;replace&quot;, &quot;path&quot;:&quot;/parameters/w/step&quot;, &quot;value&quot;:{&quot;mode&quot;:&quot;linear&quot;, &quot;value&quot;:0.000001}},
+  {&quot;op&quot;:&quot;replace&quot;, &quot;path&quot;:&quot;/evidence/~1parameters~1w~1step&quot;, &quot;value&quot;:&quot;confirm_2&quot;}
+]
+</code></pre></div>
+<p>第二个 Pointer 中 <code>~1</code> 是 JSON Pointer 对 <code>/</code> 的转义，定位 evidence 映射中的完整键。
+增量合并后重用基线中未变的模型、symbol 及其他参数内容；确认对象范围须覆盖此次实际修改。</p>
+<footer class="page-footer"><span>依据 SICO-PDK-DATA 1.1.0 · 生效 2026-09-22</span><a href="index.html">返回使用手册 →</a></footer>
+</main>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#sec-1">1. 范围与效力</a><a href="#sec-2">2. 设计原则</a><a href="#sec-3">3. 标准目录</a><a href="#sec-4">4. 文件职责与权威归属</a><a href="#sec-5">5. 必备性与可用状态</a><a href="#sec-6">6. 采集与交互确认</a><a href="#sec-7">7. probe、callback 与辅助仿真</a><a href="#sec-8">8. 工作区增量数据</a><a href="#sec-9">9. 有界读取</a><a href="#sec-10">10. 验收要求</a><a href="#sec-11">11. 版本与修订</a><a href="#sec-12">12. 历史数据与实施迁移</a><a href="#sec-13">13. 修订记录</a><a href="#appendix-a">附录 A：包级数据格式</a><a href="#appendix-b">附录 B：器件数据格式</a><a href="#appendix-c">附录 C：增量更新、有界读取与验收</a><a href="#appendix-d">附录 D：格式示例（资料性）</a></aside>
+</div></div>
+</body>
+</html>

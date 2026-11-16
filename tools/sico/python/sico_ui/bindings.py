@@ -26,7 +26,7 @@ from .glyphs import ACTION_GLYPH_SIZE, cross_icon, refresh_icon
 def target_name(record):
     snapshot = record.get("snapshot", {})
     cellview = snapshot.get("cellview") or {}
-    name = "/".join(str(cellview.get(key, "")) for key in ("lib", "cell", "view"))
+    name = "/".join(str(cellview.get(key, "")) for key in ("lib", "cell", "view_name"))
     return name if name.strip("/") else (snapshot.get("ade_session") or "CIW")
 
 

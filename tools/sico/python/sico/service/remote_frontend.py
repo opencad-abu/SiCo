@@ -6,8 +6,11 @@ from pathlib import Path
 
 from sicostate import project_directory
 
+from ..core.cad_ref import normalize_ref, normalize_target, normalize_window_ref
+from ..core.contracts import identifier
 from ..transport.framing import ProtocolError
 from .frontend_assets import input_value
+from .cad_highlight import validate_highlight
 from .frontend_session import FrontendSession
 from .frontend_transport import LONG_TIMEOUT, FrontendLane
 from .remote_catalog import RemoteCatalog
@@ -298,6 +301,120 @@ class RemoteFrontend:
 
     def target_source(self, token, **kwargs):
         return None  # Target mutation requires AS-05 control authority.
+
+    def object_source(self, token, **kwargs):
+        """Read-only window/object queries for the desktop @ picker."""
+        self.handle(token)
+        from .remote_objects import RemoteObjectSource
+
+        return RemoteObjectSource(self, self.address(token), token)
+
+    def open_object_target(self, token, ref, candidate=None):
+        """Open a referenced target for an explicit user location request."""
+        self.handle(token)
+        if token.runtime_id is None:
+            raise ValueError("历史只读；请明确恢复会话后再打开目标")
+        if not self.can_control(token):
+            raise ValueError("当前窗口没有控制权，无法打开目标；请先恢复会话控制")
+        ref = normalize_ref(ref)
+        candidate = None if candidate is None else identifier(candidate)
+        address = self._sessions.get(token.session_id).address
+
+        def publish(row):
+            self.handle(token)
+            exact_fields(row, {"target", "window_ref", "window"})
+            if not isinstance(row["window"], str):
+                raise ProtocolError("Invalid opened target window")
+            return {
+                "target": normalize_target(row["target"]),
+                "window_ref": normalize_window_ref(row["window_ref"]),
+                "window": row["window"],
+            }
+
+        def params():
+            value = dict(address=address.record(), ref=ref)
+            if candidate is not None:
+                value["candidate"] = candidate
+            return value
+
+        return self._commands.request(
+            "open_object_target", params, publish,
+            control=self.control.proof(token),
+        )
+
+    def object_instances(self, token, ref):
+        """Find the target window on other instances of this project."""
+        self.handle(token)
+        address = self._sessions.get(token.session_id).address
+        ref = normalize_ref(ref)
+
+        def publish(row):
+            self.handle(token)
+            exact_fields(row, {"instances"})
+            if not isinstance(row["instances"], list) or len(row["instances"]) > 8:
+                raise ProtocolError("Invalid project instance result")
+            result = []
+            for item in row["instances"]:
+                exact_fields(item, {"candidate", "instance", "generation", "windows"})
+                if (not isinstance(item["candidate"], str)
+                        or not isinstance(item["instance"], str)
+                        or not isinstance(item["generation"], str)
+                        or not isinstance(item["windows"], list)
+                        or len(item["windows"]) > 8):
+                    raise ProtocolError("Invalid project instance row")
+                identifier(item["candidate"])
+                windows = []
+                for window in item["windows"]:
+                    exact_fields(window, {"window_ref", "window", "title"})
+                    if any(not isinstance(window[key], str)
+                           for key in ("window_ref", "window", "title")):
+                        raise ProtocolError("Invalid project instance window")
+                    windows.append({
+                        "window_ref": normalize_window_ref(window["window_ref"]),
+                        "window": window["window"][:128],
+                        "title": window["title"][:256],
+                    })
+                result.append({**item, "windows": windows})
+            return {"instances": result}
+
+        return self._queries.request(
+            "object_instances", lambda: dict(address=address.record(), ref=ref), publish
+        )
+
+    def highlight_object_instance(self, token, ref, candidate, window_ref):
+        """Locate one object on an explicitly selected project instance."""
+        self.handle(token)
+        if token.runtime_id is None:
+            raise ValueError("历史只读；请明确恢复会话后再定位其他实例")
+        if not self.can_control(token):
+            raise ValueError("当前窗口没有控制权，无法在其他实例定位对象")
+        address = self._sessions.get(token.session_id).address
+        ref = normalize_ref(ref)
+        window_ref = normalize_window_ref(window_ref)
+        if not isinstance(candidate, str):
+            raise ValueError("无效的目标实例")
+        identifier(candidate)
+
+        def publish(row):
+            self.handle(token)
+            exact_fields(row, {"candidate", "instance", "generation", "result"})
+            if any(not isinstance(row[key], str)
+                   for key in ("candidate", "instance", "generation")):
+                raise ProtocolError("Invalid project instance location")
+            return {
+                "candidate": row["candidate"],
+                "instance": row["instance"],
+                "generation": row["generation"],
+                "result": validate_highlight(row["result"]),
+            }
+
+        return self._commands.request(
+            "highlight_object_instance",
+            lambda: dict(address=address.record(), candidate=candidate,
+                         ref=ref, window_ref=window_ref),
+            publish,
+            control=self.control.proof(token),
+        )
 
     def background_request(self, token, method, *args, **kwargs):
         if method in {'submit_background', 'cancel_background'}:

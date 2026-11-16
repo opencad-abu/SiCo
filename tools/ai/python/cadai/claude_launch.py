@@ -70,10 +70,10 @@ def build_claude_mcp_config(
         if not workspace_path.is_absolute():
             raise ValueError("SICO_AI_WORKSPACE must be an absolute path")
         server_environment["SICO_AI_WORKSPACE"] = str(workspace_path.resolve())
-    for name in ("SICO_PYTHON_ROOT", "SICO_PYTHON"):
-        python_value = source.get(name, "").strip()
-        if python_value:
-            server_environment[name] = python_value
+    selected = current(source)
+    if selected.runtime_python_root is not None:
+        server_environment["SICO_PYTHON_ROOT"] = str(selected.runtime_python_root)
+    server_environment["SICO_PYTHON"] = python
     command = mcp_command(python, mcp_entry, timeout, environment=source)
     config = {
         "mcpServers": {

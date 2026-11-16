@@ -24,6 +24,7 @@ from skill_load_drc_cases import (
 from skill_load_extraction_options_cases import (
     test_rce_netlist_customize_controls_follow_tool_and_output_support,
     test_rce_process_corners_are_scanned_and_preserve_case,
+    test_rce_remove_floating_nets_is_wired_across_gui_toml_and_profile,
 )
 from skill_load_native_view_cases import (
     test_lvs_oa_input_names_can_be_synchronized_in_either_direction,
@@ -55,7 +56,7 @@ from skill_load_registry_cases import (
 from skill_load_rule_options_cases import (
     test_cdl_include_is_wired_to_rce_lvs_and_export_cdl,
     test_custom_svrf_is_shared_by_drc_lvs_and_rce,
-    test_ignore_lvs_error_is_standalone_only_and_svdb_query_is_lvs_only,
+    test_ignore_lvs_error_is_standalone_only_and_svdb_query_is_shared,
     test_lvs_and_rce_virtual_connect_name_defaults_and_callbacks,
     test_lvs_case_sensitive_matching_is_enabled_by_default,
     test_lvs_hcell_gui_is_wired_to_rce_and_standalone_lvs,

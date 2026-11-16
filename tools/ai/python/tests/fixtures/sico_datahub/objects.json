@@ -1,0 +1,27 @@
+{
+  "ok": true,
+  "valid": true,
+  "schema": "cad.cv.objects.v1",
+  "session_ref": "fixture",
+  "window_ref": "wctx_fixture_1",
+  "target": {
+    "library": "worklib",
+    "cell": "OTA",
+    "view_name": "schematic",
+    "oa_view_type": "schematic",
+    "oa_view_type_source": "platform_api",
+    "library_path": "/project/worklib"
+  },
+  "items": [
+    {
+      "kind": "net",
+      "name": "VOUT",
+      "hierarchy": []
+    }
+  ],
+  "total": 120,
+  "max_items": 50,
+  "offset": 0,
+  "truncated": true,
+  "selection_count": 1
+}

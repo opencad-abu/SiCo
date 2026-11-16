@@ -1,0 +1,29 @@
+#!/bin/sh
+set -eu
+
+program=dmyfill
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+product_root=$(CDPATH='' cd -- "$script_dir/../../.." && pwd -P)
+. "$product_root/tools/common/sh/sico-installation.sh"
+sico_installation "$product_root" || exit 2
+sico_launcher_environment || exit 2
+flow_root=$(CDPATH= cd -- "$script_dir/.." && pwd -P)
+entry=$flow_root/python/dmyfill
+
+if [ ! -f "$entry" ]; then
+    echo "$program: Python entry is unavailable: $entry" >&2
+    exit 2
+fi
+
+sico_runtime_python || exit 2
+python=$sico_runtime_python_value
+
+if [ -z "${DMYFILL_ORIG_LD_LIBRARY_PATH+x}" ]; then
+    export DMYFILL_ORIG_LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}
+fi
+sico_runtime_library_path flow
+export LD_LIBRARY_PATH=$sico_runtime_library_path_value
+export PYTHONDONTWRITEBYTECODE=1
+export PYTHONNOUSERSITE=1
+unset PYTHONHOME PYTHONPATH LD_PRELOAD LD_AUDIT
+exec "$python" -s "$entry" "$@"

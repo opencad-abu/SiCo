@@ -3,9 +3,9 @@
 unless(boundp('aiSelectionHighlights)
   aiSelectionHighlights=makeTable("aiSelectionHighlights" nil))
 unless(and(boundp('aiSelectionVersion)
-           aiSelectionVersion=="20261021.ai.selection.v2")
+           aiSelectionVersion=="20261023.ai.selection.v3")
 
-procedure(aiSelectionRevision() "20261021.ai.selection.v2")
+procedure(aiSelectionRevision() "20261023.ai.selection.v3")
 
 procedure(aiSelectionText(asxValue)
   if(not(and(stringp(asxValue) strlen(asxValue)>0 strlen(asxValue)<=512)) nil
@@ -23,14 +23,15 @@ procedure(aiSelectionTarget(asxCv)
       asxLib=aiSelectionText(car(errset(asxCv~>libName nil)))
       asxCell=aiSelectionText(car(errset(asxCv~>cellName nil)))
       asxView=aiSelectionText(car(errset(asxCv~>viewName nil)))
-      asxType=aiSelectionText(car(errset(asxCv~>cellViewType nil)))
+      asxType=aiSelectionText(car(errset(asxCv~>viewType nil)))
       when(and(asxLib asxCell asxView asxType)
         asxPath=car(errset(ddGetObjReadPath(ddGetObj(asxLib)) nil))
         aiPdkObj(list(
           list("library" asxLib)
           list("cell" asxCell)
-          list("view" asxView)
-          list("view_type" asxType)
+          list("view_name" asxView)
+          list("oa_view_type" asxType)
+          list("oa_view_type_source" "platform_api")
           list("library_path" when(and(stringp(asxPath) strlen(asxPath)>0) asxPath))))))))
 
 procedure(aiSelectionMaster(asxObj)
@@ -45,12 +46,13 @@ procedure(aiSelectionMaster(asxObj)
           aiPdkObj(list(
             list("library" asxLib)
             list("cell" asxCell)
-            list("view" asxView))))))))
+            list("view_name" asxView))))))))
 
 procedure(aiSelectionInstance(asxObj)
   let((asxType asxName asxMaster asxBox)
     asxType=car(errset(asxObj~>objType nil))
-    when(or(asxType=="instance" asxType=="inst" asxType=='inst)
+    when(or(asxType=="instance" asxType=="inst" asxType=='inst
+            asxType=="mosaic" asxType=='mosaic)
       asxName=aiSelectionText(car(errset(asxObj~>name nil)))
       when(asxName
         asxMaster=aiSelectionMaster(asxObj)
@@ -79,6 +81,21 @@ procedure(aiSelectionNet(asxObj)
         list("hierarchy" aiPdkArray(nil))
         list("bbox" asxBox))))))
 
+procedure(aiSelectionTerminalFigures(atfTerm)
+  let((atfPins atfPin atfFigures atfPinFigures atfFigure)
+    atfPins=car(errset(atfTerm~>pins nil))
+    foreach(atfPin atfPins
+      atfPinFigures=car(errset(atfPin~>figs nil))
+      when(and(!atfPinFigures car(errset(atfPin~>bBox nil)))
+        atfPinFigures=list(atfPin))
+      foreach(atfFigure atfPinFigures
+        when(atfFigure atfFigures=cons(atfFigure atfFigures))))
+    when(!atfFigures
+      atfFigures=car(errset(atfTerm~>figs nil)))
+    when(!atfFigures
+      atfFigures=car(errset(list(atfTerm~>fig) nil)))
+    atfFigures))
+
 procedure(aiSelectionTerminal(asxObj)
   let((asxType asxName asxDirection asxBox)
     asxType=car(errset(asxObj~>objType nil))
@@ -89,7 +106,7 @@ procedure(aiSelectionTerminal(asxObj)
                 or(stringp(asxDirection) symbolp(asxDirection))))
       asxName=aiSelectionText(car(errset(asxObj~>name nil)))
       when(asxName
-        asxBox=aiWindowBBox(car(errset(asxObj~>bBox nil)))
+        asxBox=aiSelectionObjectBox(asxObj "terminal")
         aiPdkObj(list(
           list("kind" "terminal")
           list("name" asxName)
@@ -155,7 +172,7 @@ procedure(aiSelectionItemMasterText(aslItem)
       when(aslMaster
         aslFields=cdr(aslMaster)
         strcat(cadr(assoc("library" aslFields)) "/"
-          cadr(assoc("cell" aslFields)) "/" cadr(assoc("view" aslFields)))))))
+          cadr(assoc("cell" aslFields)) "/" cadr(assoc("view_name" aslFields)))))))
 
 procedure(aiSelectionMatches(aslItem aslQuery)
   let((aslName aslMaster)
@@ -168,23 +185,37 @@ procedure(aiSelectionMatches(aslItem aslQuery)
 procedure(aiSelectionList(aslRef aslKind aslQuery aslOffset aslLimit)
   prog((aslState aslWindow aslCv aslTarget aslItems aslCount aslCandidate
         aslResult aslSelected aslTruncated aslPage aslRemaining aslPageCount
-        aslItem aslName)
+        aslItem aslName aslNext)
     unless(and(fixp(aslOffset) aslOffset>=0 aslOffset<=4096
                fixp(aslLimit) aslLimit>=1 aslLimit<=50
                member(aslKind list("all" "instance" "net" "terminal" "shape")))
-      return(aiPdkError("invalid_arguments" "Invalid object query arguments")))
+      return(datahubLegacyError("sico.cad.objects.v1" "list"
+        "invalid_arguments" "Invalid object query arguments")))
     unless(and(stringp(aslQuery) strlen(aslQuery)<=128)
-      return(aiPdkError("invalid_arguments" "Invalid object query")))
+      return(datahubLegacyError("sico.cad.objects.v1" "list"
+        "invalid_arguments" "Invalid object query")))
     aslState=aiWindowResolveState(aslRef)
     aslWindow=cadr(aslState)
     unless(aslWindow return(aiWindowStateError(aslState)))
     aslCv=car(errset(geGetEditCellView(aslWindow) nil))
-    unless(aslCv return(aiPdkError("read_failed" "The edit cellview is unavailable")))
+    unless(aslCv aslCv=car(errset(geGetWindowCellView(aslWindow) nil)))
+    unless(aslCv return(datahubLegacyError("sico.cad.objects.v1" "list"
+      "read_failed" "The window cellview is unavailable")))
     aslTarget=aiSelectionTarget(aslCv)
-    unless(aslTarget return(aiPdkError("read_failed" "Invalid cellview target")))
+    unless(aslTarget return(datahubLegacyError("sico.cad.objects.v1" "list"
+      "read_failed" "Invalid cellview target")))
     aslItems=nil aslCount=0
+    ; The interactive "all" scope is instances, nets and terminals (pins).
+    ; Shapes remain available through an explicit kind query so the picker
+    ; stays focused on objects users name in circuit conversations.
     when(member(aslKind list("all" "instance"))
       foreach(aslCandidate aslCv~>instances
+        when(and(aslCount<4096
+                 (aslItem=aiSelectionInstance(aslCandidate))
+                 aiSelectionMatches(aslItem aslQuery))
+          aslItems=cons(aslItem aslItems)
+          aslCount=aslCount+1))
+      foreach(aslCandidate aslCv~>mosaics
         when(and(aslCount<4096
                  (aslItem=aiSelectionInstance(aslCandidate))
                  aiSelectionMatches(aslItem aslQuery))
@@ -204,7 +235,7 @@ procedure(aiSelectionList(aslRef aslKind aslQuery aslOffset aslLimit)
                  aiSelectionMatches(aslItem aslQuery))
           aslItems=cons(aslItem aslItems)
           aslCount=aslCount+1)))
-    when(member(aslKind list("all" "shape"))
+    when(member(aslKind list("shape"))
       foreach(aslCandidate aslCv~>shapes
         when(and(aslCount<4096
                  (aslItem=aiSelectionShape(aslCandidate))
@@ -222,21 +253,21 @@ procedure(aiSelectionList(aslRef aslKind aslQuery aslOffset aslLimit)
       aslRemaining=cdr(aslRemaining))
     aslPage=reverse(aslPage)
     aslSelected=errset(geGetSelSet(aslWindow) nil)
-    aslResult=aiPdkJson(aiPdkObj(list(
-      list("ok" t)
-      list("valid" t)
-      list("schema" "cad.cv.objects.v1")
-      list("session_ref" aiWindowEpoch)
-      list("window_ref" aslRef)
-      list("target" aslTarget)
-      list("items" aiPdkArray(aslPage))
-      list("total" length(aslItems))
-      list("max_items" aslLimit)
-      list("offset" aslOffset)
-      list("truncated" aiPdkBool(aslTruncated))
-      list("selection_count" if(aslSelected length(car(aslSelected)) 0)))))
-    when(strlen(aslResult)>55000
-      return(aiPdkError("result_too_large" "Object list exceeds the limit")))
+    aslNext=datahubNextOffset(aslOffset length(aslPage)
+      length(aslItems) aslTruncated)
+    aslResult=datahubLegacyResult(datahubOk(
+      "sico.cad.objects.v1" 1 "selection-list" "list"
+      aiPdkObj(list(
+        list("session_ref" aiWindowEpoch)
+        list("window_ref" aslRef)
+        list("target" aslTarget)
+        list("items" aiPdkArray(aslPage))
+        list("selection_count"
+          if(aslSelected length(car(aslSelected)) 0))))
+      datahubPage(aslOffset aslLimit length(aslItems)
+        aslNext aslTruncated)
+      datahubMeta())
+      "Object list exceeds the limit")
     return(aslResult)))
 
 procedure(aiSelectionRaiseWindow(aswWindow)
@@ -307,8 +338,7 @@ procedure(aiSelectionAddHilight(ashSet ashObj ashKind @optional ashPath)
           when(car(errset(geAddHilightFig(ashSet ashFigure nil ashPath) nil))
             ashCount=ashCount+1)))
       (ashKind=="terminal"
-        ashFigures=car(errset(ashObj~>figs nil))
-        when(!ashFigures ashFigures=car(errset(list(ashObj~>fig) nil)))
+        ashFigures=aiSelectionTerminalFigures(ashObj)
         foreach(ashFigure ashFigures
           when(and(ashFigure
                    car(errset(geAddHilightFig(ashSet ashFigure nil ashPath) nil)))
@@ -333,7 +363,10 @@ procedure(aiSelectionObjectBox(aobObj aobKind)
       (member(aobKind list("instance" "shape"))
         aobBox=car(errset(aobObj~>bBox nil)))
       (t
-        aobFigures=car(errset(aobObj~>figs nil))
+        when(aobKind=="terminal"
+          aobFigures=aiSelectionTerminalFigures(aobObj))
+        when(!aobFigures
+          aobFigures=car(errset(aobObj~>figs nil)))
         when(!aobFigures aobFigures=car(errset(list(aobObj~>fig) nil)))
         foreach(aobFigure aobFigures
           when(aobFigure
@@ -350,16 +383,20 @@ procedure(aiSelectionKey(asxItem)
 procedure(aiSelectionInspect(asxRef asxOffset asxLimit)
   prog((asxState asxWindow asxSignature asxDisplay asxCv asxTarget
         asxSelected asxTail asxCount asxItems asxKeys asxItem asxKey
-        asxUnsupported asxTruncated asxPage asxRemaining asxPageCount asxResult)
+        asxUnsupported asxTruncated asxPage asxRemaining asxPageCount asxResult
+        asxNext)
     unless(and(fixp(asxOffset) asxOffset>=0 asxOffset<=4096
                fixp(asxLimit) asxLimit>=1 asxLimit<=50)
-      return(aiPdkError("invalid_arguments"
+      return(datahubLegacyError("sico.cad.selection.v1" "inspect"
+        "invalid_arguments"
         "Selection offset must be 0..4096 and max_items must be 1..50")))
     unless(and(stringp(asxRef)
                rexMatchp("^wctx_[A-Za-z0-9_-]+_[0-9]+$" asxRef))
-      return(aiPdkError("invalid_arguments" "Invalid window reference")))
+      return(datahubLegacyError("sico.cad.selection.v1" "inspect"
+        "invalid_arguments" "Invalid window reference")))
     unless(isCallable('geGetSelSet)
-      return(aiPdkError("capability_not_available"
+      return(datahubLegacyError("sico.cad.selection.v1" "inspect"
+        "capability_not_available"
         "Selection inspection is unavailable in this Virtuoso session")))
     asxState=aiWindowResolveState(asxRef)
     asxWindow=cadr(asxState)
@@ -368,10 +405,12 @@ procedure(aiSelectionInspect(asxRef asxOffset asxLimit)
     asxDisplay=car(asxSignature)
     asxCv=or(asxDisplay cadr(asxSignature))
     asxTarget=aiSelectionTarget(asxCv)
-    unless(asxTarget return(aiPdkError("read_failed"
+    unless(asxTarget return(datahubLegacyError("sico.cad.selection.v1" "inspect"
+      "read_failed"
       "The selected window has no readable cellview target")))
     asxSelected=errset(geGetSelSet(asxWindow) nil)
-    unless(asxSelected return(aiPdkError("read_failed"
+    unless(asxSelected return(datahubLegacyError("sico.cad.selection.v1" "inspect"
+      "read_failed"
       "The current selection could not be read")))
     asxSelected=car(asxSelected)
     asxTail=asxSelected asxCount=0 asxItems=nil asxKeys=nil
@@ -401,23 +440,22 @@ procedure(aiSelectionInspect(asxRef asxOffset asxLimit)
     asxPage=reverse(asxPage)
     unless(equal(car(aiWindowResolveState(asxRef)) 'valid)
       return(aiWindowStateError(aiWindowResolveState(asxRef))))
-    asxResult=aiPdkJson(aiPdkObj(list(
-      list("ok" t)
-      list("valid" t)
-      list("schema" "cad.cv.selection.v1")
-      list("session_ref" aiWindowEpoch)
-      list("window_ref" asxRef)
-      list("target" asxTarget)
-      list("items" aiPdkArray(asxPage))
-      list("selection_count" length(asxSelected))
-      list("unsupported_count" asxUnsupported)
-      list("max_items" asxLimit)
-      list("offset" asxOffset)
-      list("truncated" aiPdkBool(asxTruncated)))))
-    when(strlen(asxResult)>55000
-      return(aiPdkError("result_too_large"
-        "Selection snapshot exceeds the response limit")))
+    asxNext=datahubNextOffset(asxOffset length(asxPage)
+      length(asxSelected) asxTruncated)
+    asxResult=datahubLegacyResult(datahubOk(
+      "sico.cad.selection.v1" 1 "selection-inspect" "inspect"
+      aiPdkObj(list(
+        list("session_ref" aiWindowEpoch)
+        list("window_ref" asxRef)
+        list("target" asxTarget)
+        list("items" aiPdkArray(asxPage))
+        list("selection_count" length(asxSelected))
+        list("unsupported_count" asxUnsupported)))
+      datahubPage(asxOffset asxLimit length(asxSelected)
+        asxNext asxTruncated)
+      datahubMeta())
+      "Selection snapshot exceeds the response limit")
     return(asxResult)))
 
-aiSelectionVersion="20261021.ai.selection.v2"
+aiSelectionVersion="20261023.ai.selection.v3"
 )

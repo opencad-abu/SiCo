@@ -13,7 +13,7 @@ _FIELDS = {
     "ok", "valid", "schema", "session_ref", "target", "kind", "name",
     "window_ref", "highlighted", "highlight_count", "zoomed", "selection_preserved",
 }
-_OPTIONAL = {"bbox"}
+_OPTIONAL = {"bbox", "selected"}
 _CAPTURE_FIELDS = {"output", "output_truncated", "output_capture"}
 
 
@@ -50,6 +50,8 @@ def validate_highlight(value):
         raise ValueError("Invalid highlight window reference")
     if type(value["highlighted"]) is not bool or type(value["selection_preserved"]) is not bool:
         raise ValueError("Invalid highlight flags")
+    if "selected" in value and type(value["selected"]) is not bool:
+        raise ValueError("Invalid highlight selection flag")
     if type(value["highlight_count"]) is not int or value["highlight_count"] < 0:
         raise ValueError("Invalid highlight count")
     if value["kind"] == "cellview":
@@ -72,6 +74,7 @@ def validate_highlight(value):
         "highlight_count": value["highlight_count"],
         "zoomed": value["zoomed"],
         "selection_preserved": value["selection_preserved"],
+        **({"selected": value["selected"]} if "selected" in value else {}),
         **({"bbox": normalize_bbox(value["bbox"])} if "bbox" in value else {}),
     }
 

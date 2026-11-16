@@ -7,9 +7,10 @@ let((entryDirectory)
   load(strcat(entryDirectory "/../../../scripts/sicoSkillLoader.ils"))
   load(strcat(entryDirectory "/../../ai/skill++/AI_shared.ils"))
   set('sicoRoot strcat(SICO_sourceRoot() "/tools/sico"))
-  SICO_sourceRequire("sico" "66e28283505908c71868b410968e88a240a2043b062d2cf5e2399290f286f501" '(
+  SICO_sourceRequire("sico" "4323f0847e9e80514811169b578e946942be4489efd117dad36451e1334ee133" '(
     ("tools/ai/skill" "AI_entry_project.il" "fc3ecc06f5c3f876e7ad6f0c6e9e88c3b80cc15b5e6f49a18c3a9622fde0511b"
       (sicoProjectReply aiEntryProjectName aiEntryProjectRead)
+      ()
       ()
       ()
       ())
@@ -17,13 +18,15 @@ let((entryDirectory)
       (aiCopilotHex aiCopilotLiteral aiCopilotDecode)
       ()
       ()
+      ()
       ())
     ("tools/ai/skill" "AI_copilot_results.il" "5abb5a26ffb14ff84f60fc7b6dff21d62fd316235005e2fbfb9af6c4618b2f5b"
       (aiCopilotBindResults aiCopilotResultCheck aiCopilotAnalysisPageCall aiCopilotAnalysisCapture)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_copilot_targets.il" "9d26ab4fecdf94f0ae5eeba8fdb63008e2383487e35a63dfff4824c299a9ecc6"
+    ("tools/ai/skill" "AI_copilot_targets.il" "dd59fbf7ebc5ae56e73506dbbd09661519b077a09c4ba32569a785edcb72f4fc"
       (aiCopilotTargetFamily aiCopilotJsonList aiCopilotSourcelessFunction aiCopilotSourcelessFunctions
        aiCopilotOpenWindows aiCopilotOpenTargets aiCopilotListTargets aiCopilotListLibraries
        aiCopilotListCells aiCopilotListViews aiCopilotOpenTarget aiCopilotInspectSelected
@@ -31,18 +34,21 @@ let((entryDirectory)
        aiCopilotExpandHome)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_copilot_circuit.il" "4f8117046b25ec86fb7442b9dc5821e054b799140135428ff77a00e194dc875d"
+    ("tools/ai/skill" "AI_copilot_circuit.il" "6160723b11ee4f99a006ec435a6134a4948e5697c7b1500414b72d766b160dc5"
       (aiCopilotFailureStage aiCopilotReject aiCopilotMutatingFunction aiCopilotEnterFunction
        aiCopilotSourceCheck aiCopilotTaskCheck aiCopilotTaskBindingReply aiCopilotOwner
        aiCopilotRetainedCheck aiCopilotDescribe aiCopilotFinal aiCopilotDispatch
        aiCopilotSynchronousCaptureP aiCopilotCaptureRevision aiCopilotCaptureDispatch
        aiCopilotAttachCapturedOutput sicoCircuitReply)
-      ((aiCopilotCaptureRevision "20261021.ai.circuit.capture.v7"))
+      ((aiCopilotCaptureRevision "20261101.ai.circuit.capture.v8"))
+      ()
       ()
       ())
     ("tools/sico/skill" "SICO_entry.il" "309191a9720d1ae6203920d845e79dc3aba148a0cd45092eb4a40f3f6ad6ac28"
       (sicoEntryObservation sicoEntryRef sicoEntryRead)
+      ()
       ()
       ()
       ())
@@ -50,6 +56,7 @@ let((entryDirectory)
       (sicoDiagnostic sicoConfigureDiagnostics sicoDiagnosticsRevision)
       ((sicoDiagnosticsRevision "20260921.sico.diagnostics.v1"))
       (sicoDiagnosticsVersion)
+      ()
       ())
     ("tools/sico/skill" "SICO_binding.il" "f4d6d5a6d212db256a3721d591d663580bb40bfd61d80980e268210695c3fda4"
       (sicoBindingRevision sicoBindingSamePath sicoNativeRequest aiCopilotResolveResources
@@ -57,16 +64,19 @@ let((entryDirectory)
        sicoNativePoll sicoInstallNativeBindings)
       ((sicoBindingRevision "20261020.sico.binding.v2"))
       ()
+      ()
       ())
-    ("tools/sico/skill" "SICO_context.il" "22e5d40131f2f8db1cbea981027eb4ee1cbe50e1bfab7cafb416058c858fab8a"
+    ("tools/sico/skill" "SICO_context.il" "a877dd3c6ff8ede1a7ee531239bfa83cdf2a4d58780c4f089b9ddc3942545ef9"
       (sicoRequestIdP sicoTrace sicoProjectContextJson sicoAdeCellJson sicoContextJson sicoAssistantReply
        sicoIpcWrite sicoWriteReply sicoReadReply sicoRequestBody sicoRequest sicoDispatch sicoDataPart
        sicoData sicoError sicoExit sicoConnect sicoDisconnect sicoContextRevision)
-      ((sicoContextRevision "20261020.sico.context.v3"))
+      ((sicoContextRevision "20261101.sico.context.v6"))
       (sicoContextVersion)
+      ()
       ())
     ("tools/sico/skill" "SICO_source.il" "fb5944990b9e87bf88a6c747a531788f74abb16787c395cbf2c9598e02c8154f"
       (sicoSourceRead sicoSourceObservation)
+      ()
       ()
       ()
       ())
@@ -75,24 +85,28 @@ let((entryDirectory)
        sicoAdeSetupJson sicoAdeHistoryRow sicoAdeHistoryJson sicoAdeDispatch sicoAdeRevision)
       ((sicoAdeRevision "20260921.sico.ade.v1"))
       (sicoAdeVersion)
+      ()
       ())
     ("tools/sico/skill" "SICO_sessions.il" "4544c4e96f24f4c895bd409551a60259534cfa0b91c4ec82847b35ae7b56ddd8"
       (sicoSessionLive sicoSessionForWindow sicoBindSession sicoSessionTarget sicoNewSession
        sicoSessionNotice sicoSessionsRevision)
       ((sicoSessionsRevision "20260921.sico.sessions.v1"))
       (sicoSessionsVersion)
+      ()
       ())
-    ("tools/sico/skill" "SICO_launcher.il" "57749be6a4ddf685eab8ab98d91f60a6f818ad922984322789be47ee50880046"
+    ("tools/sico/skill" "SICO_launcher.il" "6c5a162a0da5d4a632bfb9413e250d77a840acf6097857bc4ca778f8cff76751"
       (sicoEnv sicoQuote sicoLaunchCommand sicoEnsureBridge sicoReconnectBridge sicoFinishReconnect
        sicoReconnectSession sicoPlaceCiw sicoPlaceLaunchedCiw sicoShow sicoStopDesktop
        sicoRequestShutdown sicoExitCleanup sicoRegisterExitCleanup sicoLauncherRevision)
-      ((sicoLauncherRevision "20261020.sico.launcher.v7"))
+      ((sicoLauncherRevision "20261024.sico.launcher.v8"))
       (sicoLauncherVersion)
+      ()
       ())
     ("tools/sico/skill" "SICO_registration.il" "4161aeaf2a1ae9412209dc3ed886644ed2e5f8dded801263cc53508c7c5baedb"
       (sicoRegisterPlatform sicoSchedulePlatformRegistration)
       ()
       (sicoRegistrationVersion)
+      ()
       ())
     ("tools/sico/skill" "SICO_menus.il" "44b7dc08e6075022d6c6dd511a202c53d66a1807f7f6dc1b1b8f1bc57cbf1cc6"
       (sicoWindowForSession sicoWindowForResult sicoMenuCommand sicoFromMenu sicoHistoryMenu
@@ -101,25 +115,30 @@ let((entryDirectory)
        sicoStartAdeMenuPoll sicoMenusRevision)
       ((sicoMenusRevision "20261020.sico.menus.v2"))
       (sicoMenusVersion)
+      ()
       ())
     ("tools/sico/skill" "SICO_desktop.il" "a33d34f1d40889e30f26cf92bafb868a919ed6893d6abee554256c801cdc33e1"
       (sicoDesktopRevision sicoDesktopFind sicoDesktopAttach sicoDesktopLaunch sicoDesktopWake)
       ((sicoDesktopRevision "20261021.sico.desktop.v2"))
+      ()
       ()
       ())
     ("tools/sico/skill" "SICO_ask_queue.il" "fc1b1ddaff7edcce391ecf36cda5b338c7c46f260ae01ad724dfb99c9e1724b4"
       (sicoAskAvailable sicoAskEnqueue sicoAskPump sicoAskSettled sicoAskQuery sicoAskRestoreUnknown)
       ()
       ()
+      ()
       ())
-    ("tools/sico/skill" "SICO_quick.il" "ee5bb4ba500215d88f59f0d8b04b3dcf526805c3abb1a641246b84a399930da2"
+    ("tools/sico/skill" "SICO_quick.il" "db6cb933ad438ec500f9ed73e54038e1d607d44ecd0a5bfab777c9fbdd5dcc3f"
       (sicoQuickSource sicoQuickPointP sicoQuickAnchor sicoQuickAnchorJson sicoQuickSend sicoQuickAsk
-       sicoQuickObjects sicoQuickSubmit sicoQuickAcceptedHost sicoQuickRejectedHost sicoQuickUnknownHost
-       sicoQuickWake sicoQuickHostLine sicoQuickHostData sicoQuickHostExit sicoQuickData
-       sicoQuickHostPending sicoQuickAccepted sicoQuickRejected sicoQuickExit sicoQuickChildExit
-       sicoQuickRevision)
-      ((sicoQuickRevision "20261021.sico.quick.v7"))
+       sicoQuickObjectError sicoQuickObjectFailure sicoQuickObjects sicoQuickSubmit sicoQuickAcceptedHost
+       sicoQuickRejectedHost sicoQuickUnknownHost sicoQuickWake sicoQuickHostLine sicoQuickHostData
+       sicoQuickHostExit sicoQuickData sicoQuickHostPending sicoQuickAccepted sicoQuickRejected
+       sicoQuickExit sicoQuickChildExit sicoQuickTerminateChild sicoQuickExitCleanup
+       sicoQuickRegisterExitCleanup sicoQuickRevision)
+      ((sicoQuickRevision "20261023.sico.quick.v11"))
       (sicoQuickVersion)
+      ()
       ())
     ("tools/sico/skill" "SICO_rmb.il" "125079bed6561af4186c92667d6c218eaf53732650f492d0e6daabba0bfbc55d"
       (sicoAskIcon sicoEditorMenuCommand sicoSchematicMenus sicoPrepareSchematicMenu
@@ -127,6 +146,7 @@ let((entryDirectory)
        sicoInstallEditorMenus sicoRmbRevision)
       ((sicoRmbRevision "20260921.sico.rmb.v2"))
       (sicoRmbVersion)
+      ()
       ())
   ))
   SICO_sourceInitialize("sico" '(sicoInstallAdeMenus sicoInstallEditorMenus sicoInstallNativeBindings sicoSchedulePlatformRegistration sicoPlaceLaunchedCiw))

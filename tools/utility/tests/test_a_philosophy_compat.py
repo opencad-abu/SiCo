@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from utility.a_philosophy_compat import check_compatibility, load_compatibility
-from conftest import write
+from utility.tests.gate_fixtures import write
 
 
 @pytest.fixture

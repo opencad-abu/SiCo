@@ -1,7 +1,7 @@
 ; Process and OpenAccess bridge for the external PyQt5 DSPF analyzer.
 
 unless(and(boundp('rceDspfAnalyzerVersion)
-             rceDspfAnalyzerVersion=="20260722.dspf.analyzer.v5"
+             rceDspfAnalyzerVersion=="20261024.dspf.analyzer.v6"
              isCallable('rceDspfProtocolRevision)
              rceDspfProtocolRevision()=="20260721.dspf.protocol.v3"
              isCallable('rceDspfGeometryRevision)
@@ -261,7 +261,7 @@ procedure(rceDspfAnalyzerStart(source meta)
     rceDspfAnalyzerState['layoutCell]=meta['layoutCell]
     rceDspfAnalyzerState['layoutView]=meta['layoutView]
     rceDspfAnalyzerState['buffer]=""
-    python=or(SICO_envValue("RCE_ANALYZER_PYTHON") RCE_pythonExe())
+    python=RCE_pythonExe()
     entry=RCE_pythonEntry()
     environment=rceDspfLaunchEnvironment(nil)
     unless(environment return(nil))
@@ -287,8 +287,8 @@ procedure(rceDspfAnalyzerStart(source meta)
 )
 
 procedure(rceDspfAnalyzerRevision()
-  "20260722.dspf.analyzer.v5"
+  "20261024.dspf.analyzer.v6"
 )
 
-rceDspfAnalyzerVersion="20260722.dspf.analyzer.v5"
+rceDspfAnalyzerVersion="20261024.dspf.analyzer.v6"
 )

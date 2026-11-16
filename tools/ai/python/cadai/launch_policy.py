@@ -5,6 +5,7 @@ from __future__ import annotations
 from .agent_profile import INTERACTIVE_PROFILE, validate_profile
 from .mcp import TOOLS as MCP_TOOLS
 from .mcp_server import SERVER_ID
+from .skill_access_guidance import INSTRUCTIONS as SKILL_ACCESS_INSTRUCTIONS
 
 MCP_TOOL_NAMES = tuple(tool["name"] for tool in MCP_TOOLS)
 
@@ -56,7 +57,9 @@ def assistant_instructions(profile: str = INTERACTIVE_PROFILE) -> str:
             "任务开始时确认前台/后台偏好。"
             "Virtuoso 的设计、库、原理图、版图和 Maestro 任务都"
             "通过专用 MCP 工具和 Cadence SKILL API 完成。用 "
-            "search_skill_api/get_skill_api 核实 API 签名，用 eval_skill 执行"
+            "search_skill_api/get_skill_api 核实 API 签名。"
+            + SKILL_ACCESS_INSTRUCTIONS
+            + "用 eval_skill 执行"
             "一个经典 SKILL 表达式，用 load_skill_file 加载多形式 .il/.ils "
             "脚本。"
             "参考工具需要单独配置的站点资源；不可用时改"
@@ -76,8 +79,8 @@ def assistant_instructions(profile: str = INTERACTIVE_PROFILE) -> str:
         )
     return context + (
         "支持性脚本或处理导出数据需要 Python 时，"
-        '使用配置好的生产解释器 "$SICO_PYTHON" -s，包括 '
-        "Python 子进程。SICO_PYTHON 是本会话的默认 Python；"
+        '使用配置好的安装内解释器 "$SICO_HOME/runtime/python/bin/python3" -s，包括 '
+        "Python 子进程。安装内解释器是本会话唯一的 Python；"
         "不要隐式选择 /usr/bin/python、/usr/bin/python3、虚拟环境或其他 "
         "解释器。不要为了绕过缺失依赖而安装软件包或切换运行时。"
         "一次工具调用失败不代表可以"

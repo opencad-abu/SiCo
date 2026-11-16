@@ -1,0 +1,42 @@
+; Snapshot process environment inputs for local and farm extraction requests.
+
+procedure(rceFinfetFlowP()
+  let((value)
+    value=or(getShellEnvVar("RCE_FINFET_FLOW") "0")
+    unless(member(value '("0" "1"))
+      error("RCE_FINFET_FLOW must be 0 or 1\n"))
+    value=="1"
+  )
+)
+
+procedure(rceProcessEnvPath(name)
+  or(SICO_absolutePath(SICO_envValue(name)) "")
+)
+
+procedure(rceWriteProcessInputsToml(outFile techDir processCorner)
+  let((blocks blockBase)
+    SICO_tomlWriteSection(outFile "extract.starrc")
+    SICO_tomlWriteString(outFile "reference_file"
+      rceProcessEnvPath("RCE_STARRC_REFERENCE_FILE"))
+    SICO_tomlWriteSection(outFile "extract.qrc")
+    SICO_tomlWriteString(outFile "technology_command_file"
+      rceProcessEnvPath("RCE_QRC_COMMAND_FILE"))
+    SICO_tomlWriteString(outFile "technology_layer_setup_file"
+      rceProcessEnvPath("RCE_QRC_LAYER_SETUP_FILE"))
+    SICO_tomlWriteString(outFile "technology_lpe_confile"
+      rceProcessEnvPath("RCE_QRC_LPE_CONFILE"))
+    ; The established block-cell override resolves relative to the selected
+    ; compiled technology directory, including the foundry's Tech/ layout.
+    blocks=SICO_envValue("RCE_QUANTUS_BLOCK_CELL_FILE")
+    when(blocks
+      blockBase=techDir
+      unless(rceProcessCornerDirP("QRC" blockBase techDir)
+        when(isDir(strcat(blockBase "/Tech"))
+          blockBase=strcat(blockBase "/Tech"))
+        blockBase=strcat(blockBase "/" processCorner))
+      unless(rexMatchp("^/" blocks)
+        blocks=strcat(blockBase "/" blocks))
+      blocks=SICO_absolutePath(blocks))
+    SICO_tomlWriteString(outFile "block_cell_file" or(blocks ""))
+  )
+)

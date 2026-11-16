@@ -1,3 +1,4 @@
+from skill_loader_test_support import loader_contract
 import re
 
 from skill_load_fixtures import (
@@ -111,9 +112,9 @@ def test_gui_writers_make_external_toml_paths_absolute() -> None:
         ("lvs/skill++/LVS.ils", "lvsStageAbsolutePathRevision"),
         ("rce/skill++/RCE.ils", "rceAbsolutePathRevision"),
     ):
-        entry = (CAD_ROOT / entry_path).read_text(encoding="utf-8")
-        assert f"isCallable('{revision_function})" in entry
-        assert f'{revision_function}()=="{revision}"' in entry
+        entry = loader_contract(entry_path)
+        assert entry.requires(f"{revision_function}")
+        assert entry.revision(f"{revision_function}") == f"{revision}"
 
 
 def test_file_callbacks_and_gui_external_paths_use_shared_helpers() -> None:
@@ -146,9 +147,9 @@ def test_file_callbacks_and_gui_external_paths_use_shared_helpers() -> None:
             assert body.index(cdl_normalize) < body.index('SICO_tomlWriteString(outFile "file" cdl)')
             assert body.index(gds_normalize) < body.index('SICO_tomlWriteString(outFile "file" gds)')
 
-        entry = read_skill_source(CAD_ROOT / f"{prefix}/skill++/{prefix.upper()}.ils")
-        assert "isCallable('SICO_absolutePath)" in entry
-        assert "isCallable('SICO_fileStem)" in entry
+        entry = loader_contract(f"{prefix}/skill++/{prefix.upper()}.ils")
+        assert entry.requires("SICO_absolutePath")
+        assert entry.requires("SICO_fileStem")
 
 
 def test_standalone_gds_and_cdl_use_independent_project_roots() -> None:

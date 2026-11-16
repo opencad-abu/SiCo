@@ -367,7 +367,7 @@ def run_session(
             # resources and agent-specific setup are ready.  This preserves
             # deterministic cleanup and keeps path/runtime preflight errors
             # distinguishable from interpreter configuration errors.
-            child_python = production_python(require_environment=True)
+            child_python = production_python()
             codex_adapter = CodexCliAdapter(
                 agent_exe,
                 profile,
@@ -376,7 +376,7 @@ def run_session(
                 provenance_path=os.environ.get("AIVW_PROVENANCE_PATH") or None,
             )
         else:
-            child_python = production_python(require_environment=True)
+            child_python = production_python()
             mcp_environment = dict(os.environ, SICO_AI_WORKSPACE=str(workspace))
             apply_pdk_workflow(mcp_environment, workspace)
             mcp_environment["SICO_BACKEND"], mcp_environment["SICO_PROVIDER"] = (

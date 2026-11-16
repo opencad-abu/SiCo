@@ -80,7 +80,7 @@ def call_read_only_tools(
             raise CdnsIpcUnavailable(
                 "client_unavailable", "authenticated development MCP entry is unavailable")
         entry = raw_entry.resolve()
-        invocation = (production_python(require_environment=True), "-s", str(entry))
+        invocation = (production_python(), "-s", str(entry))
     messages = []
     identifiers = []
     for index, call in enumerate(calls):

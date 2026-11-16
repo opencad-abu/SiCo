@@ -19,6 +19,10 @@ def _file(path: Path, text: str = "test\n") -> Path:
     return path
 
 
+def _command_section(command: str, name: str) -> str:
+    return command.split(f"{name} \\\n", 1)[1].split("\n\n", 1)[0]
+
+
 def _cci_config(tmp_path: Path, tool: str, tech_dir: Path) -> RceConfig:
     runset = _file(tmp_path / "rce_lvs.cal", "// RCE LVS rules\n")
     return RceConfig(
@@ -110,6 +114,7 @@ def test_quantus_generates_named_mpc_technology_and_temperature_lists(
     assert "-technology_corner RCmax Cmin" in command
     assert "-temperature 125 -40" in command
     assert f'-file_name "{tmp_path / "run/top"}"' in command
+    assert "-output_multi_value_rc false" in command
     assert (ctx.log_dir / "qrc_mpc_technology/corner.defs").read_text().splitlines() == [
         f"DEFINE RCmax {tech / 'RCmax'}",
         f"DEFINE Cmin {tech / 'Cmin'}",
@@ -118,6 +123,36 @@ def test_quantus_generates_named_mpc_technology_and_temperature_lists(
         (tmp_path / "run/top_RCmax_125.dspf", tmp_path / "run/top_RCmax.dspf"),
         (tmp_path / "run/top_Cmin_-40.dspf", tmp_path / "run/top_Cmin.dspf"),
     )
+
+
+def test_quantus_requests_per_corner_files_only_for_dspf_and_spef(
+    tmp_path: Path,
+) -> None:
+    tech = tmp_path / "QRC"
+    for corner in ("RCmax", "Cmin"):
+        _file(tech / corner / "qrcTechFile")
+    cfg = _cci_config(tmp_path, "QRC", tech)
+
+    def command_for(config: RceConfig) -> str:
+        return generate_qrc(config, config.context()).read_text(encoding="utf-8")
+
+    output_db = _command_section(command_for(cfg), "output_db")
+    assert output_db.count("-output_multi_value_rc false") == 1
+
+    spef = cfg.replace('extract', 'output_type', value="spef").replace(
+        'netlist', 'output_path', value=str(tmp_path / "run/top.spef")
+    )
+    assert command_for(spef).count("-output_multi_value_rc false") == 1
+
+    spice = cfg.replace('extract', 'output_type', value="sp").replace(
+        'netlist', 'output_path', value=str(tmp_path / "run/top.sp")
+    )
+    assert "-output_multi_value_rc" not in command_for(spice)
+
+    single = cfg.replace('extract', 'corners', value=["RCmax"]).replace(
+        'extract', 'corner_temperatures', value=["125"]
+    )
+    assert "-output_multi_value_rc" not in command_for(single)
 
 
 def test_starrc_generates_smc_corners_file_with_per_corner_temperatures(

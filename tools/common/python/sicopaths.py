@@ -16,7 +16,6 @@ MARKER = Path("etc/config/sico-install.json")
 IDENTITY = {"format": "cad.runtime.install.v1", "product": "Silicon Copilot", "layout": 1}
 IDENTITY_BYTES = (json.dumps(IDENTITY, separators=(",", ":")) + "\n").encode("ascii")
 RUNTIME_PYTHON = "runtime/python/bin/python3"
-DEV_RUNTIME = "etc/config/dev-runtime"
 
 
 def _absolute(raw: str | Path, label: str) -> Path:
@@ -108,28 +107,8 @@ class Installation:
         """Return the release Python/EDA library path derived from this root."""
         python_root = self.runtime_python_root
         if python_root is None:
-            dev = self.dev_python
-            if dev is None:
-                return None
-            python_root = dev.parents[1]
-        return os.pathsep.join((str(python_root / "lib"), str(self.root / "lib")))
-
-    @property
-    def dev_python(self) -> Path | None:
-        """Return an explicit source-tree interpreter, never a release default."""
-        marker = self.path(DEV_RUNTIME)
-        try:
-            configured = marker.read_text(encoding="utf-8").strip()
-        except OSError:
             return None
-        if not configured or "\0" in configured or "\n" in configured:
-            raise ValueError("Invalid development runtime marker")
-        path = Path(configured).expanduser()
-        if not path.is_absolute() or not path.is_file() or not os.access(path, os.X_OK):
-            raise ValueError(
-                "Development runtime Python is unavailable: " + str(path)
-            )
-        return path.resolve()
+        return os.pathsep.join((str(python_root / "lib"), str(self.root / "lib")))
 
 
 def installation(

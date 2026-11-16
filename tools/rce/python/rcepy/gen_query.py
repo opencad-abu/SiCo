@@ -8,18 +8,25 @@ from caddefaults import Defaults, resolve_defaults
 from .config import DesignContext, RceConfig
 from .qrc_defaults import QrcDefaults
 from .textutil import clean_lines, write_text
+from .finfet_query import finfet_query_prefix, generate_finfet_star_query, qrc_finfet_query_lines
+from .finfet_qrc import QRC_PROCESS_DEFAULTS
 
 
 def generate_query(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | None = None) -> Path:
     tool = cfg.ext_tool.upper()
     if tool in {"STARRC", "STARXTRACT"}:
+        if cfg.flag("extract", "finfet_flow"):
+            return generate_finfet_star_query(ctx)
         return generate_star_query(ctx)
-    baseline = QrcDefaults(resolve_defaults(("quantus.options",), defaults, ctx.log_dir))
-    return _generate_qrc_query(ctx, baseline)
+    baseline = QrcDefaults(
+        resolve_defaults(("quantus.options",), defaults, ctx.log_dir),
+        overrides=QRC_PROCESS_DEFAULTS if cfg.flag("extract", "finfet_flow") else None,
+    )
+    return _generate_qrc_query(ctx, baseline, finfet=cfg.flag("extract", "finfet_flow"))
 
 
-def _generate_qrc_query(ctx: DesignContext, baseline: QrcDefaults) -> Path:
-    prefix = f"{ctx.cci_dir}/{ctx.layout_cell}"
+def _generate_qrc_query(ctx: DesignContext, baseline: QrcDefaults, *, finfet: bool = False) -> Path:
+    prefix = finfet_query_prefix(ctx) if finfet else f"{ctx.cci_dir}/{ctx.layout_cell}"
     lines = [
         "echo",
         "status",
@@ -52,6 +59,8 @@ def _generate_qrc_query(ctx: DesignContext, baseline: QrcDefaults) -> Path:
         f"lvs settings report write {prefix}.lvs_settings",
         "terminate",
     ]
+    if finfet:
+        lines = qrc_finfet_query_lines(lines, prefix)
     return write_text(ctx.log_dir / "query.cal", clean_lines(lines))
 
 

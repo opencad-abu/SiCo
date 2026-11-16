@@ -85,3 +85,26 @@ def test_qrc_converts_relative_capacitance_percent_to_ratio(tmp_path: Path) -> N
     command = generate_qrc(cfg, cfg.context()).read_text(encoding="utf-8")
 
     assert "filter_coupling_cap -coupling_cap_threshold_relative 0.001" in command
+
+
+@pytest.mark.parametrize(
+    ("remove_floating_nets", "expected"),
+    (
+        (False, "-exclude_floating_nets false"),
+        (True, "-exclude_floating_nets true"),
+    ),
+)
+def test_qrc_filter_cap_states_the_gui_floating_net_choice(
+    tmp_path: Path,
+    remove_floating_nets: bool,
+    expected: str,
+) -> None:
+    cfg = _config(
+        tmp_path, "QRC", extract={"remove_floating_nets": remove_floating_nets}
+    )
+
+    command = generate_qrc(cfg, cfg.context()).read_text(encoding="utf-8")
+
+    assert command.count("-exclude_floating_nets") == 1
+    assert command.index("filter_cap ") < command.index(expected)
+    assert command.index(expected) < command.index("filter_res ")

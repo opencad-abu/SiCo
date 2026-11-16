@@ -2,36 +2,6 @@
 ; LVS configuration-profile adapter.
 ;------------------------------------------------------------------------------
 
-procedure(lvsSvdbQueryFromForm(form)
-  let((field value labels result index)
-    field=get(form 'svdbQuery)
-    labels=list("CCI" "SI" "RECON" "IXF NXF SLPH" "PINLOC")
-    value=if(field then field~>value else '(nil nil nil nil nil))
-    result=nil
-    for(index 0 sub1(length(labels))
-      when(nth(index value)
-        result=append1(result nth(index labels))))
-    result
-  )
-)
-
-procedure(lvsSvdbQueryFlags(data)
-  let((selected labels result label selectedIxf)
-    selected=SICO_profileDataValue(data "lvs.svdb_query" nil)
-    labels=list("CCI" "SI" "RECON" "IXF NXF SLPH" "PINLOC")
-    selectedIxf=or(member("IXF NXF SLPH" selected)
-                   member("IXF+NXF+SLPH" selected)
-                   and(member("IXF" selected)
-                       member("NXF" selected)
-                       member("SLPH" selected)))
-    result=nil
-    foreach(label labels
-      result=append1(result
-        if(label=="IXF NXF SLPH" then selectedIxf else member(label selected))))
-    result
-  )
-)
-
 procedure(lvsProfileCollect(form)
   let((entries tasks svdbQuery)
     tasks=or(form~>cadBatchTasks nil)

@@ -49,8 +49,7 @@ def _profile_defaults(flow: str) -> dict[str, ProfileValue]:
                 "runtime.lvs_cpus": "1",
             }
         )
-        if flow == "LVS":
-            defaults["lvs.svdb_query"] = ()
+        defaults["lvs.svdb_query"] = () if flow == "LVS" else ("CCI",)
     if flow == "RCE":
         defaults.update(
             {

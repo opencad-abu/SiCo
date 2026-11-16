@@ -43,18 +43,41 @@ class BridgeTargetProvider:
                 "layout" if any(name.startswith("maskLayout") for name in family)
                 else "schematic"
             )
-        return self._rows("aiCopilotListViews", values, "views", "name", "view_type")
+        rows = self._rows(
+            "aiCopilotListViews", values, "views",
+            "view_name", "oa_view_type", "oa_view_type_source",
+        )
+        if any(
+            row["oa_view_type_source"] not in {"platform_api", "unknown"}
+            for row in rows
+        ):
+            raise TargetBridgeError("Bridge returned an invalid view type source")
+        return rows
 
     def open_target(self, target):
+        oa_view_type = target.get("oa_view_type")
+        if not isinstance(oa_view_type, str) or not oa_view_type:
+            raise ValueError("Opening a target requires oa_view_type")
         values = [
             str(target.get("library", "")), str(target.get("cell", "")),
-            str(target.get("view", "")), str(target.get("view_type", "schematic")),
+            str(target.get("view_name", "")), oa_view_type,
             "r" if target.get("read_only") else "a",
+            str(target.get("oa_view_type_source", "unknown")),
         ]
         data = self._call("aiCopilotOpenTarget", values)
-        normalized = {key: data[key] for key in ("library", "cell", "view", "view_type")
-                      if isinstance(data.get(key), str) and data[key]}
-        return {**target, **normalized, "window": data.get("window", "")}
+        normalized = {
+            key: data[key] for key in (
+                "library", "cell", "view_name", "oa_view_type", "oa_view_type_source",
+            )
+            if isinstance(data.get(key), str) and data[key]
+        }
+        source = data.get("oa_view_type_source")
+        if source not in {"platform_api", "unknown"}:
+            raise TargetBridgeError("Bridge returned an invalid view type source")
+        return {
+            **target, **normalized, "window": data.get("window", ""),
+            "window_ref": data.get("window_ref", ""),
+        }
 
     def selection(self, window_ref, offset=0, max_items=50):
         if type(offset) is not int or not 0 <= offset <= 4096:
@@ -71,9 +94,9 @@ class BridgeTargetProvider:
         target = ref["target"]
         master = ref.get("master")
         values = [
-            target["library"], target["cell"], target["view"], ref["kind"], ref["name"],
+            target["library"], target["cell"], target["view_name"], ref["kind"], ref["name"],
             list(ref["hierarchy"]), None if master is None else [
-                master["library"], master["cell"], master["view"],
+                master["library"], master["cell"], master["view_name"],
             ],
         ]
         if window_ref is not None:
@@ -84,7 +107,7 @@ class BridgeTargetProvider:
         ref = normalize_ref(ref)
         target = ref["target"]
         return validate_windows(self._call("aiCopilotListObjectWindows", [
-            target["library"], target["cell"], target["view"],
+            target["library"], target["cell"], target["view_name"],
         ]))
 
     def window_list(self):

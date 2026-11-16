@@ -49,27 +49,6 @@ if [[ $# -eq 3 ]]; then
         || fatal "checksum mismatch: skill_api.json.gz"
 fi
 
-select_validation_python() {
-    local candidate
-    local -a candidates
-    if [[ -n ${SICO_AI_REFERENCE_VALIDATION_PYTHON-} ]]; then
-        candidates=("$SICO_AI_REFERENCE_VALIDATION_PYTHON")
-    else
-        candidates=(/usr/bin/python3 python3)
-    fi
-    for candidate in "${candidates[@]}"; do
-        [[ -n $candidate ]] || continue
-        if command -v -- "$candidate" >/dev/null 2>&1 \
-                && run_validation_python \
-                    "$candidate" -c 'import gzip, json, sqlite3, zlib' \
-                    >/dev/null 2>&1; then
-            printf '%s\n' "$candidate"
-            return 0
-        fi
-    done
-    return 1
-}
-
 run_validation_python() {
     env -u PYTHONHOME -u PYTHONPATH -u LD_PRELOAD -u LD_AUDIT \
         PYTHONNOUSERSITE=1 \
@@ -77,8 +56,9 @@ run_validation_python() {
         "$@"
 }
 
-validation_python=$(select_validation_python) \
-    || fatal "a Python interpreter with sqlite3 and zlib is required for validation"
+validation_python=${SICO_HOME-}/runtime/python/bin/python3
+[[ -n ${SICO_HOME-} && -f $validation_python && -x $validation_python ]] \
+    || fatal "SiCo Python is unavailable: $validation_python"
 if ! run_validation_python "$validation_python" - "$database" "$fallback" <<'PY'
 import gzip
 import json

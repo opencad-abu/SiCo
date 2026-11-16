@@ -14,7 +14,7 @@
 <a class="skip" href="#main">跳到正文</a>
 <header class="topbar">
   <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
-  <span class="edition">使用手册 / 2026.09</span>
+  <span class="edition">使用手册 / 2026.10</span>
   <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
 </header>
 <noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
@@ -23,6 +23,8 @@
 <p class="rail-label">SICO DOCUMENTATION</p>
 <a href="index.html">开始阅读</a>
 <p class="nav-group">开始使用</p>
+<a href="sico-gui.html">SiCo · 客户端界面</a>
+<a href="sico-workspace.html">SiCo · 工作区页面</a>
 <a href="installation.html">01 · 安装</a>
 <a href="environment.html">02 · 环境变量</a>
 <a href="virtuoso.html">03 · Virtuoso 集成</a>
@@ -35,6 +37,9 @@
 <a href="utilities.html">LEF / GDS / CDL</a>
 <a href="lsf.html" aria-current="page">LSF · 运行与资源</a>
 <p class="nav-group">参考附录</p>
+<a href="appendix-pdk-data-standard.html">PDK 数据标准</a>
+<a href="appendix-circuit-template-standard.html">电路模板标准</a>
+<a href="appendix-symbol-template-standard.html">Symbol 模板标准</a>
 <a href="environment-internal.html">环境接口附录</a>
 <div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
 </nav>
@@ -43,6 +48,35 @@
 <p class="eyebrow">EXECUTION / LSF</p>
 <h1>LSF · 选择合适的运行位置</h1>
 <p class="lead">SiCo 工作会话、CAD flow、完整 AI Assistant 和模型 HTTP worker 的远程执行各有入口。根据需要移动的工作选择配置。</p>
+<h2 id="gui">图形界面：LSF Loading Monitor</h2>
+<figure class="figure">
+  <a href="assets/screenshots/lsf-resources.png" aria-label="查看 LSF Resources 页原图"><img src="assets/screenshots/lsf-resources.png" alt="LSF Loading Monitor 的 Resources 页：队列、主机过滤、资源表和选择按钮" loading="lazy"></a>
+  <figcaption><strong>Resources 页。</strong>示例显示两个队列和 busy/idle 主机；真实数据取决于当前用户可提交的队列与节点。<span class="zoom-hint">点击图片查看原始尺寸</span></figcaption>
+</figure>
+<figure class="figure">
+  <a href="assets/screenshots/lsf-jobs.png" aria-label="查看 LSF Jobs 页原图"><img src="assets/screenshots/lsf-jobs.png" alt="LSF Loading Monitor 的 Jobs 页：作业过滤、状态、资源占用和 Kill 动作" loading="lazy"></a>
+  <figcaption><strong>Jobs 页。</strong>示例包含 RUN 与 PEND 作业；Kill 动作会先请求确认。<span class="zoom-hint">点击图片查看原始尺寸</span></figcaption>
+</figure>
+<p>从 CAD flow 的 Hardware 区点击 <strong>LSF</strong> 按钮打开时，窗口进入“选择运行位置”模式，底部出现 <strong>Use Auto</strong>、<strong>Use Selected Host</strong> 和 <strong>Cancel</strong>。独立运行 <code>lsfmonitor</code> 时只查看资源与作业，不出现回填按钮。</p>
+<div class="table-wrap"><table><thead><tr><th>页面/控件</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>Resources</strong> 页签</td><td>显示队列、主机资源、槽位和负载。</td><td>选择运行位置先看这里；Jobs 页只用于查看作业。</td></tr>
+<tr><td><strong>Queue</strong> 下拉</td><td>选择要观察的队列；候选来自当前用户可提交且开放的队列。</td><td>队列候选未加载时不要凭记忆填写名称。</td></tr>
+<tr><td><strong>Filter hosts</strong></td><td>按主机名过滤资源表。</td><td>过滤只影响显示；选择主机时要确认当前选中行仍然可见。</td></tr>
+<tr><td><strong>Available only</strong></td><td>只显示有可用槽位的节点。</td><td>默认开启；排查拓扑或满载节点时再关闭。</td></tr>
+<tr><td><strong>Auto Refresh</strong> / 间隔</td><td>按设定秒数自动刷新快照。</td><td>频繁刷新会增加集群查询负载；调试时可临时关闭。</td></tr>
+<tr><td>刷新 / 重新加载拓扑图标</td><td>刷新一次快照，或重新读取队列、主机成员和容量拓扑。</td><td>队列/主机列表发生变化时用 Reload Topology，而不是反复点刷新。</td></tr>
+<tr><td>主机计数与 Sample 时间</td><td>显示当前过滤后的主机数和快照采样时间。</td><td>Sample 过旧时状态栏会提示 stale；不要依据旧快照提交。</td></tr>
+<tr><td>队列表 / 主机表</td><td>队列表展示状态和槽位；主机表展示状态、最大/运行/挂起作业、负载、CPU 和内存。</td><td>选择主机后检查 cpu、memory 与当前作业数，而不是只看 RUN 数量。</td></tr>
+<tr><td><strong>Use Auto</strong></td><td>把当前队列写回 flow，并让 LSF 调度器选择主机。</td><td>推荐作为默认选择；不锁定具体节点。</td></tr>
+<tr><td><strong>Use Selected Host</strong></td><td>把当前队列和选中主机写回 flow。</td><td>只有主机在快照中可验证且有资源时才启用；不要依赖已消失的行。</td></tr>
+<tr><td><strong>Cancel</strong></td><td>关闭选择窗口，不修改 flow 的 queue/host。</td><td>取消后原设置保持不变；需要重新选择时再次点击 LSF。</td></tr>
+<tr><td><strong>Jobs</strong> 页签</td><td>列出当前用户的未完成作业。</td><td>作业列表与 Resources 快照同时生成；状态和主机可能随后变化。</td></tr>
+<tr><td><strong>Filter jobs</strong></td><td>按 Job ID、名称或主机等文本过滤作业。</td><td>过滤不改变作业本身；清除过滤后再核对总数。</td></tr>
+<tr><td><strong>All states</strong> 下拉</td><td>按 PEND、RUN 等状态筛选。</td><td>需要查看全部作业时选择 All states。</td></tr>
+<tr><td>作业表</td><td>显示 Job ID、用户、状态、队列、执行主机、槽位、时间、进度和 Job Name；Action 列提供 Kill。</td><td>Kill 会请求确认并调用 bkill；不要用它取消不属于本任务的作业。</td></tr>
+<tr><td>状态栏</td><td>显示刷新中、ready、stale 或错误诊断。</td><td>stale/error 时不要提交；先刷新或查看 diagnostic 文本。</td></tr>
+</tbody></table></div>
+<div class="notice"><strong>选择位置和执行作业是两件事。</strong> LSF Loading Monitor 只返回经过验证的 queue/host 选择；实际 flow 运行仍由表单的 Run 提交。关闭监控窗口不会取消已经提交的作业。</div>
 <h2 id="modes">四种使用方式</h2>
 <div class="table-wrap"><table><thead><tr><th>需求</th><th>入口</th><th>远端执行内容</th></tr></thead><tbody>
 <tr><td>将 SiCo 工作会话限定到专用队列</td><td>站点统一提交入口；见<a href="installation.html#model-deployment">模型集中部署建议</a></td><td>SiCo 与其新启动的工程服务；由站点安排同节点的 Virtuoso 联动和图形显示。</td></tr>
@@ -77,9 +111,9 @@ export SICO_CODEX_LSF_ARGS="-Is -q ai"
 <h2 id="diagnose">排查顺序</h2>
 <ol class="steps"><li>无 Queue：先在同一用户环境检查 bqueues 是否成功、是否有可提交的开放队列。</li><li>作业启动失败：检查执行节点同路径安装、许可证、共享工程与工具环境。</li><li>模型 502：检查真正发送上游 HTTP 的节点是否具备网络权限。</li><li>模型 400：核对 API 协议、模型名和工具格式；已成功排队不表示上游接受请求。</li><li>图形窗口或中文输入失败：检查 DISPLAY、XAUTHORITY，并在实际执行 GUI 的节点按<a href="installation.html#pinyin">拼音输入法要求与 lib 安装命令</a>检查依赖、UTF-8 locale、中文字体和 Qt 插件。</li></ol>
 
-<footer class="page-footer"><span>内容基线 8ef8482a · 核对 2026-09-28</span><a href="environment-internal.html">环境接口附录 →</a></footer>
+<footer class="page-footer"><span>内容基线 8ef8482a · 界面核对 2026-10-24</span><a href="environment-internal.html">环境接口附录 →</a></footer>
 </main>
-<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#modes">四种使用方式</a><a href="#flow">CAD flow 提交</a><a href="#assistant">完整 AI Assistant 远程会话</a><a href="#gateway">仅模型网络请求走 LSF</a><a href="#diagnose">排查顺序</a></aside>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#gui">图形界面：LSF Loading Monitor</a><a href="#modes">四种使用方式</a><a href="#flow">CAD flow 提交</a><a href="#assistant">完整 AI Assistant 远程会话</a><a href="#gateway">仅模型网络请求走 LSF</a><a href="#diagnose">排查顺序</a></aside>
 </div></div>
 </body>
 </html>

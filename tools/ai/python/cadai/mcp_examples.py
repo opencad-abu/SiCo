@@ -281,19 +281,19 @@ EXAMPLES: dict[str, dict[str, Any]] = {
         "notes": ["presentation=background 不打开编辑器窗口；choice_confirmed 表示用户已确认呈现方式。"],
     },
     "inspect_circuit_target": {
-        "summary": "确认目标与已有视图策略后再决定 create/reuse/replace。",
+        "summary": "只读检查目标与已有视图内容；不需要 circuit task。",
         "arguments": {"target": {"library": "myDesignLib", "cell": "tb_myinv",
                                  "view": "schematic"},
-                      "task_ref": "REPLACE: task_ref from begin_circuit_task",
                       "request_id": "tb_myinv-inspect-1"},
-        "replace": ["task_ref"],
+        "notes": ["从 Ask 入口可直接检查当前捕获的 lib/cell/view。",
+                  "需要写入时先 begin_circuit_task，再用该 task_ref 重新检查目标。"],
     },
     "preflight_circuit_project": {
         "summary": "带确切输出目标与工作区事实的工程预检。",
         "arguments": {
             "presentation": "background",
             "targets": [{"library": "myDesignLib", "cell": "tb_myinv", "view": "schematic",
-                         "view_type": "schematic", "intent": "create"}],
+                         "oa_view_type": "schematic", "intent": "create"}],
             "libraries": [{"library": "myDesignLib",
                            "expected_path": "REPLACE: absolute path of the myDesignLib library"}],
             "directories": [{"path": "REPLACE: project workspace path", "purpose": "project",

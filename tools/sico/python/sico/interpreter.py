@@ -7,53 +7,31 @@ import sys
 from importlib.machinery import EXTENSION_SUFFIXES
 from pathlib import Path
 
-from sicoenv import value
-
 from . import PRODUCT_NAME
 from .installation import current
 
 
 def cad_python(environment=None):
+    """Return the only interpreter owned by this SiCo installation."""
     env = os.environ if environment is None else environment
-    explicit = value(env, "SICO_PYTHON", ("CAD_PYTHON",))
-    root = value(env, "SICO_PYTHON_ROOT", ("CAD_PYTHON_ROOT",))
-    if ("SICO_PYTHON" in env and not explicit) or ("SICO_PYTHON_ROOT" in env and not root):
-        raise ValueError("Explicit SICO_PYTHON/SICO_PYTHON_ROOT must not be empty")
     selected = current(env)
-    bundled = selected.runtime_python
-    if bundled is not None:
-        # One installation owns one interpreter. Stale modulefile selectors
-        # must not make the source launcher disagree with the native launcher.
-        return str(bundled)
-    dev = selected.dev_python
-    if explicit:
-        path = Path(explicit).expanduser()
-    elif root:
-        path = Path(root).expanduser() / "bin/python3"
-    elif dev is not None:
-        path = dev
-    else:
-        path = Path("/software/pkgs/python/3.9.13/bin/python3")
-    if not path.is_absolute() or not path.is_file() or not os.access(path, os.X_OK):
-        raise ValueError(
-            "SiCo Python is unavailable: set $SICO_HOME/runtime/python or "
-            "etc/config/dev-runtime"
-        )
-    return str(path)  # Preserve site NAS aliases.
+    python = selected.runtime_python
+    if python is None:
+        raise ValueError("$SICO_HOME/runtime/python/bin/python3 is unavailable")
+    return str(python)
 
 
-def agent_command(*arguments):
+def agent_command(*arguments, environment=None):
     entry = native_entry("sico")
     if entry is not None and _is_native_binary(entry):
-        # A packaged launcher is an executable; it selects CAD_PYTHON itself and
-        # must never be handed to Python as a script.
+        # A packaged launcher is an executable and selects its runtime itself.
         return [str(entry), *arguments]
     if any(__file__.endswith(suffix) for suffix in EXTENSION_SUFFIXES):
         raise ValueError("Native SiCo runtime requires an executable ELF sico relay")
     source_entry = current().tool("sico") / "python/sico-entry"
     if not source_entry.is_file():
         raise ValueError("SiCo development entry is unavailable")
-    return [cad_python(), "-s", str(source_entry), *arguments]
+    return [cad_python(environment), "-s", str(source_entry), *arguments]
 
 
 def _is_native_binary(path):

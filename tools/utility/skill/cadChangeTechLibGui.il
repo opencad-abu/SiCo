@@ -29,7 +29,7 @@ unless(and(boundp('sicoChangeTechLibCoreVersion)
 )
 
 unless(and(boundp('sicoChangeTechLibGuiVersion)
-             sicoChangeTechLibGuiVersion=="20260902.form.lifecycle.v1"
+             sicoChangeTechLibGuiVersion=="20261024.form.lifecycle.v2"
              isCallable('cadChangeTechLibGuiRowText))
 
 unless(boundp('cadChangeTechLibForm)
@@ -39,8 +39,8 @@ unless(boundp('cadChangeTechLibForm)
 procedure(cadChangeTechLibBrand()
   cond(
     (isCallable('SICO_logo) SICO_logo())
-    (isCallable('witMenuLogo) witMenuLogo())
-    (t "SiCo")
+    (isCallable('sicoMenuLogo) sicoMenuLogo())
+    (t "Silicon Copilot")
   )
 )
 
@@ -434,7 +434,7 @@ procedure(cadChangeTechLibGuiRevision()
   sicoChangeTechLibGuiVersion
 )
 
-sicoChangeTechLibGuiVersion="20260902.form.lifecycle.v1"
+sicoChangeTechLibGuiVersion="20261024.form.lifecycle.v2"
 )
 
 unless(and(boundp('sicoChangeTechLibViaGuiVersion)

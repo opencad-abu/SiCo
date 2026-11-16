@@ -30,6 +30,8 @@ def verify(package):
     resources = package.document('file.json')['items']
     identities = set()
     names = ['device.json', 'category.json', 'file.json']
+    if package.available('layout.json'):
+        names.append('layout.json')
     for key, row in devices['items'].items():
         if row['library'] not in package.manifest['libraries']:
             fail('Unknown device library')
@@ -47,6 +49,9 @@ def verify(package):
                 name = row['dir'] + '/' + suffix
                 if package.available(name):
                     names.append(name)
+            name = row['dir'] + '/layout.json'
+            if package.available(name):
+                names.append(name)
             cdf = package.document(row['dir'] + '/cdf.json')
             if 'interface_parameters' in cdf and not confirmed(package, cdf, '/interface_parameters', sources):
                 fail('CDF interface scope requires user confirmation provenance')

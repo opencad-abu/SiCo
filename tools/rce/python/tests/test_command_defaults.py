@@ -12,7 +12,7 @@ from rcepy.gen_query import generate_query
 from rcepy.generators import generate_all
 from rcepy.gen_starrc import generate_starrc
 from rcepy.qrc_defaults import QrcDefaults, qrc_launch_arguments
-from rcepy.starrc_defaults import MIGRATED_FIELDS
+from rcepy.starrc_defaults import GUI_OWNED_FIELDS, MIGRATED_FIELDS
 from qrc_netlist_customize_fixtures import _config as qrc_config
 from starrc_netlist_customize_fixtures import _config as star_config
 
@@ -48,6 +48,7 @@ def test_quantus_mode_default_and_duplicate_detection():
 @pytest.mark.parametrize("text", [
     "[extract]\n-type r_only", "[input_db]\n-directory_name /other",
     "[output_db.file]\n-disable_instances true", "[unknown]\n-x 1",
+    "[output_db]\n-output_multi_value_rc true",
     "[extract]\n-extract_via_cap true\n[extract]\n-extract_via_cap false",
     '[extract]\n-extract_via_cap true; source bad',
     '[extract]\n-extract_via_cap true -type none',
@@ -80,6 +81,39 @@ def test_starrc_old_behavior_fields_have_actionable_migration_error(tmp_path, fi
     cfg = star_config(tmp_path).replace("extract", "starrc", field, value="YES")
     with pytest.raises(ValueError, match=r"moved to .*starrc.options"):
         generate_starrc(cfg, cfg.context(), defaults=bundle("starrc.options", ""))
+
+
+@pytest.mark.parametrize("field", sorted(GUI_OWNED_FIELDS))
+def test_starrc_gui_owned_fields_have_actionable_migration_error(tmp_path, field):
+    cfg = star_config(tmp_path).replace("extract", "starrc", field, value="YES")
+    key = GUI_OWNED_FIELDS[field]
+    with pytest.raises(ValueError, match=rf"GUI-owned {key.replace('.', '[.]')}"):
+        generate_starrc(cfg, cfg.context(), defaults=bundle("starrc.options", ""))
+
+
+@pytest.mark.parametrize(
+    ("name", "text", "option"),
+    (
+        (
+            "quantus.options",
+            "[filter_cap]\n-exclude_floating_nets true\n",
+            "exclude_floating_nets",
+        ),
+        (
+            "starrc.options",
+            "[database]\nREMOVE_FLOATING_NETS: NO\n",
+            "REMOVE_FLOATING_NETS",
+        ),
+    ),
+)
+def test_floating_net_removal_stays_gui_owned(name, text, option, tmp_path):
+    if name == "quantus.options":
+        with pytest.raises(ValueError, match=option):
+            QrcDefaults(bundle(name, text))
+        return
+    cfg = star_config(tmp_path)
+    with pytest.raises(ValueError, match=option):
+        generate_starrc(cfg, cfg.context(), defaults=bundle(name, text))
 
 
 def test_starrc_rejects_gui_override_and_preserves_pdk_checks(tmp_path):

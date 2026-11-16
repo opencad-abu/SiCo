@@ -114,7 +114,7 @@ def qualify(recipe_path,target,execute=True):
     request={'kind':recipe['kind'],'target':target,'recipe_sha256':sha256_file(recipe_path),
         'sources':pairs,'implementation':{str(p):sha256_file(p) for p in files},'holdout_evaluated':False}
     digest=stable_digest(request)
-    run=allocate_split_run(resolve_launch_paths(),Path('/path/to/xh/amsVerify/data/ams').resolve(),
+    run=allocate_split_run(resolve_launch_paths(),Path('/workarea/xh/amsVerify/data/ams').resolve(),
         library=plan['target']['library'],cell=plan['target']['cell'],view='transition_response',
         kind='transition-response',request_digest=digest)
     write_json_once(run.control_root/'request.json',request)

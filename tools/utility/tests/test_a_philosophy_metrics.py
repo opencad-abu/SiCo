@@ -3,7 +3,7 @@
 from utility.a_philosophy_metrics import python_metrics
 from utility.a_philosophy_sources import source_rows
 from utility.check_private_import_boundaries import check
-from conftest import write
+from utility.tests.gate_fixtures import write
 import json
 
 

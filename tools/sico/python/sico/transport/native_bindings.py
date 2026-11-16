@@ -46,7 +46,7 @@ def output_context(source, params, request_id):
     snapshot = dict(
         source="native_resource",
         cwd=source.snapshot.get("cwd"),
-        cellview=dict(zip(("lib", "cell", "view"), names)),
+        cellview=dict(zip(("lib", "cell", "view_name"), names)),
     )
     if path:
         snapshot["library_path"] = str(Path(path).resolve())
@@ -99,7 +99,7 @@ class NativeBindings:
                         dict(
                             source="native_resource",
                             cwd=identity["cwd"],
-                            cellview=dict(zip(("lib", "cell", "view"), row[:3])),
+                            cellview=dict(zip(("lib", "cell", "view_name"), row[:3])),
                             library_path=str(Path(row[3]).resolve()),
                         ),
                     )
@@ -113,10 +113,11 @@ class NativeBindings:
             ):
                 declared = [
                     (reservation.snapshot.get("cellview") or {}).get(key)
-                    for key in ("lib", "cell", "view")
+                    for key in ("lib", "cell", "view_name")
                 ] + [reservation.snapshot.get("library_path") or ""]
                 resolved = [
-                    outputs[0].snapshot["cellview"].get(key) for key in ("lib", "cell", "view")
+                    outputs[0].snapshot["cellview"].get(key)
+                    for key in ("lib", "cell", "view_name")
                 ] + [outputs[0].snapshot.get("library_path") or ""]
                 error = binding_error(
                     "binding_reservation_changed",

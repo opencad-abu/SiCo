@@ -6,7 +6,8 @@ import uuid
 from contextlib import nullcontext
 from datetime import datetime, timezone
 
-from ..core.cad_ref import extract_cad_refs, target_from_snapshot
+from ..core.cad_linkify import extract_cad_refs
+from ..core.cad_ref import target_from_snapshot
 from ..core.contracts import ToolResult
 from ..core.tools import Tool
 from ..storage.workbench import WorkbenchIndex, object_link

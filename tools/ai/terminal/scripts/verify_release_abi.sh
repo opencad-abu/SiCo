@@ -403,14 +403,10 @@ for file in "$binding" "$library"; do
     fi
 done
 
-python=${SICO_PYTHON-}
-if [[ -z $python && -n ${SICO_PYTHON_ROOT-} ]]; then
-    python="$SICO_PYTHON_ROOT/bin/python3"
-fi
-[[ -n $python ]] || fatal "SICO_PYTHON or SICO_PYTHON_ROOT is required for release validation"
+python="$common_prefix/runtime/python/bin/python3"
 python=$(realpath -e -- "$python")
 [[ -x $python ]] || fatal "production Python is not executable: $python"
-python_library_path=${SICO_AI_PYTHON_LIBRARY_PATH-${SICO_SYSTEM_LD_LIBRARY_PATH-}}
+python_library_path="$common_prefix/runtime/python/lib:$common_prefix/lib"
 smoke=$(env -u PYTHONPATH -u QT_PLUGIN_PATH -u QT_QPA_PLATFORM_PLUGIN_PATH \
     -u LD_PRELOAD -u LD_AUDIT \
     PYTHONNOUSERSITE=1 \

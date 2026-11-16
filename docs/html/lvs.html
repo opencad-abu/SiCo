@@ -14,7 +14,7 @@
 <a class="skip" href="#main">跳到正文</a>
 <header class="topbar">
   <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
-  <span class="edition">使用手册 / 2026.09</span>
+  <span class="edition">使用手册 / 2026.10</span>
   <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
 </header>
 <noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
@@ -23,6 +23,8 @@
 <p class="rail-label">SICO DOCUMENTATION</p>
 <a href="index.html">开始阅读</a>
 <p class="nav-group">开始使用</p>
+<a href="sico-gui.html">SiCo · 客户端界面</a>
+<a href="sico-workspace.html">SiCo · 工作区页面</a>
 <a href="installation.html">01 · 安装</a>
 <a href="environment.html">02 · 环境变量</a>
 <a href="virtuoso.html">03 · Virtuoso 集成</a>
@@ -35,6 +37,9 @@
 <a href="utilities.html">LEF / GDS / CDL</a>
 <a href="lsf.html">LSF · 运行与资源</a>
 <p class="nav-group">参考附录</p>
+<a href="appendix-pdk-data-standard.html">PDK 数据标准</a>
+<a href="appendix-circuit-template-standard.html">电路模板标准</a>
+<a href="appendix-symbol-template-standard.html">Symbol 模板标准</a>
 <a href="environment-internal.html">环境接口附录</a>
 <div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
 </nav>
@@ -43,6 +48,38 @@
 <p class="eyebrow">CAD FLOW / LAYOUT VERSUS SCHEMATIC</p>
 <h1>LVS · 版图与原理图一致性</h1>
 <p class="lead">以 Calibre 比较版图和源网表。OA、CDL 与 GDS 可按实际设计来源组合，层映射与器件定义需要匹配同一工艺。</p>
+<h2 id="gui">图形界面：LVS 主表单</h2>
+<figure class="figure">
+  <a href="assets/screenshots/lvs-form.png" aria-label="查看 LVS 主表单原图"><img src="assets/screenshots/lvs-form.png" alt="SiCo LVS 主表单：输入组合、LVS 选项、输出、引擎和硬件配置" loading="lazy"></a>
+  <figcaption><strong>SiCo LVS 主表单。</strong>示例同时填写了 schematic 与 layout；实际只需按 Input Data Type 填写对应输入。<span class="zoom-hint">点击图片查看原始尺寸</span></figcaption>
+</figure>
+<p>从 <strong>SiCo → LVS</strong> 打开。LVS 的关键是让“源电路”和“版图”指向同一设计，并确认 Rule File、Hcell 与输入格式匹配。</p>
+<div class="table-wrap"><table><thead><tr><th>页面/控件</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>Config File</strong> + <strong>Load / Save / Save As…</strong></td><td>载入或保存 LVS Profile。</td><td>加载后重新核对本次 library / cell / view，Profile 不应替代设计身份检查。</td></tr>
+<tr><td><strong>Run Scope</strong></td><td>Single Cell 或 Multiple Cells；多 cell 时显示双栏 Mapping 编辑器。</td><td>多 cell 的每组 schematic / layout 都要完整；不要混入不同 top cell。</td></tr>
+<tr><td><strong>Input Data Type</strong></td><td><strong>OA</strong>、<strong>CDL+GDS</strong>、<strong>CDL+LAY</strong>、<strong>SCH+GDS</strong>。选择后只启用对应输入区。</td><td>输入组合决定哪些文件必须存在，以及是否需要层映射。</td></tr>
+<tr><td><strong>Schematic</strong> Library / Cell / View</td><td>OA 源电路身份，view 通常为 <code>schematic</code>。</td><td>CDL 输入时改用 CDL File Path 与 Cell Name。</td></tr>
+<tr><td><strong>Layout</strong> Library / Cell / View</td><td>OA 版图身份，view 通常为 <code>layout</code>。</td><td>CDL+LAY 或 OA 输入需要 <code>TECH_LAYER_MAP</code>；GDS 输入改用文件与 top cell。</td></tr>
+<tr><td><strong>CDL File Path / Cell Name</strong></td><td>已有 CDL 文件及其 top cell 名称。</td><td>文件必须可读；Cell Name 是 CDL 内实际 subckt 名，不是文件名猜测。</td></tr>
+<tr><td><strong>GDS File Path / Cell Name</strong></td><td>已有 GDS 文件及其 top cell。</td><td>GDS 来自其他端口时先确认层号、单位与 top cell 一致。</td></tr>
+<tr><td><strong>→</strong> / <strong>←</strong> 按钮</td><td>把 Schematic 或 Layout 的 library / cell 复制到另一侧。</td><td>只同步名称，不复制文件；view 和非空输入仍需手动确认。</td></tr>
+<tr><td><strong>More Input Options → CDL Include</strong></td><td>启用并选择 CDL include 文件，通常为 PDK 器件定义。</td><td><code>CDL_HEADER_FILE</code> 非空时默认启用；没有文件时不要保留占位路径。</td></tr>
+<tr><td><strong>Run Mode</strong></td><td>Hier 使用层次化比较和 CPU；Flat 固定 1 CPU。</td><td>Hier/Flat 必须与 runset 和设计层次预期一致。</td></tr>
+<tr><td><strong>Rule File</strong></td><td>LVS runset 的显示名与路径，来源为 <code>LVS_FILE</code>。</td><td>不要误用 RCE 的前置 LVS 文件；RCE 使用独立的 <code>RCE_LVS_FILE</code>。</td></tr>
+<tr><td><strong>Hcell File</strong> 开关与路径</td><td>指定 Hcell 列表；关闭时不传该文件。</td><td>Hcell 会改变层次比较边界；启用前核对列表中的 cell 确实应作为黑盒。</td></tr>
+<tr><td><strong>Case Sensitive</strong></td><td>控制网络/器件名大小写敏感性。</td><td>默认开启；关闭前确认版图与网表命名差异是设计意图，而不是命名错误。</td></tr>
+<tr><td><strong>Virtual Connect By</strong></td><td>选择 <strong>Colon(:)</strong> 或 <strong>Name</strong>，并在名称字段填写规则。</td><td>虚拟连接会放宽物理连接要求；只在工艺或设计明确要求时使用。</td></tr>
+<tr><td><strong>More LVS Options</strong></td><td>展开后显示 SVDB query、Recognize Logic Gate 与 Customized SVRF Command。</td><td>SVDB query 影响后续 RCE/查询数据，不是装饰性选项。</td></tr>
+<tr><td><strong>SVDB query</strong></td><td>可选 <strong>CCI</strong>、<strong>SI</strong>、<strong>RECON</strong>、<strong>IXF+NXF+SLPH</strong>、<strong>PINLOC</strong>，允许多选。</td><td>按后续工具需求选择；不需要查询数据时不额外生成。</td></tr>
+<tr><td><strong>Recognize Logic Gate</strong></td><td><strong>NONE</strong>、<strong>ALL</strong>、<strong>SIMPLE</strong>。</td><td>改变逻辑门识别方式；默认 NONE，确认工艺 runset 支持后再改。</td></tr>
+<tr><td><strong>Customized SVRF Command</strong></td><td>追加用户 SVRF 命令。</td><td>只用于已确认的补充命令，不能替代 foundry runset。</td></tr>
+<tr><td><strong>Save Data to</strong></td><td>项目、当前或自定义输出根。</td><td>SVDB 位于运行目录下的 <code>db/svdb.&lt;top_cell&gt;</code>；确认输出根可写。</td></tr>
+<tr><td><strong>LVS Engine</strong></td><td>当前为 Calibre。</td><td>用 <code>command -v calibre</code> 核对实际可执行文件。</td></tr>
+<tr><td><strong>Run at / Queue / Host / LSF</strong></td><td>选择当前主机或 LSF；LSF 按钮打开负载监控器。</td><td>队列和主机必须已验证；不要只看表单中的默认值。</td></tr>
+<tr><td><strong>CPU Number / Parallel Cells</strong></td><td>Hier 的 CPU 数与多 cell 并行数。</td><td>受队列槽位、内存和许可证限制。</td></tr>
+<tr><td><strong>Run+Close / Run / Report / Close</strong></td><td>运行后关闭、运行保留、打开报告、关闭表单。</td><td>Report 读取已有结果；无成功运行时不要据此判断 LVS 通过。</td></tr>
+</tbody></table></div>
+<div class="notice"><strong>比对结论看报告，不看窗口是否关闭。</strong> LVS 完成后检查比较报告和 RVE。若出现 mismatch，先核对双方 top cell、器件定义、全局网络、Hcell 与规则版本，再决定是否重跑。</div>
 <h2 id="prepare">配置项目输入</h2>
 <div class="code-block"><div class="code-label">Bash · LVS 环境</div><pre><code>export LVS_FILE="default,$PDK_ROOT/pv/lvs.cal"
 export LVS_DB_DIR="$PROJECT_ROOT/runs/lvs"
@@ -73,9 +110,9 @@ lvs report /path/to/run/lvs.toml</code></pre></div>
 <h2 id="reuse">保存团队设置</h2>
 <p>用 <strong>Save As…</strong> 保存 LVS Profile，并通过 <code>LVS_CONFIG</code> 预填下一次表单的 Config File。共享 Profile 适合保存工艺选项；运行目录和设计身份在每次 Run 前仍应核对。</p>
 
-<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="rce.html">RCE 寄生提取 →</a></footer>
+<footer class="page-footer"><span>内容基线 ed47e32e · 界面核对 2026-10-24</span><a href="rce.html">RCE 寄生提取 →</a></footer>
 </main>
-<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#prepare">配置项目输入</a><a href="#inputs">选择输入组合</a><a href="#run">运行与判读</a><a href="#cli">命令行入口</a><a href="#reuse">保存团队设置</a></aside>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#gui">图形界面：LVS 主表单</a><a href="#prepare">配置项目输入</a><a href="#inputs">选择输入组合</a><a href="#run">运行与判读</a><a href="#cli">命令行入口</a><a href="#reuse">保存团队设置</a></aside>
 </div></div>
 </body>
 </html>

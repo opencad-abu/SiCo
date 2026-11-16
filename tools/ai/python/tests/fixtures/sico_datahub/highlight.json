@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "valid": true,
+  "schema": "cad.cv.highlight.v1",
+  "session_ref": "fixture",
+  "target": {
+    "library": "worklib",
+    "cell": "OTA",
+    "view_name": "schematic",
+    "oa_view_type": "schematic",
+    "oa_view_type_source": "platform_api",
+    "library_path": "/project/worklib"
+  },
+  "kind": "instance",
+  "name": "NM1",
+  "window_ref": "wctx_fixture_1",
+  "highlighted": true,
+  "highlight_count": 1,
+  "zoomed": true,
+  "selection_preserved": false,
+  "selected": true,
+  "bbox": [[1.0, 2.0], [3.0, 4.0]]
+}

@@ -150,5 +150,15 @@ def test_xrc_no_rc_rejects_parasitic_only_options(
     cfg, _ = make_xrc_config(tmp_path, rc_type="NONE")
     cfg = configure(cfg)
 
-    with pytest.raises(ValueError, match="Calibre XRC NONE/noRC"):
+    with pytest.raises(ValueError, match="Calibre xRC NONE/noRC"):
         generate_all(cfg, cfg.context())
+
+
+def test_xrc_no_rc_omits_the_floating_net_statement(tmp_path: Path) -> None:
+    cfg, paths = make_xrc_config(tmp_path, rc_type="NONE")
+
+    generate_all(cfg, cfg.context())
+
+    assert "PEX EXTRACT FLOATING NETS" not in paths["runset"].read_text(
+        encoding="utf-8"
+    )

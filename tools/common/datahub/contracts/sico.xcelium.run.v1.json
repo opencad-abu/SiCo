@@ -1,0 +1,63 @@
+{
+  "actions": {
+    "probe": {
+      "capability": "xcelium.run",
+      "request": {
+        "fields": ["tool_root"],
+        "required": ["tool_root"]
+      },
+      "response": {
+        "schema": "xcelium.run.probe.v1"
+      }
+    },
+    "run": {
+      "capability": "xcelium.run",
+      "request": {
+        "fields": ["run_ref", "work_root", "command_ref"],
+        "required": ["run_ref", "work_root", "command_ref"]
+      },
+      "response": {
+        "schema": "xcelium.run.submit.v1"
+      }
+    },
+    "status": {
+      "capability": "xcelium.run",
+      "request": {
+        "fields": ["run_ref"],
+        "required": ["run_ref"]
+      },
+      "response": {
+        "schema": "xcelium.run.status.v1"
+      }
+    },
+    "stop": {
+      "capability": "xcelium.run",
+      "request": {
+        "fields": ["run_ref"],
+        "required": ["run_ref"]
+      },
+      "response": {
+        "schema": "xcelium.run.stop.v1"
+      }
+    }
+  },
+  "errors": [
+    "invalid_arguments",
+    "unsupported_contract",
+    "version_mismatch",
+    "capability_not_available",
+    "stale_context",
+    "read_failed",
+    "result_too_large",
+    "timeout",
+    "cancelled",
+    "internal"
+  ],
+  "limits": {
+    "max_bytes": 55000,
+    "max_items": 200,
+    "max_text": 4096
+  },
+  "name": "sico.xcelium.run.v1",
+  "version": 1
+}

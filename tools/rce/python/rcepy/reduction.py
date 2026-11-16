@@ -179,6 +179,10 @@ def _qreduce_type(cfg: RceConfig) -> str:
 
     tool = cfg.ext_tool.strip().casefold()
     kind = view_kind(cfg)
+    if tool in {"qrc", "quantus"} and kind == "idspf":
+        raise ValueError(
+            "Standalone reduction is not supported for Quantus Interactive DSPF (iDSPF) views"
+        )
     if tool not in {"qrc", "quantus"} or kind not in {"smart", "extracted"}:
         raise ValueError(
             "Reduction supports native views only for Quantus Smart View and "

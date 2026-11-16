@@ -287,7 +287,7 @@ procedure(lvsStageIpcPostFunc(cid exitStatus)
 
 procedure(lvsStageStart(form stage)
   prog((cmdFile runPathParts pidPostfix tmp user lib cell pid pidNum inp run
-         runPathPrefix logDir launchLog cmd launchCmd cid out label prefix
+         runPathPrefix logDir launchLog launchCmd cid out label prefix
          outputName)
     run="YES"
     user=getLogin()
@@ -321,7 +321,6 @@ procedure(lvsStageStart(form stage)
       return(nil))
     logDir=strcat(runPathPrefix "/log")
     launchLog=strcat(logDir "/" prefix ".launch.log")
-    cmd=strcat(SICO_backendCommand("lvs" LVS_pythonExe() LVS_pythonEntry()) " " lvsStageCommandName(stage) " " SICO_shellQuote(cmdFile))
     launchCmd=LVS_launchEnvCommand(
                 strcat("LVS_BACKUP_DONE=1 "
                         SICO_backendCommand("lvs" LVS_pythonExe() LVS_pythonEntry()) " "
@@ -331,8 +330,6 @@ procedure(lvsStageStart(form stage)
       launchCmd form~>runType~>value form~>queueName~>value
       form~>srvName~>value
       form~>runCpu~>value nil launchLog)
-    cmd=launchCmd
-    info(strcat("<INFO> " label "::CMD=\"" cmd "\"\n"))
     info(strcat("<INFO> " label "::LOG=\"" launchLog "\"\n"))
     system(strcat("mkdir -p " SICO_shellQuote(logDir)))
     cid=ipcBeginProcess(launchCmd "" 'lvsStageIpcDataHandler 'lvsStageIpcErrHandler 'lvsStageIpcPostFunc launchLog)

@@ -12,10 +12,13 @@
 </head>
 <body>
 <a class="skip" href="#main">跳到正文</a>
-<header class="topbar">
+<header class="topbar topbar--index">
   <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
-  <span class="edition">使用手册 / 2026.09</span>
-  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+  <span class="motto">至精致工 至简致用</span>
+  <div class="topbar-right">
+    <span class="edition">使用手册 / 2026.10</span>
+    <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+  </div>
 </header>
 <noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
 <div class="layout">
@@ -23,6 +26,8 @@
 <p class="rail-label">SICO DOCUMENTATION</p>
 <a href="index.html" aria-current="page">开始阅读</a>
 <p class="nav-group">开始使用</p>
+<a href="sico-gui.html">SiCo · 客户端界面</a>
+<a href="sico-workspace.html">SiCo · 工作区页面</a>
 <a href="installation.html">01 · 安装</a>
 <a href="environment.html">02 · 环境变量</a>
 <a href="virtuoso.html">03 · Virtuoso 集成</a>
@@ -35,6 +40,9 @@
 <a href="utilities.html">LEF / GDS / CDL</a>
 <a href="lsf.html">LSF · 运行与资源</a>
 <p class="nav-group">参考附录</p>
+<a href="appendix-pdk-data-standard.html">PDK 数据标准</a>
+<a href="appendix-circuit-template-standard.html">电路模板标准</a>
+<a href="appendix-symbol-template-standard.html">Symbol 模板标准</a>
 <a href="environment-internal.html">环境接口附录</a>
 <div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
 </nav>
@@ -43,7 +51,9 @@
 <p class="eyebrow">SILICON COPILOT / USER GUIDE</p>
 <h1>从环境就绪，到流程运行。</h1>
 <p class="lead">SiCo 使用手册。为 CAD 工程师与电路设计者整理安装、Virtuoso 接入和常用 CAD flow 的配置方法，让每一次运行都有明确的输入、设置与结果。</p>
-<div class="meta"><span class="tag">中文使用手册</span><span class="tag">离线可读</span><span class="tag">内容核对 · 2026.09.28</span></div>
+<div class="meta"><span class="tag">中文使用手册</span><span class="tag">离线可读</span><span class="tag">内容核对 · 2026.10.24</span></div>
+<div class="notice"><strong>新增图形界面与按钮导览。</strong> 先阅读 <a href="sico-gui.html">SiCo 客户端界面</a> 中的连接后主界面，再从 <a href="sico-workspace.html">SiCo 工作区页面</a> 查看左侧四个导航页、右侧五个工作台页、详情和设置子页面；DRC、LVS、RCE、MTS、LEF/导出、LSF 页面也已加入实际界面截图和逐项控件说明。</div>
+<div class="notice"><strong>三个标准已收入附录。</strong> 可直接阅读 <a href="appendix-pdk-data-standard.html">PDK 数据标准</a>、<a href="appendix-circuit-template-standard.html">电路模板规范</a> 和 <a href="appendix-symbol-template-standard.html">Symbol 模板标准</a>，也可从左侧「参考附录」进入。</div>
 <div class="cards">
   <a class="card" href="installation.html"><span class="number">01 / GET STARTED</span><h2>安装与首次启动</h2><p>选择安装目录，配置 Python 与工具环境，完成第一次启动检查。</p><span class="arrow">开始安装 →</span></a>
   <a class="card" href="environment.html"><span class="number">02 / CONFIGURATION</span><h2>环境变量速查</h2><p>按名称或用途查找变量，查看可选值、默认值及生效范围。</p><span class="arrow">查找配置 →</span></a>
@@ -70,10 +80,18 @@
 <tr><td>各 flow 的结果目录</td><td>运行 TOML、工具命令、日志与输出</td><td>通过表单的输出目录或各 <code>*_DB_DIR</code> 变量选择。</td></tr>
 </tbody></table></div>
 <p>本手册说明当前主线的使用行为。二进制安装可能落后于主线；安装中的 <code>RUNTIME-MANIFEST.json</code> 用于识别实际代码版本。页面无需联网，浅色主题沿用 SiCo GUI 的红棕强调色，深色主题参考 AIVI / oaplg 家族风格。</p>
+<h2 id="standards">数据与模板标准</h2>
+<p>PDK 数据、电路模板和 Symbol 模板的权威文本随手册离线收录。标准正文仍以仓库中的 Markdown 文档为准；草案附录只用于阅读，不表示标准已生效。</p>
+<div class="table-wrap"><table><thead><tr><th>附录</th><th>内容</th><th>当前状态</th></tr></thead><tbody>
+<tr><td><a href="appendix-pdk-data-standard.html">PDK 数据标准</a></td><td>目录、字段职责、采集、增量更新、有界读取与验收；含附录 A–D</td><td>SICO-PDK-DATA 1.1.0 · 试行</td></tr>
+<tr><td><a href="appendix-circuit-template-standard.html">电路模板规范</a></td><td>模板定义、抽取、复用契约、检索、目标准备与创建验收</td><td>SICO-CIRCUIT-TEMPLATE 0.1.0 · 草案</td></tr>
+<tr><td><a href="appendix-symbol-template-standard.html">Symbol 模板标准</a></td><td>数据归属、坐标与几何、约束分层、消费流程与验收边界</td><td>SICO-SYMBOL-TEMPLATE 0.1.6 · 复核草案</td></tr>
+<tr><td><a href="environment-internal.html">环境接口附录</a></td><td>SiCo 会话、worker 与诊断使用的内部传递变量</td><td>现行实现说明</td></tr>
+</tbody></table></div>
 
-<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="installation.html">安装与首次启动 →</a></footer>
+<footer class="page-footer"><span>内容基线 3562b79b · 标准附录 2026-10-24</span><a href="installation.html">安装与首次启动 →</a></footer>
 </main>
-<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#first-run">第一次使用，按这个顺序</a><a href="#choose-flow">按目标选择入口</a><a href="#workspace">先认清三个目录</a></aside>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#first-run">第一次使用，按这个顺序</a><a href="#choose-flow">按目标选择入口</a><a href="#workspace">先认清三个目录</a><a href="#standards">数据与模板标准</a></aside>
 </div></div>
 </body>
 </html>

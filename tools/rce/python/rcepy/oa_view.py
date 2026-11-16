@@ -34,6 +34,7 @@ def view_kind(cfg: RceConfig) -> str:
     legacy = {
         "extview": ("qrc", "extracted"),
         "smartview": ("qrc", "smart"),
+        "idspf": ("qrc", "idspf"),
         "calibreview": ("xrc", "calibre"),
         "starrcview": ("starrc", "oa"),
     }
@@ -51,10 +52,15 @@ def view_kind(cfg: RceConfig) -> str:
     raw_kind = cfg.text("extract", "view", "kind").strip().casefold()
     aliases = {
         "qrc": {
-            "": "smart",
+            "": "idspf",
             "smart": "smart",
             "smartview": "smart",
             "smart_view": "smart",
+            "idspf": "idspf",
+            "i-dspf": "idspf",
+            "idspfview": "idspf",
+            "interactive dspf (idspf)": "idspf",
+            "interactive_dspf": "idspf",
             "extracted": "extracted",
             "extview": "extracted",
             "extracted_view": "extracted",
@@ -97,6 +103,7 @@ def resolve_view_target(cfg: RceConfig, ctx: DesignContext) -> OaViewTarget:
             "design input or set extract.view.library and extract.view.cell"
         )
     default_name = {
+        "idspf": "idspf",
         "smart": "av_extracted",
         "extracted": "av_extracted",
         "calibre": "calibre",
@@ -183,18 +190,21 @@ def resolved_corner_dir(cfg: RceConfig) -> Path:
     return tech_dir / corner
 
 
-def calibre_cellmap_file(cfg: RceConfig) -> Path:
+def calibre_cellmap_file(cfg: RceConfig) -> Path | None:
     raw = cfg.text("extract", "view", "cellmap_file").strip() or cfg.text(
         "extract", "xrc", "cellmap_file"
     ).strip()
-    path = cfg.resolve_path(raw) if raw else resolved_corner_dir(cfg) / "calview.cellmap"
+    try:
+        path = cfg.resolve_path(raw) if raw else resolved_corner_dir(cfg) / "calview.cellmap"
+    except ValueError:
+        return None
     if not path.is_file():
-        raise FileNotFoundError(f"Cannot access Calibre View cellmap file: {path}")
+        return None
     _validate_setup_path(path, "Calibre View cellmap file")
     return path
 
 
-def starrc_mapping_files(cfg: RceConfig) -> tuple[Path, Path]:
+def starrc_mapping_files(cfg: RceConfig) -> tuple[Path | None, Path | None]:
     corner_dir = resolved_corner_dir(cfg)
     device = _mapping_file(
         cfg,
@@ -246,7 +256,10 @@ def write_calibreview_setup(
         f"output_library : {target.library}",
         f"schematic_library : {schematic_library}",
         f"cell_name : {target.cell}",
-        f"cellmap_file : {cellmap}",
+    ]
+    if cellmap is not None:
+        lines.append(f"cellmap_file : {cellmap}")
+    lines.extend([
         f"calibreview_log_file : {log_file}",
         f"calibreview_name : {target.view}",
         "calibreview_type : maskLayout",
@@ -262,7 +275,7 @@ def write_calibreview_setup(
         "show_parasitic_polygons : off",
         "open_calibreview : don't_open",
         "generate_spectre_netlist : off",
-    ]
+    ])
     return write_text(setup, "\n".join(lines) + "\n")
 
 
@@ -272,24 +285,21 @@ def _mapping_file(
     corner_dir: Path,
     candidates: tuple[str, ...],
     label: str,
-) -> Path:
+) -> Path | None:
     raw = cfg.text("extract", "view", option).strip() or cfg.text(
         "extract", "starrc", option
     ).strip()
     if raw:
-        path = cfg.resolve_path(raw)
+        try:
+            path = cfg.resolve_path(raw)
+        except ValueError:
+            return None
     else:
         path = next(
             (corner_dir / name for name in candidates if (corner_dir / name).is_file()),
-            corner_dir / candidates[0],
+            None,
         )
-    if not path.is_file():
-        raise FileNotFoundError(
-            f"Cannot access {label}: {path}. Set extract.view.{option} to the "
-            "foundry-provided StarRC OA mapping file; stream-out layer maps are "
-            "not compatible."
-        )
-    return path
+    return path if path is not None and path.is_file() else None
 
 
 def _validate_oa_name(value: str, option: str) -> None:

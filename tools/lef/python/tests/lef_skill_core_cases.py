@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from skill_integration_fixtures import CAD_ROOT, SKILL_FILES, _balanced
 from skill_test_support import read_skill_source
+from skill_loader_test_support import loader_contract
 
 
 def test_lef_skill_sources_are_bounded_and_balanced() -> None:
@@ -78,9 +79,9 @@ def test_lef_frontend_emits_batch_input_and_step_controls() -> None:
     assert "makeServers(profileGui)" in gui
     assert "makeRunCpus(profileGui)" in gui
     assert "profileGui->servers" in gui
-    assert 'lefHardwareGuiRevision()=="20260820.lsf.monitor.v1"' in loader
-    assert 'SICO_lsfMonitorRevision()=="20260924.sico.monitor.environment.v3"' in loader
-    assert '"/skill/SICO_lsfMonitor.il"' in loader
+    assert loader_contract("lef/skill++/LEF.ils").revision("lefHardwareGuiRevision") == "20260820.lsf.monitor.v1"
+    assert loader_contract("lef/skill++/LEF.ils").revision("SICO_lsfMonitorRevision") == "20260924.sico.monitor.environment.v3"
+    assert loader_contract("lef/skill++/LEF.ils").contains_source("/skill/SICO_lsfMonitor.il")
     assert "SICO_lsfChoicesCB(lefForm)" in gui
     runner = (CAD_ROOT / "lef/skill++/LEFRUN.ils").read_text(encoding="utf-8")
     assert "SICO_lsfWrapCommand(" in runner

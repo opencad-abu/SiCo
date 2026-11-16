@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from utility.boundary_objects import check_object_sources, composition_errors, object_errors
-from conftest import write
+from utility.tests.gate_fixtures import write
 
 
 TOKEN = dict(source="token.py:Token", public=["session_id", "runtime_id"],

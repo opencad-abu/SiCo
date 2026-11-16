@@ -3,11 +3,11 @@
 ;------------------------------------------------------------------------------
 
 unless(and(boundp('sicoNl2ViewVersion)
-             sicoNl2ViewVersion=="20260818.nl2view.v6"
+             sicoNl2ViewVersion=="20261024.nl2view.v7"
              isCallable('cadDisplayNl2ViewForm))
 
 unless(and(isCallable('SICO_tomlRevision)
-             SICO_tomlRevision()=="20260922.sico.temp.v6")
+             SICO_tomlRevision()=="20261024.sico.temp.v7")
   cond(
     (isCallable('cadLoadRelative)
       cadLoadRelative("common/skill/SICO_toml.il"))
@@ -16,16 +16,16 @@ unless(and(isCallable('SICO_tomlRevision)
     (t
       warn("Netlist to View requires SICO_HOME or the %s menu loader.\n"
            cond(
-             (isCallable('witMenuLogo) witMenuLogo())
-             (t "SiCo"))))
+             (isCallable('sicoMenuLogo) sicoMenuLogo())
+             (t "Silicon Copilot"))))
   )
 )
 
 procedure(cadNl2ViewBrand()
   cond(
     (isCallable('SICO_logo) SICO_logo())
-    (isCallable('witMenuLogo) witMenuLogo())
-    (t "SiCo")
+    (isCallable('sicoMenuLogo) sicoMenuLogo())
+    (t "Silicon Copilot")
   )
 )
 
@@ -344,5 +344,5 @@ procedure(cadNl2ViewRevision()
   sicoNl2ViewVersion
 )
 
-sicoNl2ViewVersion="20260818.nl2view.v6"
+sicoNl2ViewVersion="20261024.nl2view.v7"
 )

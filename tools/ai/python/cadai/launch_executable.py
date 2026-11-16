@@ -10,8 +10,6 @@ import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-from sicoenv import read as environment_setting
-
 from .codex_selection import (
     CodexConfigurationError,
     require_supported_runtime,
@@ -33,50 +31,21 @@ _CODEX_RUNTIME_RELATIVE = Path(
 _EXPECTED_PYTHON_VERSION = (3, 9, 13)
 
 
-_DEFAULT_PYTHON_ROOT = Path("/software/pkgs/python/3.9.13")
-
-
 def production_python(
     environment: Mapping[str, str] | None = None,
-    *,
-    require_environment: bool = False,
 ) -> str:
     """Resolve the production interpreter for controller child processes.
 
-    A bundled runtime is authoritative. Without one, an explicit
-    ``SICO_PYTHON`` takes precedence over ``SICO_PYTHON_ROOT/bin/python3``. For
-    embedded callers and source-tree tests, an entirely unset environment uses
-    the qualified default. No PATH lookup or ``sys.executable`` fallback is
-    permitted.
+    ``$SICO_HOME/runtime/python/bin/python3`` is the only interpreter. No
+    environment selector, PATH lookup, development runtime or
+    ``sys.executable`` fallback is permitted.
     """
 
     source = os.environ if environment is None else environment
-    root_value = environment_setting(source, "SICO_PYTHON_ROOT", "").strip()
-    python_value = environment_setting(source, "SICO_PYTHON", "").strip()
-    for name, configured in (("SICO_PYTHON", python_value), ("SICO_PYTHON_ROOT", root_value)):
-        if name in source and not configured:
-            raise RuntimeError(name + " must not be empty")
     selected = current(source)
-    bundled = selected.runtime_python
-    if bundled is not None:
-        # The bundled interpreter is the installation identity. Ignore stale
-        # site selectors so source and native launchers resolve identically.
-        executable = bundled
-    elif python_value:
-        executable = Path(python_value).expanduser()
-    elif root_value:
-        executable = Path(root_value).expanduser() / "bin" / "python3"
-    elif (dev := selected.dev_python) is not None:
-        executable = dev
-    elif require_environment:
-        raise RuntimeError(
-            "SICO_PYTHON or SICO_PYTHON_ROOT must be set, or "
-            "$SICO_HOME/runtime/python must contain Python"
-        )
-    else:
-        executable = _DEFAULT_PYTHON_ROOT / "bin" / "python3"
-    if not executable.is_absolute():
-        raise RuntimeError("selected production Python must be an absolute path")
+    executable = selected.runtime_python
+    if executable is None:
+        raise RuntimeError("$SICO_HOME/runtime/python/bin/python3 is unavailable")
     try:
         executable_real = executable.resolve(strict=True)
     except (OSError, RuntimeError) as exc:

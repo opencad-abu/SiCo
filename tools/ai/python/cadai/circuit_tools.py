@@ -20,7 +20,7 @@ class CircuitArgumentError(ValueError):
 
 
 TARGET = {k: string_schema() for k in ("library", "cell", "view")}
-TARGET["view_type"] = {"type": "string", "enum": ["schematic", "schematicSymbol", "maestro"]}
+TARGET["oa_view_type"] = string_schema(64)
 CONTEXT = {"context_ref": string_schema(128)}
 LOOKUP_PROPERTIES = {
     "library": string_schema(), "cell": string_schema(), "query": string_schema(),
@@ -36,14 +36,15 @@ CIRCUIT_TOOLS = [
          LOOKUP_PROPERTIES),
     tool("preflight_circuit_flow", "Read the launching Virtuoso's target/library paths and API/GUI capabilities. "
          "Does not open/create a view, run callbacks, check out licenses or certify simulation readiness.",
-         {**TARGET, "presentation": PRESENTATION}, ("library", "cell", "view", "view_type", "presentation")),
+         {**TARGET, "presentation": PRESENTATION},
+         ("library", "cell", "view", "oa_view_type", "presentation")),
     tool("open_design_view", "Open an EXISTING schematic/symbol/Maestro by explicit target. Foreground retains "
          "the editor window; background retains an owned reference until release. Returns context_ref. "
          "Does not create/save a view or run simulation. Reuse request_id after unknown transport status.",
          {**TARGET, "presentation": PRESENTATION,
           "access": {"type": "string", "enum": ["read", "edit"], "default": "read"},
           "request_id": string_schema(96, pattern=r"^[A-Za-z0-9_-]+$")},
-         ("library", "cell", "view", "view_type", "request_id", "presentation"), True),
+         ("library", "cell", "view", "oa_view_type", "request_id", "presentation"), True),
     tool("inspect_design_context", "Revalidate a context_ref against its bound window/session and target. "
          "Does not follow current focus, reopen a closed target, or certify unchanged design contents.",
          CONTEXT, ("context_ref",)),
@@ -139,6 +140,10 @@ def build_circuit_skill(name, arguments):
         function = "aiCircuitInspect" if name.startswith("inspect") else "aiCircuitRelease"
         values = [args["context_ref"]]
     else:
+        if args["oa_view_type"] not in {
+            "schematic", "schematicSymbol", "maestro",
+        }:
+            raise CircuitArgumentError("unsupported oa_view_type")
         function = "aiCircuitPreflight" if name.startswith("preflight") else "aiCircuitOpen"
         values = [args[key] for key in TARGET] + [args["presentation"]]
         if name == "open_design_view":

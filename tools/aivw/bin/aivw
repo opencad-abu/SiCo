@@ -18,23 +18,6 @@ fi
 package_root=$product_root/python/aivworkbench
 sico_runtime_python || exit 2
 python=$sico_runtime_python_value
-if [ -x "$SICO_HOME/runtime/python/bin/python3" ] \
-        || [ -f "$SICO_HOME/etc/config/dev-runtime" ]; then
-    case $python in
-        */*) ;;
-        *) python=$(command -v -- "$python") || {
-               echo "aivw: Python is unavailable: $python" >&2
-               exit 2
-           } ;;
-    esac
-    if [ "$python" = "$SICO_HOME/runtime/python/bin/python3" ]; then
-        python_root=$SICO_HOME/runtime/python
-    else
-        python_root=$(CDPATH='' cd -- "$(dirname -- "$python")/.." && pwd -P) || exit 2
-    fi
-    export SICO_PYTHON=$python
-    export SICO_PYTHON_ROOT=$python_root
-fi
 sico_runtime_library_path flow
 export LD_LIBRARY_PATH=$sico_runtime_library_path_value
 # Isolate imports before invoking the shared interpreter contract.

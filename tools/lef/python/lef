@@ -9,6 +9,13 @@ from pathlib import Path
 common_python = Path(__file__).resolve().parents[2] / "common/python"
 sys.path.insert(0, str(common_python))
 
+from sicoruntimebootstrap import ensure_runtime
+
+ensure_runtime(
+    Path(__file__).resolve(),
+    Path(__file__).resolve().parents[3],
+)
+
 from lefpy.cli import main
 
 

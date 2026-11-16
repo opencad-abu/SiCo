@@ -1,6 +1,9 @@
 """One admission gate for destructive tool calls that need host approval."""
 
-from cadai.destructive_skill import prepare as prepare_skill_review
+from cadai.destructive_skill import (
+    ReviewPreparationError,
+    prepare as prepare_skill_review,
+)
 
 from ..core.contracts import ToolResult
 
@@ -59,7 +62,16 @@ def skill_gate(registry, name, arguments, context, workspace):
     """Review raw SKILL deletion and return the arguments to dispatch."""
     if name not in {"eval_skill", "load_skill_file"}:
         return None, arguments
-    review = prepare_skill_review(name, arguments, workspace)
+    try:
+        review = prepare_skill_review(name, arguments, workspace)
+    except ReviewPreparationError as exc:
+        return ToolResult("tool_error", str(exc), data={
+            "ok": False,
+            "code": exc.code,
+            "operation_dispatched": False,
+            "automatic_retry": False,
+            **exc.detail,
+        }), arguments
     if review is None:
         return None, {k: v for k, v in arguments.items() if k != "approval_digest"}
     status = _status(registry, "skill_deletion", review["review_digest"], context)

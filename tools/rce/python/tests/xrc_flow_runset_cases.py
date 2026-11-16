@@ -96,7 +96,7 @@ def test_xrc_rejects_missing_lvs_rule_file(tmp_path: Path) -> None:
     cfg, _ = make_xrc_config(tmp_path)
     cfg = cfg.replace('lvs', 'runset_file', value="missing.lvs")
 
-    with pytest.raises(FileNotFoundError, match="Calibre XRC LVS rule file"):
+    with pytest.raises(FileNotFoundError, match="Calibre xRC LVS rule file"):
         generate_all(cfg, cfg.context())
 
 

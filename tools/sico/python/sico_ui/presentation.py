@@ -1,5 +1,7 @@
 """Passive Qt document with shared bounded display formatters."""
 
+import re
+
 from PyQt5.QtCore import QEvent, QObject, Qt, pyqtSignal
 from PyQt5.QtGui import (
     QBrush,
@@ -39,7 +41,12 @@ __all__ = (
     "markdown_document", "secondary_point_size", "target_label", "token_amount",
     "document_tables",
     "document_link_stylesheet", "style_document", "style_document_surfaces",
-    "style_links", "style_tables", "transcript_link_format",
+    "style_links", "style_tables", "transcript_link_format", "insert_cad_link_text",
+)
+
+_CAD_LINK = re.compile(
+    r"\[(@(?:\\[\\\]]|[^\]\n]){1,512})\]"
+    r"\(((?:copilot|studio)://cad/[^)\s]{1,5000})\)"
 )
 
 
@@ -58,6 +65,20 @@ def transcript_link_format(url, *, point_size=None):
     if point_size:
         fmt.setFontPointSize(point_size)
     return fmt
+
+
+def insert_cad_link_text(cursor, text):
+    """Insert user text verbatim, rendering only durable CAD links as anchors."""
+    text = str(text or "")
+    position = 0
+    for match in _CAD_LINK.finditer(text):
+        if match.start() > position:
+            cursor.insertText(text[position:match.start()], QTextCharFormat())
+        label = re.sub(r"\\([\\\]])", r"\1", match.group(1))
+        cursor.insertText(label, transcript_link_format(match.group(2)))
+        position = match.end()
+    if position < len(text):
+        cursor.insertText(text[position:], QTextCharFormat())
 
 
 def document_link_stylesheet(palette=None):

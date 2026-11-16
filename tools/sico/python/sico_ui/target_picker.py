@@ -198,9 +198,9 @@ class TargetPicker(SiDialog):
     def _views_loaded(self, views):
         self.view.blockSignals(True)
         for view in views:
-            if view.get("view_type") not in self.family:
+            if view.get("oa_view_type") not in self.family:
                 continue
-            label = view["name"]
+            label = view["view_name"]
             if view.get("open"):
                 label += "（已打开）"
             self.view.addItem(label, view)
@@ -253,8 +253,9 @@ class TargetPicker(SiDialog):
         if not (entry and cell and view):
             return None
         return {
-            "library": entry["name"], "cell": cell, "view": view["name"],
-            "view_type": view.get("view_type", self.family[0]),
+            "library": entry["name"], "cell": cell, "view_name": view["view_name"],
+            "oa_view_type": view.get("oa_view_type"),
+            "oa_view_type_source": view.get("oa_view_type_source", "unknown"),
             "read_only": self.read_only.isChecked(),
         }
 
@@ -271,8 +272,9 @@ class TargetPicker(SiDialog):
 
     def _opened(self, target):
         if not isinstance(target, dict) or not all(
-            target.get(key) for key in ("library", "cell", "view")
-        ):
+            target.get(key)
+            for key in ("library", "cell", "view_name", "oa_view_type")
+        ) or target.get("oa_view_type_source") not in {"platform_api", "unknown"}:
             raise ValueError("桥接没有返回完整的设计目标")
         self.selection = target
         self.done(QDialog.Accepted)
@@ -283,7 +285,8 @@ class TargetPicker(SiDialog):
         target = self.chosen_target() or {
             "library": (self.library.currentData() or {}).get("name", ""),
             "cell": self.cell.currentData() or "",
-            "view": "", "view_type": self.family[0], "read_only": False,
+            "view_name": "", "oa_view_type": self.family[0],
+            "oa_view_type_source": "unknown", "read_only": False,
         }
         self._open(lambda: self.provider.create(target))
 

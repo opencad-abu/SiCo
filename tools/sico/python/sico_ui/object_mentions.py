@@ -5,7 +5,8 @@ from __future__ import annotations
 from PyQt5.QtCore import QEvent, QObject, Qt, QTimer
 from PyQt5.QtWidgets import QApplication
 
-from sico.core.cad_ref import object_ref, target_from_snapshot
+from sico.core.cad_ref import target_from_snapshot
+from .object_mention_rows import object_rows, window_label, window_rows
 from .object_mention_popup import ObjectMentionPopup
 
 QUERY_CHARS = 64
@@ -29,6 +30,12 @@ class ObjectMentionController(QObject):
         self._object_total = 0
         self._object_truncated = False
         self._loading_more = False
+        self._object_request = 0
+        self._scope = "idle"
+        self._selection_count = 0
+        self._selection_unsupported = 0
+        self._notice = None
+        self._notice_detail = ""
         self._provider = None
         self._window_ref = ""
         self._query = ""
@@ -47,7 +54,7 @@ class ObjectMentionController(QObject):
         window.destroyed.connect(lambda *_args: self.close())
 
     def eventFilter(self, watched, event):
-        if watched is not self.input:
+        if watched is not getattr(self, "input", None):
             return False
         if event.type() == QEvent.KeyPress and self.popup.isVisible():
             key = event.key()
@@ -114,12 +121,21 @@ class ObjectMentionController(QObject):
         return (context.snapshot or {}) if context is not None else {}
 
     def _load(self):
-        window_ref = self._context().get("window_ref", "")
+        context = self._context()
+        window_ref = context.get("window_ref", "")
         if not window_ref:
-            self.popup.show_error("当前会话没有捕获窗口")
+            # The Ask open envelope carries its own capture, so a context that
+            # failed to repeat the reference can still use that owner window.
+            window_ref = getattr(self.window, "window_ref", "")
+        if not window_ref:
+            self.popup.show_error("Ask 未能捕获当前窗口；请重新打开 Ask")
             return
         try:
-            provider = self.window.actions.target_picker_provider()
+            loader = getattr(self.window.actions, "object_picker_provider", None)
+            provider = (
+                loader() if loader is not None
+                else self.window.actions.target_picker_provider()
+            )
         except (ValueError, RuntimeError) as exc:
             self.popup.show_error(str(exc))
             return
@@ -128,69 +144,141 @@ class ObjectMentionController(QObject):
             return
         self._provider = provider
         self._window_ref = window_ref
-        target = target_from_snapshot(self._context())
+        target = target_from_snapshot(context)
         self._target = target
-        self._window_label = self._make_window_label(
-            target, self._context().get("window"), self._context().get("title")
+        self._window_label = window_label(
+            target, context.get("window"), context.get("title")
         ) if target else window_ref
-        self._window_items = self._window_rows()
+        self._window_items = []
         self._generation += 1
         generation = self._generation
-        self.popup.show_loading()
+        self._scope = "loading"
+        self._selection_count = 0
+        self._selection_unsupported = 0
+        self._notice = None
+        self._notice_detail = ""
+        self.popup.show_loading("正在读取当前选择…")
         self._selection_items = []
-        self._object_items = []
-        self._object_offset = 0
-        self._object_total = 0
-        self._object_truncated = False
-        self._loading_more = False
+        self._clear_object_page()
         scope = self.window.actions.capture()
         self._load_selection(generation, window_ref, scope)
-        self._load_objects(generation, window_ref, self._query, scope, 0, False)
-        self._load_window_choices(generation, scope)
 
     def _load_selection(self, generation, window_ref, scope):
         try:
             future = self._provider.selection(window_ref, 0, 50)
-        except (ValueError, RuntimeError):
+        except (ValueError, RuntimeError) as exc:
+            self._scope = "error"
             self._selection_items = []
             self._filter()
+            message = str(exc).strip() or "未知错误"
+            self.popup.show_error(
+                "当前选择读取失败：" + message[:160] + "；草稿保留")
             return
 
         def loaded(selection):
             if generation != self._generation or self.window.lifecycle.closing:
                 return
-            self._selection_items = self._rows(
-                selection["target"], selection["items"], "当前选择",
+            self._adopt_response(selection)
+            items = selection.get("items") or []
+            count = selection.get("selection_count")
+            if type(count) is not int:
+                count = len(items)
+            unsupported = selection.get("unsupported_count")
+            if type(unsupported) is not int:
+                unsupported = 0
+            self._selection_count = count
+            self._selection_unsupported = unsupported
+            self._selection_items = object_rows(
+                selection["target"], items, "当前选择",
                 self._window_ref, self._window_label,
             )
-            self._filter()
+            if count > 0:
+                self._enter_selection_scope(generation, scope)
+            else:
+                self._enter_window_scope(generation, window_ref, scope)
 
         def failed(exc):
             if generation == self._generation:
+                self._scope = "error"
                 self._selection_items = []
+                self._object_items = []
+                self._window_items = []
+                self._loading_more = False
                 self._filter()
-                if not self._object_items:
-                    self.popup.show_error("当前选择读取失败；草稿保留")
+                message = str(exc).strip() or "未知错误"
+                self.popup.show_error(
+                    "当前选择读取失败：" + message[:160] + "；草稿保留")
 
         self.window.commands.watch(
             future, success=loaded, failure=failed, scope=scope
         )
 
-    def _load_objects(self, generation, window_ref, query, scope, offset, append):
+    def _enter_selection_scope(self, generation, scope):
+        self._scope = "selection"
+        self._clear_object_page()
+        self._notice = None
+        self._notice_detail = ""
+        self._window_items = window_rows(
+            self._target, self._window_ref, self._window_label,
+            self._other_windows, include_current=False)
+        if self._selection_items:
+            self._filter()
+        else:
+            count = self._selection_unsupported or self._selection_count
+            self._notice = (
+                f"当前选择包含 {count} 个暂不支持的对象" if count
+                else "当前选择包含暂不支持的对象")
+            self._notice_detail = "清空选择后可浏览当前窗口的器件、网络和引脚"
+            self._filter()
+        self._load_window_choices(generation, scope)
+
+    def _enter_window_scope(self, generation, window_ref, scope):
+        self._scope = "window"
+        self._clear_object_page()
+        self._notice = None
+        self._notice_detail = ""
+        self._selection_items = []
+        self._window_items = window_rows(
+            self._target, self._window_ref, self._window_label, self._other_windows)
+        self._filter()
+        self._load_objects(
+            generation, self._window_ref, self._query, scope, 0, False,
+            request=self._object_request,
+        )
+        self._load_window_choices(generation, scope)
+
+    def _load_objects(self, generation, window_ref, query, scope, offset, append,
+                      request=None):
+        request = self._object_request if request is None else request
+        if request != self._object_request:
+            return
         self._loading_more = True
         try:
             future = self._provider.objects(window_ref, "all", query, offset, 50)
-        except (ValueError, RuntimeError):
-            if not append:
+        except (ValueError, RuntimeError) as exc:
+            if not append and request == self._object_request:
                 self._object_items = []
             self._loading_more = False
             self._filter()
+            message = str(exc).strip() or "未知错误"
+            if self._window_items:
+                self.popup.set_hint("当前窗口对象读取失败：" + message[:100])
+            else:
+                self.popup.show_error(
+                    "当前窗口对象读取失败：" + message[:160] + "；草稿保留")
             return
 
         def loaded(result):
-            if generation != self._generation or self.window.lifecycle.closing:
+            if (request != self._object_request
+                    or generation != self._generation
+                    or self.window.lifecycle.closing):
                 return
-            rows = self._rows(
+            self._adopt_response(result)
+            if self._scope == "window":
+                self._window_items = window_rows(
+                    self._target, self._window_ref, self._window_label,
+                    self._other_windows)
+            rows = object_rows(
                 result["target"], result["items"], "当前窗口",
                 self._window_ref, self._window_label,
             )
@@ -205,13 +293,17 @@ class ObjectMentionController(QObject):
             self._filter()
 
         def failed(exc):
-            if generation == self._generation:
+            if request == self._object_request and generation == self._generation:
                 if not append:
                     self._object_items = []
                 self._loading_more = False
                 self._filter()
-                if not self._selection_items:
-                    self.popup.show_error("当前窗口对象读取失败；草稿保留")
+                message = str(exc).strip() or "未知错误"
+                if self._window_items:
+                    self.popup.set_hint("当前窗口对象读取失败：" + message[:100])
+                else:
+                    self.popup.show_error(
+                        "当前窗口对象读取失败：" + message[:160] + "；草稿保留")
 
         self.window.commands.watch(future, success=loaded, failure=failed, scope=scope)
 
@@ -227,102 +319,70 @@ class ObjectMentionController(QObject):
         def loaded(result):
             if generation != self._generation or self.window.lifecycle.closing:
                 return
+            if self._scope not in ("window", "selection"):
+                return
             self._other_windows = [
                 row for row in result.get("windows", [])
                 if row.get("window_ref") != self._window_ref
             ]
-            self._window_items = self._window_rows()
+            self._window_items = window_rows(
+                self._target, self._window_ref, self._window_label,
+                self._other_windows, include_current=self._scope == "window")
             self._filter()
 
         self.window.commands.watch(
             future, success=loaded, failure=lambda _exc: None, scope=scope
         )
 
-    @staticmethod
-    def _make_window_label(target, window=None, title=None):
-        if not isinstance(target, dict):
-            return str(window or "")
-        label = "/".join((target["library"], target["cell"], target["view"]))
-        if window:
-            label += " · " + str(window)
-        if isinstance(title, str) and title:
-            clean = " ".join(title.split())
-            if clean:
-                label += " · " + clean[:80]
-        return label[:256]
+    def _adopt_response(self, response):
+        """Adopt a lazily resolved window ref and a partial-context target."""
+        ref = response.get("window_ref")
+        if isinstance(ref, str) and ref.startswith("wctx_"):
+            self._window_ref = ref
+        target = response.get("target")
+        if isinstance(target, dict) and not isinstance(self._target, dict):
+            self._target = target
+            context = self._context()
+            self._window_label = window_label(
+                target, context.get("window"), context.get("title"))
 
-    def _window_rows(self):
-        if not isinstance(self._target, dict):
-            return []
-        label = self._window_label or self._make_window_label(self._target)
-        name = "/".join((
-            self._target["library"], self._target["cell"], self._target["view"],
-        ))
-        rows = [{
-            "label": label,
-            "detail": "当前窗口 · cellview",
-            "window_ref": self._window_ref,
-            "window_label": label,
-            "ref": object_ref(self._target, {
-                "kind": "cellview", "name": name, "hierarchy": [],
-            }, require_master=False),
-        }]
-        for window in self._other_windows:
-            target = window.get("target")
-            if not isinstance(target, dict) or window.get("window_ref") == self._window_ref:
-                continue
-            window_label = self._make_window_label(
-                target, window.get("window"), window.get("title")
-            )
-            rows.append({
-                "label": window_label,
-                "detail": "其他窗口 · cellview",
-                "window_ref": window["window_ref"],
-                "window_label": window_label,
-                "switch_window": window,
-            })
-        return rows
-
-    @staticmethod
-    def _rows(target, items, source, window_ref=None, window_label=None):
-        rows = []
-        for item in items:
-            detail = (window_label or source) + " · " + item["kind"]
-            if item.get("master"):
-                master = item["master"]
-                detail += " · " + "/".join((master["library"], master["cell"], master["view"]))
-            row = {
-                "label": item["name"],
-                "detail": detail,
-                "ref": object_ref(target, item),
-                "window_ref": window_ref,
-                "window_label": window_label,
-            }
-            rows.append(row)
-        return rows
+    def _clear_object_page(self):
+        self._object_items = []
+        self._object_offset = 0
+        self._object_total = 0
+        self._object_truncated = False
+        self._loading_more = False
+        self._object_request += 1
 
     def _search_objects(self):
-        if not self.popup.isVisible() or self._provider is None:
+        if (not self.popup.isVisible() or self._provider is None
+                or self._scope != "window"):
             return
         self._object_offset = 0
         self._object_truncated = False
+        self._object_request += 1
         self._load_objects(
             self._generation, self._window_ref, self._query,
             self.window.actions.capture(), 0, False,
+            request=self._object_request,
         )
 
     def _load_more(self):
         if (not self.popup.isVisible() or self._provider is None
-                or self._loading_more or not self._object_truncated):
+                or self._loading_more or not self._object_truncated
+                or self._scope != "window"):
             return
         self._load_objects(
             self._generation, self._window_ref, self._query,
             self.window.actions.capture(), self._object_offset, True,
+            request=self._object_request,
         )
 
     def _filter(self):
         query = self._query.casefold()
         rows, seen = [], set()
+        if self._notice:
+            rows.append({"label": self._notice, "detail": self._notice_detail})
         for row in [*self._window_items, *self._selection_items, *self._object_items]:
             if "ref" not in row:
                 if not query or query in row["label"].casefold() or query in row["detail"].casefold():
@@ -335,7 +395,7 @@ class ObjectMentionController(QObject):
                 ref["kind"],
                 tuple(ref["hierarchy"]),
                 ref["name"],
-                tuple(master[key] for key in ("library", "cell", "view")) if master else None,
+                tuple(master[key] for key in ("library", "cell", "view_name")) if master else None,
             )
             if key in seen:
                 continue
@@ -345,33 +405,42 @@ class ObjectMentionController(QObject):
         scroll = self.popup.rows.verticalScrollBar().value()
         self.popup.set_items(rows)
         self.popup.rows.verticalScrollBar().setValue(scroll)
-        if self._object_truncated:
-            self.popup.set_hint(
-                f"↑/↓ 选择，Enter 插入，Esc 关闭；已加载 {len(self._object_items)} / "
-                f"{self._object_total}，滚动加载更多"
-            )
+        self.popup.show_scope(
+            self._scope, count=len(rows),
+            selection_count=self._selection_count,
+            object_count=len(self._object_items),
+            object_total=self._object_total,
+            truncated=self._object_truncated, query=self._query,
+        )
 
     def choose(self):
         payload = self.popup.current_payload()
-        if not payload or self._trigger_start is None:
+        if self._trigger_start is None:
+            return
+        if not payload:
+            self.close()
             return
         if payload.get("switch_window") is not None:
             window = payload["switch_window"]
             self._window_ref = window["window_ref"]
             self._window_label = payload["window_label"]
             self._target = window.get("target")
+            self._scope = "loading"
+            self._selection_count = 0
+            self._selection_unsupported = 0
             self._selection_items = []
-            self._object_items = []
-            self._object_offset = 0
-            self._object_total = 0
-            self._object_truncated = False
-            self._window_items = self._window_rows()
-            self.popup.show_loading("正在读取该窗口对象…")
+            self._clear_object_page()
+            self._window_items = []
+            self._notice = None
+            self._notice_detail = ""
+            self.popup.show_loading("正在读取该窗口选择…")
             scope = self.window.actions.capture()
             self._load_selection(self._generation, self._window_ref, scope)
-            self._load_objects(
-                self._generation, self._window_ref, self._query, scope, 0, False
-            )
+            return
+        if "ref" not in payload:
+            # Loading/notice rows are not insertable. Dismiss the popup so
+            # Enter/Tab cannot trap keyboard focus on a non-actionable row.
+            self.close()
             return
         cursor = self.input.textCursor()
         end = cursor.position()
@@ -419,10 +488,12 @@ class ObjectMentionController(QObject):
         self._other_windows = []
         self._target = None
         self._window_label = ""
-        self._object_offset = 0
-        self._object_total = 0
-        self._object_truncated = False
-        self._loading_more = False
+        self._scope = "idle"
+        self._selection_count = 0
+        self._selection_unsupported = 0
+        self._notice = None
+        self._notice_detail = ""
+        self._clear_object_page()
 
 
 __all__ = ["ObjectMentionController", "ObjectMentionPopup"]

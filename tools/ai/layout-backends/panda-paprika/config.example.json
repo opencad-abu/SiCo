@@ -1,0 +1,5 @@
+{
+  "panda_root": "/path/to/PANDA",
+  "pr_lib_dir": "/path/to/PANDA/pr_kernel/libso",
+  "shell": "/bin/bash"
+}

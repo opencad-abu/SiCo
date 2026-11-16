@@ -21,5 +21,11 @@ def q(value: str) -> str:
     return str(value).replace('"', '\\"')
 
 
+def path_token(path: str | Path) -> str:
+    """Quote whitespace-bearing paths in StarRC commands and Cadence DEFINEs."""
+    value = str(path)
+    return f'"{q(value)}"' if any(c.isspace() or c == '"' for c in value) else value
+
+
 def clean_lines(lines: Iterable[str]) -> str:
     return "\n".join(line.rstrip() for line in lines).rstrip() + "\n"

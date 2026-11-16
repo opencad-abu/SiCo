@@ -29,6 +29,8 @@ defclass(LVSOPTGUI (CUSTOMSVRFGUI)
     (lvsHcell           @initform nil)
     (lvsIgnoreError      @initform nil)
     (lvsCaseBtn          @initform nil)
+    (svdbQuery           @initform nil)
+    (svdbQueryDefault    @initform '(nil nil nil nil nil))
     (lvsRecognizeGates   @initform nil)
     (lvsVirtualConn      @initform nil)
     (lvsVirtualConnName  @initform nil)
@@ -115,6 +117,62 @@ defmethod(makeLvsVirtualConnName ((inst LVSOPTGUI))
   )
 );demethod makeLvsVirtualconnName
 
+defmethod(makeLvsSvdbQuery ((inst LVSOPTGUI))
+  inst->svdbQuery=hiCreateToggleField(
+    ?name       'svdbQuery
+    ?prompt     "SVDB query:"
+    ?choices    list(list('svdbQueryCci "CCI")
+                     list('svdbQuerySi "SI")
+                     list('svdbQueryRecon "RECON")
+                     list('svdbQueryIxfNxfSlph "IXF+NXF+SLPH")
+                     list('svdbQueryPinloc "PINLOC"))
+    ?itemsPerRow 5
+    ?value      inst->svdbQueryDefault
+    ?defValue   inst->svdbQueryDefault
+  )
+)
+
+procedure(lvsSvdbQueryToolTip()
+  list(
+    "Calibre Connectivity Interface"
+    "LVS Recon or short isolation"
+    "LVS Recon ERC"
+    "ASCII cross-reference"
+    "Pin locations"
+  )
+)
+
+procedure(lvsSvdbQueryFromForm(form)
+  let((field value labels result index)
+    field=get(form 'svdbQuery)
+    labels=list("CCI" "SI" "RECON" "IXF NXF SLPH" "PINLOC")
+    value=if(field then field~>value else '(nil nil nil nil nil))
+    result=nil
+    for(index 0 sub1(length(labels))
+      when(nth(index value)
+        result=append1(result nth(index labels))))
+    result
+  )
+)
+
+procedure(lvsSvdbQueryFlags(data @optional default)
+  let((pair selected labels result label selectedIxf)
+    pair=assoc("lvs.svdb_query" data)
+    selected=if(pair cadr(pair) default)
+    labels=list("CCI" "SI" "RECON" "IXF NXF SLPH" "PINLOC")
+    selectedIxf=or(member("IXF NXF SLPH" selected)
+                   member("IXF+NXF+SLPH" selected)
+                   and(member("IXF" selected)
+                       member("NXF" selected)
+                       member("SLPH" selected)))
+    result=nil
+    foreach(label labels
+      result=append1(result
+        if(label=="IXF NXF SLPH" then selectedIxf else member(label selected))))
+    result
+  )
+)
+
 defmethod(makeLvsRecognizeGates ((inst LVSOPTGUI))
   inst->lvsRecognizeGates=hiCreateCyclicField(
     ?name     'lvsRecognizeGates
@@ -131,14 +189,15 @@ defmethod(makeLvsExtOpt ((inst LVSOPTGUI))
   makeLvsCase(inst)
   makeLvsVirtualConn(inst)
   makeLvsVirtualConnName(inst)
+  makeLvsSvdbQuery(inst)
   makeLvsRecognizeGates(inst)
   makeCustomSvrf(inst)
   inst->lvsBasicOpt=makehbl('lvsBasicOpt list(inst->lvsIgnoreError inst->lvsCaseBtn inst->lvsVirtualConn inst->lvsVirtualConnName))
-  inst->lvsExtOpt=makevbl('lvsExtOpt list(inst->lvsRunset inst->lvsHcell inst->lvsBasicOpt inst->lvsRecognizeGates inst->customSvrf) ?f "LVS Options")
+  inst->lvsExtOpt=makevbl('lvsExtOpt list(inst->lvsRunset inst->lvsHcell inst->lvsBasicOpt inst->svdbQuery inst->lvsRecognizeGates inst->customSvrf) ?f "LVS Options")
 );defmethod makeLvsExtopt
 
 procedure(cadBaseLvsOptionsRevision()
-  "20260908.recognize.gates.v1"
+  "20261103.svdb.query.v2"
 )
 
 procedure(cadBaseRuleFileLabelRevision()

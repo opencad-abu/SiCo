@@ -29,17 +29,21 @@ def validate_header(value: Mapping[str, Any]) -> dict[str, Any]:
     cellview = value.get("cellview")
     if not isinstance(cellview, dict):
         raise SnapshotError("snapshot header has no cellview identity")
-    for key in ("lib", "cell", "view"):
+    for key in ("lib", "cell", "view_name"):
         if not isinstance(cellview.get(key), str) or not cellview[key]:
             raise SnapshotError(f"snapshot cellview.{key} is invalid")
-    view_type = value.get("view_type")
-    if view_type != "schematic":
-        raise SnapshotError("snapshot view_type must be schematic")
+    oa_view_type = cellview.get("oa_view_type")
+    if oa_view_type != "schematic":
+        raise SnapshotError("snapshot cellview oa_view_type must be schematic")
+    if cellview.get("oa_view_type_source") != "platform_api":
+        raise SnapshotError("snapshot cellview oa_view_type_source must be platform_api")
     return {
         "schema_version": SNAPSHOT_SCHEMA_VERSION,
         "kind": "schematic",
-        "cellview": {key: cellview[key] for key in ("lib", "cell", "view")},
-        "view_type": view_type,
+        "cellview": {
+            key: cellview[key]
+            for key in ("lib", "cell", "view_name", "oa_view_type", "oa_view_type_source")
+        },
         "modified": value.get("modified") if isinstance(value.get("modified"), bool) else None,
         "hierarchy_included": False,
     }
@@ -47,7 +51,7 @@ def validate_header(value: Mapping[str, Any]) -> dict[str, Any]:
 
 def validate_record(entity: str, data: Mapping[str, Any], line_number: int) -> None:
     if entity == "instance":
-        for field in ("lib", "cell", "view"):
+        for field in ("lib", "cell", "view_name"):
             if not isinstance(data.get(field), str) or not data[field]:
                 raise SnapshotError(f"snapshot line {line_number} has an invalid instance {field}")
         nonnegative_integer(data, "term_count", line_number)

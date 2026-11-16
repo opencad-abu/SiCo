@@ -2,7 +2,7 @@
 ; Load AI_protocol.il and AI_eval.il first. No arbitrary SKILL arrives over this channel.
 
 unless(and(boundp('sicoContextVersion)
-           sicoContextVersion=="20261020.sico.context.v3")
+           sicoContextVersion=="20261101.sico.context.v6")
 
 unless(boundp('sicoBindings) sicoBindings=makeTable("sicoBindings" nil))
 
@@ -41,7 +41,7 @@ procedure(sicoAdeCellJson(session)
     cellName=axlGetSessionCellName(session)
     viewName=axlGetSessionViewName(session)
     unless(and(libName cellName viewName) return("null"))
-    return(sprintf(nil "{\"lib\":\"%s\",\"cell\":\"%s\",\"view\":\"%s\"}"
+    return(sprintf(nil "{\"lib\":\"%s\",\"cell\":\"%s\",\"view_name\":\"%s\",\"oa_view_type\":null,\"oa_view_type_source\":\"unknown\"}"
       aiJsonEscape(libName) aiJsonEscape(cellName) aiJsonEscape(viewName)))))
 
 procedure(sicoContextJson(binding)
@@ -54,13 +54,13 @@ procedure(sicoContextJson(binding)
     sharedRef=cadr(observation)
     cellJson=or(binding['cellJson] "null") ade=binding['adeSession]
     libraryPath=nth(4 observation)
-    viewType=if(ade "maestro"
+    viewType=unless(ade
       when(and(isCallable('aiWindowGraphical) aiWindowGraphical(window))
-        car(errset(geGetWindowCellView(window)~>cellViewType nil))))
+        car(errset(geGetWindowCellView(window)~>viewType nil))))
     liveWindow=if(window then sprintf(nil "%L" window) else "")
     binding['valid]=valid
     return(sprintf(nil
-      "{\"native_binding\":\"cad_ai_native_binding.v1\",\"valid\":%s,\"code\":\"%s\",\"cwd\":\"%s\",\"window\":\"%s\",\"cellview\":%s,\"ade_session\":\"%s\",\"version\":\"%s\",\"entry\":\"%s\",\"history\":\"%s\",\"test\":\"%s\",\"selection_scope\":\"%s\",\"capabilities\":%s,\"window_ref\":\"%s\",\"library_path\":\"%s\",\"view_type\":\"%s\"}"
+      "{\"native_binding\":\"cad_ai_native_binding.v1\",\"valid\":%s,\"code\":\"%s\",\"cwd\":\"%s\",\"window\":\"%s\",\"cellview\":%s,\"ade_session\":\"%s\",\"version\":\"%s\",\"entry\":\"%s\",\"history\":\"%s\",\"test\":\"%s\",\"selection_scope\":\"%s\",\"capabilities\":%s,\"window_ref\":\"%s\",\"library_path\":\"%s\",\"oa_view_type\":%s,\"oa_view_type_source\":\"%s\"}"
       if(valid then "true" else "false") if(valid "" code) aiJsonEscape(or(binding['cwd] aiWorkingDirectory()))
       aiJsonEscape(liveWindow) cellJson
       aiJsonEscape(if(ade then if(stringp(ade) then ade else sprintf(nil "%L" ade)) else ""))
@@ -80,7 +80,8 @@ procedure(sicoContextJson(binding)
         if(isCallable('aiCopilotDispatch) ",\"circuit_call\"" "")
         if(isCallable('aiEvalExpression) ",\"assistant_call\"" "") "]")
       aiJsonEscape(or(sharedRef "")) aiJsonEscape(or(libraryPath ""))
-      aiJsonEscape(or(viewType ""))))
+      if(viewType aiJsonEscape(viewType) "null")
+      if(viewType "platform_api" "unknown")))
   )
 )
 
@@ -104,7 +105,10 @@ procedure(sicoAssistantReply(aarCid aarFields)
       unless(stringp(aarEncoded) error("Assistant payload is not text"))
       if(aarMethod=="load_skill_file" then
         aarPath=simplifyFilename(aiCopilotHex(aarEncoded))
-        aarCwd=simplifyFilename(or(aarTarget['cwd] aiWorkingDirectory()) t)
+        ; Canonicalize the workspace without preserving the /workarea symlink alias:
+        ; aarPath is already canonicalized, so a preserved alias would fail the
+        ; prefix check even for a file inside the project.
+        aarCwd=simplifyFilename(or(aarTarget['cwd] aiWorkingDirectory()))
         unless(and(isFile(aarPath) fileLength(aarPath)<=8388608
                    or(rexMatchp("\\.il$" aarPath) rexMatchp("\\.ils$" aarPath)))
           error("Assistant source file is unavailable"))
@@ -309,7 +313,9 @@ procedure(sicoData(adtCid adtData)
     return(t)))
 
 procedure(sicoError(cid data)
-  when(data warn("Silicon Copilot Relay: %s" data))
+  ; Materialize relay stderr immediately. warn() defers its last message and
+  ; can retain the IPC callback's transient data pointer until process exit.
+  when(data printf("*WARNING* Silicon Copilot Relay: %s" data))
 )
 
 procedure(sicoExit(cid status)
@@ -350,7 +356,7 @@ procedure(sicoDisconnect(cid)
 )
 
 procedure(sicoContextRevision()
-  "20261020.sico.context.v3")
+  "20261101.sico.context.v6")
 
-sicoContextVersion="20261020.sico.context.v3"
+sicoContextVersion="20261101.sico.context.v6"
 )

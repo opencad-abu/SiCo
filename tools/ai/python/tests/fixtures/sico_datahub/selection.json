@@ -1,0 +1,33 @@
+{
+  "ok": true,
+  "valid": true,
+  "schema": "cad.cv.selection.v1",
+  "session_ref": "fixture",
+  "window_ref": "wctx_fixture_1",
+  "target": {
+    "library": "worklib",
+    "cell": "OTA",
+    "view_name": "schematic",
+    "oa_view_type": "schematic",
+    "oa_view_type_source": "platform_api",
+    "library_path": "/project/worklib"
+  },
+  "items": [
+    {
+      "kind": "instance",
+      "name": "NM1",
+      "master": {
+        "library": "smic18",
+        "cell": "nmos4",
+        "view_name": "symbol"
+      },
+      "hierarchy": [],
+      "bbox": [[1.0, 2.0], [3.0, 4.0]]
+    }
+  ],
+  "selection_count": 2,
+  "unsupported_count": 1,
+  "max_items": 50,
+  "offset": 0,
+  "truncated": true
+}

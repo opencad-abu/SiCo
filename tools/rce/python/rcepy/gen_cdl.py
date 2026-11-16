@@ -9,12 +9,11 @@ from caddefaults import Defaults
 from cadstage.command_files import CdlCommandOptions, write_cdl_env
 
 from .config import DesignContext, RceConfig
+from .source_inputs import cdl_header_file
 
 
 def generate_cdl(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | None = None) -> Path:
-    header = cfg.path(
-        "input", "schematic", "cdl_header_file"
-    )
+    header = cdl_header_file(cfg, ctx)
     return write_cdl_env(
         ctx.cdl_dir / "si.env",
         CdlCommandOptions(

@@ -59,7 +59,7 @@ def normalize_schematic(header, rows, classifications=None):
                 decorative[-1].update(master={"library": inst["libName"],
                                               "cell": inst["cellName"], "view": inst["viewName"]},
                                       builtin_library=inst["builtin_library"],
-                                      master_view_type=inst["master_view_type"])
+                                      master_oa_view_type=inst["master_oa_view_type"])
             continue
         key = "d" + str(len(devices))
         inventory = inst.get("terminal_names") or []

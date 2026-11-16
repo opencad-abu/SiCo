@@ -76,7 +76,7 @@ procedure(rceSyncNativeView(form)
             )
             defaultName=rceNativeViewDefaultName(selectedKind)
             when(or(!oldName strlen(oldName)==0
-                      member(oldName '("smart_view" "oa_extracted" "av_extracted"
+                      member(oldName '("smart_view" "idspf" "oa_extracted" "av_extracted"
                                        "calibre" "starrc" "parasitic")))
               form~>viewName~>value=defaultName
             )
@@ -142,7 +142,7 @@ procedure(rceSyncNativeView(form)
 procedure(rceViewKindCB(form)
   let((oldDefaults)
     unless(rceNativeViewSyncActive
-      oldDefaults='("smart_view" "oa_extracted" "av_extracted"
+      oldDefaults='("smart_view" "idspf" "oa_extracted" "av_extracted"
                     "calibre" "starrc" "parasitic")
       when(member(form~>viewName~>value oldDefaults)
         form~>viewName~>value=rceNativeViewDefaultName(form~>viewKind~>value)

@@ -60,7 +60,7 @@ def refit(recipe_path):
         'candidate_digest':model['model_digest'],'holdout_evaluated':False,'source_qualification':'immutable_snapshot_only',
         'implementation':{str(p):sha256_file(p) for p in [Path(__file__).resolve(),Path(__file__).resolve().parents[1]/'python/aivworkbench/plugins/transition_tail.py',Path(__file__).resolve().parents[1]/'python/aivworkbench/plugins/transition_response.py',Path(__file__).resolve().parents[1]/'python/aivworkbench/plugins/tail_minimax_fit.py']}}
     digest=stable_digest(request)
-    run=allocate_split_run(resolve_launch_paths(),Path('/path/to/xh/amsVerify/data/ams').resolve(),library='amsLDO',cell='LDO_MASTER',view='tail_refit',kind='tail-refit',request_digest=digest)
+    run=allocate_split_run(resolve_launch_paths(),Path('/workarea/xh/amsVerify/data/ams').resolve(),library='amsLDO',cell='LDO_MASTER',view='tail_refit',kind='tail-refit',request_digest=digest)
     write_json_once(run.control_root/'request.json',request)
     print(json.dumps({'run_id':run.run_id,'payload':str(run.payload_root)}),flush=True)
     summary={'status':'FAIL_EXECUTION','qualification':'NOT_ESTABLISHED','holdout_evaluated':False}

@@ -32,6 +32,7 @@ def test_relative_multiline_package_initializers_and_cross_package_closure(
         "pkg.sub",
         "pkg.sub.worker",
         "pkg.values",
+        "pkg.helper",
         "shared",
         "shared.worker",
         "shared.init_dependency",

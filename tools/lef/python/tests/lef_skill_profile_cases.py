@@ -6,13 +6,14 @@ import subprocess
 
 import pytest
 from skill_integration_fixtures import CAD_ROOT
+from skill_loader_test_support import loader_contract
 
 
 def test_lef_profile_adapter_covers_business_fields_transactionally() -> None:
     profile = (CAD_ROOT / "lef/skill++/LEFPROFILE.ils").read_text(
         encoding="utf-8"
     )
-    frontend = (CAD_ROOT / "lef/skill++/LEF.ils").read_text(encoding="utf-8")
+    frontend = loader_contract("lef/skill++/LEF.ils")
     gui = (CAD_ROOT / "lef/skill++/LEFGUI.ils").read_text(encoding="utf-8")
 
     for path in (
@@ -52,9 +53,9 @@ def test_lef_profile_adapter_covers_business_fields_transactionally() -> None:
     assert "errset(progn(" in profile
     assert "lefProfileRestore(form snapshot)" in profile
     assert 'SICO_profileRegisterAdapter("LEF"' in profile
-    assert '"/skill/SICO_profile.il"' in frontend
-    assert '"/skill++/PROFILEGUI.ils"' in frontend
-    assert '"/skill++/LEFPROFILE.ils"' in frontend
+    assert frontend.contains_source("/skill/SICO_profile.il")
+    assert frontend.contains_source("/skill++/PROFILEGUI.ils")
+    assert frontend.contains_source("/skill++/LEFPROFILE.ils")
     assert 'profileGui->profileFlow="LEF"' in gui
 
 

@@ -177,6 +177,13 @@ def test_native_view_reduction_runs_from_generated_cdslib_directory(
     assert reduced_view_name(cfg, cfg.context()) == "av_extracted_reduced"
 
 
+def test_idspf_view_reduction_is_rejected(tmp_path: Path) -> None:
+    cfg = _config(tmp_path, output_type="view", view_kind="idspf")
+
+    with pytest.raises(ValueError, match="iDSPF"):
+        build_reduction_jobs(cfg, cfg.context())
+
+
 def test_multi_corner_reduction_is_rejected(tmp_path: Path) -> None:
     cfg = _config(tmp_path, corners=["Cmin", "Cmax"])
 

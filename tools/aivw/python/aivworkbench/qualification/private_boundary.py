@@ -22,18 +22,32 @@ import shutil
 import subprocess
 import tempfile
 
+from sicopaths import installation
+
 from ..workspace import sha256_file
 
 
 BOUNDARY_KIND = "bwrap_filesystem_namespace_v2"
 QUALIFIED_STATUS = "QUALIFIED_LOCAL_NAMESPACE_V2"
-DEFAULT_PYTHON = Path("/software/pkgs/python/3.9.13/bin/python3")
 DEFAULT_RO_PATHS = ("/software", "/usr", "/bin", "/lib", "/lib64", "/etc")
 _LICENSE_ENVIRONMENT = ("CDS_LIC_FILE", "CLIOLMD_LICENSE_FILE", "LM_LICENSE_FILE", "SNPSLMD_LICENSE_FILE")
 
 
 class BoundaryError(RuntimeError):
     """The boundary could not be established; callers must fail closed."""
+
+
+def runtime_python():
+    """Return the interpreter owned by this SiCo installation."""
+
+    try:
+        selected = installation(anchor=Path(__file__).resolve().parents[5])
+    except ValueError as exc:
+        raise BoundaryError("SiCo installation is unavailable") from exc
+    python = selected.runtime_python
+    if python is None:
+        raise BoundaryError("$SICO_HOME/runtime/python is unavailable")
+    return python
 
 
 def license_hosts_from_environment(environment):
@@ -166,7 +180,7 @@ def _parse_probe(stdout):
 
 
 def probe(private_root, *, spool, canary, visibility, expected_sha256, license_hosts=(),
-          python=DEFAULT_PYTHON, timeout=120.0):
+          python=None, timeout=120.0):
     """Run the capability probe inside the boundary and return its report."""
 
     environment = {
@@ -180,12 +194,19 @@ def probe(private_root, *, spool, canary, visibility, expected_sha256, license_h
         "BOUNDARY_LICENSE_HOSTS": ",".join(license_hosts),
         "BOUNDARY_EXPECTED_SHA256": expected_sha256,
     }
-    completed = run_boundary([str(python), "-s", "-c", _PROBE], private_root=private_root,
-                             spool=spool, environment=environment, timeout=timeout)
+    selected_python = runtime_python() if python is None else Path(python).expanduser().resolve()
+    ro_roots = tuple(Path(path).resolve() for path in DEFAULT_RO_PATHS if Path(path).exists())
+    extra_mounts = ()
+    if not any(selected_python == root or root in selected_python.parents for root in ro_roots):
+        runtime_root = selected_python.parents[2]
+        extra_mounts = ((runtime_root, str(runtime_root), False),)
+    completed = run_boundary([str(selected_python), "-s", "-c", _PROBE], private_root=private_root,
+                             spool=spool, environment=environment, timeout=timeout,
+                             extra_mounts=extra_mounts)
     return _parse_probe(completed.stdout)
 
 
-def qualify(reservation_control, *, payload_root, python=DEFAULT_PYTHON, timeout=120.0, license_hosts=None):
+def qualify(reservation_control, *, payload_root, python=None, timeout=120.0, license_hosts=None):
     """Qualify the boundary against one public reservation commitment.
 
     The public process reads only the control manifest and the public

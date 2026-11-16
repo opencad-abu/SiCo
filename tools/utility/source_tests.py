@@ -8,6 +8,7 @@ from importlib import metadata
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -54,14 +55,35 @@ def selection(root, spec, groups, allow_eda):
     return selected
 
 
+def ensure_test_runtime(root):
+    """Provide the one installation-owned interpreter for source tests."""
+    runtime = root / "runtime/python/bin/python3"
+    if not runtime.is_file() or runtime.is_symlink():
+        runtime.parent.mkdir(parents=True, exist_ok=True)
+        if runtime.is_symlink():
+            runtime.unlink()
+        shutil.copy2(sys.executable, runtime)
+        metadata = root / "runtime/python/pyvenv.cfg"
+        metadata.write_text(
+            "home = %s\ninclude-system-site-packages = true\nversion = %d.%d.%d\n"
+            % (
+                Path(sys.base_prefix) / "bin",
+                *sys.version_info[:3],
+            ),
+            encoding="ascii",
+        )
+    return runtime
+
+
 def environment(root, paths, *, group, codex=None):
     # Do not inherit site model credentials, opt-in flags, pytest options or source roots.
     keep = {"HOME", "USER", "LOGNAME", "PATH", "TMPDIR", "LANG", "LC_ALL", "TZ", "SYSTEMROOT"}
     env = {k: v for k, v in os.environ.items() if k in keep}
+    runtime_python = root / "runtime/python/bin/python3"
     env.update(PYTHONDONTWRITEBYTECODE="1", PYTHONNOUSERSITE="1",
                PYTEST_DISABLE_PLUGIN_AUTOLOAD="1", QT_QPA_PLATFORM="offscreen",
                PYTHONPATH=os.pathsep.join(str(root / p) for p in paths),
-               SICO_HOME=str(root), SICO_PYTHON=sys.executable)
+               SICO_HOME=str(root), SICO_PYTHON=str(runtime_python))
     if group.get("compatibility_imports"):
         env["CAD_RUN_COMPAT_SOURCE_IMPORTS"] = "1"
     if group["kind"] == "eda":
@@ -96,6 +118,7 @@ def run(root, groups, output, *, allow_eda=False, codex=None):
         raise ValueError("In-checkout test evidence must stay under .cad")
     spec, paths = configuration(root)
     selected = selection(root, spec, groups, allow_eda)
+    ensure_test_runtime(root)
     prepared = [(name, group, environment(root, paths, group=group, codex=codex))
                 for name, group in selected]
     output.mkdir(parents=True, exist_ok=True)

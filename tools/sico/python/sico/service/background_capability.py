@@ -12,17 +12,18 @@ MAX_PROBE_BYTES = 256 * 1024
 
 def _target(arguments):
     if not isinstance(arguments, dict) or set(arguments) - {
-        "lib", "cell", "view", "view_type", "max_items", "include_placement"
+        "lib", "cell", "view_name", "oa_view_type", "max_items", "include_placement"
     }:
         raise ValueError("Background inspection requires an explicit database target")
     for key in ("lib", "cell"):
         if not isinstance(arguments.get(key), str) or not arguments[key]:
             raise ValueError("Background inspection requires lib and cell")
-    if arguments.get("view_type", "schematic") != "schematic":
+    if arguments.get("oa_view_type") != "schematic":
         raise ValueError("Background probe supports only schematic views")
     build_read_only_skill("inspect_schematic", arguments)
     return {"lib": arguments["lib"], "cell": arguments["cell"],
-            "view": arguments.get("view") or "schematic"}
+            "view_name": arguments["view_name"],
+            "oa_view_type": arguments["oa_view_type"]}
 
 
 def build_background_probe(method, arguments):
@@ -47,8 +48,8 @@ def assess_background_probe(raw, *, target, expected_version):
         if not expected_version or record.get("virtuoso_version") != expected_version:
             raise ValueError("Probe version mismatch")
         if record.get("ok") is not True:
-            reasons = {"explicit_target_required", "unsupported_view_type", "api_unavailable",
-                       "cellview_open_failed", "view_type_mismatch", "writable_handle", "modified_target",
+            reasons = {"explicit_target_required", "unsupported_oa_view_type", "api_unavailable",
+                       "cellview_open_failed", "oa_view_type_mismatch", "writable_handle", "modified_target",
                        "technology_unavailable", "master_unavailable", "dependency_limit", "cdf_unavailable",
                        "unsupported_dependency", "inspection_failed", "close_failed", "probe_failed"}
             return dict(unavailable, reason=record.get("reason") if record.get("reason") in reasons else "probe_failed")
@@ -70,7 +71,7 @@ def assess_background_probe(raw, *, target, expected_version):
                     or item["instance"] in masters
                     or not isinstance(item.get("master"), dict)
                     or not all(isinstance(item["master"].get(k), str) and item["master"][k]
-                               for k in ("lib", "cell", "view"))
+                               for k in ("lib", "cell", "view_name"))
                     or not isinstance(item.get("technology_library"), str) or not item["technology_library"]
                     or type(item.get("cdf_present")) is not bool
                     or type(item.get("cdf_parameter_count")) is not int
@@ -94,7 +95,7 @@ def assess_background_probe(raw, *, target, expected_version):
         for item in instances:
             if (not isinstance(item, dict) or not isinstance(item.get("name"), str)
                     or item["name"] in seen or item["name"] not in masters
-                    or {k: item.get(k) for k in ("lib", "cell", "view")} != masters[item["name"]]):
+                    or {k: item.get(k) for k in ("lib", "cell", "view_name")} != masters[item["name"]]):
                 raise ValueError("Inspection master mismatch")
             seen.add(item["name"])
         return dict(ok=True, available=True, protocol=PROTOCOL, method="inspect_schematic",

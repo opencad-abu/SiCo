@@ -1,6 +1,6 @@
 ; Native LEF completion summary. Keep this independent of Python/Qt versions.
 unless(and(boundp('lefSummaryUiVersion)
-             lefSummaryUiVersion=="20260901.summary.lifecycle.v2")
+             lefSummaryUiVersion=="20261024.summary.lifecycle.v3")
 procedure(lefSummaryDisposeForm(form)
   let((deleted)
     when(and(form
@@ -161,8 +161,8 @@ procedure(lefSummaryEnsureForm()
         'lefSummaryForm
         strcat(cond(
                  (isCallable('SICO_logo) SICO_logo())
-                 (isCallable('witMenuLogo) witMenuLogo())
-                 (t "SiCo"))
+                 (isCallable('sicoMenuLogo) sicoMenuLogo())
+                 (t "Silicon Copilot"))
                 "::LEF Generation Summary")
         layout
         ?buttonLayout list(
@@ -282,7 +282,7 @@ procedure(lefSummaryDisplay(meta exitStatus)
   )
 )
 procedure(lefSummaryUiRevision()
-  "20260901.summary.lifecycle.v2"
+  "20261024.summary.lifecycle.v3"
 )
-lefSummaryUiVersion="20260901.summary.lifecycle.v2"
+lefSummaryUiVersion="20261024.summary.lifecycle.v3"
 )

@@ -1,0 +1,36 @@
+{
+  "schema": "sico.layout.backend.v1",
+  "id": "panda-paprika",
+  "name": "PANDA Paprika P&R",
+  "version": "0.1.0",
+  "api_version": "1.0",
+  "transport": {
+    "kind": "stdio",
+    "command": [
+      "/path/to/python3",
+      "/path/to/sico-panda-paprika/server.py"
+    ],
+    "cwd": "/path/to/sico-panda-paprika"
+  },
+  "capabilities": {
+    "source_kinds": ["netlist"],
+    "actions": {
+      "place": {
+        "source_kinds": ["netlist"],
+        "requires": ["netlist", "techfile", "stdcell", "pcell_bundle", "paramfile", "process_view"],
+        "produces": ["placement_layout"],
+        "constraint_kinds": ["symmetry"]
+      }
+    },
+    "artifact_formats": ["gds", "json"],
+    "catalogs": [],
+    "process_view_schema": "sico.process_view.v1"
+  },
+  "license": {
+    "spdx": "PolyForm-Noncommercial-1.0.0",
+    "commercial_use": "requires_separate_license"
+  },
+  "integrity": {
+    "files": {}
+  }
+}

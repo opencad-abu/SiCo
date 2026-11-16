@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import shutil
 from pathlib import Path
@@ -9,6 +10,46 @@ from skill_probe_support import run_virtuoso_source
 
 CAD_ROOT = Path(__file__).resolve().parents[3]
 RUN_PROBE = os.environ.get("RCE_RUN_SKILL_PROBE") == "1"
+
+
+@pytest.mark.skipif(
+    not RUN_PROBE,
+    reason="set RCE_RUN_SKILL_PROBE=1 to run the Cadence Virtuoso probe",
+)
+def test_lsf_monitor_python_selection_uses_installation_runtime(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    for name in ("SICO_PYTHON", "SICO_PYTHON_ROOT", "SICO_LSF_PYTHON"):
+        monkeypatch.delenv(name, raising=False)
+    install = tmp_path / "install"
+    for directory in ("bin", "tools", "tools/common", "etc/config"):
+        (install / directory).mkdir(parents=True, exist_ok=True)
+    shutil.copy2(
+        CAD_ROOT.parent / "etc/config/sico-install.json",
+        install / "etc/config/sico-install.json",
+    )
+    expected = install / "runtime/python/bin/python3"
+    expected.parent.mkdir(parents=True)
+    expected.write_text("#!/bin/sh\nexit 0\n", encoding="ascii")
+    expected.chmod(0o755)
+    source = "\n".join(
+        f"load({json.dumps(str(CAD_ROOT / path))})"
+        for path in (
+            "common/skill/SICO_environment.il",
+            "common/skill/SICO_installation.il",
+            "common/skill/SICO_toml.il",
+            "common/skill/SICO_lsfCommands.il",
+        )
+    )
+    source += (
+        '\nprintf("LSF_PYTHON=%s\\n" SICO_lsfPythonExe())\n'
+        "exit()\n"
+    )
+    output = run_virtuoso_source(
+        source, tmp_path, env_updates={"SICO_HOME": str(install)},
+        log_path=tmp_path / "lsf-python.log",
+    )
+    assert f"LSF_PYTHON={expected}" in output
 
 
 @pytest.mark.skipif(

@@ -63,6 +63,25 @@ def test_style_checker_rejects_wrapped_algebraic_calls() -> None:
     )
 
 
+def test_style_checker_rejects_unbalanced_parentheses() -> None:
+    # Virtuoso only warns about an extra ')' and keeps loading, so the style
+    # checker owns this failure mode instead of parse().
+    stray = "procedure(sample() t))\n"
+    unclosed = "procedure(sample()\n  t\n"
+
+    assert [
+        (finding.kind, finding.name)
+        for finding in skill_style.analyze(Path("stray.il"), stray)
+    ] == [("unbalanced close", ")")]
+    assert [
+        (finding.kind, finding.name)
+        for finding in skill_style.analyze(Path("open.il"), unclosed)
+    ] == [("unclosed open", "(")]
+    assert [token.kind for token in skill_style.unbalanced_tokens("a(b)) c")] == [
+        "close"
+    ]
+
+
 def test_style_rewriter_preserves_block_comments_and_line_numbers() -> None:
     source = '/* (not a call)\n unmatched ( ; " */\n(list/* keep */ value)\n'
     findings = skill_style.analyze(Path("sample.il"), source)

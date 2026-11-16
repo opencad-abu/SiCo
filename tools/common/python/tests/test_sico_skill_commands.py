@@ -18,9 +18,12 @@ COMMANDS = {"drc": "drc", "lvs": "lvs", "rce": "rce", "lefgen": "lef",
 
 def stage_installation(tmp_path):
     stage = tmp_path / "installed SiCo's tools"
-    for name in ("bin", "tools/common", "etc/config"):
+    for name in ("bin", "tools/common", "etc/config", "runtime/python/bin"):
         (stage / name).mkdir(parents=True, exist_ok=True)
     shutil.copy2(ROOT / "etc/config/sico-install.json", stage / "etc/config")
+    runtime = stage / "runtime/python/bin/python3"
+    runtime.write_text("#!/bin/sh\nexit 0\n", encoding="ascii")
+    runtime.chmod(0o755)
     return stage
 
 
@@ -32,7 +35,11 @@ def run_skill(code, stage, work):
                       for name in ("SICO_toml.il",))
     environment = {key: value for key, value in os.environ.items()
                    if not key.startswith(("CAD_", "SICO_", "PYTHON", "LD_"))}
-    environment.update(SICO_HOME=str(stage), SICO_PYTHON=sys.executable, PWD=str(work))
+    environment.update(
+        SICO_HOME=str(stage),
+        SICO_PYTHON=str(stage / "runtime/python/bin/python3"),
+        PWD=str(work),
+    )
     result = subprocess.run([dbaccess], input=loads + "\n" + code + '\nexit()\n',
                             cwd=work, env=environment, text=True, capture_output=True, timeout=40)
     output = result.stdout + result.stderr
@@ -147,6 +154,7 @@ def test_ai_flow_uses_the_same_native_entry_and_new_environment(tmp_path):
         shutil.copy2("/bin/echo", entry)
     code = '\n'.join(f'load({json.dumps(str(ROOT / "tools/ai/skill" / name))})'
                      for name in ("AI_flow_command.il", "AI_flows.il"))
+    runtime = stage / "runtime/python/bin/python3"
     code += '''
 procedure(aiWorkflowTempEnvironment() "")
 setShellEnvVar("CAD_PYTHON" "/missing/legacy")
@@ -164,9 +172,9 @@ fprintf(port "%s" aiWorkflowCommand("{flow}" "/input with spaces.toml" "run" nil
   aiWorkflowPython("{flow}") aiWorkflowEntry("{flow}" aiWorkflowToolsRoot())))
 close(port)
 '''
-    code += '''
-setShellEnvVar("SICO_PYTHON" "")
-when(aiWorkflowExecutableP(aiWorkflowPython("drc")) error("empty Python fell back"))
+    code += f'''
+unless(aiWorkflowPython("drc")=={json.dumps(str(runtime))}
+  error("stale Python selectors replaced the installation runtime"))
 printf("SICO_COMMAND_OK\\n")
 '''
     environment = run_skill(code, stage, tmp_path)

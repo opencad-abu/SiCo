@@ -1,19 +1,20 @@
 ; Complete schematic snapshots streamed to a private JSONL file.
 ; Loaded with AI_inspect.il by the versioned AI parent.
 unless(and(boundp('aiInspectVersion)
-             aiInspectVersion=="20261022.ai.inspect.v11")
+             aiInspectVersion=="20261101.ai.inspect.v12")
 
 procedure(aiInspectSnapshotHeaderJson(cv includePlacement)
   let((protected values viewType localBudget modifiedJson line)
     localBudget=aiInspectNewSnapshotBudget()
-    protected=errset(list(cv~>libName cv~>cellName cv~>viewName cv~>cellViewType) nil)
+    protected=errset(list(cv~>libName cv~>cellName cv~>viewName cv~>viewType) nil)
     if(!protected then nil
       else
         values=car(protected)
-        viewType=or(cadddr(values) caddr(values) "schematic")
+        viewType=cadddr(values)
+        unless(viewType return(nil))
         modifiedJson=aiInspectCellViewModifiedJson(cv)
         line=sprintf(nil
-          "{\"record_type\":\"header\",\"schema_version\":\"cad.schematic.snapshot.v1\",\"kind\":\"schematic\",\"cellview\":{\"lib\":%s,\"cell\":%s,\"view\":%s},\"view_type\":%s,\"modified\":%s,\"hierarchy_included\":false,\"include_placement\":%s}\n"
+          "{\"record_type\":\"header\",\"schema_version\":\"cad.schematic.snapshot.v1\",\"kind\":\"schematic\",\"cellview\":{\"lib\":%s,\"cell\":%s,\"view_name\":%s,\"oa_view_type\":%s,\"oa_view_type_source\":\"platform_api\"},\"modified\":%s,\"hierarchy_included\":false,\"include_placement\":%s}\n"
           aiInspectJsonString(car(values) localBudget)
           aiInspectJsonString(cadr(values) localBudget)
           aiInspectJsonString(caddr(values) localBudget)
@@ -41,14 +42,14 @@ procedure(aiSnapshotSchematic(lib cell view viewType outputPath includePlacement
     cv=target['cv]
     path=if(stringp(outputPath) outputPath "")
     counts=makeTable("aiSnapshotCounts" 0)
-    protectedType=when(cv errset(cv~>cellViewType nil))
+    protectedType=when(cv errset(cv~>viewType nil))
     actualType=if(protectedType then car(protectedType) else nil)
     if(!and(cv strlen(path)>0) then
       aiInspectTargetError("schematic" target 0)
     else if(actualType!="schematic" then
       progn(
         aiInspectCloseTarget(target)
-        aiInspectError("schematic" "wrong_view_type"
+        aiInspectError("schematic" "wrong_oa_view_type"
           "snapshot_schematic requires a schematic cellview" 0))
     else
       port=outfile(path "w")

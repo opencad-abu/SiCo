@@ -113,7 +113,6 @@ def build_codex_command(
         "PATH",
         *SESSION_ENVIRONMENT_NAMES,
         "SICO_HOME",
-        "SICO_PYTHON_ROOT",
         "SICO_PYTHON",
         *OPTIONAL_RESOURCE_KEYS,
         "CAD_TEMP_DIR",

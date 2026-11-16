@@ -16,15 +16,11 @@ export PDK_ROOT="${PDK_ROOT:-${PROJECT_ROOT}/PDK_V1.0}"
 RCE_RUN_ROOT="${RCE_RUN_ROOT:-${PROJECT_ROOT}/.rce}"
 export RCE_RUN_ROOT
 
-if [[ -z ${RCE_PYTHON:-} ]]; then
-    if [[ -n ${SICO_PYTHON:-} ]]; then
-        RCE_PYTHON=${SICO_PYTHON}
-    elif [[ -n ${SICO_PYTHON_ROOT:-} ]]; then
-        RCE_PYTHON=${SICO_PYTHON_ROOT%/}/bin/python3
-    else
-        RCE_PYTHON=python3
-    fi
+if [[ ! -x ${SICO_HOME}/runtime/python/bin/python3 ]]; then
+    echo "<ERROR> SiCo Python is unavailable: ${SICO_HOME}/runtime/python/bin/python3" >&2
+    return 1
 fi
+RCE_PYTHON="${SICO_HOME}/runtime/python/bin/python3"
 export RCE_PYTHON
 export RCE_PYTHON_ENTRY="${RCE_PYTHON_ENTRY:-${SICO_HOME}/tools/rce/python/rce}"
 export PYTHONDONTWRITEBYTECODE="${PYTHONDONTWRITEBYTECODE:-1}"
@@ -33,13 +29,13 @@ if [[ -z ${LOGO:-} || ${LOGO^^} == OCAD ]]; then
     if [[ -n ${COMPANY:-} && ${COMPANY^^} != OCAD ]]; then
         export LOGO="${COMPANY}"
     else
-        export LOGO=SiCo
+        export LOGO="Silicon Copilot"
     fi
 else
     export LOGO
 fi
 if [[ -z ${COMPANY:-} || ${COMPANY^^} == OCAD ]]; then
-    export COMPANY=SiCo
+    export COMPANY="Silicon Copilot"
 else
     export COMPANY
 fi

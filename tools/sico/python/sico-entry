@@ -3,6 +3,18 @@
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+root = Path(__file__).resolve().parents[3]
+common = root / "tools/common/python"
+if str(common) not in sys.path:
+    sys.path.insert(0, str(common))
+
+from sicoruntimebootstrap import ensure_runtime
+
+ensure_runtime(Path(__file__).resolve(), root)
+
 from sico.entry import main
 
 raise SystemExit(main())

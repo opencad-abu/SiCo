@@ -2,10 +2,31 @@
 
 from PyQt5.QtCore import QBuffer, QByteArray, QIODevice, Qt, QUrl
 from PyQt5.QtGui import QDesktopServices, QImageReader, QPixmap
-from PyQt5.QtWidgets import QLabel, QListWidget, QPlainTextEdit, QPushButton, QSizePolicy
+from PyQt5.QtWidgets import (
+    QLabel,
+    QListWidget,
+    QListWidgetItem,
+    QPlainTextEdit,
+    QPushButton,
+    QSizePolicy,
+)
 
+from sico.core.cad_ref import object_link
 from .chrome import SiDialog
 from .receipts import DataReceipt
+
+
+def open_object_input(window, row):
+    """Open one structured object input through the shared CAD link action."""
+    cad_objects = getattr(window, "cad_objects", None)
+    session = getattr(getattr(window.page, "session", None), "session_id", "")
+    if (cad_objects is None or not session or not isinstance(row, dict)
+            or row.get("type") != "object_ref"):
+        return False
+    try:
+        return cad_objects.open_link(object_link(session, row["ref"]))
+    except (KeyError, ValueError):
+        return False
 
 
 class InputImage(QLabel):
@@ -78,7 +99,9 @@ def show_input_detail(window, value):
                 rows.blockSignals(True)
                 rows.clear()
                 for row in result["inputs"]:
-                    rows.addItem(row["type"] + " · " + row.get("name", ""))
+                    item = QListWidgetItem(row["type"] + " · " + row.get("name", ""))
+                    item.setData(Qt.UserRole, row)
+                    rows.addItem(item)
                 rows.blockSignals(False)
             else:
                 row = result["input"]
@@ -117,6 +140,11 @@ def show_input_detail(window, value):
                       ready, failed)
 
     rows.currentRowChanged.connect(lambda index: load(index) if index >= 0 else None)
+    def open_object_row(item):
+        open_object_input(window, item.data(Qt.UserRole))
+
+    rows.itemClicked.connect(open_object_row)
+    rows.itemActivated.connect(open_object_row)
     open_media.clicked.connect(lambda: QDesktopServices.openUrl(state["url"])
                                if current() and state["url"] is not None else None)
     def finished(*_args):

@@ -15,6 +15,9 @@ from cadcalibre.lvs import (
 
 from .config import DesignContext, RceConfig
 from .textutil import clean_lines, q, write_text
+from .finfet_lvs import finfet_lvs_deck
+from .process_inputs import existing_input_file
+from .source_inputs import lvs_source_path
 
 
 def resolve_lvs_hcell_file(
@@ -31,20 +34,18 @@ def resolve_lvs_hcell_file(
         return None
 
     raw = cfg.text("lvs", "hcell_file").strip()
-    if raw:
-        path = cfg.resolve_path(raw)
-    elif fallback_value.strip():
-        path = cfg.resolve_path(fallback_value, base=fallback_base)
-    elif fallback_file is not None:
-        path = fallback_file.resolve()
-    else:
-        raise ValueError(
-            "Calibre LVS hcell is enabled but lvs.hcell_file is empty"
-        )
-
-    if not path.is_file():
-        raise FileNotFoundError(f"Cannot access {label}: {path}")
-    return path
+    try:
+        if raw:
+            path = cfg.resolve_path(raw)
+        elif fallback_value.strip():
+            path = cfg.resolve_path(fallback_value, base=fallback_base)
+        elif fallback_file is not None:
+            path = fallback_file.resolve()
+        else:
+            return None
+    except ValueError:
+        return None
+    return path if path.is_file() else None
 
 
 def lvs_hcell_arguments(cfg: RceConfig) -> list[str]:
@@ -85,16 +86,20 @@ def append_custom_svrf(text: str, cfg: RceConfig) -> str:
     )
 
 
-def lvs_svdb_query_tokens(cfg: RceConfig) -> list[str]:
+def lvs_svdb_query_tokens(
+    cfg: RceConfig,
+    *,
+    default: tuple[str, ...] = ("CCI", "PINLOC"),
+) -> list[str]:
     """Return the selected Calibre SVDB query tokens.
 
     An explicitly empty ``lvs.svdb_query`` means the user selected no optional
-    query data and must render as a bare ``QUERY`` clause.  Configurations
-    without this standalone-LVS option retain the standalone legacy default.
+    query data and must render as a bare ``QUERY`` clause. Configurations
+    without this option retain the caller's legacy default.
     """
     raw = cfg.get("lvs", "svdb_query", default=None)
     if raw is None:
-        return ["CCI", "PINLOC"]
+        return list(default)
 
     values = cfg.items("lvs", "svdb_query")
     tokens: list[str] = []
@@ -114,16 +119,21 @@ def lvs_svdb_query_tokens(cfg: RceConfig) -> list[str]:
 def generate_lvs(
     cfg: RceConfig, ctx: DesignContext, *, standalone: bool = False, defaults: Defaults | None = None
 ) -> Path:
-    # RCE needs connectivity data only. Extra query outputs belong to the
-    # standalone LVS flow and must not leak into extraction runsets.
-    query_tokens = lvs_svdb_query_tokens(cfg) if standalone else ["CCI"]
+    # Standalone LVS and RCE share the same selectable query list. RCE keeps
+    # CCI as its compatibility default when older requests omit the option.
+    query_tokens = (
+        lvs_svdb_query_tokens(cfg)
+        if standalone
+        else lvs_svdb_query_tokens(cfg, default=("CCI",))
+    )
     baseline = calibre_defaults("calibre-lvs.svrf", defaults, ctx.log_dir)
-    runset = cfg.path("lvs", "runset_file")
+    runset = finfet_lvs_deck(cfg, ctx)
+    source_path = lvs_source_path(cfg, ctx)
     lines = [
         f'LAYOUT PATH "{q(ctx.layout_path)}"',
         f"LAYOUT PRIMARY {ctx.layout_cell}",
         "LAYOUT SYSTEM GDSII",
-        f'SOURCE PATH "{q(ctx.source_path)}"',
+        f'SOURCE PATH "{q(source_path)}"',
         f"SOURCE PRIMARY {ctx.source_cell}",
         "SOURCE SYSTEM SPICE",
         f'MASK SVDB DIRECTORY "{q(ctx.svdb_dir)}" QUERY'
@@ -153,5 +163,8 @@ def generate_lvs(
     )
     if runset:
         text += f'\nINCLUDE "{q(runset)}"'
+    extra = existing_input_file(cfg, "lvs", "extra_file")
+    if extra:
+        text += f'\nINCLUDE "{q(extra)}"'
     text += "\n"
     return write_text(ctx.log_dir / "lvs.cal", text)

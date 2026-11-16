@@ -161,6 +161,27 @@ def bridge_control(reader, bridge):
     return receive
 
 
+def stop_project_service_on_host_exit(project):
+    """A closed Virtuoso must not leave a project service holding the workspace."""
+    from .service_discovery import discover_project
+    from .service_force_stop import ForceServiceStop, WAIT_SECONDS
+
+    try:
+        found = discover_project(project)
+        if found.state != "local_candidate":
+            return
+        request = ForceServiceStop(project, found.service)
+        try:
+            # SIGTERM is sent before the wait; the service deadline bounds exit.
+            request.ready.result(min(WAIT_SECONDS, 3.0))
+        except Exception:
+            pass
+        finally:
+            request.close()
+    except Exception:
+        pass
+
+
 def launch_bridge(args):
     from ..transport.router_archive import capture_archive_owner
 
@@ -209,6 +230,7 @@ def launch_bridge(args):
     finally:
         termination.restore()
         reader.close()
+        stop_project_service_on_host_exit(args.launch_dir)
 
 
 def _launch_desktop(args, reader, control, stopping):

@@ -2,7 +2,7 @@
 
 procedure(rceNativeViewOutputP(outputType)
   if(member(lowerCase(or(outputType ""))
-              '("view" "extview" "smartview" "calibreview" "starrcview")) then
+              '("view" "extview" "smartview" "idspf" "calibreview" "starrcview")) then
     t
   else
     nil
@@ -13,11 +13,15 @@ procedure(rceNativeViewKindItems(form)
   case(lowerCase(or(form~>outType~>value ""))
     ("extview" '("Extracted View"))
     ("smartview" '("Smart View"))
+    ("idspf" '("Interactive DSPF (iDSPF)"))
     ("calibreview" '("Calibre View"))
     ("starrcview" '("OpenAccess Parasitic View"))
     (t
       case(form~>extTool~>value
-        ("QRC" '("Smart View" "Extracted View"))
+        ("QRC"
+          if(member(form~>inpType~>value '("OA" "SCH+GDS")) then
+            '("Interactive DSPF (iDSPF)" "Extracted View")
+            '("Extracted View")))
         ("StarRC" '("OpenAccess Parasitic View"))
         (t '("Calibre View"))
       )
@@ -34,6 +38,8 @@ procedure(rceNativeViewKindValue(form)
     )
     case(kind
       ("Smart View" "smart")
+      ("Interactive DSPF (iDSPF)" "idspf")
+      ("idspf" "idspf")
       ("Extracted View" "extracted")
       ("Calibre View" "calibre")
       ("OpenAccess Parasitic View" "oa")
@@ -45,6 +51,8 @@ procedure(rceNativeViewKindValue(form)
 procedure(rceNativeViewDefaultName(kind)
   case(kind
     ("Smart View" "smart_view")
+    ("Interactive DSPF (iDSPF)" "idspf")
+    ("idspf" "idspf")
     ("Extracted View" "av_extracted")
     ("Calibre View" "calibre")
     ("OpenAccess Parasitic View" "starrc")

@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "valid": true,
+  "schema": "cad.windows.v1",
+  "session_ref": "fixture",
+  "pid": 123,
+  "windows": [
+    {
+      "id": "window:5",
+      "window_ref": "wctx_fixture_1",
+      "kind": "schematic",
+      "window_class": "window",
+      "application": "Virtuoso",
+      "title_bytes_hex": "4f5441",
+      "is_current": true,
+      "display_state": "normal",
+      "cellview": {
+        "lib": "worklib",
+        "cell": "OTA",
+        "view_name": "schematic",
+        "oa_view_type": "schematic",
+        "oa_view_type_source": "platform_api"
+      }
+    },
+    {
+      "id": "text:1",
+      "window_ref": null,
+      "kind": "text",
+      "title_bytes_hex": "6c6f67"
+    }
+  ],
+  "max_items": 200,
+  "total": 2,
+  "offset": 0,
+  "next_offset": null,
+  "truncated": false,
+  "snapshot_atomic": false,
+  "read_scope": "current Virtuoso process only"
+}

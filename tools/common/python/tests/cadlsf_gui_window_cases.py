@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from cadlsf_gui_fixtures import application as application, _snapshot
-from pathlib import Path
 import pytest
 from PyQt5.QtCore import QObject, Qt
 from PyQt5.QtGui import QImage, QPainter
 from PyQt5.QtWidgets import QApplication, QHeaderView, QLabel, QSplitter
+from cadgui.palette import active
+from cadlsf.gui.glyphs import (
+    KILL_GLYPH, REFRESH_GLYPH, RELOAD_GLYPH, kill_glyph_color,
+)
 from cadlsf.gui.main_window import LsfLoadMonitorWindow
 from cadlsf.gui.models import HostTableModel, HostFilterProxyModel, JobTableModel, JobFilterProxyModel
 from cadlsf_gui_fakes import FakeController
@@ -32,7 +35,7 @@ def test_host_filter_and_progress_delegate_render_nonblank(
     application.processEvents()
     # 家族 chrome：无边框自绘标题栏，左上角带站点/产品 logo。
     assert window.windowFlags() & Qt.FramelessWindowHint
-    assert window.title_bar.title.text() == "SiCo::LSF Loading Monitor"
+    assert window.title_bar.title.text() == "Silicon Copilot::LSF Loading Monitor"
     assert window.title_bar.findChild(QLabel, "copilotTitleLogo") is not None
     image = QImage(window.size(), QImage.Format_ARGB32)
     image.fill(Qt.transparent)
@@ -93,10 +96,9 @@ def test_job_model_filter_and_window_tab_layout(
     window.show()
     application.processEvents()
     assert window.width() == window.minimumWidth() == 1140
-    assert window.jobs.job_action_delegate._icon_path == (
-        Path(__file__).resolve().parents[4] / "share/sico/icons/actions/close-flow.png"
-    )
-    assert not window.jobs.job_action_delegate._kill_icon.isNull()
+    assert window.jobs.job_action_delegate._kill_font.pixelSize() > 0
+    assert KILL_GLYPH == "\u274c"
+    assert kill_glyph_color().name() == active().stop.lower()
     window.tabs.setCurrentIndex(1)
     application.processEvents()
     action_rect = window.jobs.job_table.visualRect(window.jobs.job_proxy.index(0, 9))
@@ -120,6 +122,10 @@ def test_job_model_filter_and_window_tab_layout(
     assert window.resources.auto_refresh.parent() is host_panel
     assert window.resources.interval_spin.parent() is host_panel
     assert window.resources.refresh_button.parent() is host_panel
+    assert window.resources.refresh_button.text() == REFRESH_GLYPH
+    assert window.resources.refresh_button.icon().isNull()
+    assert window.resources.reload_topology_button.text() == RELOAD_GLYPH
+    assert window.resources.reload_topology_button.icon().isNull()
     assert window.resources.sample_label.parent() is host_panel
     queue_y = window.resources.queue_table.mapTo(window, window.resources.queue_table.rect().topLeft()).y()
     controls_y = window.resources.queue_combo.mapTo(window, window.resources.queue_combo.rect().topLeft()).y()
@@ -144,7 +150,7 @@ def test_window_refresh_pause_failure_and_close_lifecycle(
         initial_queue="normal",
         auto_start=False,
     )
-    assert window.windowTitle() == "SiCo::LSF Loading Monitor"
+    assert window.windowTitle() == "Silicon Copilot::LSF Loading Monitor"
     assert window.findChildren(type(window.resources.refresh_button), "")
     assert window.findChild(QObject, "queueCombo") is window.resources.queue_combo
     assert window.findChild(QObject, "hostTable") is window.resources.host_table

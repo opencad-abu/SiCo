@@ -59,7 +59,10 @@ def snapshot_binding_from_aivw(value: Mapping[str, Any]) -> dict[str, Any] | Non
         if not isinstance(target, Mapping) or not isinstance(view_identity, Mapping):
             continue
         required_target = ("library", "cell", "module")
-        required_view = ("library", "cell", "view", "view_type", "kind")
+        required_view = (
+            "library", "cell", "view_name", "oa_view_type",
+            "oa_view_type_source", "kind",
+        )
         if any(
             not isinstance(target.get(key), str) or not target.get(key)
             for key in required_target
@@ -71,6 +74,8 @@ def snapshot_binding_from_aivw(value: Mapping[str, Any]) -> dict[str, Any] | Non
         ):
             continue
         if view_identity.get("kind") != "schematic":
+            continue
+        if view_identity.get("oa_view_type_source") != "platform_api":
             continue
         return {
             "source_generation": candidate,
@@ -174,7 +179,10 @@ def run_live_recipe(
             }
             expected_view = {
                 key: active_view.get(key)
-                for key in ("library", "cell", "view", "view_type", "kind")
+                for key in (
+                    "library", "cell", "view_name", "oa_view_type",
+                    "oa_view_type_source", "kind",
+                )
             }
             if (
                 binding["target"] != expected_target

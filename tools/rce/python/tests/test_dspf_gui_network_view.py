@@ -227,6 +227,13 @@ def test_r_only_controls_keep_transform_and_remain_functional() -> None:
     pane = _shown_pane()
     before = pane.canvas.transform()
 
+    assert pane.zoom_out.text() == "\u2212"
+    assert pane.zoom_in.text() == "+"
+    assert pane.fit_button.text() == "Fit"
+    assert all(
+        button.icon().isNull()
+        for button in (pane.zoom_out, pane.zoom_in, pane.fit_button)
+    )
     pane.zoom_in.click()
     assert pane.canvas.transform().m11() > before.m11()
     pane.fit_button.click()
@@ -243,6 +250,8 @@ def test_integrity_controls_results_and_external_labels() -> None:
     pane = _shown_pane()
     requested: list[float] = []
     pane.integrityRequested.connect(requested.append)
+    assert pane.check_integrity.text() == "\u2713 Check"
+    assert pane.check_integrity.icon().isNull()
     pane.short_threshold.setValue(0.25)
     pane.check_integrity.click()
 

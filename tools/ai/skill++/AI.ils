@@ -7,7 +7,7 @@ let((entryDirectory)
   load(strcat(entryDirectory "/../../../scripts/sicoSkillLoader.ils"))
   load(strcat(entryDirectory "/AI_shared.ils"))
   set('aiRoot strcat(SICO_sourceRoot() "/tools/ai"))
-  SICO_sourceRequire("assistant" "3eaf3458ccfff918164514f70f69068dc97ccaeade3b00b51118594baf7bcf70" '(
+  SICO_sourceRequire("assistant" "735fb433c21c701aced62461643e5b77e961153d27d16f892ebf7e07102c1ae9" '(
     ("tools/ai/skill" "AI_ipc.il" "a3126f1ee7d2304b9188e34a8424e02eb41c421f41176f5707aeea769fac65f6"
       (aiIpcClearLiveState aiIpcTerminateProcess aiIpcWrite aiIpcRespond aiIpcExecute aiIpcDrainQueue
        aiIpcHandleLine aiIpcDataHandler aiIpcErrHandler aiIpcReset aiIpcRetire aiIpcPostFunc aiStop
@@ -15,41 +15,46 @@ let((entryDirectory)
        aiIpcStart aiIpcRevision)
       ((aiIpcRevision "20260911.ai.ipc.v13"))
       (aiIpcVersion)
+      ()
       ())
-    ("tools/ai/skill" "AI_live_model.il" "9a759eca591a289e463c82a6933ebb4f6b856d1a725f80e028d0e2805fa20766"
+    ("tools/ai/skill" "AI_live_model.il" "4d3f1825e95458093b535282af7c4c19a39a934d37a4f37c80b13c879bf6f5e6"
       (aiLiveModelRevision aiLiveModelPair aiLiveModelBoundText aiLiveModelViewKind aiLiveModelIdentity
        aiLiveModelTarget aiLiveModelIdentityPairs aiLiveModelJsonObject aiLiveModelNextSequence
        aiLiveModelTargetPairs aiLiveModelTargetValidP aiLiveModelViewIdentityValidP
        aiLiveModelSessionRunningP aiLiveModelWriteEvent aiLiveModelPostSaveTrigger aiLiveModelScanString
        aiLiveModelScanInteger aiLiveModelForbiddenStatusP aiLiveModelHandleStatus aiLiveModelStart
        aiLiveModelChanged aiLiveModelStop aiLiveModelStatus aiLiveModelReset)
-      ((aiLiveModelRevision "20260902.ai.live.v1"))
+      ((aiLiveModelRevision "20261101.ai.live.v2"))
       (aiLiveModelVersion)
+      ()
       ())
-    ("tools/ai/skill" "AI_launcher.il" "4988c77c30c1d6a856d3198e10337de7f6773f98f324f8bbff6bc87bba653515"
+    ("tools/ai/skill" "AI_launcher.il" "3c525258032c082f36d7d6d5863d6833ac896a40e5afa599953265768bcc74ea"
       (aiShellQuote aiEnvValue aiProductEnvironment aiCanonicalPath aiPythonVersionOK aiProductionPythonP
        aiControllerReadyDelay aiPythonExecutable aiPythonEntry aiControllerCommand aiStartAgent aiStart
        aiLaunchFormCB aiCreateLaunchForm cadDisplayAiAssistant aiLauncherRevision)
-      ((aiLauncherRevision "20261020.sico.launcher.v21"))
+      ((aiLauncherRevision "20261024.sico.launcher.v23"))
       (aiLauncherVersion)
+      ()
       ())
-    ("tools/ai/skill" "AI_flow_command.il" "e8b01ef38f5a86dd48c86c248b580a64bfc4059cd95678187e8e2b307df44c0b"
+    ("tools/ai/skill" "AI_flow_command.il" "dd39c1d745a86450bdad2b198cd174a5262e627ae8d0447f0014b4b40e0cb4ac"
       (aiWorkflowEnv aiWorkflowTempEnvironment aiWorkflowShellQuote aiWorkflowJsonEscape aiWorkflowError
        aiWorkflowSafeTextP aiWorkflowInputPath aiWorkflowToolsRoot aiWorkflowPython aiWorkflowExecutableP
        aiWorkflowEntry aiWorkflowCommandName aiWorkflowLibraryPath aiWorkflowStopValues
        aiWorkflowValidate)
       ()
       (aiWorkflowVersion)
+      ()
       ())
-    ("tools/ai/skill" "AI_flows.il" "1f137e292800019d2b2fcb089999d2d1cd01c4809d7f37e8ff7eda5055190c24"
+    ("tools/ai/skill" "AI_flows.il" "b4896202e3f964454a38f0ff7e7fbd019c5261c6a43dc9cf596bd7a90b2eb055"
       (aiWorkflowNextId aiWorkflowCreateRuntimeDir aiWorkflowWriteLauncher aiWorkflowLogLimit
        aiWorkflowLogMarker aiWorkflowAppendLog aiWorkflowCleanupJobArtifacts aiWorkflowJobCount
        aiWorkflowEvictOldestTerminal aiWorkflowReserveJobSlot aiWorkflowCommand aiWorkflowLaunch
        aiWorkflowDataHandler aiWorkflowErrHandler aiWorkflowPostFunc aiWorkflowStart
        aiWorkflowAnalyzeDspf aiWorkflowStatus aiWorkflowTerminate aiWorkflowExitCleanup
        aiWorkflowRegisterExitCleanup aiWorkflowRevision)
-      ((aiWorkflowRevision "20261020.sico.flow.v7"))
+      ((aiWorkflowRevision "20261024.sico.flow.v8"))
       (aiWorkflowVersion)
+      ()
       ())
     ("tools/ai/skill" "AI_maestro.il" "51c6fa6704fdb40145b0a2923a82476c19aec1aac935692fd636213f3819cf13"
       (aiMaestroMissingCapabilities aiMaestroViewSession aiMaestroApplySpec aiMaestroCreate
@@ -59,6 +64,7 @@ let((entryDirectory)
        aiMaestroStop aiMaestroCleanup aiMaestroRegisterExitCleanup aiMaestroRevision)
       ((aiMaestroRevision "20260908.ai.maestro.v2"))
       (aiMaestroVersion)
+      ()
       ())
     ("tools/ai/skill" "AI_maestro_validate.il" "07cda88f5a8fe934a77d9189a5f27335dba5e9f17383253db6d0264b64bb91f1"
       (aiMaestroBoundText aiMaestroJsonString aiMaestroValueJson aiMaestroListJson aiMaestroError
@@ -66,9 +72,11 @@ let((entryDirectory)
        aiMaestroVarListP aiMaestroFileP aiMaestroValidateCreate)
       ()
       (aiMaestroValidationVersion)
+      ()
       ())
     ("tools/ai/skill" "AI_circuit_rc.il" "9d1f92b99c0912002538b97d745156a3a4e7135feca9a99254c2b93ad50879ac"
       (aiRcGeometrySnapshot aiRcAnchor aiRcProperty aiRcWire aiRcVerify aiRcValidateSaved aiRcCreate)
+      ()
       ()
       ()
       ())
@@ -76,9 +84,11 @@ let((entryDirectory)
       (aiRcSetupSnapshot aiRcMaestro)
       ()
       ()
+      ()
       ())
     ("tools/ai/skill" "AI_circuit_rc_run.il" "5f0024fc7a523b0b0b653bfbf78b77d1f604a4b041587e1c625cddf53e58ed7c"
       (aiRcRunJson aiRcRunCallback aiRcRun aiRcStatus aiRcResults aiRcStop)
+      ()
       ()
       ()
       ())
@@ -86,9 +96,11 @@ let((entryDirectory)
       (aiGateMos aiGateParams aiGatePoint aiGateWire aiGateSchematic aiGateSymbol)
       ()
       ()
+      ()
       ())
     ("tools/ai/skill" "AI_circuit_gate_verify.il" "e27eab725dc9fac5143c32d5b87a70e42eb0e6664315ae822e50b147edbad2ea"
       (aiGateVerifyPorts aiGateVerifySchematic aiGateSnapshot aiGateValidate)
+      ()
       ()
       ()
       ())
@@ -96,9 +108,11 @@ let((entryDirectory)
       (aiGateReply aiGateInspect aiGateBuildView aiGateCreate)
       ()
       ()
+      ()
       ())
     ("tools/ai/skill" "AI_circuit_opamp_contract.il" "447db898652a72d9666dd4545550620f1622dc884b20173cea6987396436b5e3"
       (aiOpampReferenceContract)
+      ()
       ()
       ()
       ())
@@ -107,15 +121,18 @@ let((entryDirectory)
        aiOpampValidate aiOpampInspect aiOpampCreate)
       ((aiOpampRevision "20260910.ai.opamp.v3"))
       ()
+      ()
       ())
     ("tools/ai/skill" "AI_circuit_opamp_run.il" "d1c704199289a506a49c16ee0c6e86f3e3e79c66a778ac418a0a94dadd9cfd10"
       (aiOpampRunReply aiOpampCallback aiOpampIdle aiOpampNoActive aiOpampRun aiOpampStatus aiOpampStop
        aiOpampRelease)
       ()
       ()
+      ()
       ())
     ("tools/ai/skill" "AI_circuit_opamp_results.il" "254aef59b0cfcb3088186f82a707f21f16daeeb8e5508ec8e6f55af03cbc3c11"
       (aiOpampMeasurements aiOpampResults)
+      ()
       ()
       ()
       ())
@@ -124,9 +141,11 @@ let((entryDirectory)
        aiRebuildMasters aiRebuildSourceContract)
       ((aiRebuildRevision "20260909.ai.rebuild.v2"))
       ()
+      ()
       ())
     ("tools/ai/skill" "AI_circuit_rebuild_devices.il" "047b59eb7ebc56890cbc19915489d1de59ef722c888645667161c21547ee5a30"
       (aiRebuildInst aiRebuildPin aiRebuildStub aiRebuildDut aiRebuildTb aiRebuildSymbol)
+      ()
       ()
       ()
       ())
@@ -135,9 +154,11 @@ let((entryDirectory)
        aiRebuildInspect)
       ()
       ()
+      ()
       ())
     ("tools/ai/skill" "AI_circuit_rebuild_maestro.il" "b98bf83a257d7df4c87358485467edae9080b5f9a9dd78d23b31906f4c5ee85e"
       (aiRebuildBindTests aiRebuildSimulationValidate aiRebuildMaestro aiRebuildRun)
+      ()
       ()
       ()
       ())
@@ -146,9 +167,11 @@ let((entryDirectory)
        aiMatrixInspect aiMatrixRun)
       ((aiMatrixRevision "20260910.ai.matrix.v1"))
       ()
+      ()
       ())
     ("tools/ai/skill" "AI_circuit_matrix_results.il" "9b9765cf5172b04ed945517a28f2070c363133217c60d1499cd23cbf4d6c1028"
       (aiMatrixParam aiMatrixMatch aiMatrixScalar aiMatrixResults)
+      ()
       ()
       ()
       ())

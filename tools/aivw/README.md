@@ -74,7 +74,7 @@ Xcelium、Spectre、AMS、OCEAN、网表、波形、worklib 和仿真数据库�
 $PROJ_AMS_DB_DIR/<lib>.<cell>.<view>/runs/<run_id>/
 ```
 
-当前 setup 静态导出 `PROJ_AMS_DB_DIR=/path/to/xh/amsVerify/data/ams`。AIVW 不整体 source
+当前 setup 静态导出 `PROJ_AMS_DB_DIR=/workarea/xh/amsVerify/data/ams`。AIVW 不整体 source
 setup，只读取白名单 export，并检查绝对路径、安全边界和可写性。Control 与 payload 以同一
 run ID、request digest 和 manifest hash 绑定，所有 run 目录 exclusive-create。
 
@@ -90,34 +90,34 @@ EDA payload 写入项目启动目录的新正式运行。
 export SICO_PYTHON_ROOT="/software/pkgs/python/3.9.13"
 export SICO_PYTHON="$SICO_PYTHON_ROOT/bin/python3"
 
-/path/to/sico-src/tools/aivw/bin/aivw info
-/path/to/sico-src/tools/aivw/bin/aivw recipes
-/path/to/sico-src/tools/aivw/bin/aivw recipe saradc.comparator_new
-/path/to/sico-src/tools/aivw/bin/aivw run-recipe saradc.comparator_new --dry-run
-/path/to/sico-src/tools/aivw/bin/aivw run-recipe saradc.comparator_new --through structure
-/path/to/sico-src/tools/aivw/bin/aivw run-recipe saradc.comparator_new --through connectivity
-/path/to/sico-src/tools/aivw/bin/aivw check-connectivity \
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw info
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw recipes
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw recipe saradc.comparator_new
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw run-recipe saradc.comparator_new --dry-run
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw run-recipe saradc.comparator_new --through structure
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw run-recipe saradc.comparator_new --through connectivity
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw check-connectivity \
   --netlist /absolute/path/to/ihnl/cds5/netlist --map /absolute/path/to/map/current \
   --globalmap /absolute/path/to/ihnl/globalmap --candidate /absolute/path/to/structure.sv \
   --module comparator_new --port out --port outb --port cdsNet1 --port cdsNet0 --port clk
-/path/to/sico-src/tools/aivw/bin/aivw run-recipe saradc.comparator_new --through model_check
-/path/to/sico-src/tools/aivw/bin/aivw probe-text-view --profile amsverify
-/path/to/sico-src/tools/aivw/bin/aivw verify-run \
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw run-recipe saradc.comparator_new --through model_check
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw probe-text-view --profile amsverify
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw verify-run \
   --control-manifest /absolute/path/.aivw/runs/<run_id>/manifest.json \
   --payload-manifest /absolute/path/data/ams/<lib>.<cell>.<view>/runs/<run_id>/payload-manifest.json
 # M0-E/M0-S 与 M1-AI 命令仍由核心执行器驱动；agent 外圈已于 2026-10-11 退役
 # （见 docs/AGENT_RETIREMENT_PLAN.md）。
-/path/to/sico-src/tools/aivw/bin/aivw pilot m0-e
-/path/to/sico-src/tools/aivw/bin/aivw pilot m0-s
-/path/to/sico-src/tools/aivw/bin/aivw doctor
-/path/to/sico-src/tools/aivw/bin/aivw run m0-e
-/path/to/sico-src/tools/aivw/bin/aivw run m0-s
-/path/to/sico-src/tools/aivw/bin/aivw qualify m1-ai
-/path/to/sico-src/tools/aivw/bin/aivw run m1-ai --gate golden-nominal
-/path/to/sico-src/tools/aivw/bin/aivw run m1-ai --gate golden-pvt
-/path/to/sico-src/tools/aivw/bin/aivw run m1-ai --gate rnm
-/path/to/sico-src/tools/aivw/bin/aivw run m1-ai --gate rnm-evidence --rnm-source-manifest /absolute/path/to/m1-ai-rnm/manifest.json
-/path/to/sico-src/tools/aivw/bin/aivw run m1-ai --gate spectre-evidence --spectre-source-manifest /absolute/path/to/m1-ai-golden/manifest.json
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw pilot m0-e
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw pilot m0-s
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw doctor
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw run m0-e
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw run m0-s
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw qualify m1-ai
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw run m1-ai --gate golden-nominal
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw run m1-ai --gate golden-pvt
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw run m1-ai --gate rnm
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw run m1-ai --gate rnm-evidence --rnm-source-manifest /absolute/path/to/m1-ai-rnm/manifest.json
+/workarea/ai/openclaw/cad/tools/aivw/bin/aivw run m1-ai --gate spectre-evidence --spectre-source-manifest /absolute/path/to/m1-ai-golden/manifest.json
 ```
 
 external provider 资格化（`qualify-provider`/`qualify-revision`/`qualify-external-provider`）
@@ -126,7 +126,7 @@ external provider 资格化（`qualify-provider`/`qualify-revision`/`qualify-ext
 `run_aivw_recipe` 调用。历史 provider 证据保留在
 [M2 External Provider Acceptance](docs/M2_EXTERNAL_PROVIDER_ACCEPTANCE.md)。
 
-`doctor` 只读取 `/path/to/xh/amsVerify/setup.bashrc` 中的 `module load` 声明和白名单
+`doctor` 只读取 `/workarea/xh/amsVerify/setup.bashrc` 中的 `module load` 声明和白名单
 `PROJ_AMS_DB_DIR` literal export，不会 source 或执行该文件的其他内容。然后在一次性子
 shell 中加载：
 

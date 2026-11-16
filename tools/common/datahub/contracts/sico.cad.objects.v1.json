@@ -1,0 +1,36 @@
+{
+  "actions": {
+    "list": {
+      "capability": "aiSelectionList",
+      "request": {
+        "fields": ["window_ref", "kind", "query", "offset", "limit"],
+        "required": ["window_ref", "kind", "query", "offset", "limit"]
+      },
+      "response": {
+        "schema": "cad.cv.objects.v1"
+      }
+    }
+  },
+  "errors": [
+    "invalid_arguments",
+    "unsupported_contract",
+    "version_mismatch",
+    "capability_not_available",
+    "source_not_captured",
+    "stale_context",
+    "stale_object",
+    "ambiguous_target",
+    "read_failed",
+    "result_too_large",
+    "timeout",
+    "cancelled",
+    "internal"
+  ],
+  "limits": {
+    "max_bytes": 55000,
+    "max_items": 50,
+    "max_text": 4096
+  },
+  "name": "sico.cad.objects.v1",
+  "version": 1
+}

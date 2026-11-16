@@ -1,7 +1,7 @@
 ; Headless workflow environment, input policy and command selection.
 ; Loaded with AI_flows.il by the versioned AI parent.
 unless(and(boundp('aiWorkflowVersion)
-             aiWorkflowVersion=="20261020.sico.flow.v7"
+             aiWorkflowVersion=="20261024.sico.flow.v8"
              boundp('aiWorkflowState)
              aiWorkflowState['exitCleanupRegistered])
 
@@ -76,32 +76,9 @@ procedure(aiWorkflowToolsRoot()
     SICO_installationPath(SICO_installationRoot(launcherRoot) "tools")))
 
 procedure(aiWorkflowPython(flow)
-  let((installed productionRoot productionPython sharedPython)
+  let((installed)
     installed=SICO_installedPython()
-    sharedPython=when(not(installed)
-      SICO_environmentValue("SICO_PYTHON" list("CAD_PYTHON")))
-    productionRoot=when(not(or(installed sharedPython))
-      SICO_environmentValue("SICO_PYTHON_ROOT" list("CAD_PYTHON_ROOT")))
-    when(and(getShellEnvVar("SICO_PYTHON_ROOT") productionRoot=="")
-      error("SICO_PYTHON_ROOT must not be empty\n"))
-    unless(and(sharedPython strlen(sharedPython)>0)
-      sharedPython=when(getShellEnvVar("SICO_PYTHON") ""))
-    productionPython=when(and(productionRoot
-                                isExecutable(strcat(productionRoot "/bin/python3")))
-      strcat(productionRoot "/bin/python3"))
-    case(flow
-      ("rce" or(aiWorkflowEnv("RCE_PYTHON") installed sharedPython
-                 productionPython "/App/others/python3.9.13/bin/python3"))
-      ("drc" or(aiWorkflowEnv("DRC_PYTHON") installed sharedPython
-                 aiWorkflowEnv("RCE_PYTHON") productionPython "python3"))
-      (("lvs" "gds" "cdl")
-        or(aiWorkflowEnv("LVS_PYTHON") installed sharedPython
-            aiWorkflowEnv("RCE_PYTHON") productionPython "python3"))
-      ("lef" or(aiWorkflowEnv("LEF_PYTHON") installed sharedPython
-                 aiWorkflowEnv("RCE_PYTHON") productionPython "python3"))
-      ("dspf" or(aiWorkflowEnv("RCE_ANALYZER_PYTHON")
-                  aiWorkflowEnv("RCE_PYTHON") installed sharedPython
-                  productionPython "/App/others/python3.9.13/bin/python3")))))
+    installed))
 
 procedure(aiWorkflowExecutableP(executable)
   let((path)

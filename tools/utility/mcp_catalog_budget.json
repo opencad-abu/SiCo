@@ -389,6 +389,16 @@
    "budget": 204800,
    "status": "ok",
    "owner": "sico",
+   "exit": "Keep the exact 192-tool / 204458-byte surface until the legacy lifecycle tools have a reviewed retirement; new tools use task profiles.",
+   "exact_count": 192,
+   "exact_bytes": 204458
+  },
+  "desktop_context": {
+   "count": 193,
+   "bytes": 204985,
+   "budget": 212992,
+   "status": "ok",
+   "owner": "sico",
    "exit": ""
   },
   "desktop_core": {
@@ -482,10 +492,10 @@
    "layer": "canonical",
    "kind": "changed",
    "name": "bind_pdk_device",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "owner": "PDK tool surface budget",
+   "reason": "Documentation-only budget reduction: moved callback/permission and live-revalidation details from the advertised description into existing help_text; schema and behavior are unchanged; no frozen ceiling was relaxed.",
    "before_sha256": "ef40105ed5f325707cb4582b6a503f66708c31dfd2abe05e95a9e62782a6a405",
-   "after_sha256": "80781f7c197af398d4b7742bfc004d2308e886258e53f3bb9733aa0de3e2001d"
+   "after_sha256": "e0da06f84552d30842acf505742dc165714b5c0da35c9aa1d68d2238690d8d26"
   },
   {
    "layer": "canonical",
@@ -510,18 +520,18 @@
    "kind": "changed",
    "name": "collect_pdk_data",
    "owner": "PDK workflow",
-   "reason": "PDK tools now expose get_pdk_data(section=blockers), derive missing model.json from declared deck sections, and return prioritized root causes instead of a bare incomplete status; descriptions were tightened to stay within the catalog budget.",
+   "reason": "collect_pdk_data now exposes the layout_qualification/layout_qualification_evidence pair in addition to layout_policy; it records DRC/LVS results, tested parameter scope and a sha256-bound private evidence reference, and marks the device layout_available=true only when qualification is present. Layout collection now also emits the new PCell/parameter/three-LPP contract, enforces meter-based process units/pin_lpp_map/via stack, and records explicit unavailability when no layout view exists. The advertised description was shortened to keep desktop_compat within its frozen budget.",
    "before_sha256": "e339a18e87277237acc2ff5a8ce847192ca09f592fb0787225771f43bc246f07",
-   "after_sha256": "e659721b7c41d99d1640430a40e9b5e5856309e0d88073c27ed1517c6908dd6c"
+   "after_sha256": "ffed16f11e622b184d43efd4789dc18d2a1ea56d1c1625f491fa0ee83fe7dbb6"
   },
   {
    "layer": "canonical",
    "kind": "changed",
    "name": "collect_pdk_parameter_facts",
    "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them. The wire description is tightened for the public acceptance tool budget; behavior and schema are unchanged.",
    "before_sha256": "7387b0b7fad76e9b54b9054037aeb399d632b0f861b1b1a863fc3ed792b1ad0d",
-   "after_sha256": "6d3e272f30fe1c37ee285000ee8e394e9e3d9fbaf8695851cdcc34991cb7d04d"
+   "after_sha256": "cf07d2ca80ab6a92e5858339b62656ce3e1266b6c58662fb73c0d4cf58b050ee"
   },
   {
    "layer": "canonical",
@@ -537,9 +547,9 @@
    "kind": "changed",
    "name": "create_circuit_library",
    "owner": "MCP catalog / schema factoring",
-   "reason": "Direct one-step create accepts library/optional technology and points to prepare_library for explicit stepwise review.",
+   "reason": "Direct one-step create accepts library/optional technology and points to prepare_library for explicit stepwise review. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged.",
    "before_sha256": "6388920864634c7ff954137f3f582e44172fc2d8cf868326d25dfd216f37e8ed",
-   "after_sha256": "8ab658dd0ed95ed9b0d7876c899e4e9cf406fb2562e2718cd4e8bacebd2acc63"
+   "after_sha256": "49e4f00fe515bf5fce1f240a13e577b0c883c5104d033d8274b6e284f55c487b"
   },
   {
    "layer": "canonical",
@@ -554,10 +564,10 @@
    "layer": "canonical",
    "kind": "changed",
    "name": "create_simulation_setup",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "owner": "PDK tool surface budget",
+   "reason": "Documentation-only budget reduction: moved foreground/retained-status details from the advertised description into existing help_text; schema and behavior are unchanged; no frozen ceiling was relaxed.",
    "before_sha256": "ec72e6fdd1ddc6c384e01bc1b0164a43b251f423dd6d1c723c85aa305d875c1e",
-   "after_sha256": "35b5de4a3b51ac45f4929ebac574b1d7827e535690e22e4a2452bc009ce1cd91"
+   "after_sha256": "f13cf2eedee3f1a5cc78be497bd0fa6f1805356275f64606ae240e1546bd8ccd"
   },
   {
    "layer": "canonical",
@@ -609,9 +619,9 @@
    "kind": "changed",
    "name": "get_pdk_data",
    "owner": "PDK workflow",
-   "reason": "PDK model collection now also exposes the derived model/subckt card inventory from get_pdk_data(section=model); the tool contract otherwise keeps its membership and behavior.",
+   "reason": "Adds the read-only consumer capability registry query (section=capabilities) with stable gap codes; package membership and behavior are unchanged. IV runs now have a registered validator and a bounded numeric query (iv={run,points,columns,range}); the advertised description was tightened to stay within the frozen desktop_compat budget.",
    "before_sha256": "8ef35894494587e2b33b42e83beda17fae429cc646131d9bdb393e4d41110fd7",
-   "after_sha256": "a426c9b06fc101328c7de09e8504f10fd39ef6b647cadf8d149f0ec8b1fe205b"
+   "after_sha256": "1e8d487695fe1e9402603012a0f6db9db7398e68ac79314084ccead297ea47be"
   },
   {
    "layer": "canonical",
@@ -654,27 +664,27 @@
    "kind": "added",
    "name": "init_pdk",
    "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them. init_pdk now carries an optional reload flag so the idempotent initializer can force a fresh libInit.il load past the per-session cache; the advertised description was trimmed to offset the added property and no frozen ceiling was relaxed.",
    "before_sha256": null,
-   "after_sha256": "4e77af3e73d0815e986bd59088053a981ebdbb79fd16dc780eeae663e6b94ea4"
+   "after_sha256": "bbdce5bf807d297981366eae27263182feffaa47acf8dc92fc15c89723c8b144"
   },
   {
    "layer": "canonical",
    "kind": "changed",
    "name": "inspect_cdf",
    "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged.",
    "before_sha256": "44a89ccc99ecf9fe1c23cc01300f1ae98dd7fc5ea19262c5765cc736816a2503",
-   "after_sha256": "35c23a5eb9f90af1561958a91031ffdadc4a07df2e1daaa89371a3749ae9ad4f"
+   "after_sha256": "c4382a91ba705a0f57897eaab773532a1c4607000bbb162f320769a44a949014"
   },
   {
    "layer": "canonical",
    "kind": "changed",
    "name": "inspect_circuit_target",
-   "owner": "sico-target-scope",
-   "reason": "Existing-target review is deferred to write preparation; read-only inspection no longer creates a decision. The shorter description states that inspection never asks about existing content.",
+   "owner": "sico-ask-read-inspect",
+   "reason": "Read-only target inspection no longer requires a task: an Ask entry can inspect its captured source. task_ref is optional; stale or omitted tasks are kept as read-only observations, and writes still require begin_circuit_task plus a fresh inspection. The description is shortened to keep the simulation profile within its frozen byte budget. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged.",
    "before_sha256": "7c02f29d37aea78650fcfed88593bada968b35908b3e4774e22eaf84341a5d6f",
-   "after_sha256": "daa4f4af61e752ba3268ea5f98e3b632273bc4e70325b45b708ade6ae4ce2381"
+   "after_sha256": "76a798bdd822e1c2789cfe2966860d474870811da0a7680baecc353f3055da94"
   },
   {
    "layer": "canonical",
@@ -699,9 +709,9 @@
    "kind": "changed",
    "name": "list_project_extensions",
    "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged.",
    "before_sha256": "c3631ad3c6f013e775760ec1cb1258b6992c98aa3152cea3430f7717f1b1fea3",
-   "after_sha256": "0adc082dd2ece8547dab8047d7cdf788546c9e5f57f3d34800b37951dd6bc4ab"
+   "after_sha256": "fd1326ebbd2c140acf9269ac99cd31dbec6fdba8369ecb5fba18a01b9c47c0ce"
   },
   {
    "layer": "canonical",
@@ -753,108 +763,108 @@
    "kind": "changed",
    "name": "preflight_circuit_project",
    "owner": "MCP catalog / schema factoring",
-   "reason": "preflight_circuit_project now documents that ADE creates simulation run directories; circuit-only work needs no run directory. Schema, name and membership are unchanged.",
+   "reason": "preflight_circuit_project now documents that ADE creates simulation run directories; circuit-only work needs no run directory. The shared design-name pattern now also permits a leading digit. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged.",
    "before_sha256": "3daff88df36611d4e6debf34f550d44182807ecb81aa0b0e452d0002f46f3930",
-   "after_sha256": "2cc4d1250cc9a430d22b3afbd7e775a3425b6ae6ef3cc87a7b9e0fd5b1b7ee39"
+   "after_sha256": "f5f6e3c648e12b1f5a231d602307874b17d90969249f2120e454f170a8fc4604"
   },
   {
    "layer": "canonical",
    "kind": "changed",
    "name": "prepare_circuit_creation",
-   "owner": "sico-target-scope",
-   "reason": "The description now places the one existing-target decision at write preparation and documents automatic continuation for current-task retained targets. Schema and membership are unchanged.",
+   "owner": "SiCo circuit-library source access (CCL0-C)",
+   "reason": "The description now places the one existing-target decision at write preparation and documents automatic continuation for current-task retained targets. The shared design-name pattern now also permits a leading digit. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged. prepare_circuit_creation now accepts target_action=create as a reuse_empty alias for an absent target. Adds layout_intent as the deterministic placement entry: role columns/rows, anchors, ports and basic/gnd pin links are resolved by the tool; explicit layout remains an expert override and the hard grid/bbox/escape/pin-link checks are unchanged. CCL0-C adds source_id selection and source_ref binding to the existing library query/get/prepare chain. Template-use v1/v2 preserve the bound source during preview and replay; query description details move to existing help_text to retain the frozen byte ceiling. Tool membership and validation semantics remain unchanged.",
    "before_sha256": "2c162f90dfec4e173f4f93e96998c9211dbabfaba7d5dddd06e849d983f1dca3",
-   "after_sha256": "b5ba0269a4ffc88a74b79bc9a9614d2f198afa4783b800e194f2e6487867e5a3"
+   "after_sha256": "7ab8e3dee5f303e7eefc441cd10fa38ac88ffdfa4c57a7e83c427915f6089273"
   },
   {
    "layer": "canonical",
    "kind": "changed",
    "name": "prepare_circuit_edit",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "Advertise the compact top-level circuit/template schema and a shorter description; the full nested validation contract remains in inputSchema and is served on demand by mcp_help schema.",
+   "owner": "SiCo circuit-library source access (CCL0-C)",
+   "reason": "Advertise the compact top-level circuit/template schema and a shorter description; the full nested validation contract remains in inputSchema and is served on demand by mcp_help schema. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged. CCL0-C adds source_id selection and source_ref binding to the existing library query/get/prepare chain. Template-use v1/v2 preserve the bound source during preview and replay; query description details move to existing help_text to retain the frozen byte ceiling. Tool membership and validation semantics remain unchanged.",
    "before_sha256": "077a141dcd4c1b33aed89f4c6110b85d18a06df1dc557e58052356b30cca05e0",
-   "after_sha256": "4f9a3299ffee601c546a47be708cda3323310fd8b9fc1b3be4e96ae42cd0a708"
+   "after_sha256": "1010f35117732a0736a283e5477fb8ebdc7b1e1adf9bd0033898286536a5c5bd"
   },
   {
    "layer": "canonical",
    "kind": "changed",
    "name": "prepare_circuit_template_plan",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "Advertise the compact top-level circuit/template schema and a shorter description; the full nested validation contract remains in inputSchema and is served on demand by mcp_help schema.",
+   "owner": "SiCo circuit-library source access (CCL0-C)",
+   "reason": "Advertise the compact top-level circuit/template schema and a shorter description; the full nested validation contract remains in inputSchema and is served on demand by mcp_help schema. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged. Template placement routing is now optional and omitted routing defaults to labelled stubs. CCL0-C adds source_id selection and source_ref binding to the existing library query/get/prepare chain. Template-use v1/v2 preserve the bound source during preview and replay; query description details move to existing help_text to retain the frozen byte ceiling. Tool membership and validation semantics remain unchanged.",
    "before_sha256": "a17af23c1d8a0ee96c55efddff1112054553998fc05bd215252f188a1485d02b",
-   "after_sha256": "329103497059f3c699b79c4162fe58eacafeb09e25bb471e5eb1d18341332d54"
+   "after_sha256": "c2bcf643de0987a9ff53b4b6551a53da6be1ce3d489309fbe6b584a533761edd"
   },
   {
    "layer": "canonical",
    "kind": "added",
    "name": "prepare_pdk_baseline_update",
    "owner": "MCP catalog / schema factoring",
-   "reason": "PDK tool descriptions now direct users to 设置 → 智能体设置 → 智能体模式 instead of the retired modulefile SICO_PDK_WORKFLOW; schema and membership are unchanged.",
+   "reason": "PDK review pagination and semantic-equivalent symbol/orphan-interface refreshes reduce mechanical reviews; the complete before/after evidence remains host-paginated. Adds capture_digest for reviewed incremental fresh-capture adoption, including changed CDF/symbol/interface facts with unknown policy and re-review; removals remain fail-closed. Adds sources for same-review document/model resource and root registration during capture adoption; existing roots, bytes and dependencies remain immutable. The visible description is tightened to keep the frozen desktop profile budget.",
    "before_sha256": null,
-   "after_sha256": "001f6ca06883cac1beec2b55537757fe243659fb29fe8b050d4a2df1857c8b8c"
+   "after_sha256": "c704a031045e28fa932e29ccb8528227720a1eb0f11d02d2a991e0ce7c1e42ff"
   },
   {
    "layer": "canonical",
    "kind": "changed",
    "name": "prepare_pdk_cdf_validation",
    "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "reason": "Retains up to 64 source-bound CDF cases; the tool contract now permits broader reviewer-defined cases while preserving preparation-only safety.",
    "before_sha256": "f3a0bfe6811e2d67ab568e5fd362a7876a7bbb65c8b5ce811508200ee726ffe6",
-   "after_sha256": "0715bcf750fc95d721f2f04296cca63a649ae72910e15588c3f3e7e6f1cee778"
+   "after_sha256": "406c349ab074e9478e4017d879ff73d6d32f95637c518fbb3b809b41cde0eea1"
   },
   {
    "layer": "canonical",
    "kind": "changed",
    "name": "prepare_pdk_parameter_draft",
    "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them. The wire description is tightened for the public acceptance tool budget; behavior and schema are unchanged.",
    "before_sha256": "b876ddf59ca88939dc8b361c2dd4f47987e94a4c4adc860c50a986299b536b0e",
-   "after_sha256": "bca85a9d98448fe1433945f0826edd318f4e9d9e204fd6310859321b22d4b0ea"
+   "after_sha256": "0607a3d4252dc8ba0400dbf4e620c7b4636dafe4a77086f25d2ec3cf97390603"
   },
   {
    "layer": "canonical",
    "kind": "changed",
    "name": "prepare_template_circuit",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "owner": "SiCo portable template preparation (CCL1-B)",
+   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged. CCL0-C adds source_id selection and source_ref binding to the existing library query/get/prepare chain. Template-use v1/v2 preserve the bound source during preview and replay; query description details move to existing help_text to retain the frozen byte ceiling. Tool membership and validation semantics remain unchanged. CCL1-B documents portable whole scalar preparation with explicit maps, current published target PDK bindings, target geometry and shared execution guards; schema and membership remain unchanged.",
    "before_sha256": "1e8ded0d0575f225d0d605ff037afe2b512f153d09a2b14a2d9bec07004a5ac3",
-   "after_sha256": "572ca7e9a8cab5f720e4227e748a67f18cd1835f759537294e5c9c4a72a6f6a9"
+   "after_sha256": "d40533a187b41f476e270a9434f384d7c7fe1eb5e418521adb42f8abfdce715a"
   },
   {
    "layer": "canonical",
    "kind": "changed",
    "name": "preview_circuit_geometry",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "Advertise the compact top-level circuit/template schema and a shorter description; the full nested validation contract remains in inputSchema and is served on demand by mcp_help schema.",
+   "owner": "SiCo circuit-library source access (CCL0-C)",
+   "reason": "Advertise the compact top-level circuit/template schema and a shorter description; the full nested validation contract remains in inputSchema and is served on demand by mcp_help schema. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged. Adds layout_intent as the deterministic placement entry: role columns/rows, anchors, ports and basic/gnd pin links are resolved by the tool; explicit layout remains an expert override and the hard grid/bbox/escape/pin-link checks are unchanged. CCL0-C adds source_id selection and source_ref binding to the existing library query/get/prepare chain. Template-use v1/v2 preserve the bound source during preview and replay; query description details move to existing help_text to retain the frozen byte ceiling. Tool membership and validation semantics remain unchanged.",
    "before_sha256": "73b0f1daee1511b94dcb6b9221785ba8bf6e5fe05ba3a8e172d47f2db42e8b39",
-   "after_sha256": "b034b4f62a06acb591261a990e547eeb795a12e6af4338132ebc3d96afb3d6c5"
+   "after_sha256": "dbf38bee8342180cdf0927ecb520f14ab653ee6d70d0b6e73091fcab39d2624a"
   },
   {
    "layer": "canonical",
    "kind": "changed",
    "name": "preview_circuit_spec",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "Advertise the compact top-level circuit/template schema and a shorter description; the full nested validation contract remains in inputSchema and is served on demand by mcp_help schema.",
+   "owner": "SiCo circuit-library source access (CCL0-C)",
+   "reason": "Advertise the compact top-level circuit/template schema and a shorter description; the full nested validation contract remains in inputSchema and is served on demand by mcp_help schema. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged. CCL0-C adds source_id selection and source_ref binding to the existing library query/get/prepare chain. Template-use v1/v2 preserve the bound source during preview and replay; query description details move to existing help_text to retain the frozen byte ceiling. Tool membership and validation semantics remain unchanged.",
    "before_sha256": "0dc2c05a907ced7f5acfff75a196f70f42aede17dc10730abbc1cc3f3f66a09c",
-   "after_sha256": "b435ad6c2eea905d3d6521a2cce689905ac9dc9e2d0341d5f4989795ccdbe330"
+   "after_sha256": "439ba4c469648bd6ee4d2a5e8ac77080d76d7b2bcd908267728c01913fe78a26"
   },
   {
    "layer": "canonical",
    "kind": "changed",
    "name": "preview_simulation_recipe",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "owner": "PDK tool surface budget",
+   "reason": "Documentation-only budget reduction: moved model-inheritance, plotting, corner/sweep and limit details from the advertised description into existing help_text; schema and behavior are unchanged; no frozen ceiling was relaxed.",
    "before_sha256": "5b7d81d0981a232f178611a051499ecaaa43dada9e12b5753a9b751da4105204",
-   "after_sha256": "24c6af36c75f20d1f7cd825a7d751aa163fd6741b4deb54e1bcb8c3ba2dcbace"
+   "after_sha256": "6a7f8ec32644f8705742965161c9f32a748f37b4f97467815ba2d07493984ef6"
   },
   {
    "layer": "canonical",
    "kind": "changed",
    "name": "preview_template_placement",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "Advertise the compact top-level circuit/template schema and a shorter description; the full nested validation contract remains in inputSchema and is served on demand by mcp_help schema.",
+   "owner": "SiCo circuit-library source access (CCL0-C)",
+   "reason": "Advertise the compact top-level circuit/template schema and a shorter description; the full nested validation contract remains in inputSchema and is served on demand by mcp_help schema. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged. CCL0-C adds source_id selection and source_ref binding to the existing library query/get/prepare chain. Template-use v1/v2 preserve the bound source during preview and replay; query description details move to existing help_text to retain the frozen byte ceiling. Tool membership and validation semantics remain unchanged.",
    "before_sha256": "842a454219e414b512da23c1f64e91f25ba8389ca7a3d430e24ea345c98e275a",
-   "after_sha256": "469eac21f62294723586eb0195b369de8febe954c35b74cfd69abb76659df178"
+   "after_sha256": "ef1bf274ebe5c7d0ff3f7ed2ed4f08c4fe0db6e01d164d5de4b8705150001107"
   },
   {
    "layer": "canonical",
@@ -888,18 +898,18 @@
    "kind": "changed",
    "name": "publish_pdk_data",
    "owner": "PDK workflow",
-   "reason": "PDK tools now expose get_pdk_data(section=blockers), derive missing model.json from declared deck sections, and return prioritized root causes instead of a bare incomplete status; descriptions were tightened to stay within the catalog budget.",
+   "reason": "PDK tools now expose get_pdk_data(section=blockers), derive missing model.json from declared deck sections, and return prioritized root causes instead of a bare incomplete status; descriptions were tightened to stay within the catalog budget. The wire description is tightened for the public acceptance tool budget; behavior and schema are unchanged.",
    "before_sha256": "e4ed67a2f7d5b2302beae120680c48b5c6aa08b44e0af62b57ec80c1770f9bbe",
-   "after_sha256": "6c03a9bf88954c4645b19cb005e658c9ceb7d5e84c996570ef1dad237038311c"
+   "after_sha256": "0a049509fa4801db92262d0a4a9e779bbfe59deaea5e6fce3bdb47a1818a0aac"
   },
   {
    "layer": "canonical",
    "kind": "changed",
    "name": "query_circuit_templates",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "owner": "SiCo circuit-library source access (CCL0-C)",
+   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them. CCL0-C adds source_id selection and source_ref binding to the existing library query/get/prepare chain. Template-use v1/v2 preserve the bound source during preview and replay; query description details move to existing help_text to retain the frozen byte ceiling. Tool membership and validation semantics remain unchanged.",
    "before_sha256": "a4c723cb1ba9783c650d08dae51083788ac5bbd04fa8eba63d0da25763e2dc93",
-   "after_sha256": "e241e4dc96e495f32753ecc03b08ae6cf633f8dc8f3bd95131b47919347b752e"
+   "after_sha256": "554fbb6a31ae68e5532ea627e72c3da90b06f014d33b20e5a40132dd4b897791"
   },
   {
    "layer": "canonical",
@@ -947,6 +957,15 @@
    "after_sha256": "a8c2637ae8210515783e611a0f6550020fcde65cfc86912b39a7ace3e4cf70bc"
   },
   {
+   "layer": "canonical",
+   "kind": "changed",
+   "name": "import_pdk_facts",
+   "owner": "PDK tool surface budget",
+   "reason": "Documentation-only budget reduction: moved legacy-checkpoint and qualification-boundary details from the advertised description into existing help_text; schema and behavior are unchanged; no frozen ceiling was relaxed.",
+   "before_sha256": "cd61f7c5e903e279f7359ca31a97feea9e6fa67eb722232d14ba373947d0fae8",
+   "after_sha256": "302bce09f1e2208c96cf27e32a769c3794c0440fcad2957f2b7c3a88e8a4de86"
+  },
+  {
    "layer": "host",
    "kind": "added",
    "name": "apply_pdk_baseline_update",
@@ -959,10 +978,10 @@
    "layer": "host",
    "kind": "changed",
    "name": "bind_pdk_device",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "owner": "PDK tool surface budget",
+   "reason": "Documentation-only budget reduction: moved callback/permission and live-revalidation details from the advertised description into existing help_text; schema and behavior are unchanged; no frozen ceiling was relaxed.",
    "before_sha256": "dfd6588435e71c36fbc60eb2e837a0b8b9ca7a98e896956e567f0dc17fab19f4",
-   "after_sha256": "6c6154b40ea7222ad42e8fde1ce5760589eab0dd1672757d3dd01242cdfad7ce"
+   "after_sha256": "cde43542442f1d9ebd295dd2c81aa85dae59329bfaaf906326e8cca3d8344312"
   },
   {
    "layer": "host",
@@ -987,18 +1006,18 @@
    "kind": "changed",
    "name": "collect_pdk_data",
    "owner": "PDK workflow",
-   "reason": "PDK tools now expose get_pdk_data(section=blockers), derive missing model.json from declared deck sections, and return prioritized root causes instead of a bare incomplete status; descriptions were tightened to stay within the catalog budget.",
+   "reason": "collect_pdk_data now exposes the layout_qualification/layout_qualification_evidence pair in addition to layout_policy; it records DRC/LVS results, tested parameter scope and a sha256-bound private evidence reference, and marks the device layout_available=true only when qualification is present. Layout collection now also emits the new PCell/parameter/three-LPP contract, enforces meter-based process units/pin_lpp_map/via stack, and records explicit unavailability when no layout view exists. The advertised description was shortened to keep desktop_compat within its frozen budget.",
    "before_sha256": "e339a18e87277237acc2ff5a8ce847192ca09f592fb0787225771f43bc246f07",
-   "after_sha256": "4705a5a53dba4e1970c45e99e613fa2691fdb0ca1db5f317043154101572b097"
+   "after_sha256": "02d6fde6a296be087c3272c26c73d7ce0cd5a31b3f1fc020e0d92a448f1e1ebc"
   },
   {
    "layer": "host",
    "kind": "changed",
    "name": "collect_pdk_parameter_facts",
    "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them. The wire description is tightened for the public acceptance tool budget; behavior and schema are unchanged.",
    "before_sha256": "48dec3caf501014d2466a41a06937128c6fde633f1d51b8bb9dbc840df9a0d44",
-   "after_sha256": "1b322766501b10523968fd88914bfd2b962c6f7928fd1a805a767140ba4a52bd"
+   "after_sha256": "da78d9214c5650ee17269c4477144061c5673c81a21d8297498ada16961b42e0"
   },
   {
    "layer": "host",
@@ -1014,9 +1033,9 @@
    "kind": "changed",
    "name": "create_circuit_library",
    "owner": "MCP catalog / schema factoring",
-   "reason": "Direct one-step create accepts library/optional technology and points to prepare_library for explicit stepwise review.",
+   "reason": "Direct one-step create accepts library/optional technology and points to prepare_library for explicit stepwise review. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged.",
    "before_sha256": "6388920864634c7ff954137f3f582e44172fc2d8cf868326d25dfd216f37e8ed",
-   "after_sha256": "8ab658dd0ed95ed9b0d7876c899e4e9cf406fb2562e2718cd4e8bacebd2acc63"
+   "after_sha256": "49e4f00fe515bf5fce1f240a13e577b0c883c5104d033d8274b6e284f55c487b"
   },
   {
    "layer": "host",
@@ -1031,10 +1050,10 @@
    "layer": "host",
    "kind": "changed",
    "name": "create_simulation_setup",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "owner": "PDK tool surface budget",
+   "reason": "Documentation-only budget reduction: moved foreground/retained-status details from the advertised description into existing help_text; schema and behavior are unchanged; no frozen ceiling was relaxed.",
    "before_sha256": "ec72e6fdd1ddc6c384e01bc1b0164a43b251f423dd6d1c723c85aa305d875c1e",
-   "after_sha256": "35b5de4a3b51ac45f4929ebac574b1d7827e535690e22e4a2452bc009ce1cd91"
+   "after_sha256": "981c8353a80cb2af2c8a258605c274901c07e42ec307ac78d9bd5aae3253019c"
   },
   {
    "layer": "host",
@@ -1095,9 +1114,9 @@
    "kind": "changed",
    "name": "get_pdk_data",
    "owner": "PDK workflow",
-   "reason": "PDK tools now expose get_pdk_data(section=blockers), derive missing model.json from declared deck sections, and return prioritized root causes instead of a bare incomplete status; descriptions were tightened to stay within the catalog budget.",
+   "reason": "Adds the read-only consumer capability registry query (section=capabilities) with stable gap codes; package membership and behavior are unchanged. IV runs now have a registered validator and a bounded numeric query (iv={run,points,columns,range}); the advertised description was tightened to stay within the frozen desktop_compat budget.",
    "before_sha256": "8227065e69fb46ae42ea0bc4ab05772f1a1dd8b2154c1cbc7bce5c912df7f89f",
-   "after_sha256": "4fd3e53ef7767fe68edceffc9179b48f039b0f3d1d0610447d6c1ab82ec9299a"
+   "after_sha256": "9fadef44ba9f98a09f1a28db820454e88cb2adf012cca4bd27c68bf6dd5a1d82"
   },
   {
    "layer": "host",
@@ -1140,27 +1159,27 @@
    "kind": "added",
    "name": "init_pdk",
    "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them. init_pdk now carries an optional reload flag so the idempotent initializer can force a fresh libInit.il load past the per-session cache; the advertised description was trimmed to offset the added property and no frozen ceiling was relaxed.",
    "before_sha256": null,
-   "after_sha256": "4e77af3e73d0815e986bd59088053a981ebdbb79fd16dc780eeae663e6b94ea4"
+   "after_sha256": "bbdce5bf807d297981366eae27263182feffaa47acf8dc92fc15c89723c8b144"
   },
   {
    "layer": "host",
    "kind": "changed",
    "name": "inspect_cdf",
    "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged.",
    "before_sha256": "a38c67fb4e8aa41c190935f73ddba3138bcbb19fef527fa195f3f7e393cb8c22",
-   "after_sha256": "8b0ba1938b9fab62de84ca91bad361bc014af6a32513202043456fa7cd62636d"
+   "after_sha256": "be01fe5c11677e9180a4c08acb77c22082499426c97225ce8c8c8a3f54ea0b95"
   },
   {
    "layer": "host",
    "kind": "changed",
    "name": "inspect_circuit_target",
-   "owner": "sico-target-scope",
-   "reason": "Existing-target review is deferred to write preparation; read-only inspection no longer creates a decision. The shorter description states that inspection never asks about existing content.",
+   "owner": "sico-ask-read-inspect",
+   "reason": "Read-only target inspection no longer requires a task: an Ask entry can inspect its captured source. task_ref is optional; stale or omitted tasks are kept as read-only observations, and writes still require begin_circuit_task plus a fresh inspection. The description is shortened to keep the simulation profile within its frozen byte budget. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged.",
    "before_sha256": "7c02f29d37aea78650fcfed88593bada968b35908b3e4774e22eaf84341a5d6f",
-   "after_sha256": "daa4f4af61e752ba3268ea5f98e3b632273bc4e70325b45b708ade6ae4ce2381"
+   "after_sha256": "76a798bdd822e1c2789cfe2966860d474870811da0a7680baecc353f3055da94"
   },
   {
    "layer": "host",
@@ -1185,9 +1204,9 @@
    "kind": "changed",
    "name": "list_project_extensions",
    "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged.",
    "before_sha256": "c3631ad3c6f013e775760ec1cb1258b6992c98aa3152cea3430f7717f1b1fea3",
-   "after_sha256": "0adc082dd2ece8547dab8047d7cdf788546c9e5f57f3d34800b37951dd6bc4ab"
+   "after_sha256": "fd1326ebbd2c140acf9269ac99cd31dbec6fdba8369ecb5fba18a01b9c47c0ce"
   },
   {
    "layer": "host",
@@ -1239,18 +1258,18 @@
    "kind": "changed",
    "name": "preflight_circuit_project",
    "owner": "MCP catalog / schema factoring",
-   "reason": "preflight_circuit_project now documents that ADE creates simulation run directories; circuit-only work needs no run directory. Schema, name and membership are unchanged.",
+   "reason": "preflight_circuit_project now documents that ADE creates simulation run directories; circuit-only work needs no run directory. The shared design-name pattern now also permits a leading digit. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged.",
    "before_sha256": "3daff88df36611d4e6debf34f550d44182807ecb81aa0b0e452d0002f46f3930",
-   "after_sha256": "ceb130997ddca56deca39ed4db51b757aa14623bf20d3fe51cce084d4a7c7cb0"
+   "after_sha256": "53165316f169dff7a0e92b82067ac8e4069fb0a616bbab8322cc74ac1706b99b"
   },
   {
    "layer": "host",
    "kind": "changed",
    "name": "prepare_circuit_creation",
    "owner": "sico-target-scope",
-   "reason": "The description now places the one existing-target decision at write preparation and documents automatic continuation for current-task retained targets. Schema and membership are unchanged.",
+   "reason": "The description now places the one existing-target decision at write preparation and documents automatic continuation for current-task retained targets. The shared design-name pattern now also permits a leading digit. prepare_circuit_creation now accepts target_action=create as a reuse_empty alias for an absent target. Adds layout_intent as the deterministic placement entry: role columns/rows, anchors, ports and basic/gnd pin links are resolved by the tool; explicit layout remains an expert override and the hard grid/bbox/escape/pin-link checks are unchanged.",
    "before_sha256": "2c162f90dfec4e173f4f93e96998c9211dbabfaba7d5dddd06e849d983f1dca3",
-   "after_sha256": "056ac80a75bfe77630e60dc9304051560f1175e6197164e9f21499c84a03469a"
+   "after_sha256": "9a4d4ea2e0b13b8d75243f165df3ef8e18baac10a5cc597a217ff7148538565e"
   },
   {
    "layer": "host",
@@ -1265,55 +1284,55 @@
    "layer": "host",
    "kind": "changed",
    "name": "prepare_circuit_template_plan",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "Advertise the compact top-level circuit/template schema and a shorter description; the full nested validation contract remains in inputSchema and is served on demand by mcp_help schema.",
+   "owner": "SiCo circuit-library source access (CCL0-C)",
+   "reason": "Advertise the compact top-level circuit/template schema and a shorter description; the full nested validation contract remains in inputSchema and is served on demand by mcp_help schema. CCL0-C adds source_id selection and source_ref binding to the existing library query/get/prepare chain. Template-use v1/v2 preserve the bound source during preview and replay; query description details move to existing help_text to retain the frozen byte ceiling. Tool membership and validation semantics remain unchanged.",
    "before_sha256": "a17af23c1d8a0ee96c55efddff1112054553998fc05bd215252f188a1485d02b",
-   "after_sha256": "5223cd3cdfe2d91bc1dc15673df0f43a740958ce2f8cd8fa53ae1b1ce2cf88e3"
+   "after_sha256": "f57596a4d991c0f838e1d54b4790f28204030a7a5c067381b5f19aef58ca37a4"
   },
   {
    "layer": "host",
    "kind": "added",
    "name": "prepare_pdk_baseline_update",
    "owner": "MCP catalog / schema factoring",
-   "reason": "PDK tool descriptions now direct users to 设置 → 智能体设置 → 智能体模式 instead of the retired modulefile SICO_PDK_WORKFLOW; schema and membership are unchanged.",
+   "reason": "PDK review pagination allows the reviewed baseline-refresh batch to grow from 8 to 64 devices; schema membership is unchanged and the complete before/after review remains host-paginated. Adds capture_digest for reviewed incremental fresh-capture adoption, including changed CDF/symbol/interface facts with unknown policy and re-review; removals remain fail-closed. Adds sources for same-review document/model resource and root registration during capture adoption; existing roots, bytes and dependencies remain immutable. The visible description is tightened to keep the frozen desktop profile budget.",
    "before_sha256": null,
-   "after_sha256": "09394866c11c4a97e6057fb5bba0a11b206d4996c49e8d18a88dfc1852a7e358"
+   "after_sha256": "04911fdb74759245cd9f428ba4e3f8f0f0948ed6b69c080241c8e2423d84331e"
   },
   {
    "layer": "host",
    "kind": "changed",
    "name": "prepare_pdk_cdf_validation",
    "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "reason": "Retains up to 64 source-bound CDF cases; the tool contract now permits broader reviewer-defined cases while preserving preparation-only safety.",
    "before_sha256": "f3a0bfe6811e2d67ab568e5fd362a7876a7bbb65c8b5ce811508200ee726ffe6",
-   "after_sha256": "0715bcf750fc95d721f2f04296cca63a649ae72910e15588c3f3e7e6f1cee778"
+   "after_sha256": "406c349ab074e9478e4017d879ff73d6d32f95637c518fbb3b809b41cde0eea1"
   },
   {
    "layer": "host",
    "kind": "changed",
    "name": "prepare_pdk_parameter_draft",
    "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them. The wire description is tightened for the public acceptance tool budget; behavior and schema are unchanged.",
    "before_sha256": "b876ddf59ca88939dc8b361c2dd4f47987e94a4c4adc860c50a986299b536b0e",
-   "after_sha256": "bca85a9d98448fe1433945f0826edd318f4e9d9e204fd6310859321b22d4b0ea"
+   "after_sha256": "66ec7056c4b30d3e91b1df62b31bfb3cbc9e2d91f6044e8f3565ca4dc2b4d042"
   },
   {
    "layer": "host",
    "kind": "changed",
    "name": "prepare_template_circuit",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "owner": "SiCo portable template preparation (CCL1-B)",
+   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged. CCL0-C adds source_id selection and source_ref binding to the existing library query/get/prepare chain. Template-use v1/v2 preserve the bound source during preview and replay; query description details move to existing help_text to retain the frozen byte ceiling. Tool membership and validation semantics remain unchanged. CCL1-B documents portable whole scalar preparation with explicit maps, current published target PDK bindings, target geometry and shared execution guards; schema and membership remain unchanged.",
    "before_sha256": "46adb32cfe086b49016c3f4dec445e6a86eb254559b405541657bf22a6693629",
-   "after_sha256": "67ec4ef511a898dca8038ef6511a751c594ca66be1ad5905b493602414809d83"
+   "after_sha256": "836f1855a62c575edbc41370d44952a4b39aacb588a94af6fb28e7084a3985b5"
   },
   {
    "layer": "host",
    "kind": "changed",
    "name": "preview_circuit_geometry",
    "owner": "MCP catalog / schema factoring",
-   "reason": "Advertise the compact top-level circuit/template schema and a shorter description; the full nested validation contract remains in inputSchema and is served on demand by mcp_help schema.",
+   "reason": "Advertise the compact top-level circuit/template schema and a shorter description; the full nested validation contract remains in inputSchema and is served on demand by mcp_help schema. Adds layout_intent as the deterministic placement entry: role columns/rows, anchors, ports and basic/gnd pin links are resolved by the tool; explicit layout remains an expert override and the hard grid/bbox/escape/pin-link checks are unchanged.",
    "before_sha256": "62e87ed83abaa90903c412f4a4655b5a5ffe4de3b6b043926c5688de869b69b6",
-   "after_sha256": "abed92dd9617afdf25c968fe23fe1ac96d2565be5641a9e47971f51a28dba6b0"
+   "after_sha256": "bafc5f8da2286b108475b1cd385465d75da98105bf0ac10dd0a7af837e88d50f"
   },
   {
    "layer": "host",
@@ -1328,10 +1347,10 @@
    "layer": "host",
    "kind": "changed",
    "name": "preview_simulation_recipe",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "owner": "PDK tool surface budget",
+   "reason": "Documentation-only budget reduction: moved model-inheritance, plotting, corner/sweep and limit details from the advertised description into existing help_text; schema and behavior are unchanged; no frozen ceiling was relaxed.",
    "before_sha256": "5b7d81d0981a232f178611a051499ecaaa43dada9e12b5753a9b751da4105204",
-   "after_sha256": "24c6af36c75f20d1f7cd825a7d751aa163fd6741b4deb54e1bcb8c3ba2dcbace"
+   "after_sha256": "dd0a5daa5180388e14cafdfcc544eb43e9b5a4cce851e19000199916c51d1fc7"
   },
   {
    "layer": "host",
@@ -1374,18 +1393,18 @@
    "kind": "changed",
    "name": "publish_pdk_data",
    "owner": "PDK workflow",
-   "reason": "PDK tools now expose get_pdk_data(section=blockers), derive missing model.json from declared deck sections, and return prioritized root causes instead of a bare incomplete status; descriptions were tightened to stay within the catalog budget.",
+   "reason": "PDK tools now expose get_pdk_data(section=blockers), derive missing model.json from declared deck sections, and return prioritized root causes instead of a bare incomplete status; descriptions were tightened to stay within the catalog budget. The wire description is tightened for the public acceptance tool budget; behavior and schema are unchanged.",
    "before_sha256": "e4ed67a2f7d5b2302beae120680c48b5c6aa08b44e0af62b57ec80c1770f9bbe",
-   "after_sha256": "bf42f06a93f878b3277d57b293bb4aeb5c01412c49094f240312411c5c1f21fa"
+   "after_sha256": "7ed79862a12d063ff28ecd578a290c3dc7cc094f67bd5b1997bcde7298afff99"
   },
   {
    "layer": "host",
    "kind": "changed",
    "name": "query_circuit_templates",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them.",
+   "owner": "SiCo circuit-library source access (CCL0-C)",
+   "reason": "The tool differs from the frozen M1a baseline after the exact local-$defs schema projection; existing reviewed defs are retained and repeated authored subtrees are added beside them. CCL0-C adds source_id selection and source_ref binding to the existing library query/get/prepare chain. Template-use v1/v2 preserve the bound source during preview and replay; query description details move to existing help_text to retain the frozen byte ceiling. Tool membership and validation semantics remain unchanged.",
    "before_sha256": "5ba83af43153a30e06880e64ef131acf628c45828d2ba6dd0b7787f198791ece",
-   "after_sha256": "bef7c58dbbd03bb2eed425f9ee7de0772172e76eae69073ba8a88cb787bbb968"
+   "after_sha256": "054a3b73131b0138571cf10760c6b7cda354b46df1c7a333016bec3a0f3c9efa"
   },
   {
    "layer": "host",
@@ -1456,9 +1475,9 @@
    "from": "prepare_circuit_library",
    "to": "prepare_library",
    "owner": "MCP catalog / library workflow",
-   "reason": "Renamed prepare_circuit_library to prepare_library; task_ref is optional and a background library task is created when absent. The old name remains a hidden compatibility alias.",
+   "reason": "Renamed prepare_circuit_library to prepare_library; task_ref is optional and a background library task is created when absent. The old name remains a hidden compatibility alias. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged.",
    "before_sha256": "3fd142cb91d807c178c7fc999075871f8ce1f9772095a2cd33bc4d0c24ec10ee",
-   "after_sha256": "86d8212ab1f98fb56066e98c4356a9e4dd224cedc060db9782a90a54778ec1a0"
+   "after_sha256": "47a61514cc1825218a34ae3409d7db7a2329df833d1d53c77f3d7a0a64f5053b"
   },
   {
    "layer": "host",
@@ -1466,9 +1485,9 @@
    "from": "prepare_circuit_library",
    "to": "prepare_library",
    "owner": "MCP catalog / library workflow",
-   "reason": "Renamed prepare_circuit_library to prepare_library; task_ref is optional and a background library task is created when absent. The old name remains a hidden compatibility alias.",
+   "reason": "Renamed prepare_circuit_library to prepare_library; task_ref is optional and a background library task is created when absent. The old name remains a hidden compatibility alias. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged.",
    "before_sha256": "b4919896e71d324c6f93392496a40f36598421c5ad66f655b5e4a0bcca9cd012",
-   "after_sha256": "0fd907410bcf5147029795c0de569966da9b0e7ef678d9bde602c9ab6ebb17a9"
+   "after_sha256": "997a9f226484cb5af61ca2d8e74a63b7ea0e46ab0a40941ab5b2594c3e58b115"
   },
   {
    "layer": "host",
@@ -1484,9 +1503,9 @@
    "kind": "added",
    "name": "plan_copilot_stages",
    "owner": "sico-tool-profiles",
-   "reason": "P3 records an ordered stage plan before execution; planned stages are visible but are not execution facts and must be selected with set_copilot_stage.",
+   "reason": "P3 records an ordered stage plan before execution and now carries parent_stage_id for bounded hierarchy; planned stages are visible but are not execution facts and must be selected with set_copilot_stage.",
    "before_sha256": null,
-   "after_sha256": "f8b8d32445baaa20c162386d66dcb013d02c7aa5eb6ef0aed8f3301b76fc0e7a"
+   "after_sha256": "1eea96bc904ce98691f59279f75aff93f1fefa02b2818b9563e7e2d3e07fb06e"
   },
   {
    "layer": "canonical",
@@ -1519,19 +1538,19 @@
    "layer": "canonical",
    "kind": "changed",
    "name": "prepare_pdk_data_update",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "PDK reviews are retained up to 2 MiB and rendered as paginated GUI review content; the old 10,000-byte approval limit was removed. Tool membership and schema are unchanged.",
+   "owner": "PDK evidence retention",
+   "reason": "Adds an existing prepare_pdk_data_update retention mode and optional retention_days parameter for host-confirmed cleanup of expired, unreferenced private evidence, reports, facts and superseded overlays. No new MCP tool; active packages, reviews and receipt references remain protected; schema and behavior changes are exactly this review.",
    "before_sha256": "a6c0f8b384618d6e7b6c754887bd833ceaa54bb5956e9e4b0ef6dc9f0ea4917d",
-   "after_sha256": "d97524279de883694e6363a30cbc562cbb4c238dd660b9ae3c7fd6009a7c3758"
+   "after_sha256": "bc8fb4c874e68b1c8f8d00660717605ce8f666c02a0d9a9a057162c2fa4e4de7"
   },
   {
    "layer": "host",
    "kind": "changed",
    "name": "prepare_pdk_data_update",
-   "owner": "MCP catalog / schema factoring",
-   "reason": "PDK reviews are retained up to 2 MiB and rendered as paginated GUI review content; the old 10,000-byte approval limit was removed. Tool membership and schema are unchanged.",
+   "owner": "PDK evidence retention",
+   "reason": "Adds an existing prepare_pdk_data_update retention mode and optional retention_days parameter for host-confirmed cleanup of expired, unreferenced private evidence, reports, facts and superseded overlays. No new MCP tool; active packages, reviews and receipt references remain protected; schema and behavior changes are exactly this review.",
    "before_sha256": "aae1c2caa3a0142e06e7b514cf91b80ea505f6b8f1a4f8f9252c96170eb87a9f",
-   "after_sha256": "9210d50defcb44813be6d1fb8364e57dd64799760a71056674127823af34d19a"
+   "after_sha256": "1665e53e9147369c1d82aee13653d19577925370c59b2e71cb26ceebf10a4476"
   },
   {
    "layer": "canonical",
@@ -1622,6 +1641,483 @@
    "reason": "search_skill_api now clamps oversized result limits; the finite ceiling stays in the handler.",
    "before_sha256": "92abb3269e2035324a7d564fa256b384d5c264493b6a43d1b81ff34eb6fb7434",
    "after_sha256": "ebd5e691a26c89ce394185c7c827ecbbd9f5bebc2fdb2b441fc470ec68918233"
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "check_visible_layout_drc",
+   "owner": "DataHub visible-window DRC",
+   "reason": "Visible-DRC check/start descriptions now state that only window_ref is required and that config_path/work_root/calibre_root default from project flow settings, so the agent stops hand-writing a flow TOML before the first attempt.",
+   "before_sha256": null,
+   "after_sha256": "d38cb4423619f294a4774591f88155710925c24ad771f885cc86ccc3a40bb1ee"
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "check_visible_layout_drc",
+   "owner": "DataHub visible-window DRC",
+   "reason": "Visible-DRC check/start descriptions now state that only window_ref is required and that config_path/work_root/calibre_root default from project flow settings, so the agent stops hand-writing a flow TOML before the first attempt.",
+   "before_sha256": null,
+   "after_sha256": "7384791879f9049d428f2d9c7b3ff1cb260ad2dc5b8c091b803e03b5f0a478d2"
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "start_visible_layout_drc",
+   "owner": "DataHub visible-window DRC",
+   "reason": "Documentation-only budget reduction: shortened an overly long advertised description; schema and behavior are unchanged and no frozen ceiling was relaxed.",
+   "before_sha256": null,
+   "after_sha256": "57f2a57467ebac7970015a7e057d5cf3a1532fb7cd1f7e126fe3751ed7c86962"
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "get_visible_layout_drc",
+   "owner": "DataHub visible-window DRC",
+   "reason": "Visible-DRC tool contracts now carry whole-string window/job patterns (the shared validator uses re.fullmatch) and optional config_path, because the session resolves DRC_CONFIG/DRC_FILE when no flow TOML is given; paths stay untyped to remain inside the frozen profile byte ceiling.",
+   "before_sha256": null,
+   "after_sha256": "d90efc6b1ce5357c382595cfdc58e82342e3ae9a85421e4386dfd4d5b18beb36"
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "cancel_visible_layout_drc",
+   "owner": "DataHub visible-window DRC",
+   "reason": "Visible-DRC tool contracts now carry whole-string window/job patterns (the shared validator uses re.fullmatch) and optional config_path, because the session resolves DRC_CONFIG/DRC_FILE when no flow TOML is given; paths stay untyped to remain inside the frozen profile byte ceiling.",
+   "before_sha256": null,
+   "after_sha256": "e970ad0cc318e3a1691854eb026de245f66477878598eafed3970a24ec371d30"
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "start_visible_layout_drc",
+   "owner": "DataHub visible-window DRC",
+   "reason": "Documentation-only budget reduction: shortened an overly long advertised description; schema and behavior are unchanged and no frozen ceiling was relaxed.",
+   "before_sha256": null,
+   "after_sha256": "c7c14e5fe9890179e598854ed76ad75686b1550fb6e3a6805259e8417bfd36ea"
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "get_visible_layout_drc",
+   "owner": "DataHub visible-window DRC",
+   "reason": "Visible-DRC tool contracts now carry whole-string window/job patterns (the shared validator uses re.fullmatch) and optional config_path, because the session resolves DRC_CONFIG/DRC_FILE when no flow TOML is given; paths stay untyped to remain inside the frozen profile byte ceiling.",
+   "before_sha256": null,
+   "after_sha256": "4c45fa0d1115d95d1104f556023fae7d736924de2c49f5e974b8c5eeeb939996"
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "cancel_visible_layout_drc",
+   "owner": "DataHub visible-window DRC",
+   "reason": "Visible-DRC tool contracts now carry whole-string window/job patterns (the shared validator uses re.fullmatch) and optional config_path, because the session resolves DRC_CONFIG/DRC_FILE when no flow TOML is given; paths stay untyped to remain inside the frozen profile byte ceiling.",
+   "before_sha256": null,
+   "after_sha256": "689c92a06d3926e501c5827a86ad6231a1e6074aa2734cee4492053e8d77b600"
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "inspect_layout_drc_rules",
+   "owner": "DataHub Calibre DRC rules",
+   "reason": "Read-only bounded DRC rule catalog over the existing DataHub runset/provenance owners; static discovery by default, Calibre TVF expansion when an explicit tool root is supplied.",
+   "before_sha256": null,
+   "after_sha256": "27b9dcd189446ae5eb0dcf8bf09776ff4058b9d42cba2fb5fc282d3d093b60d0"
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "inspect_layout_drc_rules",
+   "owner": "DataHub Calibre DRC rules",
+   "reason": "Host projection of the read-only bounded DRC rule catalog.",
+   "before_sha256": null,
+   "after_sha256": "27b9dcd189446ae5eb0dcf8bf09776ff4058b9d42cba2fb5fc282d3d093b60d0"
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "list_visible_layout_drc",
+   "owner": "DataHub visible-window DRC",
+   "reason": "Completed the missing destructiveHint/openWorldHint annotations on the read-only visible-DRC list tool; schema, name and behavior are unchanged.",
+   "before_sha256": null,
+   "after_sha256": "27fc37b0af817ccdf927c412250746c2b514580d2b8974bb05f5db9561b3da53"
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "list_visible_layout_drc",
+   "owner": "DataHub visible-window DRC",
+   "reason": "Completed the missing destructiveHint/openWorldHint annotations on the read-only visible-DRC list tool; schema, name and behavior are unchanged.",
+   "before_sha256": null,
+   "after_sha256": "27fc37b0af817ccdf927c412250746c2b514580d2b8974bb05f5db9561b3da53"
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "visible_layout_drc_watch",
+   "owner": "DataHub visible-window DRC",
+   "reason": "Visible-DRC tool contracts now carry whole-string window/job patterns (the shared validator uses re.fullmatch) and optional config_path, because the session resolves DRC_CONFIG/DRC_FILE when no flow TOML is given; paths stay untyped to remain inside the frozen profile byte ceiling.",
+   "before_sha256": null,
+   "after_sha256": "b04d5f85e8a3e09ca7e27e3e9be3d93e4389147f78cf32ab1e36fd14a703e8d9"
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "visible_layout_drc_watch",
+   "owner": "DataHub visible-window DRC",
+   "reason": "Visible-DRC tool contracts now carry whole-string window/job patterns (the shared validator uses re.fullmatch) and optional config_path, because the session resolves DRC_CONFIG/DRC_FILE when no flow TOML is given; paths stay untyped to remain inside the frozen profile byte ceiling.",
+   "before_sha256": null,
+   "after_sha256": "c99c98c26dec1ac2b0f8a3d09a72b0c1b74e1a8f3a8d0806fa27e48c5ec91bf9"
+  },
+  {
+   "layer": "canonical",
+   "kind": "changed",
+   "name": "probe_cdf_parameters",
+   "owner": "MCP catalog / design-name validation",
+   "reason": "The tool contract changed. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged.",
+   "before_sha256": "54bba0fc40339f4e86ee4ac936cfb8ca87e21396dbe6479bd15e73c808e5f7d8",
+   "after_sha256": "1ab7d89a02109ac5f27f47d247442973cbb27f45ca78bd2518e394e7ae8ccae7"
+  },
+  {
+   "layer": "host",
+   "kind": "changed",
+   "name": "probe_cdf_parameters",
+   "owner": "MCP catalog / design-name validation",
+   "reason": "The tool contract changed. Design-name validation now permits a leading digit (for example library 8_bit_sar_adc); membership and wire fields are unchanged.",
+   "before_sha256": "99be4609a4c9859b52023f514d805f230444e0a08883a637d6ded0747d7c90d4",
+   "after_sha256": "9fbc58c50b390889141fa278c08e294f8efa4b4a3475144394fb35851d7e1e1d"
+  },
+  {
+   "layer": "host",
+   "kind": "changed",
+   "name": "set_copilot_stage",
+   "owner": "MCP catalog / design-name validation",
+   "reason": "An existing work_id now supplies its recorded work title; work_title is required only when creating a new work. The stage selector also accepts parent_stage_id for the bounded hierarchy.",
+   "before_sha256": "a5086c97a030e1588a7fc00221b249af745d818a69d58fb749a15810f84574c9",
+   "after_sha256": "9b3f3ce29eb3d94c195832bf52254df15d9674403407ef0307de2b2b4c591363"
+  },
+  {
+   "layer": "canonical",
+   "kind": "changed",
+   "name": "prepare_pdk_data",
+   "owner": "PDK collection source contract",
+   "reason": "Fresh non-builtin collection requires the user-owned PDK source contract (installation root, PCell/design-rule manuals, model files); the MCP input schema now admits the documented source fields; existing validated metadata remains reusable. The visible description is tightened to keep the frozen desktop profile budget.",
+   "before_sha256": "609d92a63001c66869bd0305fbd497a4c311d2f9e23cd36a69f7527497f412a1",
+   "after_sha256": "941c5b1a4e60211613ca4961b951bbf56f523e90c493f2afd256ab6447ccc732"
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "register_pdk_resources",
+   "owner": "PDK collection source contract",
+   "reason": "Adds the reviewed generation-only resource registration entry point for documentation/model files inside bound roots; the MCP input schema now admits the documented source fields. The canonical help points fresh-capture adopters to prepare_pdk_baseline_update while retaining this recovery entry point.",
+   "before_sha256": null,
+   "after_sha256": "901c9c2622ecce6737d527cd29232b0b722a5a6f4638498b01f250db53a028ef"
+  },
+  {
+   "layer": "host",
+   "kind": "changed",
+   "name": "prepare_pdk_data",
+   "owner": "PDK collection source contract",
+   "reason": "Fresh non-builtin collection requires the user-owned PDK source contract (installation root, PCell/design-rule manuals, model files); the MCP input schema now admits the documented source fields; existing validated metadata remains reusable. The visible description is tightened to keep the frozen desktop profile budget.",
+   "before_sha256": "a65ba0151559cc2cb762824947a8d7ba12be81771a424090aae4451f26353b5b",
+   "after_sha256": "06ef517283d4b1ace21a0df953329f7446bb8f99d73c1b46b5a47bb70120af41"
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "register_pdk_resources",
+   "owner": "PDK collection source contract",
+   "reason": "Adds the reviewed generation-only resource registration entry point for documentation/model files inside bound roots; the MCP input schema now admits the documented source fields.",
+   "before_sha256": null,
+   "after_sha256": "42dbcd0bc096447a870625898c8957f8385f8d2d28ff9795d8cf1b04e9bc67ff"
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "accept_pdk_data",
+   "owner": "PDK acceptance lifecycle",
+   "reason": "Adds the public begin/finish recorder for real five-operation device acceptance; it freezes the tested subject and records explicit results without executing EDA. Adds phase=evidence for combining distinct accepted device groups; overlap and stale subjects are rejected.",
+   "before_sha256": null,
+   "after_sha256": "d07e89f589236d2577a33a2f9aea156b29e42b981747919cdbb80304f25461cf"
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "accept_pdk_data",
+   "owner": "PDK acceptance lifecycle",
+   "reason": "Adds the public begin/finish recorder for real five-operation device acceptance; it freezes the tested subject and records explicit results without executing EDA. Adds phase=evidence for combining distinct accepted device groups; overlap and stale subjects are rejected.",
+   "before_sha256": null,
+   "after_sha256": "a37697b4be772e87452e3e57c92e48b9b3768968de9354ad1b4768187fc3cba2"
+  },
+  {
+   "layer": "canonical",
+   "kind": "changed",
+   "name": "submit_pdk_parameter_batch",
+   "owner": "PDK acceptance lifecycle",
+   "reason": "Wire description is tightened for the public acceptance tool budget; behavior and schema are unchanged.",
+   "before_sha256": "77422530056e44e6f3e13724a2c3c426015a9e9f816f26d5e34f64d51024a0d0",
+   "after_sha256": "66ee47b7e2f3123d310cdfe27c2bdc4d8c55f409f2b98678957c87e4de86d806"
+  },
+  {
+   "layer": "host",
+   "kind": "changed",
+   "name": "submit_pdk_parameter_batch",
+   "owner": "PDK acceptance lifecycle",
+   "reason": "Wire description is tightened for the public acceptance tool budget; behavior and schema are unchanged.",
+   "before_sha256": "77422530056e44e6f3e13724a2c3c426015a9e9f816f26d5e34f64d51024a0d0",
+   "after_sha256": "4a89c5b034aebdfa2cc81ffd73cebf87ffc238bd5eb1da5ca2df9fc6db657dc3"
+  },
+  {
+   "layer": "canonical",
+   "kind": "changed",
+   "name": "advance_pdk_collection",
+   "owner": "PDK collection observability",
+   "reason": "Adds bounded collection progress fields (phase/batch/completed/remaining/current_cell/workers/elapsed/eta/checkpoint) to the existing advance result; no new tool or permission.",
+   "before_sha256": "f0ab2f681a61f42bbc3a2e0f1907b52f24094d31c3d026295ab2f3738d4a4a69",
+   "after_sha256": "c5bd17b2adb9da80d3d4fd6917f098da5f9e3148a3d56733c0f8cb1662489530"
+  },
+  {
+   "layer": "host",
+   "kind": "changed",
+   "name": "advance_pdk_collection",
+   "owner": "PDK collection observability",
+   "reason": "Adds bounded collection progress fields (phase/batch/completed/remaining/current_cell/workers/elapsed/eta/checkpoint) to the existing advance result; no new tool or permission.",
+   "before_sha256": "f0ab2f681a61f42bbc3a2e0f1907b52f24094d31c3d026295ab2f3738d4a4a69",
+   "after_sha256": "c5bd17b2adb9da80d3d4fd6917f098da5f9e3148a3d56733c0f8cb1662489530"
+  },
+  {
+   "layer": "host",
+   "kind": "changed",
+   "name": "import_pdk_facts",
+   "owner": "PDK tool surface budget",
+   "reason": "Documentation-only budget reduction: moved legacy-checkpoint and qualification-boundary details from the advertised description into existing help_text; schema and behavior are unchanged; no frozen ceiling was relaxed.",
+   "before_sha256": "b3068cb3eccd43a97bcbe3c74978a849e5ac313773d947b8f49d1745dd4428dd",
+   "after_sha256": "8b09af6348a2874f7b5cc6eeeb6a224570471b0d7d1cc48955936a198792ce13"
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "validate_optimization_problem",
+   "owner": "SiCo optimization surface",
+   "reason": "Repairs free-form problem/request schema validation so MCP callers can pass their documented object fields; no tool or profile member is added.",
+   "after_sha256": "6b4af44271ce248dca79e4cf26b7b0046da1cbec34635b3adefdeae80c83bf1a",
+   "before_sha256": null
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "list_optimization_runs",
+   "owner": "SiCo optimization surface",
+   "reason": "Repairs free-form problem/request schema validation so MCP callers can pass their documented object fields; no tool or profile member is added.",
+   "after_sha256": "ef47732dad37e9ad4698547a4744fa18bb41efb75c039bc27c37624a0f7910a7",
+   "before_sha256": null
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "inspect_optimization_run",
+   "owner": "SiCo optimization surface",
+   "reason": "Repairs free-form problem/request schema validation so MCP callers can pass their documented object fields; no tool or profile member is added.",
+   "after_sha256": "3b6d6aa00d3e6b2edfcc7f2adca734a48989df3d954f176795d8b6d56f55fb87",
+   "before_sha256": null
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "validate_optimization_problem",
+   "owner": "SiCo optimization surface",
+   "reason": "Repairs free-form problem/request schema validation so MCP callers can pass their documented object fields; no tool or profile member is added.",
+   "after_sha256": "8eaf85bf37770d3328b56a0492f10bd4a957c821d76c6dcb9a0e40515a1bfd33",
+   "before_sha256": null
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "list_optimization_runs",
+   "owner": "SiCo optimization surface",
+   "reason": "Repairs free-form problem/request schema validation so MCP callers can pass their documented object fields; no tool or profile member is added.",
+   "after_sha256": "85361d7d33a3ed6296967b5a3b3cbf95b893ef9b38204fe020ad0b0c506a1b51",
+   "before_sha256": null
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "inspect_optimization_run",
+   "owner": "SiCo optimization surface",
+   "reason": "Repairs free-form problem/request schema validation so MCP callers can pass their documented object fields; no tool or profile member is added.",
+   "after_sha256": "b128b22cdb9bc45ee7a4e1a730ee4129f7b4759023852930948e6b289f239b43",
+   "before_sha256": null
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "optimization_run",
+   "owner": "SiCo optimization surface",
+   "reason": "Adds report and version_materialize actions, and lets version_verify read trials from an independent verification_run_id instead of requiring a hand-copied trial array. Schema membership remains one tool.",
+   "before_sha256": null,
+   "after_sha256": "885a1852281e7d934be77239c030b1544a28b98b32c702a816c54f044814a97a"
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "optimization_run",
+   "owner": "SiCo optimization surface",
+   "reason": "Adds report and version_materialize actions: report assembles JSON/Markdown from the ledger; version_materialize copies/bakes candidate views and Config and opens provisional state. Schema membership remains one tool.",
+   "before_sha256": null,
+   "after_sha256": "5b7a0a610db2a494e25c18938db342719f9d20e7ac25f7f22058a2ae6c0fc227"
+  },
+  {
+   "layer": "canonical",
+   "kind": "changed",
+   "name": "open_design_view",
+   "owner": "sico-maestro-deopen-assembler",
+   "reason": "Help text now records the deterministic GUI application choice: foreground Maestro uses deOpen with ADE Assembler and background uses maeOpenSetup with the Assembler application. The wire description, schema, membership and behavior are unchanged.",
+   "before_sha256": "06e4f99d7b8067c829b219369339ee80f4f0cc897350d5e9f228fb3e1a7df246",
+   "after_sha256": "ada8fe5d679c21e7f59e1f52432dc9d4c9c4a2f7dde142dd9d12d62a17eb0948"
+  },
+  {
+   "layer": "host",
+   "kind": "changed",
+   "name": "open_design_view",
+   "owner": "sico-maestro-access-review",
+   "reason": "The host projection carries the same reviewed Maestro access transition. It preserves the exact target/presentation/request identity and exposes approval_digest only for the reviewed context transition.",
+   "before_sha256": "06e4f99d7b8067c829b219369339ee80f4f0cc897350d5e9f228fb3e1a7df246",
+   "after_sha256": "aacb421d1a4207d413ae4514294fbf564410d96958074a53ae9809ea93126e4a"
+  },
+  {
+   "layer": "host",
+   "kind": "changed",
+   "name": "bind_result_context",
+   "owner": "sico-maestro-session-lifecycle",
+   "reason": "Rejects path-shaped or non-create setup references with setup_ref_invalid and directs open_design_view users to read_maestro_results(context_ref, history). Schema membership and native calls are unchanged.",
+   "before_sha256": "b18c4829f1ee194836f7bfe116a894d6d94bc2054be68c9a1a043fa75a2ed763",
+   "after_sha256": "32dab371c996bd2e3f933d490df3d599895f3f0e61cbd6132e29db74ed97740e"
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "eda_job",
+   "owner": "SiCo EDA job monitor",
+   "reason": "Adds one generic durable EDA job tool with list/get/wait actions and bounded liveness evidence; Phase 3 adds authoritative progress/test/check projections for Spectre, Maestro and LSF without adding another MCP tool.",
+   "before_sha256": null,
+   "after_sha256": "9a28a6a089bf2f41b04709f975d836e270cab403c3b5555fec3ca454722573fa"
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "eda_job",
+   "owner": "SiCo EDA job monitor",
+   "reason": "Host projection of the same generic eda_job tool; no second schema or alias is introduced.",
+   "before_sha256": null,
+   "after_sha256": "399010b473d802ac04e340773a46a8583e17af73dd6b49c3f63fe670a2fce309"
+  },
+  {
+   "layer": "canonical",
+   "kind": "changed",
+   "name": "evaluate_waveform_specs",
+   "owner": "MCP catalog / tool surface budget",
+   "reason": "Documentation-only budget reduction: moved explicit-contract and qualification details from the advertised description into help_text so desktop_compat remains within its frozen 204800 B ceiling; schema and behavior are unchanged.",
+   "before_sha256": "1dd907105b60c1ffef715bf76f03e04d5cfdc99940fdccdf9b4aa28e95a1c2c3",
+   "after_sha256": "7a1bc4fba1dd21f53faa1b99d247b3c5ddde0c06d189cd364666cf31aa4ac422"
+  },
+  {
+   "layer": "host",
+   "kind": "changed",
+   "name": "evaluate_waveform_specs",
+   "owner": "MCP catalog / tool surface budget",
+   "reason": "Host projection carries the same documentation-only reduction; schema and behavior are unchanged.",
+   "before_sha256": "1dd907105b60c1ffef715bf76f03e04d5cfdc99940fdccdf9b4aa28e95a1c2c3",
+   "after_sha256": "4cdc37ed76ce3e732e7fb158f6ac5e13b72d4ba72d8b1eac0752df5bf2e48f43"
+  },
+  {
+   "layer": "canonical",
+   "kind": "changed",
+   "name": "get_circuit_template",
+   "before_sha256": "e1a4afe09e51f58c83e1a2e4e3d189e5a80844cb142a00a8382aad4090e13fbb",
+   "after_sha256": "b6ad4411b3360829fcfc5fa3d98c2f786807461e477b2a6b8d7f8c63f6bb4c1f",
+   "reason": "CCL0-C adds source_id selection and source_ref binding to the existing library query/get/prepare chain. Template-use v1/v2 preserve the bound source during preview and replay; query description details move to existing help_text to retain the frozen byte ceiling. Tool membership and validation semantics remain unchanged.",
+   "owner": "SiCo circuit-library source access (CCL0-C)"
+  },
+  {
+   "layer": "host",
+   "kind": "changed",
+   "name": "get_circuit_template",
+   "before_sha256": "e1a4afe09e51f58c83e1a2e4e3d189e5a80844cb142a00a8382aad4090e13fbb",
+   "after_sha256": "b6ad4411b3360829fcfc5fa3d98c2f786807461e477b2a6b8d7f8c63f6bb4c1f",
+   "reason": "CCL0-C adds source_id selection and source_ref binding to the existing library query/get/prepare chain. Template-use v1/v2 preserve the bound source during preview and replay; query description details move to existing help_text to retain the frozen byte ceiling. Tool membership and validation semantics remain unchanged.",
+   "owner": "SiCo circuit-library source access (CCL0-C)"
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "simulation_job",
+   "owner": "SiCo simulation lifecycle",
+   "reason": "Adds one action-based lifecycle surface for inspect/status/stop/release. The four legacy lifecycle names remain registered only on the frozen desktop_compat surface; simulation, mixed_design and adaptive consume the narrower action surface.",
+   "before_sha256": null,
+   "after_sha256": "ec17efd99d5a4dfd1f177dff0fbd15e82ced4897409b829b728fd21272623e54"
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "simulation_job",
+   "owner": "SiCo simulation lifecycle",
+   "reason": "Host projection of the same simulation_job schema; no second definition or alias is introduced.",
+   "before_sha256": null,
+   "after_sha256": "e2b62c9efe2a2ad1937364cc3090466250af9cd3bce1b76b8e3582a566df9d20"
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "inspect_selection",
+   "owner": "SiCo context mode",
+   "reason": "Adds the bounded selected-object page reader only to the explicit desktop_context envelope. desktop_compat membership and its frozen byte ceiling do not change. The optional fields parameter reads bounded properties/relations for the current page only. Detail fields travel with pages of 8 or fewer, so the wire keeps its four numeric slots.",
+   "before_sha256": null,
+   "after_sha256": "eb15ae1c2a531533ecc25168e2d6d49872cb63149057fb3b7a720fba4111364c"
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "inspect_selection",
+   "owner": "SiCo context mode",
+   "reason": "Host projection of the same captured-window selection reader; no second schema or compatibility alias is introduced. The fields parameter is forwarded unchanged to the one SKILL reader. Detail fields travel with pages of 8 or fewer, so the wire keeps its four numeric slots.",
+   "before_sha256": null,
+   "after_sha256": "be10a9fe073035338dd444e22686f90cf6f5d45ea0e17a5980b23f05cf563562"
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "inspect_object",
+   "owner": "SiCo context mode",
+   "reason": "Reads one previously captured object id from the current selection page; the explicit desktop_context envelope gains this reader while desktop_compat keeps its frozen 192-tool surface.",
+   "before_sha256": null,
+   "after_sha256": "86ee4b77572e7658f0e8b33b555bc368abbc075f5a15ad83530fc29df855dbba"
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "inspect_object",
+   "owner": "SiCo context mode",
+   "reason": "Reads one previously captured object id from the current selection page; the explicit desktop_context envelope gains this reader while desktop_compat keeps its frozen 192-tool surface.",
+   "before_sha256": null,
+   "after_sha256": "e6c77e5e2062d74e7d5d7b85c99ce94ccd6482eed9ab9042269c4f008f065b5e"
+  },
+  {
+   "layer": "canonical",
+   "kind": "added",
+   "name": "inspect_hierarchy",
+   "owner": "SiCo context mode",
+   "reason": "Adds one-level hierarchy expansion to the explicit desktop_context envelope. The tool returns bounded child identities and child object ids are registered for later inspect_object reads; desktop_compat remains frozen at 192 tools.",
+   "before_sha256": null,
+   "after_sha256": "1475586f2adda4e720c684e93bb94673d423c26cf018415531bccc3289fc6118"
+  },
+  {
+   "layer": "host",
+   "kind": "added",
+   "name": "inspect_hierarchy",
+   "owner": "SiCo context mode",
+   "reason": "Host projection of the same bounded one-level hierarchy reader; no recursive expansion, second schema or compatibility alias is introduced.",
+   "before_sha256": null,
+   "after_sha256": "94d9bb18ba83c9e4c87b2884f6cf82abf2fbdc5b11fea5fbfb7cb0c4a08fe03a"
   }
  ],
  "removals": [],
@@ -1645,10 +2141,16 @@
  },
  "profile_contracts": {
   "desktop_compat": {
-   "count": 178,
-   "digest": "sha256:78c969a1e289fe0e353e56184195ab1d6543746c8b431c589ee3f73b189c2de7",
-   "owner": "sico-tool-profiles",
-   "reason": "PDK blocker/model-configuration additions; profile membership and budget ceilings are unchanged."
+   "count": 192,
+   "digest": "sha256:c4149970f1593314ae861b367c5193341e1f28cc2fbe5a6d2c08f4ed09740a72",
+   "owner": "SiCo portable template preparation (CCL1-B)",
+   "reason": "CCL1-B updates prepare_template_circuit guidance for portable preparation and keeps the frozen 192-tool membership. The measured wire size decreases from 204602 to 204458 bytes; fixed budget ceilings remain unchanged."
+  },
+  "desktop_context": {
+   "count": 195,
+   "digest": "sha256:3ae4e0a6cc20c7481098ba16d97148b9858e9ac6d365d1c5dfce578cee3b01b4",
+   "owner": "SiCo context mode",
+   "reason": "Adds the explicit desktop_context envelope: the frozen desktop_compat surface plus bounded selection and one-level hierarchy readers. The compatibility profile remains at 192 tools and is not widened. inspect_hierarchy returns child identities that can be read back with inspect_object."
   },
   "desktop_core": {
    "count": 16,
@@ -1658,21 +2160,21 @@
   },
   "circuit": {
    "count": 70,
-   "digest": "sha256:347d5efd19e0e7e70a57e4ee2bf3b8c3192b88a1e474eaf6e566e7791dd174bc",
-   "owner": "sico-tool-profiles",
-   "reason": "PDK blocker/model-configuration additions; profile membership and budget ceilings are unchanged."
+   "digest": "sha256:e5b213df1425f5be446799d743c953a8a5278ac13831389b114e1c11df184382",
+   "owner": "SiCo portable template preparation (CCL1-B)",
+   "reason": "Adds parent_stage_id to set_copilot_stage and plan_copilot_stages, and updates the context-orchestration tool contracts; profile membership and frozen byte ceilings are retained. CCL1-B documents portable whole scalar preparation with explicit maps, current published target PDK bindings, target geometry and shared execution guards; schema and membership remain unchanged."
   },
   "simulation": {
-   "count": 81,
-   "digest": "sha256:7cc512af2ed49953087462fc9e8ea93a7c940c16442178a6a28e6fe113359056",
-   "owner": "sico-tool-profiles",
-   "reason": "PDK blocker/model-configuration additions; profile membership and budget ceilings are unchanged."
+   "count": 82,
+   "digest": "sha256:0919176a96937356c54f36030fb6e8e6ec4472f84ffed664b35759355ad43c9c",
+   "owner": "SiCo simulation lifecycle",
+   "reason": "The simulation_run task group now declares the bounded inspect/status/stop/release lifecycle tools that the frozen desktop surface actually serves, while the simulation profile keeps simulation_job as its unified convenience entry. This makes the workflow selectable without widening desktop_compat."
   },
   "pdk_maintenance": {
-   "count": 57,
-   "digest": "sha256:34577b647279885a8fd9ad8c780d9031bbb838f9dd9f74e3b2454e496455976e",
-   "owner": "sico-tool-profiles",
-   "reason": "PDK blocker/model-configuration additions; profile membership and budget ceilings are unchanged."
+   "count": 58,
+   "digest": "sha256:135606f3bce7ed5bb70d96e9ac4a60c50d97be50b9b3b1e72a659886c9b201fc",
+   "owner": "PDK layout policy",
+   "reason": "collect_pdk_data adds the confirmed layout_qualification/layout_qualification_evidence pair and the new layout parameter/LPP contract; profile membership and frozen budget are unchanged. init_pdk gains an optional reload flag with a trimmed description; profile membership and the frozen byte ceiling are unchanged."
   },
   "physical_flow": {
    "count": 24,
@@ -1687,16 +2189,16 @@
    "reason": "PDK blocker/model-configuration additions; profile membership and budget ceilings are unchanged."
   },
   "mixed_design": {
-   "count": 110,
-   "digest": "sha256:59ed14c68abd4bd4b6320d29b04a082c1998b050a699af6c9898d0d95191a54b",
-   "owner": "sico-tool-profiles",
-   "reason": "PDK blocker/model-configuration additions; profile membership and budget ceilings are unchanged."
+   "count": 111,
+   "digest": "sha256:697ada98e9b92903ad6ee61d84267fa2f5a6aa1a155261cbe6790a8c38afc67b",
+   "owner": "SiCo portable template preparation (CCL1-B)",
+   "reason": "Consumes the simulation_run task-group lifecycle closure plus the simulation profile's simulation_job convenience entry; the mixed_design families remain unchanged. CCL1-B documents portable whole scalar preparation with explicit maps, current published target PDK bindings, target geometry and shared execution guards."
   },
   "adaptive": {
-   "count": 135,
-   "digest": "sha256:7d7a036bd3a5a8a77a6ebab824ed53eff46e819cb30866ca0af72c8d05d07b2b",
-   "owner": "sico-tool-profiles",
-   "reason": "PDK blocker/model-configuration additions; profile membership and budget ceilings are unchanged."
+   "count": 137,
+   "digest": "sha256:db1c536129ddd7321aa0f2ac8f9138c1acb122bb2357105515921a864c1749d2",
+   "owner": "SiCo portable template preparation (CCL1-B)",
+   "reason": "Consumes the simulation_run task-group lifecycle closure plus the simulation profile's simulation_job convenience entry; the adaptive maintenance surface is derived from the same reviewed mixed_design and pdk_maintenance families. CCL1-B documents portable whole scalar preparation with explicit maps, current published target PDK bindings, target geometry and shared execution guards."
   }
  }
 }

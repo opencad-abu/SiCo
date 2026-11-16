@@ -43,7 +43,7 @@ def audit_title(row):
     context = row.get("context") if isinstance(row.get("context"), dict) else {}
     snapshot = context.get("snapshot") if isinstance(context.get("snapshot"), dict) else {}
     cellview = snapshot.get("cellview") if isinstance(snapshot.get("cellview"), dict) else {}
-    source = "/".join(str(cellview.get(key) or "") for key in ("lib", "cell", "view"))
+    source = "/".join(str(cellview.get(key) or "") for key in ("lib", "cell", "view_name"))
     source = source.strip("/") or str(snapshot.get("entry") or context.get("target_id") or "")
     title = "审阅事项 · " + row["title"] + (" · " + source if source else "") + suffix
     if row.get("status") in {"invalid", "unconfirmed", "withdrawn"}:

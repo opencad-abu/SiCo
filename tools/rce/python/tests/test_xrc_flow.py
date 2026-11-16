@@ -16,6 +16,15 @@ from xrc_flow_modes_cases import (
     test_xrc_no_rc_uses_simple_formatter_without_pdb,
     test_xrc_rc_mode_selects_pdb_and_formatter_flags,
 )
+from xrc_flow_xact_cases import (
+    test_mock_calibre_xact_runs_serially_and_creates_artifacts,
+    test_xact_control_file_declares_the_xact_svdb_query,
+    test_xact_include_nets_use_the_select_switch,
+    test_xact_rc_mode_selects_engine_pdb_and_formatter_flags,
+    test_xact_rejects_rc_types_outside_the_calibre_pex_contract,
+    test_xact_request_is_recognized_as_the_calibre_pex_flow,
+    test_xact_transcript_errors_stop_the_flow,
+)
 from xrc_flow_netlist_cases import (
     test_xrc_bracket_replacement_uses_native_character_map,
     test_xrc_capacitance_only_rejects_unavailable_capacitor_locations,
@@ -23,6 +32,7 @@ from xrc_flow_netlist_cases import (
     test_xrc_parasitic_info_flag_combinations,
     test_xrc_rejects_formats_outside_the_rce_contract,
     test_xrc_rejects_unknown_bracket_replacement,
+    test_xrc_states_the_floating_net_choice,
     test_xrc_supported_formats_emit_all_parasitic_info_options,
     test_xrc_translates_filter_selection_and_netlist_options,
 )

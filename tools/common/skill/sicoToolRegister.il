@@ -4,7 +4,7 @@
 ;------------------------------------------------------------------------------
 
 unless(and(boundp('sicoToolRegisterVersion)
-             sicoToolRegisterVersion=="20261020.sico.register.v4"
+             sicoToolRegisterVersion=="20261024.sico.register.v5"
              isCallable('cadLoadRelative)
              isCallable('cadLoadToolScripts)
              isCallable('sicoToolRegister))
@@ -22,8 +22,8 @@ procedure(cadLoadFile(path)
     warn("%s CAD loader cannot find: %L\n"
          cond(
            (isCallable('SICO_logo) SICO_logo())
-           (isCallable('witMenuLogo) witMenuLogo())
-           (t "SiCo"))
+           (isCallable('sicoMenuLogo) sicoMenuLogo())
+           (t "Silicon Copilot"))
          path)
     nil
   )
@@ -116,7 +116,7 @@ procedure(sicoToolRegister()
     loaded=cadLoadRelative("utility/menu.il")
     menuReady=and(loaded
                    boundp('witMenuInitVersion)
-                   witMenuInitVersion=="20261020.sico.menu.v5"
+                   witMenuInitVersion=="20261024.sico.menu.v7"
                    boundp('witMenuInitRoot)
                    witMenuInitRoot==menuRoot)
     scriptsReady=and(menuReady cadLoadToolScripts())
@@ -124,17 +124,17 @@ procedure(sicoToolRegister()
   )
 )
 
-sicoToolRegisterVersion="20261020.sico.register.v4"
+sicoToolRegisterVersion="20261024.sico.register.v5"
 )
 
 cadToolsRoot=cadResolveToolsRoot()
 when(and(cadToolsRoot
            or(not(boundp('sicoToolRegisterInitVersion))
-               sicoToolRegisterInitVersion!="20261020.sico.register.v4"
+               sicoToolRegisterInitVersion!="20261024.sico.register.v5"
                not(boundp('sicoToolRegisterInitRoot))
                sicoToolRegisterInitRoot!=cadToolsRoot))
   when(sicoToolRegister()
     sicoToolRegisterInitRoot=cadToolsRoot
-    sicoToolRegisterInitVersion="20261020.sico.register.v4"
+    sicoToolRegisterInitVersion="20261024.sico.register.v5"
   )
 )

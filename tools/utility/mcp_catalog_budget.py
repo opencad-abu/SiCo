@@ -3,7 +3,7 @@
 Run from the repository root; imports source only, touches no EDA, session or
 model:
 
-    /software/pkgs/python/3.9.13/bin/python3 tools/utility/mcp_catalog_budget.py
+    "$SICO_HOME/runtime/python/bin/python3" tools/utility/mcp_catalog_budget.py
 
 The checker builds the same offline report as ``mcp_catalog_report`` and
 compares it against ``tools/utility/mcp_catalog_budget.json``:

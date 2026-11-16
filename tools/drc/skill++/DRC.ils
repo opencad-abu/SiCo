@@ -9,9 +9,10 @@ let((entryDirectory)
   drcSkillRoot=strcat(SICO_sourceRoot() "/tools/drc")
   drcCommonRoot=strcat(SICO_sourceRoot() "/tools/common")
   drcUtilityRoot=strcat(SICO_sourceRoot() "/tools/utility")
-  SICO_sourceRequire("drc" "95f36b93228db49117a704bf2f7f4a941e3985227b81703678d604f357bd0745" '(
+  SICO_sourceRequire("drc" "9205752c6d806c39e4a4f1467abddd489dc4846198a6597cb18cb4677dedd1ba" '(
     ("tools/drc/skill++" "DRCCFG.ils" "e64d21b33e43e4159312fac90f53756886ce0f6d077aceeea5478ddf810b85ce"
       (drcInitializeConfig)
+      ()
       ()
       ()
       ())
@@ -26,26 +27,30 @@ let((entryDirectory)
        drcRuleSelectInitializeRuntime)
       ((drcRuleSelectRevision "20260902.rule.select.pyqt.v6"))
       ()
+      ()
       ())
-    ("tools/drc/skill++" "DRCCB.ils" "c2b1e041c91ea02c73fbdc1bad883e52747d3aca3710dd2965c9bc21caf8d5e2"
+    ("tools/drc/skill++" "DRCCB.ils" "7872a89af198a887b059ab772beca7c252dbea59016026a2b6b06685baf592e3"
       (drcFrontendRevision drcFormValidP drcFormDoneCB drcRunCB drcRunCloseCB drcAbsolutePathRevision
        drcCustomSvrfRevision drcRunModeCB drcOutDirCB drcLsfChoicesCB drcRunsetCB drcRunDirFromForm
        drcValidateForm drcWriteToml)
       ((drcFrontendRevision "20260924.flow.environment.v3") (drcAbsolutePathRevision
        "20260812.toml.absolute.paths.v1") (drcCustomSvrfRevision "20260813.custom.svrf.common.v1"))
       ()
+      ()
       ())
-    ("tools/drc/skill++" "DRCRUN.ils" "872bbabe43d861cc3df82e2cb5f33396128518cfb9366bee4fa47ab121ec6f05"
+    ("tools/drc/skill++" "DRCRUN.ils" "4f153b3fdcd372a3fdf50283363c172f67b30ae59d9a3b4679c989214fd2783a"
       (DRC_pythonEntry drcRunUsesCadTempPath DRC_pythonExe DRC_launchEnvCommand drcBackupRunData
        drcResultsDbFromForm drcIpcDataHandler drcIpcErrHandler drcIpcPostFunc drcStart drcBatchSpec
        drcBatchStart drcPromptOpenRve drcReport drcBatchEnterMultiple drcBatchLeaveMultiple
        drcBatchOpenResult)
       ()
       ()
+      ()
       ())
     ("tools/drc/skill++" "DRCPROFILE.ils" "05f101f857f997c3069f05907718d0f896a80531802c12d7b88388faaff6ed4d"
       (drcProfileCollect drcProfileApply drcProfileRevision)
       ((drcProfileRevision "20260820.rce.live.log.v4"))
+      ()
       ()
       ())
     ("tools/drc/skill++" "DRCGUI.ils" "1d753f7e2b1411363717cd56e6253497ae068898b6327b55f4478daeb768dab8"
@@ -56,6 +61,8 @@ let((entryDirectory)
        "20260813.custom.svrf.common.v1") (drcRuleSelectGuiRevision "20260814.rule.select.pyqt.v1")
        (drcAdvancedOptionsGuiRevision "20260817.advanced.options.v1"))
       ()
-      (DRCGUI))
+      (DRCGUI)
+      (makeInpLay makeOutLay makeDrcOptLay makeDrcRunMode makeDrcTool makeDrcRunset makeDrcRuleSelect
+       makeToolLay makeHardwareLay makeMainLay makeForm))
   ))
 )

@@ -1,3 +1,4 @@
+from skill_loader_test_support import loader_contract
 import re
 
 from skill_load_fixtures import (
@@ -25,23 +26,28 @@ def test_lvs_hcell_gui_is_wired_to_rce_and_standalone_lvs() -> None:
         assert '"hcell_file"' in text
 
     for relative in ("rce/skill++/RCE.ils", "lvs/skill++/LVS.ils"):
-        text = read_skill_source(CAD_ROOT / relative)
-        assert "isCallable('makeLvsHcell)" in text
+        text = loader_contract(relative)
+        assert text.requires("makeLvsHcell")
 
 
-def test_ignore_lvs_error_is_standalone_only_and_svdb_query_is_lvs_only() -> None:
+def test_ignore_lvs_error_is_standalone_only_and_svdb_query_is_shared() -> None:
+    common_gui = read_skill_source(CAD_ROOT / "common/skill++/LVSOPTGUI.ils")
     lvs_gui = read_skill_source(CAD_ROOT / "lvs/skill++/LVSGUI.ils")
     lvs_cfg = read_skill_source(CAD_ROOT / "lvs/skill++/LVSCFG.ils")
     lvs_cb = read_skill_source(CAD_ROOT / "lvs/skill++/LVSCB.ils")
     rce_gui = read_skill_source(CAD_ROOT / "rce/skill++/RCEGUI.ils")
+    rce_profile = read_skill_source(CAD_ROOT / "rce/skill++/RCEPROFILE.ils")
+    rce_toml = read_skill_source(CAD_ROOT / "rce/skill++/RCETOMLWRITE.ils")
 
     assert "makeLvsIgnoreError(inst)" not in lvs_gui
     assert "lvsIgnoreErrorCB" not in lvs_gui + lvs_cfg + lvs_cb
     assert "makeLvsIgnoreError(inst)" in rce_gui
-    assert '"SVDB query:"' in lvs_gui
-    assert "?value      '(nil nil nil nil nil)" in lvs_gui
-    assert "?defValue   '(nil nil nil nil nil)" in lvs_gui
-    assert "gui->mainForm->svdbQuery->hiToolTip=list(" in lvs_gui
+    assert "defmethod(makeLvsSvdbQuery ((inst LVSOPTGUI))" in common_gui
+    assert '"SVDB query:"' in common_gui
+    assert "(svdbQueryDefault    @initform '(nil nil nil nil nil))" in common_gui
+    assert "?value      inst->svdbQueryDefault" in common_gui
+    assert "?defValue   inst->svdbQueryDefault" in common_gui
+    assert "procedure(lvsSvdbQueryToolTip()" in common_gui
     for tooltip in (
         "Calibre Connectivity Interface",
         "LVS Recon or short isolation",
@@ -49,7 +55,21 @@ def test_ignore_lvs_error_is_standalone_only_and_svdb_query_is_lvs_only() -> Non
         "ASCII cross-reference",
         "Pin locations",
     ):
-        assert tooltip in lvs_gui
+        assert tooltip in common_gui
+    for gui in (lvs_gui, rce_gui):
+        assert "makeLvsSvdbQuery(inst)" in gui
+        assert "svdbQuery->hiToolTip=lvsSvdbQueryToolTip()" in gui
+        assert (
+            "'lvsMoreContents list(inst->svdbQuery "
+            "inst->lvsRecognizeGates inst->customSvrf)" in gui
+        )
+    assert "inst->svdbQueryDefault='(t nil nil nil nil)" in rce_gui
+    assert rce_gui.index("inst->svdbQueryDefault='(t nil nil nil nil)") < rce_gui.index(
+        "makeLvsSvdbQuery(inst)"
+    )
+    assert 'list("lvs.svdb_query" lvsSvdbQueryFromForm(form))' in rce_profile
+    assert "lvsSvdbQueryFlags(data '(\"CCI\"))" in rce_profile
+    assert 'outFile "svdb_query" lvsSvdbQueryFromForm(form)' in rce_toml
     assert '"CPU Number:"' in lvs_gui
 
 
@@ -125,25 +145,24 @@ def test_custom_svrf_is_shared_by_drc_lvs_and_rce() -> None:
             "rceCustomSvrfGuiRevision",
         ),
     ):
-        entry = read_skill_source(CAD_ROOT / relative)
-        assert f"isCallable('{feature_revision})" in entry
-        assert f'{feature_revision}()=="20260813.custom.svrf.common.v1"' in entry
-        assert f"isCallable('{gui_revision})" in entry
-        assert f'{gui_revision}()=="20260813.custom.svrf.common.v1"' in entry
-        assert "isCallable('cadBaseLvsCustomSvrfRevision)" in entry
+        entry = loader_contract(relative)
+        assert entry.requires(f"{feature_revision}")
+        assert entry.revision(f"{feature_revision}") == f"20260813.custom.svrf.common.v1"
+        assert entry.requires(f"{gui_revision}")
+        assert entry.revision(f"{gui_revision}") == f"20260813.custom.svrf.common.v1"
+        assert entry.requires("cadBaseLvsCustomSvrfRevision")
         assert (
-            'cadBaseLvsCustomSvrfRevision()=="20260812.custom.svrf.align.v2"'
-            in entry
+            entry.revision("cadBaseLvsCustomSvrfRevision") == "20260812.custom.svrf.align.v2"
         )
-        assert "isCallable('makeLvsCustomSvrf)" in entry
-        assert "isCallable('cadLvsCustomSvrfBind)" in entry
+        assert entry.requires("makeLvsCustomSvrf")
+        assert entry.requires("cadLvsCustomSvrfBind")
 
     assert 'procedure(lvsCustomSvrfGuiRevision()' in lvs_gui
     assert 'procedure(rceCustomSvrfGuiRevision()' in rce_gui
-    drc_entry = read_skill_source(CAD_ROOT / "drc/skill++/DRC.ils")
-    assert 'cadBaseCustomSvrfRevision()=="20260813.custom.svrf.common.v1"' in drc_entry
-    assert 'drcCustomSvrfRevision()=="20260813.custom.svrf.common.v1"' in drc_entry
-    assert 'drcCustomSvrfGuiRevision()=="20260813.custom.svrf.common.v1"' in drc_entry
+    drc_entry = loader_contract("drc/skill++/DRC.ils")
+    assert drc_entry.revision("cadBaseCustomSvrfRevision") == "20260813.custom.svrf.common.v1"
+    assert drc_entry.revision("drcCustomSvrfRevision") == "20260813.custom.svrf.common.v1"
+    assert drc_entry.revision("drcCustomSvrfGuiRevision") == "20260813.custom.svrf.common.v1"
 
 
 def test_cdl_include_is_wired_to_rce_lvs_and_export_cdl() -> None:
@@ -221,32 +240,32 @@ def test_cdl_include_is_wired_to_rce_lvs_and_export_cdl() -> None:
         ("rce/skill++/RCE.ils", "rceCdlIncludeGuiRevision"),
     )
     for relative, gui_revision in entries:
-        entry = read_skill_source(CAD_ROOT / relative)
-        assert "isCallable('cadBaseCdlIncludeRevision)" in entry
-        assert f'cadBaseCdlIncludeRevision()=="{revision}"' in entry
-        assert f"isCallable('{gui_revision})" in entry
+        entry = loader_contract(relative)
+        assert entry.requires("cadBaseCdlIncludeRevision")
+        assert entry.revision(f"cadBaseCdlIncludeRevision") == f"{revision}"
+        assert entry.requires(f"{gui_revision}")
         assert (
-            f'{gui_revision}()=="20260812.cdl.include.layout.v3"' in entry
+            entry.revision(f"{gui_revision}") == f"20260812.cdl.include.layout.v3"
         )
-        assert "isCallable('makeCdlInclude)" in entry
-        assert "isCallable('cadCdlIncludeCB)" in entry
-        assert "isCallable('cadCdlIncludeInputTypeCB)" in entry
+        assert entry.requires("makeCdlInclude")
+        assert entry.requires("cadCdlIncludeCB")
+        assert entry.requires("cadCdlIncludeInputTypeCB")
 
     rce_batch = read_skill_source(CAD_ROOT / "rce/skill++/RCEBATCH.ils")
     assert "procedure(rceBatchEnterMultiple(form)" in rce_batch
     assert "cadCdlIncludeInputTypeCB(form)" in rce_batch
     assert "procedure(rceCdlIncludeBatchRevision()" in rce_batch
-    rce_entry = read_skill_source(CAD_ROOT / "rce/skill++/RCE.ils")
-    assert "isCallable('rceCdlIncludeBatchRevision)" in rce_entry
-    assert f'rceCdlIncludeBatchRevision()=="{revision}"' in rce_entry
+    rce_entry = loader_contract("rce/skill++/RCE.ils")
+    assert rce_entry.requires("rceCdlIncludeBatchRevision")
+    assert rce_entry.revision(f"rceCdlIncludeBatchRevision") == f"{revision}"
 
     lvs_batch = read_skill_source(CAD_ROOT / "lvs/skill++/LVSRUN.ils")
     assert "procedure(lvsBatchEnterMultiple(form)" in lvs_batch
     assert "cadCdlIncludeInputTypeCB(form)" in lvs_batch
     assert "procedure(lvsCdlIncludeBatchRevision()" in lvs_batch
-    lvs_entry = read_skill_source(CAD_ROOT / "lvs/skill++/LVS.ils")
-    assert "isCallable('lvsCdlIncludeBatchRevision)" in lvs_entry
-    assert f'lvsCdlIncludeBatchRevision()=="{revision}"' in lvs_entry
+    lvs_entry = loader_contract("lvs/skill++/LVS.ils")
+    assert lvs_entry.requires("lvsCdlIncludeBatchRevision")
+    assert lvs_entry.revision(f"lvsCdlIncludeBatchRevision") == f"{revision}"
 
 
 def test_lvs_and_rce_virtual_connect_name_defaults_and_callbacks() -> None:

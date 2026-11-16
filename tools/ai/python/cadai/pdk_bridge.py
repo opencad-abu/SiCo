@@ -9,7 +9,7 @@ from .pdk_schema import MAX_CAPTURE_BYTES, PdkUnavailable, skill_string
 
 
 # Discovery operations implemented by aiPdkCapture (see tools/ai/docs/PDK_COLLECTION_SPEC_V1.md).
-OPERATIONS = frozenset({"libraries", "directory", "device", "categories"})
+OPERATIONS = frozenset({"libraries", "directory", "device", "categories", "layout"})
 
 
 class PdkBridge:

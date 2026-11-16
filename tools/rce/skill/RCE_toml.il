@@ -3,7 +3,7 @@
 ;------------------------------------------------------------------------------
 
 unless(and(boundp('rceTomlVersion)
-             rceTomlVersion=="20261020.common.compat.v3")
+             rceTomlVersion=="20261024.common.compat.v4")
 
 unless(and(boundp('cadContextBuilding) cadContextBuilding)
   let((commonSkill)
@@ -42,7 +42,7 @@ procedure(RCE_tomlDefaultOutput(runDir cell outType)
       (t normalized)
     )
     if(member(normalized
-                '("view" "extview" "smartview" "calibreview" "starrcview")) then
+                '("view" "extview" "smartview" "idspf" "calibreview" "starrcview")) then
       ""
     else
       strcat(runDir "/" cell "." suffix)
@@ -63,20 +63,12 @@ procedure(RCE_pythonEntry()
 )
 
 procedure(RCE_pythonExe()
-  let((pythonRoot)
-    or(SICO_envValue("RCE_PYTHON")
-       SICO_installedPython()
-       progn(
-         pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
-         or(SICO_envValue("SICO_PYTHON")
-            when(pythonRoot
-              simplifyFilename(strcat(pythonRoot "/bin/python3") t))
-            "python3"))))
+  SICO_installedPython()
 )
 
 procedure(RCE_tomlRevision()
-  "20261020.multi.corner.v6"
+  "20261027.idspf.view.v7"
 )
 
-rceTomlVersion="20261020.common.compat.v3"
+rceTomlVersion="20261024.common.compat.v4"
 )

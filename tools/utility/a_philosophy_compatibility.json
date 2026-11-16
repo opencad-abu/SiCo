@@ -90,7 +90,7 @@
       "exit_condition": "Supported site profiles use SICO_* variables and provider acceptance has no legacy-only environment. Retire fallback in the next incompatible configuration version; until then preserve new-name precedence including empty strings.",
       "status": "retained",
       "allow_exposure": true,
-      "evidence": ["tools/ai/python/tests/test_agent_provider_config.py"]
+      "evidence": ["tools/sico/python/sico/providers/config.py"]
     },
     {
       "legacy": "cadai.env_names pre-SICO catalog/template path variables",

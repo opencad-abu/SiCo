@@ -17,6 +17,8 @@ from .circuit_edit import EDIT_NAMES
 from .circuit_generic import GENERIC_NAMES
 from .circuit_library import LIBRARY_NAMES
 from .circuit_tools import LIVE_CIRCUIT_TOOLS, CircuitArgumentError
+from .drc_rules_handler import dispatch_drc_rules
+from .drc_rules_schema import NAMES as DRC_RULES_NAMES
 from .entry_context import NAMES as ENTRY_NAMES
 from .entry_context import call_context
 from .inspection import READ_ONLY_INSPECTION_TOOLS, InspectionArgumentError
@@ -46,6 +48,7 @@ from .mcp_template_handler import (
     TemplateHandlerArgumentError,
     dispatch_template,
 )
+from .mcp_visible_drc_handler import dispatch_visible_drc
 from .mcp_workflow_handler import dispatch_workflow
 from .pdk_binding_schema import BINDING_NAMES
 from .pdk_schema import PDK_NAMES
@@ -56,11 +59,14 @@ from .template_circuit import TOOL_NAME as TEMPLATE_CIRCUIT_NAME
 from .template_placement import TOOL_NAMES as TEMPLATE_PLACEMENT_NAMES
 from .template_prepare import TOOL_NAME as TEMPLATE_PREPARE_NAME
 from .template_symbol import TOOL_NAMES as TEMPLATE_SYMBOL_NAMES
+from .visible_drc import VisibleDrcArgumentError
+from .visible_drc_schema import VISIBLE_DRC_NAMES
 from .workflow_tools import WORKFLOW_TOOL_NAMES, WorkflowArgumentError
 
 
 def create_bindings(*, client, workspace, skill_reference, get_pdk_session,
-                    get_pdk_bindings, get_snapshot_store, get_candidate_ledger):
+                    get_pdk_bindings, get_snapshot_store, get_candidate_ledger,
+                    get_visible_drc_service=None):
     """Return the ordered registration used for both listing and invocation."""
     def entry(name, arguments):
         return call_context(name, arguments, client)
@@ -147,6 +153,11 @@ def create_bindings(*, client, workspace, skill_reference, get_pdk_session,
         (LIVE_NAMES, partial(dispatch_live, client=client), (LiveHandlerArgumentError,), False),
         (READ_ONLY_INSPECTION_TOOLS - ENTRY_NAMES, partial(dispatch_inspection, client=client),
          (InspectionArgumentError,), False),
+        (DRC_RULES_NAMES, dispatch_drc_rules, (), False),
+        (VISIBLE_DRC_NAMES, partial(
+            dispatch_visible_drc, client=client,
+            get_service=get_visible_drc_service),
+         (VisibleDrcArgumentError,), False),
         (SNAPSHOT_NAMES, partial(dispatch_snapshot, client=client, get_store=get_snapshot_store),
          (), False),
         (WORKFLOW_TOOL_NAMES, partial(dispatch_workflow, client=client),

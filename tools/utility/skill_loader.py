@@ -9,9 +9,11 @@ from pathlib import Path
 import textwrap
 
 if __package__:
-    from .skill_loader_contract import KERNEL, MANIFEST, classes, contract, manifest, members
+    from .skill_loader_contract import (
+        KERNEL, MANIFEST, classes, contract, manifest, members, method_names)
 else:
-    from skill_loader_contract import KERNEL, MANIFEST, classes, contract, manifest, members
+    from skill_loader_contract import (
+        KERNEL, MANIFEST, classes, contract, manifest, members, method_names)
 
 ROOT = Path(__file__).resolve().parents[2]
 MARKERS = {"assistant": "aiLoaderVersion", "sico": "sicoLoaderVersion",
@@ -51,11 +53,13 @@ def render(root, name, groups=None):
     lines.append(f'  SICO_sourceRequire("{name}" "{fingerprint}" \'(')
     for path, digest, exports, revisions, guards in rows:
         location = Path(path)
+        source = (root / path).read_text()
         lines.append(f'    ("{location.parent}" "{location.name}" "{digest}"')
         fields = ["(" + " ".join(exports) + ")",
                   "(" + " ".join(f"({fun} {json.dumps(value)})" for fun, value in revisions) + ")",
                   "(" + " ".join(guards) + ")",
-                  "(" + " ".join(classes((root / path).read_text())) + "))"]
+                  "(" + " ".join(classes(source)) + ")",
+                  "(" + " ".join(method_names(source)) + "))"]
         for field in fields:
             lines.extend(textwrap.wrap(field, width=105, initial_indent="      ",
                                        subsequent_indent="       ", break_long_words=False,

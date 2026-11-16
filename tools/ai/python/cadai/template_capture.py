@@ -122,7 +122,7 @@ def validate_asset(header, rows, footer, legacy=False, capture_v2=False):
             raise TemplateError("unsupported capture classification semantics")
         fields = {**fields, "instance": fields["instance"] + " builtin_library"}
         if semantics == SEMANTICS:
-            fields["instance"] += " master_view_type"
+            fields["instance"] += " master_oa_view_type"
     if capture_v2:
         from .template_capture_geometry import RECORD_FIELDS_V2, validate_geometry_capture
 
@@ -183,8 +183,8 @@ def validate_asset(header, rows, footer, legacy=False, capture_v2=False):
             ):
                 raise TemplateError("missing/invalid builtin library observation")
             if semantics == "explicit_evidence_v2" and (
-                "master_view_type" not in r or (r.get("master_available")
-                and not _text(r["master_view_type"]))
+                "master_oa_view_type" not in r or (r.get("master_available")
+                and not _text(r["master_oa_view_type"]))
             ):
                 raise TemplateError("missing/invalid master view type observation")
             if any(not _text(r.get(k)) for k in ("libName", "cellName", "viewName")):

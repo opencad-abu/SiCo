@@ -66,7 +66,7 @@
     }
   },
   "manual_evidence": {
-    "path": "/path/to/xh/amsVerify/ADC Verification.pdf",
+    "path": "/workarea/xh/amsVerify/ADC Verification.pdf",
     "sha256": "370949ad76de6f3e5201afa0a05b913d674b3067621ea686bb97e16b03e40b8a",
     "pages": [39, 52, 69, 71, 72, 75, 76, 79, 81],
     "claims": [

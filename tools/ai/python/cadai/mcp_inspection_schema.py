@@ -14,8 +14,8 @@ INSPECT_SCHEMATIC = {
         "properties": {
             "lib": {"type": "string", "minLength": 1, "maxLength": 256},
             "cell": {"type": "string", "minLength": 1, "maxLength": 256},
-            "view": {"type": "string", "minLength": 1, "maxLength": 256},
-            "view_type": {"type": "string", "minLength": 1, "maxLength": 256},
+            "view_name": {"type": "string", "minLength": 1, "maxLength": 256},
+            "oa_view_type": {"type": "string", "minLength": 1, "maxLength": 256},
             "include_placement": {"type": "boolean"},
             "max_items": {"type": "integer", "minimum": 1, "maximum": MAX_INSPECT_ITEMS},
         },
@@ -41,8 +41,8 @@ INSPECT_LAYOUT = {
         "properties": {
             "lib": {"type": "string", "minLength": 1, "maxLength": 256},
             "cell": {"type": "string", "minLength": 1, "maxLength": 256},
-            "view": {"type": "string", "minLength": 1, "maxLength": 256},
-            "view_type": {"type": "string", "minLength": 1, "maxLength": 256},
+            "view_name": {"type": "string", "minLength": 1, "maxLength": 256},
+            "oa_view_type": {"type": "string", "minLength": 1, "maxLength": 256},
             "max_items": {"type": "integer", "minimum": 1, "maximum": MAX_INSPECT_ITEMS},
         },
         "additionalProperties": False,
@@ -67,8 +67,8 @@ INSPECT_SYMBOL_PORTS = {
         "properties": {
             "lib": {"type": "string", "minLength": 1, "maxLength": 256},
             "cell": {"type": "string", "minLength": 1, "maxLength": 256},
-            "view": {"type": "string", "minLength": 1, "maxLength": 256},
-            "view_type": {"type": "string", "minLength": 1, "maxLength": 256},
+            "view_name": {"type": "string", "minLength": 1, "maxLength": 256},
+            "oa_view_type": {"type": "string", "minLength": 1, "maxLength": 256},
             "max_items": {"type": "integer", "minimum": 1, "maximum": MAX_INSPECT_ITEMS},
         },
         "additionalProperties": False,
@@ -102,7 +102,7 @@ INSPECT_MASTER_EVIDENCE = {
                     "properties": {
                         "lib": {"type": "string", "minLength": 1, "maxLength": 256},
                         "cell": {"type": "string", "minLength": 1, "maxLength": 256},
-                        "view": {"type": "string", "minLength": 1, "maxLength": 256},
+                        "view_name": {"type": "string", "minLength": 1, "maxLength": 256},
                     },
                     "required": ["lib", "cell"],
                     "additionalProperties": False,
@@ -170,10 +170,10 @@ INSPECT_CONFIG_BINDING = {
         "properties": {
             "lib": {"type": "string", "minLength": 1, "maxLength": 256},
             "cell": {"type": "string", "minLength": 1, "maxLength": 256},
-            "view": {"type": "string", "minLength": 1, "maxLength": 256},
+            "view_name": {"type": "string", "minLength": 1, "maxLength": 256},
             "max_items": {"type": "integer", "minimum": 1, "maximum": MAX_INSPECT_ITEMS},
         },
-        "required": ["lib", "cell", "view"],
+        "required": ["lib", "cell", "view_name"],
         "additionalProperties": False,
     },
     "annotations": {

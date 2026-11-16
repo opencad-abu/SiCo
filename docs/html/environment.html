@@ -14,7 +14,7 @@
 <a class="skip" href="#main">跳到正文</a>
 <header class="topbar">
   <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
-  <span class="edition">使用手册 / 2026.09</span>
+  <span class="edition">使用手册 / 2026.10</span>
   <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
 </header>
 <noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
@@ -23,6 +23,8 @@
 <p class="rail-label">SICO DOCUMENTATION</p>
 <a href="index.html">开始阅读</a>
 <p class="nav-group">开始使用</p>
+<a href="sico-gui.html">SiCo · 客户端界面</a>
+<a href="sico-workspace.html">SiCo · 工作区页面</a>
 <a href="installation.html">01 · 安装</a>
 <a href="environment.html" aria-current="page">02 · 环境变量</a>
 <a href="virtuoso.html">03 · Virtuoso 集成</a>
@@ -35,6 +37,9 @@
 <a href="utilities.html">LEF / GDS / CDL</a>
 <a href="lsf.html">LSF · 运行与资源</a>
 <p class="nav-group">参考附录</p>
+<a href="appendix-pdk-data-standard.html">PDK 数据标准</a>
+<a href="appendix-circuit-template-standard.html">电路模板标准</a>
+<a href="appendix-symbol-template-standard.html">Symbol 模板标准</a>
 <a href="environment-internal.html">环境接口附录</a>
 <div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
 </nav>
@@ -42,9 +47,9 @@
 <main id="main">
 <p class="eyebrow">02 / CONFIGURATION REFERENCE</p>
 <h1>环境变量速查</h1>
-<p class="lead">查名称、取值和未设置时的行为。表格覆盖 SiCo 运行、站点集成及 CAD flow 的配置接口；自动传递项与旧名迁移另附索引。</p>
-<div class="notice">这里的“默认”指当前代码在未设置时的行为，并非示例建议值。除有专门说明外，修改启动环境后需要重启对应进程；已经运行的工程服务不会重新读取 shell。构建脚本的编译开关和第三方软件完整变量集不属于本手册的运行配置范围。</div>
-<p><a href="environment-internal.html">查看内部传递项与诊断附录 →</a>　<a href="#retired">旧环境迁移 →</a></p>
+<p class="lead">查名称、取值和未设置时的行为。表格覆盖 SiCo 运行、站点集成及 CAD flow 的配置接口；自动传递项另见附录。</p>
+<div class="notice">这里的“默认”指当前代码在未设置时的行为，并非示例建议值。除有专门说明外，修改启动环境后需要重启对应进程；已经运行的工程服务不会重新读取 shell。构建脚本的编译开关和第三方软件完整变量集不属于本手册的运行配置范围。已退役的旧名称不再作为配置输入，本手册不保留逐项旧名索引；请按启动错误提示使用现行名称。</div>
+<p><a href="environment-internal.html">查看内部传递项与诊断附录 →</a></p>
 <div class="filters"><label for="env-search">搜索名称或用途<input id="env-search" type="search" placeholder="例如 RCE、温度、modulefiles" autocomplete="off"></label><label for="env-category">分类<select id="env-category"><option value="">全部分类</option>
 <option value="installation">安装、工程与公共入口</option>
 <option value="model">SiCo 模型与工程服务</option>
@@ -59,27 +64,27 @@
 <section class="env-section" id="installation"><h2 id="installation-heading">安装、工程与公共入口</h2>
 <div class="table-wrap"><table class="env"><thead><tr><th scope="col">变量名</th><th scope="col">可选值 / 格式</th><th scope="col">默认 / 未设置行为</th><th scope="col">作用</th></tr></thead><tbody>
 <tr id="SICO_HOME"><td><code>SICO_HOME</code></td><td>有效绝对目录</td><td>CLI 从自身入口定位；.cdsinit 要求显式设置</td><td>唯一安装根；显式空值、无效目录或与入口不一致均报错。</td></tr>
-<tr id="SICO_PYTHON"><td><code>SICO_PYTHON</code></td><td>Python 可执行文件绝对路径</td><td>二进制入口使用包内 Python；源码路径见说明</td><td>共享解释器，优先于 SICO_PYTHON_ROOT。Assistant 要求 3.9.13。</td></tr>
-<tr id="SICO_PYTHON_ROOT"><td><code>SICO_PYTHON_ROOT</code></td><td>Python 安装目录绝对路径</td><td>二进制为 $SICO_HOME/runtime/python；源码站点配置</td><td>SICO_PYTHON 未设置时使用其 bin/python3；显式空值报错。</td></tr>
-<tr id="SICO_SYSTEM_LD_LIBRARY_PATH"><td><code>SICO_SYSTEM_LD_LIBRARY_PATH</code></td><td>冒号分隔的库目录；可空</td><td>空</td><td>SiCo Python 子进程的动态库搜索路径，通常含 Python/lib 与 SICO_HOME/lib。</td></tr>
-<tr id="SICO_TEMP_DIR"><td><code>SICO_TEMP_DIR</code></td><td>.sico 状态目录；相对或绝对路径</td><td>&lt;启动目录&gt;/.sico；空值视为未设置</td><td>相对值在首次启动时固定为绝对路径；包含持久会话，不能作为普通缓存清空。</td></tr>
+<tr id="SICO_PYTHON"><td><code>SICO_PYTHON</code></td><td>派生值</td><td>始终为 <code>$SICO_HOME/runtime/python/bin/python3</code></td><td>启动器发布给子进程；外部设置不作为解释器选择输入。</td></tr>
+<tr id="SICO_PYTHON_ROOT"><td><code>SICO_PYTHON_ROOT</code></td><td>派生值</td><td>始终为 <code>$SICO_HOME/runtime/python</code></td><td>启动器发布给子进程；外部设置不作为解释器选择输入。</td></tr>
+<tr id="SICO_SYSTEM_LD_LIBRARY_PATH"><td><code>SICO_SYSTEM_LD_LIBRARY_PATH</code></td><td>派生值</td><td><code>$SICO_HOME/runtime/python/lib:$SICO_HOME/lib</code></td><td>启动器派生；不要写入 modulefile。</td></tr>
+<tr id="SICO_TEMP_DIR"><td><code>SICO_TEMP_DIR</code></td><td>.sico 状态目录；相对或绝对路径</td><td>&lt;启动目录&gt;/.sico；通常无需设置</td><td>相对值在首次启动时固定为绝对路径；包含持久会话，不能作为普通缓存清空。</td></tr>
 <tr id="SICO_RUNTIME_TOOLS"><td><code>SICO_RUNTIME_TOOLS</code></td><td>tools 目录路径</td><td>当前安装的 tools</td><td>受保护后台 worker 的定位根；保持为 $SICO_HOME/tools。</td></tr>
 <tr id="PROJ_CAD_HOME"><td><code>PROJ_CAD_HOME</code></td><td>项目 SKILL 目录</td><td>不额外加载</td><td>源码 bootstrap 在公共工具后递归加载 .il；不能指向 SiCo tools。</td></tr>
-<tr id="LOGO"><td><code>LOGO</code></td><td>标题文本</td><td>先读 LOGO，再 COMPANY，最后 SiCo</td><td>部分 flow 表单标题前缀；历史文本 OCAD 被忽略。</td></tr>
-<tr id="COMPANY"><td><code>COMPANY</code></td><td>标题文本</td><td>SiCo</td><td>LOGO 未提供有效值时使用的表单标题前缀。</td></tr>
+<tr id="LOGO"><td><code>LOGO</code></td><td>标题文本</td><td>先读 LOGO，再 COMPANY，最后 Silicon Copilot</td><td>CIW 菜单和 flow 表单标题前缀；历史文本 OCAD 被忽略。</td></tr>
+<tr id="COMPANY"><td><code>COMPANY</code></td><td>标题文本</td><td>Silicon Copilot</td><td>LOGO 未提供有效值时使用的标题前缀。</td></tr>
 <tr id="SICO_MENU_CACHE_DIR"><td><code>SICO_MENU_CACHE_DIR</code></td><td>缓存目录</td><td>$XDG_CACHE_HOME/sico；否则 $HOME/.cache/sico</td><td>源码菜单生成数据的缓存位置。</td></tr>
 <tr id="SICO_RUNTIME_NO_MENU"><td><code>SICO_RUNTIME_NO_MENU</code></td><td>1；其他值为关闭此开关</td><td>未设置</td><td>1 跳过受保护工具菜单注册；后台集成使用，交互安装通常不设置。</td></tr>
 </tbody></table></div></section>
 <section class="env-section" id="model"><h2 id="model-heading">SiCo 模型与工程服务</h2>
 <div class="table-wrap"><table class="env"><thead><tr><th scope="col">变量名</th><th scope="col">可选值 / 格式</th><th scope="col">默认 / 未设置行为</th><th scope="col">作用</th></tr></thead><tbody>
-<tr id="SICO_BACKEND"><td><code>SICO_BACKEND</code></td><td>codex / python</td><td>codex</td><td>选择模型执行后端；python 为另一套已有协议适配入口。</td></tr>
-<tr id="SICO_PROVIDER"><td><code>SICO_PROVIDER</code></td><td>codex: responses；python: anthropic / openai</td><td>codex 时 responses；python 时 anthropic</td><td>上游 API 协议，必须与 backend 配套。</td></tr>
+<tr id="SICO_BACKEND"><td><code>SICO_BACKEND</code></td><td>codex / python</td><td>codex；通常无需设置</td><td>选择模型执行后端；python 为另一套已有协议适配入口。</td></tr>
+<tr id="SICO_PROVIDER"><td><code>SICO_PROVIDER</code></td><td>codex: responses；python: anthropic / openai</td><td>codex 时 responses；通常无需设置</td><td>上游 API 协议，必须与 backend 配套。</td></tr>
 <tr id="SICO_API_BASE_URL"><td><code>SICO_API_BASE_URL</code></td><td>服务基础 URL</td><td>无</td><td>与 SICO_MODEL 一起设置；Codex 后端访问其 Responses 接口。</td></tr>
 <tr id="SICO_API_URL"><td><code>SICO_API_URL</code></td><td>服务基础 URL</td><td>无；兼容共享旧名</td><td>SICO_API_BASE_URL 的临时兼容别名；二者同时存在且地址不同会拒绝启动。</td></tr>
 <tr id="SICO_MODEL"><td><code>SICO_MODEL</code></td><td>站点服务支持的模型名</td><td>无</td><td>主界面与 Codex Assistant 共用；不是固定枚举。</td></tr>
 <tr id="SICO_API_KEY"><td><code>SICO_API_KEY</code></td><td>私有凭据字符串</td><td>无内置密钥</td><td>由站点私有环境注入；不要保存到共享配置、HTML 或命令示例。</td></tr>
 <tr id="SICO_PROVIDER_CONFIG"><td><code>SICO_PROVIDER_CONFIG</code></td><td>JSON 文件路径</td><td>有模型环境时用环境；否则工程 .sico/ai/agent-provider.json（若存在）</td><td>显式 CLI 配置优先，其次本变量，再环境配置；相对路径基于启动工程。</td></tr>
-<tr id="SICO_CODEX_CLI"><td><code>SICO_CODEX_CLI</code></td><td>可执行文件路径或命令名</td><td>本安装 Codex runtime → 本安装 bin/codex → PATH</td><td>选择 Codex 程序；当前要求版本 0.156.1，显式空值不接受。</td></tr>
+<tr id="SICO_CODEX_CLI"><td><code>SICO_CODEX_CLI</code></td><td>可执行文件路径或命令名</td><td>本安装 Codex runtime → 本安装 bin/codex → PATH</td><td>选择 Codex 程序；当前要求版本 0.162.1，显式空值不接受。</td></tr>
 <tr id="SICO_TOOL_FORMAT"><td><code>SICO_TOOL_FORMAT</code></td><td>native / flat</td><td>native</td><td>Codex 工具格式；SICO_LEGACY_0114 显式设置时优先。</td></tr>
 <tr id="SICO_LEGACY_0114"><td><code>SICO_LEGACY_0114</code></td><td>未设置 / 空 / 0 / 1</td><td>不强制覆盖 tool format</td><td>1 选择 flat，0 选择 native；不切换 Codex 版本，仍要求 Responses API。</td></tr>
 <tr id="SICO_LINUX_SANDBOX"><td><code>SICO_LINUX_SANDBOX</code></td><td>default / legacy-landlock</td><td>default</td><td>Codex Linux 隔离实现选择，按站点验证结果配置。</td></tr>
@@ -99,7 +104,7 @@
 <tr id="SICO_AI_MCP_TIMEOUT"><td><code>SICO_AI_MCP_TIMEOUT</code></td><td>正的有限秒数；Codex 使用时限 1–3600</td><td>独立 Assistant MCP 为 305 秒；Codex 回退值 1800 秒</td><td>独立 MCP 的请求预算；Codex 中仅在 SICO_MCP_TIMEOUT 未设置时读取。</td></tr>
 <tr id="SICO_CODEX_HOME"><td><code>SICO_CODEX_HOME</code></td><td>用户私有目录</td><td>$XDG_STATE_HOME/cad-codex/codex-home；否则 ~/.local/state/cad-codex/codex-home</td><td>Assistant 私有登录/配置命名空间；显式空值报错。</td></tr>
 <tr id="SICO_AI_TERMINAL"><td><code>SICO_AI_TERMINAL</code></td><td>可执行文件路径或命令名</td><td>$SICO_HOME/tools/ai/bin/sico-ai-terminal</td><td>覆盖 Assistant 终端程序；CLI --terminal 优先。</td></tr>
-<tr id="SICO_AI_PYTHON_LIBRARY_PATH"><td><code>SICO_AI_PYTHON_LIBRARY_PATH</code></td><td>冒号分隔的库目录；可空</td><td>SICO_SYSTEM_LD_LIBRARY_PATH</td><td>Assistant/终端 Python 动态库路径；显式空值不回退。</td></tr>
+<tr id="SICO_AI_PYTHON_LIBRARY_PATH"><td><code>SICO_AI_PYTHON_LIBRARY_PATH</code></td><td>冒号分隔的库目录；可空</td><td>发布包派生自 $SICO_HOME/runtime/python/lib 与 $SICO_HOME/lib</td><td>已弃用的源码兼容覆盖；不要写入 modulefile；显式空值仍保持为空。</td></tr>
 <tr id="SICO_CODEX_PYTHON_LIBRARY_PATH"><td><code>SICO_CODEX_PYTHON_LIBRARY_PATH</code></td><td>冒号分隔的库目录；兼容项</td><td>未配置时使用 SICO_SYSTEM_LD_LIBRARY_PATH</td><td>仅 aiassistant shell launcher 在 SICO_AI_PYTHON_LIBRARY_PATH 未设置时回退读取；新配置统一使用 SICO_AI_PYTHON_LIBRARY_PATH。</td></tr>
 <tr id="SICO_AI_QT_PLUGIN_PATH"><td><code>SICO_AI_QT_PLUGIN_PATH</code></td><td>Qt plugin 目录</td><td>由运行安装解析</td><td>终端子进程的 Qt 插件目录覆盖；跨安装遗留值应清除。</td></tr>
 <tr id="SICO_AI_UTF8_LOCALE"><td><code>SICO_AI_UTF8_LOCALE</code></td><td>执行节点可用的 UTF-8 locale</td><td>现有 UTF-8 locale → C.UTF-8 等候选探测</td><td>修正终端字符编码；显式不可用值报错。</td></tr>
@@ -120,7 +125,7 @@
 <section class="env-section" id="pdk"><h2 id="pdk-heading">PDK、模板与可选数据</h2>
 <div class="table-wrap"><table class="env"><thead><tr><th scope="col">变量名</th><th scope="col">可选值 / 格式</th><th scope="col">默认 / 未设置行为</th><th scope="col">作用</th></tr></thead><tbody>
 <tr id="SICO_PDK_DATA"><td><code>SICO_PDK_DATA</code></td><td>已发布标准 PDK 的 index.json 路径</td><td>工程 .sico/ai/pdk-data 的本地发布包；另有已安装 builtin 数据</td><td>设计读取已发布数据；相对路径按当前工程解析，调用相应工具时检查。</td></tr>
-<tr id="SICO_PDK_WORKFLOW"><td><code>SICO_PDK_WORKFLOW</code></td><td>design / generation</td><td>design</td><td>design 只读发布包；generation 用于独立的 PDK 采集维护进程。</td></tr>
+<tr id="SICO_PDK_WORKFLOW"><td><code>SICO_PDK_WORKFLOW</code></td><td>design / generation</td><td>design；正常用户不设置</td><td>仅 headless/CI 覆盖；普通用户通过“设置 → 智能体设置 → 智能体模式”选择项目设计或 PDK 数据维护。</td></tr>
 <tr id="SICO_CIRCUIT_TEMPLATES_DIR"><td><code>SICO_CIRCUIT_TEMPLATES_DIR</code></td><td>模板目录路径</td><td>工程 .sico/ai/circuit_templates；再查安装的 reference/circuit_templates（若有）</td><td>增加项目共享模板层；相对路径按当前工程固定，按需校验。</td></tr>
 <tr id="SICO_AI_DEVICE_CATALOG"><td><code>SICO_AI_DEVICE_CATALOG</code></td><td>器件目录数据路径</td><td>工程 .sico/ai/reference/virtuoso-base-libraries/catalog.sqlite3；再查安装对应 reference 路径（若有）</td><td>可选器件 catalog；相对路径按当前工程解析。</td></tr>
 <tr id="SICO_AI_SKILL_REFERENCE_ROOT"><td><code>SICO_AI_SKILL_REFERENCE_ROOT</code></td><td>SKILL 参考数据目录</td><td>安装 tools/ai/reference/cadence-skill（若有）</td><td>可选参考资源；相对路径按当前工程解析，按需读取。运行包不保证携带参考资源。</td></tr>
@@ -183,15 +188,8 @@
 <tr id="PROJ_HOME"><td><code>PROJ_HOME</code></td><td>项目根目录</td><td>无，可选</td><td>MTS 源项目元信息。</td></tr>
 <tr id="PROJ_ADE_DB_DIR"><td><code>PROJ_ADE_DB_DIR</code></td><td>可写绝对目录</td><td>无，生成时必需</td><td>MTS 运行结果根，缺失报错；仍是现行变量名。</td></tr>
 </tbody></table></div></section>
-<section class="env-section" id="runtime"><h2 id="runtime-heading">解释器覆盖与站点维护</h2>
+<section class="env-section" id="runtime"><h2 id="runtime-heading">解释器与站点维护</h2>
 <div class="table-wrap"><table class="env"><thead><tr><th scope="col">变量名</th><th scope="col">可选值 / 格式</th><th scope="col">默认 / 未设置行为</th><th scope="col">作用</th></tr></thead><tbody>
-<tr id="DRC_PYTHON"><td><code>DRC_PYTHON</code></td><td>解释器命令或路径</td><td>SICO_PYTHON → SICO_PYTHON_ROOT/bin/python3 → python3</td><td>覆盖 DRC backend 解释器；源码开发使用，二进制保持包内 ABI。</td></tr>
-<tr id="LVS_PYTHON"><td><code>LVS_PYTHON</code></td><td>解释器命令或路径</td><td>同共享解释器顺序</td><td>覆盖 LVS、Stream GDS、Export CDL backend。</td></tr>
-<tr id="RCE_PYTHON"><td><code>RCE_PYTHON</code></td><td>解释器命令或路径</td><td>同共享解释器顺序</td><td>覆盖 RCE backend。</td></tr>
-<tr id="LEF_PYTHON"><td><code>LEF_PYTHON</code></td><td>解释器命令或路径</td><td>同共享解释器顺序</td><td>覆盖 LEF backend。</td></tr>
-<tr id="RCE_ANALYZER_PYTHON"><td><code>RCE_ANALYZER_PYTHON</code></td><td>解释器命令或路径</td><td>RCE 的解释器</td><td>DSPF Analyzer 专用覆盖。</td></tr>
-<tr id="DRC_RULE_SELECT_PYTHON"><td><code>DRC_RULE_SELECT_PYTHON</code></td><td>解释器命令或路径</td><td>DRC 的解释器</td><td>DRC Rule Select 图形程序专用覆盖。</td></tr>
-<tr id="SICO_LSF_PYTHON"><td><code>SICO_LSF_PYTHON</code></td><td>解释器命令或路径</td><td>同共享解释器顺序</td><td>LSF discovery/monitor helper 解释器。</td></tr>
 <tr id="DRC_PYTHON_ENTRY"><td><code>DRC_PYTHON_ENTRY</code></td><td>Python 入口文件</td><td>tools/drc/python/drc</td><td>源码 DRC backend 覆盖；二进制安装优先当前原生入口。</td></tr>
 <tr id="LVS_PYTHON_ENTRY"><td><code>LVS_PYTHON_ENTRY</code></td><td>Python 入口文件</td><td>tools/lvs/python/lvs</td><td>源码 LVS backend 覆盖。</td></tr>
 <tr id="RCE_PYTHON_ENTRY"><td><code>RCE_PYTHON_ENTRY</code></td><td>Python 入口文件</td><td>tools/rce/python/rce</td><td>源码 RCE backend 覆盖。</td></tr>
@@ -281,25 +279,14 @@
 <tr id="TEMPUS_HOME"><td><code>TEMPUS_HOME</code></td><td>工具安装根目录</td><td>无站点路径默认值；优先从 PATH 定位</td><td>tool_help 查找 Tempus 安装的 doc/；无需为未使用工具设置。</td></tr>
 </tbody></table></div></section>
 <h2 id="precedence">常用优先级与空值</h2>
-<p>共享解释器：flow 专用覆盖 → SICO_PYTHON → SICO_PYTHON_ROOT/bin/python3 → 源码 flow 的 python3。Assistant 另有严格的 3.9.13 解释器检查，不能依赖 flow 的 PATH 回退。二进制入口使用包内 Python，应保持安装与 ABI 一致。</p>
+<p>解释器只有一个权威路径：<code>$SICO_HOME/runtime/python/bin/python3</code>。flow 专用解释器覆盖、PATH <code>python3</code>、站点绝对路径和 <code>etc/config/dev-runtime</code> 都不存在回退语义。Assistant 和其他工具都使用同一解释器。</p>
 <p>模型配置：显式配置文件 / SICO_PROVIDER_CONFIG 优先于环境模型设置；没有这些输入时，可读取工程默认 provider 文件。Profile 加载后的值覆盖表单环境初值，最后手动调整形成运行 TOML。</p>
-<p>SICO_HOME、显式 SICO_PYTHON / SICO_PYTHON_ROOT 不能为空；SICO_TEMP_DIR 空值按未设置。不要假定所有变量都有相同空值语义。PROJECT_ROOT、PDK_ROOT、RCE_RUN_ROOT 等是用户在路径表达式中自定义的前缀，名称不由 SiCo 固定。</p>
-<h2 id="retired">迁移旧环境</h2>
-<p>新安装使用现行名称。旧名通常只用于报告迁移错误；存在新名时不会从旧值补齐。SICO_API_URL 是仍可读取的明确例外。不要批量替换所有 PROJ_：MTS 的 PROJ_USER_HOME / PROJ_ADE_DB_DIR，以及 PROJ_CAD_HOME / PROJ_AI_LSF_* 仍然有效。</p>
-<div class="table-wrap"><table><thead><tr><th>旧名</th><th>现在使用</th></tr></thead><tbody>
-<tr><td>CAD_HOME、SICO_ROOT、CAD_AGENT_ROOT</td><td>SICO_HOME</td></tr>
-<tr><td>CAD_PYTHON / CAD_PYTHON_ROOT / CAD_SYSTEM_LD_LIBRARY_PATH</td><td>对应 SICO_ 名称</td></tr>
-<tr><td>PROJ_DRC_*、PROJ_LVS_*、PROJ_RCE_* 等旧 flow 名</td><td>在下方完整迁移索引中逐项核对；通常去掉 PROJ_</td></tr>
-<tr><td>EXT_DEF_TOOL / CORNER / DEF_TEMP / TEMP_LIST / OUTPUT_CHOICES</td><td>对应 RCE_ 名称</td></tr>
-<tr><td>EXT_CPU_ALLOW、EXT_LSF_BSUB / BKILL / BQUEUES</td><td>SICO_FLOW_CPU_ALLOW、SICO_LSF_BSUB / BKILL / BQUEUES</td></tr>
-<tr><td>SICO_CODEX_MODEL / SICO_CODEX_API_BASE_URL / SICO_CODEX_API_KEY</td><td>SICO_MODEL / SICO_API_BASE_URL / SICO_API_KEY，共用模型配置</td></tr>
-<tr><td>CAD_TEMP_DIR</td><td>通常不设置；自动使用工程 .sico，必要时设 SICO_TEMP_DIR</td></tr>
-</tbody></table></div>
-<p><a href="environment-internal.html#retired-list">完整的已登记旧名索引 →</a>　<a href="flows.html">下一步：配置 CAD flow →</a></p>
+<p>SICO_HOME 不能为空；SICO_PYTHON 和 SICO_PYTHON_ROOT 仅由启动器发布，外部设置不会改变解释器选择。SICO_TEMP_DIR 空值按未设置。不要假定所有变量都有相同空值语义。PROJECT_ROOT、PDK_ROOT、RCE_RUN_ROOT 等是用户在路径表达式中自定义的前缀，名称不由 SiCo 固定。</p>
+<p><a href="flows.html">下一步：配置 CAD flow →</a></p>
 
-<footer class="page-footer"><span>内容基线 d48ccb31 · 核对 2026-09-28</span><a href="virtuoso.html">接入 Virtuoso →</a></footer>
+<footer class="page-footer"><span>内容基线 920e8282 · 核对 2026-10-21</span><a href="virtuoso.html">接入 Virtuoso →</a></footer>
 </main>
-<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#installation-heading">安装、工程与公共入口</a><a href="#model-heading">SiCo 模型与工程服务</a><a href="#assistant-heading">AI Assistant 与终端</a><a href="#pdk-heading">PDK、模板与可选数据</a><a href="#flow-heading">CAD flow：输入、规则与输出</a><a href="#mts-heading">MTS 项目与工作目录</a><a href="#runtime-heading">解释器覆盖与站点维护</a><a href="#platform-heading">系统与第三方集成环境</a><a href="#tool-help-heading">EDA 本地帮助定位</a><a href="#precedence">常用优先级与空值</a><a href="#retired">迁移旧环境</a></aside>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#installation-heading">安装、工程与公共入口</a><a href="#model-heading">SiCo 模型与工程服务</a><a href="#assistant-heading">AI Assistant 与终端</a><a href="#pdk-heading">PDK、模板与可选数据</a><a href="#flow-heading">CAD flow：输入、规则与输出</a><a href="#mts-heading">MTS 项目与工作目录</a><a href="#runtime-heading">解释器覆盖与站点维护</a><a href="#platform-heading">系统与第三方集成环境</a><a href="#tool-help-heading">EDA 本地帮助定位</a><a href="#precedence">常用优先级与空值</a></aside>
 </div></div>
 </body>
 </html>

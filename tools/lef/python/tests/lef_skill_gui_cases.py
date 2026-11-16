@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from skill_integration_fixtures import CAD_ROOT
 from skill_test_support import read_skill_source
+from skill_loader_test_support import loader_contract
 
 
 def test_lef_form_lifecycle_reuses_valid_forms_and_never_deletes_in_callbacks() -> None:
@@ -61,14 +62,14 @@ def test_lef_more_options_use_aligned_grid_prompts() -> None:
 
 
 def test_lef_completion_summary_exposes_output_and_log_actions() -> None:
-    loader = (CAD_ROOT / "lef/skill++/LEF.ils").read_text(encoding="utf-8")
+    loader = loader_contract("lef/skill++/LEF.ils")
     runner = (CAD_ROOT / "lef/skill++/LEFRUN.ils").read_text(encoding="utf-8")
     summary = (CAD_ROOT / "lef/skill/UI_lefSummary.il").read_text(encoding="utf-8")
 
-    assert '"/skill/UI_lefSummary.il"' in loader
-    assert 'lefSummaryUiRevision()=="20260901.summary.lifecycle.v2"' in loader
-    assert "isCallable('GUI_flowLogShow)" in loader
-    assert "isCallable('GUI_flowLogClose)" in loader
+    assert loader.contains_source("/skill/UI_lefSummary.il")
+    assert loader.revision("lefSummaryUiRevision") == "20261024.summary.lifecycle.v3"
+    assert loader.requires("GUI_flowLogShow")
+    assert loader.requires("GUI_flowLogClose")
     assert '"Open LEF File"' in summary
     assert '"Copy LEF File"' in summary
     assert '"Open Log"' in summary

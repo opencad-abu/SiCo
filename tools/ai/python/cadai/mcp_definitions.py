@@ -9,10 +9,12 @@ advertised or given a second definition.
 
 from __future__ import annotations
 
+from . import drc_rules_schema as drc_rules
 from . import mcp_bridge_schema as bridge
 from . import mcp_inspection_schema as inspection
 from . import mcp_snapshot_schema as snapshot
 from . import mcp_verification_schema as verification
+from . import visible_drc_schema as visible_drc
 from . import workflow_tools
 from .ac_response_schema import RESPONSE_TOOLS
 from .ac_schema import AC_TOOLS
@@ -29,12 +31,12 @@ from .entry_context import TOOLS as ENTRY_TOOLS
 from .mcp_help_schema import MCP_HELP_TOOL
 from .mcp_live_handler import LIVE_MODEL_TOOLS
 from .mcp_registry import build_registry, validate_aliases
-from .schema_refs import auto_factor
 from .measurement_catalog import CATALOG_TOOLS
 from .pdk_binding_schema import BINDING_TOOLS
 from .pdk_schema import PDK_TOOLS
 from .project_schema import PROJECT_TOOLS
 from .result_tools import RESULT_TOOLS
+from .schema_refs import auto_factor
 from .search_tools import SEARCH_TOOL
 from .simulation_recipe import SIMULATION_TOOLS
 from .skill_check_tools import SKILL_CHECK_TOOL
@@ -64,6 +66,8 @@ _BASE_TOOLS = [
     inspection.LIST_LIBRARIES,
     inspection.INSPECT_LIBRARY,
     inspection.INSPECT_CONFIG_BINDING,
+    *drc_rules.TOOLS,
+    *visible_drc.VISIBLE_DRC_TOOLS,
     bridge.EVAL_SKILL,
     bridge.LOAD_SKILL_FILE,
     SKILL_CHECK_TOOL, SEARCH_TOOL, CDS_HELP_TOOL, MCP_HELP_TOOL,

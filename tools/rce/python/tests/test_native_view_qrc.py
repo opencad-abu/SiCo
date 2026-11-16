@@ -71,7 +71,7 @@ def _command_section(command: str, name: str) -> str:
     return command.split(f"{name} \\\n", 1)[1].split("\n\n", 1)[0]
 
 
-def test_view_defaults_to_native_smart_view(
+def test_view_defaults_to_native_idspf(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.chdir(tmp_path)
@@ -84,14 +84,19 @@ def test_view_defaults_to_native_smart_view(
 
     assert '-design_cell_name "layout_top layout layout_lib"' in input_db
     assert f'-library_definitions_file "{tmp_path / "cds.lib"}"' in input_db
+    assert '-schematic_view "schematic"' in input_db
     assert "-format" not in input_db
-    assert "-type smart_view" in output_db
-    assert '-view_name "av_extracted"' in output_db
-    assert '-res_component "presistor"' in output_db
+    assert "-type idspf" in output_db
+    assert '-view_name "idspf"' in output_db
+    assert "-subtype extended" in output_db
+    assert "-res_component" not in output_db
     assert "-cap_component" not in output_db
     assert "-cap_property_name" not in output_db
     assert "-res_property_name" not in output_db
     assert "-enable_cellview_check" not in output_db
+    assert "-enable_reduction false" in _command_section(
+        command, "parasitic_reduction"
+    )
     assert '-net_name_space "SCHEMATIC"' in output_setup
     assert '-temporary_directory_name "qrcTemp"' in output_setup
     assert "-file_name" not in output_setup
@@ -218,7 +223,11 @@ def test_schematic_gds_view_accepts_explicit_layout_view_token(
 
 @pytest.mark.parametrize("input_type", ["CDL+GDS", "CDL+LAY", "SVDB", "CCI"])
 def test_external_cdl_run_directory_maps_native_view(tmp_path: Path, input_type: str) -> None:
-    cfg = _config(tmp_path, input_type=input_type, view={"library": "results", "cell": "top"})
+    cfg = _config(
+        tmp_path,
+        input_type=input_type,
+        view={"kind": "extracted", "library": "results", "cell": "top"},
+    )
     directory = tmp_path / "export cdl"
     directory.mkdir()
     cfg = cfg.replace('input', 'cdl', value={"run_directory": str(directory)})
@@ -227,3 +236,21 @@ def test_external_cdl_run_directory_maps_native_view(tmp_path: Path, input_type:
     (directory / "si.env").write_text("simulator = auCdl\n")
     command = generate_qrc(cfg, cfg.context()).read_text()
     assert f'-cdl_out_map_directory "{directory}"' in _command_section(command, "output_db")
+
+
+@pytest.mark.parametrize("input_type", ["CDL+GDS", "CDL+LAY", "SVDB", "CCI"])
+def test_idspf_requires_schematic_input(tmp_path: Path, input_type: str) -> None:
+    cfg = _config(
+        tmp_path,
+        input_type=input_type,
+        view={"kind": "idspf", "library": "results", "cell": "top"},
+    )
+    directory = tmp_path / "export cdl"
+    directory.mkdir()
+    (directory / "si.env").write_text("simulator = auCdl\n")
+    cfg = cfg.replace(
+        'input', 'cdl', value={"run_directory": str(directory)}
+    )
+
+    with pytest.raises(ValueError, match="requires OA or SCH\\+GDS"):
+        generate_qrc(cfg, cfg.context())

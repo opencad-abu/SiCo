@@ -11,6 +11,7 @@ def make_xrc_config(
     *,
     rc_type: str = "RCC",
     output_type: str = "dspf",
+    tool: str = "CalXRC",
 ) -> tuple[RceConfig, dict[str, Path]]:
     run_dir = tmp_path / "run"
     tech_dir = tmp_path / "tech"
@@ -51,7 +52,7 @@ def make_xrc_config(
             "ignore_error": False,
         },
         "extract": {
-            "tool": "CalXRC",
+            "tool": tool,
             "tech_dir": str(tech_dir),
             "corner": "RCmax",
             "temperature": "-30",
@@ -83,6 +84,23 @@ def install_fake_calibre(mgc_home: Path) -> Path:
         """#!/bin/sh
 set -eu
 printf '%s\n' "$*" >> "$FAKE_CALIBRE_TRACE"
+write_pdb () {
+  if [ "${FAKE_PDB_FAIL:-0}" = 1 ]; then
+    echo 'mock PDB failure'
+    exit 23
+  fi
+  mkdir -p db/svdb.top/pex.db
+  : > db/svdb.top/pex.db/top_raw.bspef
+}
+
+write_netlist () {
+  if [ "${FAKE_FMT_EMPTY:-0}" = 1 ]; then
+    : > db/top.dspf
+  else
+    echo '* mock extracted netlist' > db/top.dspf
+  fi
+}
+
 case "$*" in
   *"-lvs"*)
     if [ "${FAKE_LVS_FAILURE_CODE:-0}" != 0 ]; then
@@ -99,21 +117,20 @@ case "$*" in
     fi
     echo 'LVS completed. CORRECT. See report file: lvs.report'
     ;;
+  *"-xact"*"-3d -pdb"* | *"-xact -r "*)
+    write_pdb
+    echo "xACT Errors  =  ${FAKE_PDB_XACT_ERRORS:-${FAKE_XACT_ERRORS:-0}}"
+    ;;
+  *"-xact"*"-fmt"*)
+    write_netlist
+    echo "xACT Errors  =  ${FAKE_FMT_XACT_ERRORS:-${FAKE_XACT_ERRORS:-0}}"
+    ;;
   *"-pdb"*)
-    if [ "${FAKE_PDB_FAIL:-0}" = 1 ]; then
-      echo 'mock PDB failure'
-      exit 23
-    fi
-    mkdir -p db/svdb.top/pex.db
-    : > db/svdb.top/pex.db/top_raw.bspef
+    write_pdb
     echo "xRC Errors  =  ${FAKE_PDB_XRC_ERRORS:-${FAKE_XRC_ERRORS:-0}}"
     ;;
   *"-fmt"*)
-    if [ "${FAKE_FMT_EMPTY:-0}" = 1 ]; then
-      : > db/top.dspf
-    else
-      echo '* mock extracted netlist' > db/top.dspf
-    fi
+    write_netlist
     echo "xRC Errors  =  ${FAKE_FMT_XRC_ERRORS:-${FAKE_XRC_ERRORS:-0}}"
     ;;
   *)

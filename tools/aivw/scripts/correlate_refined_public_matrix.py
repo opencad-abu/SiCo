@@ -72,7 +72,7 @@ def run(config_path,target,policy_path=None):
     profile=load_profile('amsverify');env=capture_module_environment(profile.modules);qualified=probe_tools([t for t in profile.tools if t.name=='xrun'],env)
     if len(qualified)!=1 or qualified[0].status!='PASS':raise ValueError('Xcelium unavailable')
     request={'kind':cfg['kind'],'target':target,'config_sha256':sha256_file(config_path),'sources':pairs,'candidate_sha256':sha256_file(source),'old_experiment_digest':model['experiment_digest'],'new_experiment_digest':stable_digest(plan),'physical_projection_digest':stable_digest(projection(plan)),'implementation_sha256':sha256_file(Path(__file__)),'policy_digest':stable_digest(policy),'policy_source':policy_source,'holdout_evaluated':False}
-    digest=stable_digest(request);run=allocate_split_run(resolve_launch_paths(),Path('/path/to/xh/amsVerify/data/ams').resolve(),library=plan['target']['library'],cell=plan['target']['cell'],view='refined_matrix',kind='refined-matrix',request_digest=digest)
+    digest=stable_digest(request);run=allocate_split_run(resolve_launch_paths(),Path('/workarea/xh/amsVerify/data/ams').resolve(),library=plan['target']['library'],cell=plan['target']['cell'],view='refined_matrix',kind='refined-matrix',request_digest=digest)
     write_json_once(run.control_root/'request.json',request);print(json.dumps({'run_id':run.run_id,'payload':str(run.payload_root)}),flush=True)
     summary={'status':'FAIL_EXECUTION','qualification':'NOT_ESTABLISHED','holdout_evaluated':False}
     try:

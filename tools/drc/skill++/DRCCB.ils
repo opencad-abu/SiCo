@@ -1,5 +1,5 @@
 unless(and(isCallable('SICO_tomlRevision)
-             SICO_tomlRevision()=="20260922.sico.temp.v6"
+             SICO_tomlRevision()=="20261024.sico.temp.v7"
              isCallable('SICO_tomlString) isCallable('SICO_shellQuote)
              isCallable('SICO_absolutePath) isCallable('SICO_tempPath))
   cond(

@@ -3,7 +3,7 @@
 ;------------------------------------------------------------------------------
 
 unless(and(boundp('sicoTomlVersion)
-             sicoTomlVersion=="20260922.sico.temp.v6")
+             sicoTomlVersion=="20261024.sico.temp.v7")
 
 unless(and(boundp('cadContextBuilding) cadContextBuilding)
   let((commonSkill)
@@ -112,7 +112,7 @@ procedure(SICO_logo()
       logo=nil)
     when(and(company upperCase(company)=="OCAD")
       company=nil)
-    or(logo company "SiCo")
+    or(logo company "Silicon Copilot")
   )
 )
 
@@ -156,8 +156,8 @@ procedure(SICO_tomlWriteBool(outFile key value)
 )
 
 procedure(SICO_tomlRevision()
-  "20260922.sico.temp.v6"
+  "20261024.sico.temp.v7"
 )
 
-sicoTomlVersion="20260922.sico.temp.v6"
+sicoTomlVersion="20261024.sico.temp.v7"
 )

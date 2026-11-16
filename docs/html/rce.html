@@ -14,7 +14,7 @@
 <a class="skip" href="#main">跳到正文</a>
 <header class="topbar">
   <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
-  <span class="edition">使用手册 / 2026.09</span>
+  <span class="edition">使用手册 / 2026.10</span>
   <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
 </header>
 <noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
@@ -23,6 +23,8 @@
 <p class="rail-label">SICO DOCUMENTATION</p>
 <a href="index.html">开始阅读</a>
 <p class="nav-group">开始使用</p>
+<a href="sico-gui.html">SiCo · 客户端界面</a>
+<a href="sico-workspace.html">SiCo · 工作区页面</a>
 <a href="installation.html">01 · 安装</a>
 <a href="environment.html">02 · 环境变量</a>
 <a href="virtuoso.html">03 · Virtuoso 集成</a>
@@ -35,6 +37,9 @@
 <a href="utilities.html">LEF / GDS / CDL</a>
 <a href="lsf.html">LSF · 运行与资源</a>
 <p class="nav-group">参考附录</p>
+<a href="appendix-pdk-data-standard.html">PDK 数据标准</a>
+<a href="appendix-circuit-template-standard.html">电路模板标准</a>
+<a href="appendix-symbol-template-standard.html">Symbol 模板标准</a>
 <a href="environment-internal.html">环境接口附录</a>
 <div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
 </nav>
@@ -43,6 +48,46 @@
 <p class="eyebrow">CAD FLOW / PARASITIC EXTRACTION</p>
 <h1>RCE · 寄生参数提取</h1>
 <p class="lead">在同一表单中配置 Quantus、StarRC 或 Calibre XRC，选择工艺角、温度与输出形式。输入连接与工艺数据需要先确认正确。</p>
+<h2 id="gui">图形界面：RCE 主表单</h2>
+<figure class="figure">
+  <a href="assets/screenshots/rce-form.png" aria-label="查看 RCE 主表单原图"><img src="assets/screenshots/rce-form.png" alt="SiCo RCE 主表单：输入、LVS 选项、Extract Options、输出、Netlist Customize、引擎和硬件配置" loading="lazy"></a>
+  <figcaption><strong>SiCo RCE 主表单。</strong>示例为单个 corner 的演示输入；多角、原生 view 和 reduction 选项会按当前引擎与选择展开。<span class="zoom-hint">点击图片查看原始尺寸</span></figcaption>
+</figure>
+<p>RCE 同时包含“LVS 前置”“Extract Options”“Output”和“Netlist Customize”四组业务设置。先选引擎和输入组合，再选 corner、输出格式与 view；最后核对 LVS/EXT CPU 和运行主机。</p>
+<div class="table-wrap"><table><thead><tr><th>页面/控件</th><th>详细说明</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>Config File</strong> + <strong>Load / Save / Save As…</strong></td><td>载入或保存 RCE Profile。</td><td>Profile 包含引擎、corner、输出和 Netlist 选项；加载后仍要核对输入身份与路径。</td></tr>
+<tr><td><strong>Run Scope</strong></td><td>Single Cell 或 Multiple Cells；多 cell 显示 Mapping 编辑器。</td><td>多 cell 运行时 LVS 与抽取输入必须成对完整。</td></tr>
+<tr><td><strong>Input Data Type</strong></td><td><strong>OA</strong>、<strong>CDL+GDS</strong>、<strong>CDL+LAY</strong>、<strong>SCH+GDS</strong>、<strong>SVDB</strong>、<strong>CCI</strong>。</td><td>SVDB / CCI 直接使用已有 LVS 数据；其余组合决定需要哪些文件与层映射。</td></tr>
+<tr><td><strong>Schematic</strong> / <strong>Layout</strong> Library / Cell / View</td><td>OA 源电路与版图身份。</td><td>view 默认分别为 <code>schematic</code> 与 <code>layout</code>；核对 top cell 一致。</td></tr>
+<tr><td><strong>CDL</strong> File Path / Cell Name</td><td>已有 CDL 文件与 top cell。</td><td>需要器件 include 时在 More Input Options 中启用 CDL Include。</td></tr>
+<tr><td><strong>GDS</strong> File Path / Cell Name</td><td>已有 GDS 文件与 top cell。</td><td>GDS 输入与 OA layout 二选一，取决于 Input Data Type。</td></tr>
+<tr><td><strong>SVDB</strong> Directory / Cell Name</td><td>读取既有 LVS SVDB 数据库。</td><td>数据库必须来自同一设计的成功 LVS；Cell Name 不能靠目录名猜。</td></tr>
+<tr><td><strong>Calibre Query Data (CCI)</strong> Directory / Cell Name</td><td>读取 CCI 查询数据。</td><td>通常要求前置 LVS 生成 CCI；与 SVDB 输入互斥，按实际数据选择。</td></tr>
+<tr><td><strong>→</strong> / <strong>←</strong> 按钮</td><td>同步 Schematic 与 Layout 的 library / cell 名称。</td><td>只同步名称，不验证库内是否真的存在对应 view。</td></tr>
+<tr><td><strong>More Input Options → CDL Include</strong></td><td>启用并选择 CDL 器件定义/头部文件。</td><td>使用 CDL 输入或 SCH+GDS 需要 include 时再启用；文件必须匹配当前 PDK。</td></tr>
+<tr><td><strong>LVS Options</strong></td><td>Rule File、Hcell File、Ignore LVS Error、Case Sensitive、Virtual Connect By 和 Name。</td><td>前置 LVS 使用 <code>RCE_LVS_FILE</code>，与独立 LVS 的 <code>LVS_FILE</code> 分开配置。</td></tr>
+<tr><td><strong>More LVS Options</strong></td><td>SVDB query（CCI、SI、RECON、IXF+NXF+SLPH、PINLOC）、Recognize Logic Gate 与 Customized SVRF Command。</td><td>SVDB query 默认勾选 CCI，可按后续工具需要多选或全部取消；Recognize Gate/Custom SVRF 会改变抽取前的比较语义。</td></tr>
+<tr><td><strong>Model Setup</strong> 下拉与路径</td><td>按引擎列出 <code>STARRC_TECH_DIR</code>、<code>QUANTUS_TECH_DIR</code>、<code>CALXRC_TECH_DIR</code> 或 <code>CALXACT_TECH_DIR</code> 的候选。</td><td>选择包含各 corner 子目录的 techdir；路径必须与当前引擎和金属栈一致。</td></tr>
+<tr><td><strong>Corner Scope</strong></td><td>Single Corner 或 Multiple Corners。</td><td>多角模式显示可滚动 corner 行；每个启用行对应一个 corner 和温度。</td></tr>
+<tr><td><strong>Select Corner / Temperature</strong></td><td>单角模式选择有效 corner 和温度；温度可编辑。</td><td>默认 125°C，可由 <code>RCE_DEF_TEMP</code> 改变；不要仅凭文件名猜 corner。</td></tr>
+<tr><td><strong>Extract Type</strong></td><td><strong>R+Cg+Cc</strong>、<strong>R+Cg</strong>、<strong>Cg+Cc</strong>、<strong>Cg</strong>、<strong>R</strong>、<strong>NONE</strong>、<strong>Totem</strong>、<strong>VoltusFi</strong>。</td><td>输出字段取决于类型；下游工具不支持的类型不要选。</td></tr>
+<tr><td><strong>More Extraction Options</strong></td><td>Top Cell Name（Schematic/Layout + 名称）、Use Name From、Nets、Block Cells、寄生过滤和 Remove Floating Nets。</td><td>展开后逐项确认；Nets/Block Cells 可填名称或文件，也可从 schematic/library 选择。</td></tr>
+<tr><td><strong>Nets</strong> Include / Exclude + Names / File</td><td>限定参与抽取的网络。</td><td>include 与 exclude 语义不能混用；文件内容按当前支持格式校验。</td></tr>
+<tr><td><strong>Select From Schematic</strong></td><td>从当前 schematic 选择网络。</td><td>选择结果会回填名称/文件；关闭对话框前核对是否覆盖已有过滤。</td></tr>
+<tr><td><strong>Block Cells</strong> + Names / File + <strong>Select From Library</strong></td><td>指定作为 blocking 的单元。</td><td>Blocking 会改变层次抽取结果；只加入确认为黑盒的 cell。</td></tr>
+<tr><td><strong>Relative/Absolute C Filter</strong>、<strong>Minimum R Filter</strong></td><td>按百分比/飞法过滤电容，按欧姆过滤电阻。</td><td>过滤器会丢弃小寄生；signoff 前确认阈值经过工艺批准。</td></tr>
+<tr><td><strong>Remove Floating Nets</strong></td><td>移除浮空网络。</td><td>默认开启；若需要保留浮空节点做诊断，明确关闭并记录原因。</td></tr>
+<tr><td><strong>Output Type</strong></td><td>DSPF、SPEF、SPF 或原生 view，由 <code>RCE_OUTPUT_CHOICES</code> 和引擎能力约束。</td><td>模板或下游工具要求的格式优先；不能启用引擎不支持的格式。</td></tr>
+<tr><td><strong>Create Parasitic Netlist View</strong></td><td>在 OA 中创建寄生 netlist view，并显示 View Type、View Name、View Target、Device Mapping、Layer Mapping。</td><td>目标库必须可写且映射文件匹配 PDK；目标 view 已存在时按覆盖策略处理。</td></tr>
+<tr><td><strong>Run Standalone Reduction After Extraction</strong></td><td>在抽取后运行 reduction，显示 mode、postfix、control/delay/frequency、temperature、ground、selection file、negative R 和 canonical device file。</td><td>Reduction 是独立后处理；默认关闭，启用时确认输出 postfix 和下游读取路径。</td></tr>
+<tr><td><strong>Save Data to</strong></td><td>项目、当前或自定义输出根。</td><td>本次 TOML、日志、中间网表和抽取结果都写入该运行目录。</td></tr>
+<tr><td><strong>Netlist Customize</strong></td><td>Use Pin Order From、Pin Order 类型/文件、Brackets Replace、Hierarchy Delimiter。</td><td>引脚顺序/括号/层次分隔符必须符合下游仿真器；默认 CDL 引脚顺序。</td></tr>
+<tr><td><strong>More Netlist Options</strong></td><td>+ Parasitic Information（R&amp;C 坐标、R 层名、R 尺寸）与 - Instance Section TRUE/FALSE。</td><td>附加信息会增加文件体积；只在消费端需要时启用。</td></tr>
+<tr><td><strong>LVS Engine / EXT Engine</strong></td><td>LVS 引擎为 Calibre；EXT 可选 StarRC、QRC、CalXRC、CalXACT。</td><td>切换引擎会改变 Model Setup、输出格式和可用选项，不能沿用上一个引擎的 techdir。</td></tr>
+<tr><td><strong>Run at / Queue / Host / LSF</strong></td><td>选择当前主机或 LSF，并通过 LSF 按钮验证 queue/host。</td><td>LVS 与 EXT 可以分别设置 CPU；确认两个阶段都有可用资源。</td></tr>
+<tr><td><strong>LVS CPU Number / EXT CPU Number / Parallel Cells</strong></td><td>分别控制前置 LVS、抽取和多 cell 并行的 CPU 数。</td><td>并行能力受引擎、许可证和队列槽位约束。</td></tr>
+<tr><td><strong>Run+Close / Run / Close</strong></td><td>运行后关闭、运行保留、只关闭。</td><td>RCE 表单没有独立 Report 按钮；结果和报告从运行目录或后续 DSPF Analyzer 查看。</td></tr>
+</tbody></table></div>
 <h2 id="engine">先选择提取引擎</h2>
 <div class="table-wrap"><table class="engine-table"><thead><tr><th>GUI 引擎</th><th>工艺目录变量</th><th>有效 corner 的识别文件</th><th>前置条件</th></tr></thead><tbody>
 <tr><td>QRC</td><td><code>QUANTUS_TECH_DIR</code></td><td><code>qrcTechFile</code>、<code>qrc.tch</code> 或 <code>cap_coeff.dat</code></td><td>Quantus 与 Calibre；正常 OA/CDL/GDS 流程使用 RCE_LVS_FILE。</td></tr>
@@ -223,9 +268,9 @@ dspfana /path/to/output/amplifier.dspf</code></pre></div>
 <p>QRC / StarRC 常见阶段为 CDL、GDS、LVS、query、extract；输入 SVDB / CCI 时会复用已有阶段数据。Calibre XRC 使用其自身 LVS / PDB / FMT 阶段。失败时先定位具体阶段，再核对输入、许可证和工具日志。</p>
 <p>XRC 在非空 <code>MGC_HOME</code> 下使用 <code>$MGC_HOME/bin/calibre</code>；未设置时查 PATH。普通 DRC / LVS / RCE 前置 Calibre 阶段仍查 PATH。流程默认命令维护方式见<a href="flows.html#defaults">公共默认项</a>。</p>
 
-<footer class="page-footer"><span>内容基线 d48ccb31 · 核对 2026-09-28</span><a href="mts.html">MTS 多工艺网表 →</a></footer>
+<footer class="page-footer"><span>内容基线 d48ccb31 · 界面核对 2026-10-24</span><a href="mts.html">MTS 多工艺网表 →</a></footer>
 </main>
-<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#engine">先选择提取引擎</a><a href="#techdirs">Techdir 目录层次</a><a href="#techdir-example">工艺目录对照</a><a href="#techdir-qrc">Quantus 文件清单</a><a href="#techdir-starrc">StarRC 文件清单</a><a href="#techdir-calxrc">Calibre XRC 文件清单</a><a href="#run">配置一次提取</a><a href="#corners">单角与多角</a><a href="#formats">各引擎支持的输出格式</a><a href="#oa-view">输出原生 OA 寄生 view</a><a href="#selection">选择性抽取与 blocking</a><a href="#cli">命令行与运行记录</a></aside>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#gui">图形界面：RCE 主表单</a><a href="#engine">先选择提取引擎</a><a href="#techdirs">Techdir 目录层次</a><a href="#techdir-example">工艺目录对照</a><a href="#techdir-qrc">Quantus 文件清单</a><a href="#techdir-starrc">StarRC 文件清单</a><a href="#techdir-calxrc">Calibre XRC 文件清单</a><a href="#run">配置一次提取</a><a href="#corners">单角与多角</a><a href="#formats">各引擎支持的输出格式</a><a href="#oa-view">输出原生 OA 寄生 view</a><a href="#selection">选择性抽取与 blocking</a><a href="#cli">命令行与运行记录</a></aside>
 </div></div>
 </body>
 </html>

@@ -9,18 +9,20 @@ let((entryDirectory)
   lvsSkillRoot=strcat(SICO_sourceRoot() "/tools/lvs")
   lvsCommonRoot=strcat(SICO_sourceRoot() "/tools/common")
   lvsUtilityRoot=strcat(SICO_sourceRoot() "/tools/utility")
-  SICO_sourceRequire("lvs" "3009d92d06d4d20b9a7e8c74b1ffaf140e3de9ef90b4333dd263841496d97995" '(
+  SICO_sourceRequire("lvs" "edd65224000cfde688d86734505c6dd68b4a57531068994e4d6bdea9d9df2032" '(
     ("tools/lvs/skill++" "LVSCFG.ils" "fc8f5dab1c7928f9e855216e80d11eed8844e2ec05b12e33618ad2c26bbaf63e"
       (lvsInitializeConfig lvsCdlIncludeConfigRevision)
       ((lvsCdlIncludeConfigRevision "20260812.cdl.include.v2"))
+      ()
       ()
       ())
     ("tools/lvs/skill++" "STAGECFG.ils" "33eabf276063683f4e7c9f517980a8e6dae65fb0b6c800920b6e47e8f9cf498a"
       (lvsStageProjectDir lvsStageInitializeConfig lvsStageCdlIncludeConfigRevision)
       ((lvsStageCdlIncludeConfigRevision "20260812.cdl.include.v2"))
       ()
+      ()
       ())
-    ("tools/lvs/skill++" "LVSCB.ils" "a9423bf2ab127de53b41f9b516419135ce2ea3946d4645652543a45411d91104"
+    ("tools/lvs/skill++" "LVSCB.ils" "81ed88149648f767df39008a12a368f667a6dcaec3218bbc84c3bb3fe8022545"
       (lvsFrontendRevision lvsFormValidP lvsFormDoneCB lvsRunCB lvsRunCloseCB lvsReportCB
        lvsCustomSvrfRevision lvsCdlIncludeRevision lvsAbsolutePathRevision lvsInputSyncRevision
        lvsRunModeCB lvsInpCB lvsSyncInputNames lvsCdlFileCB lvsGdsFileCB lvsOutDirCB lvsRunsetCB
@@ -30,8 +32,9 @@ let((entryDirectory)
        (lvsAbsolutePathRevision "20260812.toml.absolute.paths.v1") (lvsInputSyncRevision
        "20260817.input.sync.v1"))
       ()
+      ()
       ())
-    ("tools/lvs/skill++" "LVSRUN.ils" "b25dc15464aac108ed66b355c1bd6ee9bc32e1b852c746496cf5aba1544e6294"
+    ("tools/lvs/skill++" "LVSRUN.ils" "3b3a766029a9c9e48daac24162f7a131daee3895040bb3995276937a22adc155"
       (LVS_pythonEntry lvsRunUsesCadTempPath lvsLogDirRevision lvsRveLauncherRevision lvsRunDirFromConfig
        LVS_pythonExe LVS_launchEnvCommand lvsTopCellFromForm lvsSvdbDirFromForm lvsBackupRunData
        lvsIpcDataHandler lvsIpcErrHandler lvsLogContainsCorrect lvsCompletionCorrectP
@@ -41,8 +44,9 @@ let((entryDirectory)
       ((lvsLogDirRevision "20260817.log.artifacts.v1") (lvsRveLauncherRevision
        "20260828.prompt.return.v1") (lvsCdlIncludeBatchRevision "20260812.cdl.include.v2"))
       ()
+      ()
       ())
-    ("tools/lvs/skill++" "STAGECB.ils" "892f8143ec94150a4765f23d230a310ebd42d76846d44711b5b5572ba8a8e523"
+    ("tools/lvs/skill++" "STAGECB.ils" "6c6f4c6e0c97ee285d083aa72cd954860ff8e37ba8940f9544d4052b35d455da"
       (lvsStageOutDirCB lvsStageFormValidP streamGdsFormDoneCB streamGdsRunCB streamGdsRunCloseCB
        exportCdlFormDoneCB exportCdlRunCB exportCdlRunCloseCB lvsStageLsfChoicesCB lvsStageLabel
        lvsStageCommandName lvsStagePrefix lvsStageTomlName lvsStageRunDirFromForm lvsStageOutputName
@@ -52,27 +56,31 @@ let((entryDirectory)
       ((lvsStageCdlIncludeRevision "20260812.cdl.include.v2") (lvsStageAbsolutePathRevision
        "20260812.toml.absolute.paths.v1") (lvsStageRunRootRevision "20260924.flow.environment.v3"))
       ()
-      ())
-    ("tools/lvs/skill++" "LVSPROFILE.ils" "fd96e9fa4a9a64f2bfe001890d143a7649d1c01a832cf2833a981be1160247ab"
-      (lvsSvdbQueryFromForm lvsSvdbQueryFlags lvsProfileCollect lvsProfileApply lvsProfileRevision)
-      ((lvsProfileRevision "20260820.rce.live.log.v4"))
       ()
       ())
-    ("tools/lvs/skill++" "LVSGUI.ils" "5a481079baab85e73bd4e94317e7c19c7e673a43e97026a3ec2333c58d56f7f3"
-      (makeLvsCpus makeLvsSvdbQuery makeLvsInputNameSync makeInpLay makeOutLay makeLvsOptLay
-       makeLvsRunMode makeHardwareLay makeToolLay makeMainLay makeForm cadDisplayLvsForm
-       lvsCustomSvrfGuiRevision lvsCdlIncludeGuiRevision lvsInputSyncGuiRevision
-       lvsAdvancedOptionsGuiRevision)
+    ("tools/lvs/skill++" "LVSPROFILE.ils" "43cc19c6848385f7ea4bc69ff0d6d94f1988b30b97cd3a6bd5446496f04fd2fc"
+      (lvsProfileCollect lvsProfileApply lvsProfileRevision)
+      ((lvsProfileRevision "20260820.rce.live.log.v4"))
+      ()
+      ()
+      ())
+    ("tools/lvs/skill++" "LVSGUI.ils" "f3f44cd07cb10167fa7a65cc7db9e0cd9fe8ecabb313426036fce9be48577806"
+      (makeLvsCpus makeLvsInputNameSync makeInpLay makeOutLay makeLvsOptLay makeLvsRunMode
+       makeHardwareLay makeToolLay makeMainLay makeForm cadDisplayLvsForm lvsCustomSvrfGuiRevision
+       lvsCdlIncludeGuiRevision lvsInputSyncGuiRevision lvsAdvancedOptionsGuiRevision)
       ((lvsCustomSvrfGuiRevision "20260813.custom.svrf.common.v1") (lvsCdlIncludeGuiRevision
        "20260812.cdl.include.layout.v3") (lvsInputSyncGuiRevision "20260817.input.sync.v1")
        (lvsAdvancedOptionsGuiRevision "20260817.advanced.options.v1"))
       ()
-      (LVSGUI))
+      (LVSGUI)
+      (makeLvsCpus makeLvsInputNameSync makeInpLay makeOutLay makeLvsOptLay makeLvsRunMode
+       makeHardwareLay makeToolLay makeMainLay makeForm))
     ("tools/lvs/skill++" "STAGEGUI.ils" "68b88f13a115ad9d4815ffefe6ec95bd9c7d5246509d79fafbb19f5ed2d6557f"
       (makeStageOptions makeInpLay makeOutLay makeHardwareLay makeMainLay makeForm
        cadDisplayStreamGdsForm cadDisplayExportCdlForm lvsStageCdlIncludeGuiRevision)
       ((lvsStageCdlIncludeGuiRevision "20260812.cdl.include.v2"))
       ()
-      (STAGEOPTIONSGUI STREAMGDSGUI EXPORTCDLGUI))
+      (STAGEOPTIONSGUI STREAMGDSGUI EXPORTCDLGUI)
+      (makeStageOptions makeInpLay makeOutLay makeHardwareLay makeMainLay makeForm))
   ))
 )

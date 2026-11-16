@@ -1,7 +1,7 @@
 ; One-click, local Python Agent launch. No model task runs on the SKILL thread.
 
 unless(and(boundp('sicoLauncherVersion)
-           sicoLauncherVersion=="20261020.sico.launcher.v7")
+           sicoLauncherVersion=="20261024.sico.launcher.v8")
 
 unless(boundp('sicoLaunchCounter) sicoLaunchCounter=0)
 unless(boundp('sicoInstanceBridge) sicoInstanceBridge=nil)
@@ -30,16 +30,11 @@ procedure(sicoQuote(value)
     strcat(output "'")))
 
 procedure(sicoLaunchCommand(@optional (mode "launch"))
-  prog((python root entry invocation libraryPath inherited name value product)
+  prog((python entry invocation libraryPath inherited name value product)
     product=SICO_installationRoot(simplifyFilename(strcat(sicoRoot "/../..")))
     python=SICO_installedPython(product)
     unless(python
-      root=or(SICO_environmentValue("SICO_PYTHON_ROOT" list("CAD_PYTHON_ROOT"))
-              "/software/pkgs/python/3.9.13")
-      python=or(SICO_environmentValue("SICO_PYTHON" list("CAD_PYTHON"))
-                strcat(root "/bin/python3")))
-    unless(and(substring(python 1 1)=="/" isExecutable(python))
-      warn("Silicon Copilot: SICO_PYTHON must be an absolute executable.\n")
+      warn("Silicon Copilot: $SICO_HOME/runtime/python/bin/python3 is unavailable.\n")
       return(nil))
     entry=strcat(sicoRoot "/bin/sico")
     if(and(isFile(entry) isExecutable(entry)) then
@@ -245,7 +240,7 @@ unless(and(boundp('cadContextBuilding) cadContextBuilding)
   sicoRegisterExitCleanup())
 
 procedure(sicoLauncherRevision()
-  "20261020.sico.launcher.v7")
+  "20261024.sico.launcher.v8")
 
-sicoLauncherVersion="20261020.sico.launcher.v7"
+sicoLauncherVersion="20261024.sico.launcher.v8"
 )

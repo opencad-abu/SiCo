@@ -14,6 +14,7 @@ _RESERVED = {
     "process_technology": {
         "technology_directory", "temperature", "technology_library_file",
         "technology_corner",
+        "technology_command_file", "technology_layer_setup_file", "technology_lpe_confile",
     },
     "capacitance": set(),
     "filter_cap": {"exclude_floating_nets"},
@@ -22,7 +23,8 @@ _RESERVED = {
     "extraction_setup": {"parasitic_blocking_device_cells_file"},
     "input_db": {
         "type", "run_name", "directory_name", "layer_map_file",
-        "design_cell_name", "library_definitions_file",
+        "design_cell_name", "library_definitions_file", "schematic_view",
+        "device_properties_file",
     },
     "output_db": {
         "type", "output_xy", "include_parasitic_res_model_by_sub_conductor",
@@ -36,6 +38,7 @@ _RESERVED = {
 }
 _MODES = {
     "output_db.file", "output_db.smart_view", "output_db.extracted_view",
+    "output_db.idspf",
     "extraction_setup.block_cells", "process_technology.multi_corner",
 }
 _CONDITIONAL = {
@@ -46,7 +49,8 @@ _CONDITIONAL = {
 
 
 class QrcDefaults:
-    def __init__(self, defaults: Defaults):
+    def __init__(self, defaults: Defaults, *, overrides: dict[str, list[str]] | None = None):
+        self.overrides = overrides or {}
         self.source = defaults.source("quantus.options")
         self.groups = sections(self.source, set(_RESERVED) | _MODES)
         for section, records in self.groups.items():
@@ -91,7 +95,11 @@ class QrcDefaults:
                 raise self.source.error(number, f"Common/mode defaults repeat {key}")
             seen.add(key)
             result.append(line)
-        return result
+        additions = self.overrides.get(command, [])
+        replaced = {line.split()[0] for line in additions}
+        if command == "extraction_setup" and "-max_via_array_count" in replaced:
+            replaced.add("-max_via_array_size")
+        return [line for line in result if line.split()[0] not in replaced] + additions
 
     def mode_options(self, command: str, mode: str) -> list[str]:
         self.options(command, mode)  # Validate common/mode collisions together.
@@ -99,13 +107,11 @@ class QrcDefaults:
 
     def value(self, command: str, option: str, mode: str = "") -> str | None:
         """Read one literal value for a companion file from the same snapshot."""
-        self.options(command, mode)
-        records = [*self.groups.get(command, ()), *self.groups.get(command + "." + mode, ())]
-        for number, line in records:
+        for line in self.options(command, mode):
             tokens = shlex.split(line)
             if tokens[0] == "-" + option:
                 if len(tokens) != 2 or not tokens[1]:
-                    raise self.source.error(number, f"-{option} requires one nonempty value")
+                    raise self.source.error(1, f"-{option} requires one nonempty value")
                 return tokens[1]
         return None
 

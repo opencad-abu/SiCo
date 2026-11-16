@@ -70,7 +70,7 @@ def run(args):
                "external_provider_qualification": "NOT_IN_SCOPE"}
     digest = stable_digest(request)
     run_paths = allocate_split_run(resolve_launch_paths(),
-        Path("/path/to/xh/amsVerify/data/ams").resolve(), library=recipe.target["library"],
+        Path("/workarea/xh/amsVerify/data/ams").resolve(), library=recipe.target["library"],
         cell=recipe.target["cell"], view="rnm_candidate", kind="trajectory-revision-audit", request_digest=digest)
     write_json_once(run_paths.control_root/"request.json", request)
     write_json_once(run_paths.payload_root/"tools.json", [t.to_dict() for t in tool_results])

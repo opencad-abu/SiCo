@@ -12,7 +12,7 @@
 importSkillVar(rceForm)
 
 when(and(boundp('rceForm) rceForm hiIsForm(rceForm)
-         getq(rceForm rceReductionFormVersion)!="20261019.floating.net.include.all.v1")
+         getq(rceForm rceReductionFormVersion)!="20261103.svdb.query.v2")
   when(hiIsFormDisplayed(rceForm)
     hiFormClose(rceForm))
   unless(hiIsFormDisplayed(rceForm)
@@ -128,6 +128,8 @@ defmethod(makeLvsOptLay ((inst RCEGUI))
   makeLvsCase(inst)
   makeLvsVirtualConn(inst)
   makeLvsVirtualConnName(inst)
+  inst->svdbQueryDefault='(t nil nil nil nil)
+  makeLvsSvdbQuery(inst)
   makeLvsRecognizeGates(inst)
   makeCustomSvrf(inst)
   inst->lvsBasicOpt=makehbl(
@@ -135,7 +137,7 @@ defmethod(makeLvsOptLay ((inst RCEGUI))
     list(inst->lvsIgnoreError inst->lvsCaseBtn
          inst->lvsVirtualConn inst->lvsVirtualConnName))
   inst->lvsMoreContents=makevbl(
-    'lvsMoreContents list(inst->lvsRecognizeGates inst->customSvrf))
+    'lvsMoreContents list(inst->svdbQuery inst->lvsRecognizeGates inst->customSvrf))
   inst->lvsMore=hiCreateDisclosureTriangle(
     ?name        'lvsMore
     ?labelText   "More LVS Options"
@@ -180,8 +182,8 @@ defmethod(makeNativeViewOptions ((inst RCEGUI))
   inst->viewKind=hiCreateComboField(
     ?name     'viewKind
     ?prompt   "View Type:"
-    ?items    '("Smart View" "Extracted View")
-    ?defValue "Smart View"
+    ?items    '("Interactive DSPF (iDSPF)" "Extracted View")
+    ?defValue "Interactive DSPF (iDSPF)"
     ?editable nil
     ?callback "(rceViewKindCB hiGetCurrentForm())"
   )
@@ -195,7 +197,7 @@ defmethod(makeNativeViewOptions ((inst RCEGUI))
   inst->viewName=hiCreateStringField(
     ?name     'viewName
     ?prompt   "View Name:"
-    ?defValue "calibre"
+    ?defValue "idspf"
     ; Keep the legacy callback spelling visible for older form probes.
     ; rceSyncNativeView hiGetCurrentForm()
     ?callback "(rceViewNameCB hiGetCurrentForm())"
@@ -417,7 +419,8 @@ procedure(cadDisplayRceForm()
 
       hiInstantiateForm(gui->mainForm)
       rceAlignReductionPrompts(gui->mainForm)
-      putpropq(gui->mainForm "20261019.floating.net.include.all.v1" rceReductionFormVersion)
+      gui->mainForm->svdbQuery->hiToolTip=lvsSvdbQueryToolTip()
+      putpropq(gui->mainForm "20261103.svdb.query.v2" rceReductionFormVersion)
       putpropq(gui->mainForm nil cadProfilePathStates)
       putpropq(gui->mainForm nil cadProfileSourcePath)
       cadCustomSvrfBind(gui->mainForm)
@@ -439,7 +442,7 @@ procedure(cadDisplayRceForm()
 );defun rceDispalyForm
 
 procedure(rceGuiRevision()
-  "20261019.floating.net.include.all.v1"
+  "20261103.svdb.query.v2"
 )
 
 procedure(rceCustomSvrfGuiRevision()

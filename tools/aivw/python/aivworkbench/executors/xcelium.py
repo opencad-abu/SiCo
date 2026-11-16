@@ -149,7 +149,7 @@ def run_rnm_check(context: ExecutorContext) -> ExecutorResult:
     checker_log = root / "rnm-check.log"
     checker_json = root / "rnm-check.json"
     checker_command = (
-        production_python(require_environment=True),
+        production_python(),
         str(checker_path),
         str(model),
         "--spec",

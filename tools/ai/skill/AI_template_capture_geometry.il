@@ -29,7 +29,7 @@ procedure(aiTplSavedView(asvCv)
           then asvCv
           else
             asvSaved=car(errset(dbOpenCellViewByType(asvCv~>libName asvCv~>cellName asvCv~>viewName
-              asvCv~>cellViewType "r" nil) nil))
+              asvCv~>viewType "r" nil) nil))
             unless(asvSaved error("Saved source view is unavailable"))
             unless(and(boundp('aiTplIsolatedSession) aiTplIsolatedSession)
               when(dbIsCellViewModified(asvSaved)
@@ -119,7 +119,7 @@ procedure(aiTplElectricalEvidence(ateSource)
         when(ateSourceView
           foreach(ateInst ateSource~>instances
             when(and(ateInst~>master
-                !equal(ateInst~>master~>cellViewType "schematicSymbol")
+                !equal(ateInst~>master~>viewType "schematicSymbol")
                 !aiTplGraphicRole(ateInst))
               ateHierarchy=ateHierarchy+1)))
         foreach(ateTerm ateCv~>terminals
@@ -134,7 +134,7 @@ procedure(aiTplElectricalEvidence(ateSource)
               ateSigTexts=cons(list(ateSig~>name ateValue) ateSigTexts))))
         ateTexts=reverse(ateTexts) ateSigTexts=reverse(ateSigTexts)
         ateRows=cons(strcat("{\"target\":" aiTplJson(ateKey)
-          ",\"view_type\":" aiTplJson(ateCv~>cellViewType)
+          ",\"oa_view_type\":" aiTplJson(ateCv~>viewType)
           ",\"source_view\":" aiTplJson(if(ateSourceView "source" "master"))
           ",\"parameterized\":" if(or(ateCv~>superMaster ateCv~>isParamCell) "true" "false")
           ",\"hierarchy_count\":" aiTplJson(ateHierarchy)

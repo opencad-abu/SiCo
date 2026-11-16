@@ -20,20 +20,17 @@ def clean_environment(work):
     return env
 
 
-def test_skill_launch_uses_shared_state_python_and_library_selection(tmp_path):
+def test_skill_launch_uses_shared_state_and_library_selection(tmp_path):
     dbaccess = shutil.which("dbAccess")
     if not dbaccess:
         pytest.skip("dbAccess unavailable")
     output = tmp_path / "command.txt"
     code = f'''
 load({json.dumps(str(ROOT / 'tools/mtsnl/skill/MTS_netlistor.il'))})
-unless(mtsNetlistorPythonExe()=={json.dumps(sys.executable)} error("Python precedence"))
 unless(mtsNetlistorToolsRoot()=={json.dumps(str(ROOT / 'tools'))} error("installation root"))
 port=outfile({json.dumps(str(output))})
 fprintf(port "%s" mtsNetlistorLaunchCommand("/session with spaces.json" 12345))
 close(port)
-setShellEnvVar("SICO_PYTHON" "")
-when(errset(mtsNetlistorPythonExe() nil) error("empty Python admitted"))
 setShellEnvVar("MTS_NETLISTOR_ROOT" "/foreign/tool")
 when(errset(mtsNetlistorModuleRoot() nil) error("foreign tool admitted"))
 printf("SICO_MTS_LAUNCH_OK\\n")
@@ -52,6 +49,7 @@ exit()
     position = tokens.index(entry)
     assert tokens[position + 1:] == ["gui", "--session", "/session with spaces.json",
                                     "--parent-pid", "12345"]
+    assert not any(token.startswith("SICO_PYTHON=") for token in tokens[:position])
     child = subprocess.run(tokens[1:position] + ["/usr/bin/env"], env=env,
                            capture_output=True, text=True, check=True)
     values = dict(line.split("=", 1) for line in child.stdout.splitlines() if "=" in line)

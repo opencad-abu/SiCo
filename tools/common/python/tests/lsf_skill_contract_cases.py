@@ -3,8 +3,21 @@ from __future__ import annotations
 from pathlib import Path
 
 from skill_test_support import read_skill_source
+from skill_loader_test_support import loader_contract
 
 CAD_ROOT = Path(__file__).resolve().parents[3]
+
+
+def test_lsf_python_selection_prefers_the_installed_runtime() -> None:
+    commands = read_skill_source(CAD_ROOT / "common/skill/SICO_lsfCommands.il")
+    installation = read_skill_source(CAD_ROOT / "common/skill/SICO_installation.il")
+    assert "20261024.flow.environment.v6" in commands
+    assert "procedure(SICO_lsfInstalledPython()" in commands
+    assert "procedure(SICO_installedPython(" in installation
+    assert '"runtime/python/bin/python3"' in installation
+    selection = commands.split("procedure(SICO_lsfPythonExe()", 1)[1]
+    assert "SICO_lsfInstalledPython()" in selection
+    assert '"python3"' not in selection
 
 
 def test_shared_lsf_hardware_policy_is_wired_to_all_flows() -> None:
@@ -13,7 +26,7 @@ def test_shared_lsf_hardware_policy_is_wired_to_all_flows() -> None:
     config = read_skill_source(CAD_ROOT / "rce/skill++/RCECFG.ils")
     gui = read_skill_source(CAD_ROOT / "rce/skill++/RCEGUI.ils")
     base = read_skill_source(CAD_ROOT / "common/skill++/BASEGUI.ils")
-    entry = read_skill_source(CAD_ROOT / "rce/skill++/RCE.ils")
+    entry = loader_contract("rce/skill++/RCE.ils")
     assert "procedure(SICO_lsfDiscoveryCommand(mode queue outputPath)" in helper
     assert 'SICO_lsfDiscoveryCommand("hosts" queue path)' in helper
     assert 'SICO_lsfDiscoveryCommand("queues" nil path)' in helper
@@ -62,10 +75,10 @@ def test_shared_lsf_hardware_policy_is_wired_to_all_flows() -> None:
     assert 'procedure(SICO_lsfValidateSelection(form title)' in helper
     assert 'procedure(SICO_lsfSelectionValidP(form)' in helper
     assert "?queueCB" in config
-    assert 'SICO_lsfRevision()=="20260901.form.lifecycle.v1"' in entry
+    assert entry.requires("SICO_lsfRevision")
     assert "procedure(SICO_lsfCancelCommand(runType jobName)" in helper
     assert '" -J "' in helper
-    assert "isCallable('SICO_lsfStartHostDiscovery)" in entry
+    assert entry.requires("SICO_lsfStartHostDiscovery")
     assert "SICO_lsfMaxCpu(list(form~>lvsCpu~>value form~>extCpu~>value))" in callback
     assert 'list("Current Host" "LSF Farm")' in base
     assert '?defValue "Current Host"' in base
@@ -144,10 +157,10 @@ def test_shared_lsf_hardware_policy_is_wired_to_all_flows() -> None:
         "rce/skill++/RCE.ils",
         "lef/skill++/LEF.ils",
     ):
-        loader = (CAD_ROOT / loader_path).read_text(encoding="utf-8")
-        assert 'SICO_guiProtocolRevision()=="20260814.cadgui.v1"' in loader
-        assert 'SICO_lsfRevision()=="20260901.form.lifecycle.v1"' in loader
-        assert "isCallable('SICO_lsfValidateSelection)" in loader
+        loader = loader_contract(loader_path)
+        assert loader.revision("SICO_guiProtocolRevision") == "20260814.cadgui.v1"
+        assert loader.requires("SICO_lsfRevision")
+        assert loader.requires("SICO_lsfValidateSelection")
 
     drc_callback = read_skill_source(CAD_ROOT / "drc/skill++/DRCCB.ils")
     drc_runner = (CAD_ROOT / "drc/python/drcpy/runner.py").read_text(

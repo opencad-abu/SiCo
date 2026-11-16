@@ -1,10 +1,10 @@
 [settings]
 logo_env = "LOGO"
-default_logo = "SiCo"
+default_logo = "Silicon Copilot"
 
 [ciw]
 enabled = true
-title = "SiCo"
+title = "Silicon Copilot"
 
 [[ciw.items]]
 name = "aiAssistantAgent"
@@ -68,7 +68,7 @@ callback = "(witMenuLoadRelative \"mtsnl/skill++/MTS.ils\") (when (isCallable 'm
 
 [layout]
 enabled = true
-title = "SiCo"
+title = "Silicon Copilot"
 view_types = ["maskLayout", "maskLayoutXL", "maskLayoutEXL"]
 
 [[layout.items]]
@@ -129,7 +129,7 @@ callback = "(witMenuLoadRelative \"mtsnl/skill++/MTS.ils\") (when (isCallable 'm
 
 [schematic]
 enabled = true
-title = "SiCo"
+title = "Silicon Copilot"
 view_types = ["schematic", "schematicXL"]
 
 [[schematic.items]]
@@ -153,7 +153,7 @@ callback = "(witMenuLoadRelative \"lvs/skill++/LVS.ils\") (when (isCallable 'cad
 
 [[schematic.items]]
 text = "Create Pin For Instance"
-callback = "(printf \"[%s] Create Pin For Instance is not configured yet.\\n\" (witMenuLogo))"
+callback = "(printf \"[%s] Create Pin For Instance is not configured yet.\\n\" (sicoMenuLogo))"
 
 [[schematic.items]]
 name = "cadChangeTechLib"

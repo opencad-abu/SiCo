@@ -32,7 +32,7 @@ def main():
                "reservation": report["reservation"],
                "implementation": {str(Path(__file__).resolve()): sha256_file(Path(__file__))}}
     digest = stable_digest(request)
-    run = allocate_split_run(resolve_launch_paths(), Path("/path/to/xh/amsVerify/data/ams").resolve(),
+    run = allocate_split_run(resolve_launch_paths(), Path("/workarea/xh/amsVerify/data/ams").resolve(),
         library=library, cell=cell, view="dynamic_evaluator",
         kind="private-boundary-qualification", request_digest=digest)
     write_json_once(run.control_root/"request.json", request)

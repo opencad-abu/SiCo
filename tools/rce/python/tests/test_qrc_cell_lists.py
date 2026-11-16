@@ -12,7 +12,7 @@ if str(PYTHON_ROOT) not in sys.path:
 
 from rcepy.config import RceConfig  # noqa: E402
 from rcepy.gen_qrc import generate_qrc  # noqa: E402
-from rcepy.qrc_cells import QRC_BLOCK_CELL_ENV  # noqa: E402
+from rcepy.qrc_cells import QRC_BLOCK_CELL_ENV, qrc_foundry_cell_file  # noqa: E402
 
 
 def _config(
@@ -205,7 +205,7 @@ def test_qrc_treats_whitespace_env_as_unset(
     assert "-parasitic_blocking_device_cells_file" not in command
 
 
-def test_qrc_rejects_missing_configured_file_without_filename_fallback(
+def test_qrc_omits_missing_configured_file_without_filename_fallback(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -218,11 +218,36 @@ def test_qrc_rejects_missing_configured_file_without_filename_fallback(
     monkeypatch.setenv(QRC_BLOCK_CELL_ENV, missing.name)
     cfg = _config(tmp_path, process_dir)
 
-    with pytest.raises(
-        FileNotFoundError,
-        match=rf"{QRC_BLOCK_CELL_ENV}.*{missing.name}",
-    ):
-        _generate(cfg)
+    command = _generate(cfg)
 
-    assert not (tmp_path / "run/log/qrc.ccl").exists()
+    assert "-parasitic_blocking_device_cells_file" not in command
     assert not (tmp_path / "run/log/cells.merged").exists()
+    assert not (tmp_path / "run/log/cells").exists()
+
+
+def test_qrc_does_not_fallback_to_finfet_companion_for_missing_configured_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    process_dir = tmp_path / "QRC"
+    corner_dir = _write_corner(process_dir)
+    (corner_dir / "hcell_qci").write_text("fab_macro\n", encoding="utf-8")
+    missing = corner_dir / "missing.blocks"
+    monkeypatch.setenv(QRC_BLOCK_CELL_ENV, missing.name)
+    cfg = _config(tmp_path, process_dir).replace(
+        "extract", "finfet_flow", value=True
+    )
+
+    assert qrc_foundry_cell_file(cfg, (corner_dir,)) is None
+
+
+def test_qrc_treats_missing_finfet_block_cell_companion_as_optional(
+    tmp_path: Path,
+) -> None:
+    process_dir = tmp_path / "QRC"
+    corner_dir = _write_corner(process_dir)
+    cfg = _config(tmp_path, process_dir).replace(
+        "extract", "finfet_flow", value=True
+    )
+
+    assert qrc_foundry_cell_file(cfg, (corner_dir,)) is None

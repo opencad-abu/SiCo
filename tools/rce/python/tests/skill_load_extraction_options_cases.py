@@ -1,3 +1,4 @@
+from skill_loader_test_support import loader_contract
 import re
 
 from skill_load_fixtures import (
@@ -11,7 +12,7 @@ def test_rce_netlist_customize_controls_follow_tool_and_output_support() -> None
     config = read_skill_source(CAD_ROOT / "rce/skill++/RCECFG.ils")
     gui = read_skill_source(CAD_ROOT / "rce/skill++/RCEGUI.ils")
     callback = read_skill_source(CAD_ROOT / "rce/skill++/RCECB.ils")
-    entry = read_skill_source(CAD_ROOT / "rce/skill++/RCE.ils")
+    entry = loader_contract("rce/skill++/RCE.ils")
 
     assert '"Hierarchy Delimeter:"' not in base
     assert '?buttonText     "Hierarchy Delimiter:"' in base
@@ -29,10 +30,11 @@ def test_rce_netlist_customize_controls_follow_tool_and_output_support() -> None
     assert 'tool=="QRC" lowerCase(form~>nameSource~>value)=="layout"' in callback
     assert 'tool!="StarRC"' in callback
     assert "'(\"dspf\" \"spf\")" in callback
-    assert 'tool=="CalXRC"' in callback
+    assert "tool=form~>extTool~>value" in callback
+    assert 'noParasitics=and(RCE_calibrePexToolP(tool) form~>rcType~>value=="NONE")' in callback
+    assert "capacitanceOnly=if(and(RCE_calibrePexToolP(tool)" in callback
     assert "'(\"Cg+Cc\" \"Cg\")" in callback
     assert "not(capacitanceOnly)" in callback
-    assert 'noParasitics=and(tool=="CalXRC" form~>rcType~>value=="NONE")' in callback
     assert "form~>netSelBtn~>enabled=!noParasitics" in callback
     assert "form~>relFilterCapBtn~>enabled=!noParasitics" in callback
     assert "form~>absFilterCapBtn~>enabled=!noParasitics" in callback
@@ -74,14 +76,14 @@ def test_rce_netlist_customize_controls_follow_tool_and_output_support() -> None
     assert "form~>nlParInfo~>parasiticResDimensions~>enabled" in callback
     assert "?nlParInfoCB" in config
     assert "gui->nlParInfoCB          = extstrStruc->nlParInfoCB" in gui
-    assert "isCallable('rceParasiticInfoCB)" in entry
+    assert entry.requires("rceParasiticInfoCB")
 
     assert callback.count("rceSyncNetlistCustomize(form)") >= 8
     assert "?nameSourceCB" in config
     assert "gui->nameSourceCB" in gui
     assert "rceSyncNetlistCustomize(gui->mainForm)" in gui
-    assert "isCallable('rceSyncNetlistCustomize)" in entry
-    assert "isCallable('rceNameSourceCB)" in entry
+    assert entry.requires("rceSyncNetlistCustomize")
+    assert entry.requires("rceNameSourceCB")
 
 
 def test_rce_process_corners_are_scanned_and_preserve_case() -> None:
@@ -89,7 +91,7 @@ def test_rce_process_corners_are_scanned_and_preserve_case() -> None:
     config = read_skill_source(CAD_ROOT / "rce/skill++/RCECFG.ils")
     gui = read_skill_source(CAD_ROOT / "rce/skill++/RCEGUI.ils")
     callback = read_skill_source(CAD_ROOT / "rce/skill++/RCECB.ils")
-    entry = read_skill_source(CAD_ROOT / "rce/skill++/RCE.ils")
+    entry = loader_contract("rce/skill++/RCE.ils")
 
     assert re.search(r'\?prompt\s+"Select\s+Corner:"', base)
     assert "inst->corner=hiCreateComboField(" in base
@@ -98,7 +100,7 @@ def test_rce_process_corners_are_scanned_and_preserve_case() -> None:
     assert re.search(r'\?prompt\s+"Corner\s+Scope:"', base)
     assert "inst->cornerType=hiCreateRadioField(" in base
     assert "inst->cornerTypeChoices" in base
-    assert 'rceBaseGuiRevision()=="20260909.pin.order.v1"' in entry
+    assert entry.revision("rceBaseGuiRevision") == "20260909.pin.order.v1"
     assert "hiCreateToggleField(" in base
     assert '?choices     list(list(selectItemName ""))' in base
     assert "?scrollable  t" in base
@@ -150,5 +152,34 @@ def test_rce_process_corners_are_scanned_and_preserve_case() -> None:
     for text, revision, final_definition in revisions:
         assert text.index(f"procedure({revision}(") > text.index(final_definition)
     for revision in ("rceConfigRevision", "rceFrontendRevision", "rceGuiRevision"):
-        assert f"{revision}()==rceLoaderRevision()" in entry
-    assert 'cadBaseGuiRevision()=="20260721.case.sensitive.v2"' in entry
+        assert entry.requires(f"{revision}")
+    assert entry.revision("cadBaseGuiRevision") == "20260721.case.sensitive.v2"
+
+
+def test_rce_remove_floating_nets_is_wired_across_gui_toml_and_profile() -> None:
+    base = read_skill_source(CAD_ROOT / "rce/skill++/RCEBASEGUI.ils")
+    callback = read_skill_source(CAD_ROOT / "rce/skill++/RCECB.ils")
+    profile = read_skill_source(CAD_ROOT / "rce/skill++/RCEPROFILE.ils")
+
+    # One boolean inside More Extraction Options, checked by default.
+    assert "inst->rmFloatNetsBtn=hiCreateBooleanButton(" in base
+    assert "?name           'rmFloatNetsBtn" in base
+    assert '?buttonText     "Remove Floating Nets"' in base
+    assert re.search(
+        r"inst->rmFloatNetsBtn=hiCreateBooleanButton\(.*?\?defValue\s+t",
+        base,
+        re.DOTALL,
+    )
+    assert "inst->rmFloatNets=makehbl('rmFloatNets" in base
+    assert (
+        "?onFields    '(extractTopCellRow nameSource netSel cellSel filter "
+        "rmFloatNets)" in base
+    )
+    assert "inst->rmFloatNets)" in base
+    assert "form~>rmFloatNetsBtn~>value=nil" in callback
+    assert "when(!form~>rmFloatNetsBtn~>enabled" in callback
+    assert "form~>rmFloatNetsBtn~>value=t" in callback
+    assert "form~>rmFloatNetsBtn~>enabled=!noParasitics" in callback
+    assert 'SICO_tomlWriteBool(outFile "remove_floating_nets"' in callback
+    assert "form~>rmFloatNetsBtn~>value)" in callback
+    assert '("extract.remove_floating_nets" rmFloatNetsBtn t nil)' in profile

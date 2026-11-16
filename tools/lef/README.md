@@ -111,7 +111,7 @@ export LEFGEN_OPT_FILE="$CAD_HOME/tools/lef/python/examples/ic618_rak_abstract_i
 | `LEF_CELL_LIST` | GUI cell-list 文件初值 | 空 |
 | `LEF_DEFAULT_BIN` | `Core`、`Block`、`IO` 或 `Corner` | `Core` |
 | `LEF_ABSTRACT` | Abstract Generator 可执行文件 | `abstract` |
-| `LEF_PYTHON` | LEF backend Python | `CAD_PYTHON`、`CAD_PYTHON_ROOT/bin/python3`、`python3` |
+| `LEF_PYTHON` | 已移除的解释器覆盖 | 不再读取；固定使用 `$SICO_HOME/runtime/python/bin/python3` |
 | `LEF_PYTHON_ENTRY` | 开发调试入口覆盖 | `$CAD_HOME/tools/lef/python/lef` |
 
 ## 运行目录

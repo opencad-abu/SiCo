@@ -5,8 +5,8 @@ let((entryDirectory)
     parseString(simplifyFilename(get_filename(piport) t) "/")))) "/"))
   load(strcat(entryDirectory "/../../../scripts/sicoSkillLoader.ils"))
   load(strcat(entryDirectory "/../../../scripts/sicoSource.il"))
-  SICO_sourceRequire("nl2view" "13831a468f82643b9b508b536c8814224ad2a75a286364fd448a632ee0ef70bf" '(
-    ("tools/utility/skill" "nl2view.il" "e0f549889a4bd834a44a8e6f974f5b8ba4d059e6adfd20457bf785a84b2f8cf1"
+  SICO_sourceRequire("nl2view" "bfa34d477bea1f18da2283f785c0b65e81e5ec4f1a9b3e3ac81aa4204931f4cd" '(
+    ("tools/utility/skill" "nl2view.il" "49f3d2ddc0dfbde02ec9f30da64b0270229379e0237a51ed843145c115600b04"
       (cadNl2ViewBrand cadNl2ViewExitCleanup cadNl2ViewInitializeRuntime cadNl2ViewDefaultView
        cadNl2ViewFormatArgument cadNl2ViewSetStatus cadNl2ViewFormatCB cadNl2ViewSourceCB
        cadNl2ViewToolsRoot cadNl2ViewNonEmpty cadNl2ViewSessionLibraryPath cadNl2ViewCommand
@@ -14,6 +14,7 @@ let((entryDirectory)
        cadNl2ViewCloseCB cadNl2ViewCreateForm cadDisplayNl2ViewForm cadNl2ViewRevision)
       ()
       (sicoNl2ViewVersion)
+      ()
       ())
   ))
 )

@@ -7,7 +7,9 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PyQt5.QtCore import Qt
 
 from dspf_gui_test_support import application
-from rcepy.dspf_gui.models import NET_COLUMNS, PagedRepositoryModel
+from rcepy.dspf_gui.models import (
+    DIAGNOSTIC_COLUMNS, NET_COLUMNS, PagedRepositoryModel,
+)
 
 
 class FakeRepository:
@@ -91,3 +93,18 @@ def test_model_exact_name_bypasses_substring_page() -> None:
     model.set_query(search=None, exact_name="N0400")
     assert model.total_rows == 1
     assert model.row_at(0)["id"] == 400
+
+
+def test_diagnostic_severity_follows_the_active_palette() -> None:
+    from cadgui.palette import active
+
+    model = PagedRepositoryModel(
+        DIAGNOSTIC_COLUMNS, "count_diagnostics", "list_diagnostics")
+    model._replace([
+        {"severity": "error", "code": "E", "message": "bad"},
+        {"severity": "warning", "code": "W", "message": "careful"},
+    ], 2)
+
+    assert model.data(model.index(0, 0), Qt.ForegroundRole).name() == active().error.lower()
+    assert model.data(
+        model.index(1, 0), Qt.ForegroundRole).name() == active().state_warn.lower()

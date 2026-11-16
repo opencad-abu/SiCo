@@ -1,0 +1,330 @@
+{
+ "type": "object",
+ "properties": {
+  "input_ref": {
+   "type": "string",
+   "minLength": 1,
+   "maxLength": 80,
+   "pattern": "^waveform_[0-9a-f]{64}$"
+  },
+  "output_ref": {
+   "type": "string",
+   "minLength": 1,
+   "maxLength": 80,
+   "pattern": "^waveform_[0-9a-f]{64}$"
+  },
+  "recipes": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 96
+     },
+     "operation": {
+      "type": "string",
+      "enum": [
+       "delay",
+       "gain_sample",
+       "gain_rms"
+      ]
+     },
+     "interpolation": {
+      "type": "string",
+      "enum": [
+       "linear"
+      ]
+     },
+     "result_unit": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32
+     },
+     "pairing": {
+      "type": "string",
+      "enum": [
+       "explicit_occurrences"
+      ]
+     },
+     "input_event": {
+      "type": "object",
+      "properties": {
+       "window": {
+        "type": "object",
+        "properties": {
+         "start": {
+          "type": "object",
+          "properties": {
+           "value": {
+            "type": "number"
+           },
+           "unit": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+           }
+          },
+          "required": [
+           "value",
+           "unit"
+          ],
+          "additionalProperties": false
+         },
+         "stop": {
+          "type": "object",
+          "properties": {
+           "value": {
+            "type": "number"
+           },
+           "unit": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+           }
+          },
+          "required": [
+           "value",
+           "unit"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "start",
+         "stop"
+        ],
+        "additionalProperties": false
+       },
+       "threshold": {
+        "type": "object",
+        "properties": {
+         "value": {
+          "type": "number"
+         },
+         "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+         }
+        },
+        "required": [
+         "value",
+         "unit"
+        ],
+        "additionalProperties": false
+       },
+       "direction": {
+        "type": "string",
+        "enum": [
+         "rising",
+         "falling",
+         "either"
+        ]
+       },
+       "occurrence": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 65536
+       }
+      },
+      "required": [
+       "window",
+       "threshold",
+       "direction",
+       "occurrence"
+      ],
+      "additionalProperties": false
+     },
+     "output_event": {
+      "type": "object",
+      "properties": {
+       "window": {
+        "type": "object",
+        "properties": {
+         "start": {
+          "type": "object",
+          "properties": {
+           "value": {
+            "type": "number"
+           },
+           "unit": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+           }
+          },
+          "required": [
+           "value",
+           "unit"
+          ],
+          "additionalProperties": false
+         },
+         "stop": {
+          "type": "object",
+          "properties": {
+           "value": {
+            "type": "number"
+           },
+           "unit": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+           }
+          },
+          "required": [
+           "value",
+           "unit"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "start",
+         "stop"
+        ],
+        "additionalProperties": false
+       },
+       "threshold": {
+        "type": "object",
+        "properties": {
+         "value": {
+          "type": "number"
+         },
+         "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+         }
+        },
+        "required": [
+         "value",
+         "unit"
+        ],
+        "additionalProperties": false
+       },
+       "direction": {
+        "type": "string",
+        "enum": [
+         "rising",
+         "falling",
+         "either"
+        ]
+       },
+       "occurrence": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 65536
+       }
+      },
+      "required": [
+       "window",
+       "threshold",
+       "direction",
+       "occurrence"
+      ],
+      "additionalProperties": false
+     },
+     "at": {
+      "type": "object",
+      "properties": {
+       "value": {
+        "type": "number"
+       },
+       "unit": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 32
+       }
+      },
+      "required": [
+       "value",
+       "unit"
+      ],
+      "additionalProperties": false
+     },
+     "window": {
+      "type": "object",
+      "properties": {
+       "start": {
+        "type": "object",
+        "properties": {
+         "value": {
+          "type": "number"
+         },
+         "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+         }
+        },
+        "required": [
+         "value",
+         "unit"
+        ],
+        "additionalProperties": false
+       },
+       "stop": {
+        "type": "object",
+        "properties": {
+         "value": {
+          "type": "number"
+         },
+         "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+         }
+        },
+        "required": [
+         "value",
+         "unit"
+        ],
+        "additionalProperties": false
+       }
+      },
+      "required": [
+       "start",
+       "stop"
+      ],
+      "additionalProperties": false
+     },
+     "denominator_floor": {
+      "type": "object",
+      "properties": {
+       "value": {
+        "type": "number"
+       },
+       "unit": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 32
+       }
+      },
+      "required": [
+       "value",
+       "unit"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "required": [
+     "id",
+     "operation",
+     "interpolation",
+     "result_unit"
+    ],
+    "additionalProperties": false
+   },
+   "minItems": 1,
+   "maxItems": 32
+  }
+ },
+ "required": [
+  "input_ref",
+  "output_ref",
+  "recipes"
+ ],
+ "additionalProperties": false
+}

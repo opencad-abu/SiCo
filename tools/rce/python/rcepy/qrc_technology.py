@@ -6,7 +6,8 @@ from pathlib import Path
 
 from .config import DesignContext, RceConfig
 from .qrc_defaults import QrcDefaults
-from .textutil import clean_lines, q, write_text
+from .textutil import clean_lines, path_token, q, write_text
+from .command_paths import command_path
 
 
 def _extract_tech_dir(cfg: RceConfig) -> str:
@@ -22,6 +23,8 @@ def extract_tech_dirs(cfg: RceConfig) -> tuple[Path, ...]:
         )
 
     process_dir = Path(explicit)
+    if not _is_qrc_tech_dir(process_dir) and (process_dir / "Tech").is_dir():
+        process_dir = process_dir / "Tech"
     corners = cfg.corners
     if _is_qrc_tech_dir(process_dir) and len(corners) <= 1:
         return (process_dir,)
@@ -94,11 +97,11 @@ def qrc_technology_options(
     write_text(
         corner_defs,
         clean_lines(
-            f"DEFINE {corner} {tech_dir}"
+            f'DEFINE {corner} {path_token(command_path(ctx, str(tech_dir), "qrc") if cfg.flag("extract", "finfet_flow") else tech_dir)}'
             for corner, tech_dir in zip(cfg.corners, tech_dirs)
         ),
     )
-    write_text(techlib_defs, f"DEFINE {technology_name} {wrapper_dir}\n")
+    write_text(techlib_defs, f'DEFINE {technology_name} {path_token(wrapper_dir)}\n')
     return [
         f'-technology_library_file "{q(str(techlib_defs))}"',
         f"-technology_corner {' '.join(cfg.corners)}",

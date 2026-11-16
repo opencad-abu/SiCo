@@ -92,7 +92,8 @@ _FLOW_ALLOWED_PATHS = {
         lvs.hcell_enable lvs.hcell_file lvs.ignore_error lvs.case_sensitive
         lvs.virtual_connect_enable lvs.virtual_connect_name_enable
         lvs.virtual_connect_names lvs.custom_svrf_enable
-        lvs.recognize_gates lvs.custom_svrf_command extract.tool extract.tech_name
+        lvs.recognize_gates lvs.custom_svrf_command lvs.svdb_query
+        extract.tool extract.tech_name
         extract.tech_dir extract.corner_scope extract.corner extract.corners
         extract.temperature extract.corner_temperatures extract.rc_type
         extract.remove_floating_nets
@@ -190,6 +191,7 @@ _FLOW_ENUM_VALUES = {
         "extract.name_source": frozenset({"Schematic", "Layout"}),
         "extract.view.kind": frozenset(
             {
+                "Interactive DSPF (iDSPF)",
                 "Smart View",
                 "Extracted View",
                 "Calibre View",

@@ -6,21 +6,23 @@ let((entryDirectory)
     parseString(simplifyFilename(get_filename(piport) t) "/")))) "/"))
   load(strcat(entryDirectory "/../../../scripts/sicoSkillLoader.ils"))
   load(strcat(entryDirectory "/../../../scripts/sicoSource.il"))
-  SICO_sourceRequire("ai_shared" "3423d38be853962c53eb089c7b8946cdd85ccd3af5d91d510c4753a7b76a00ab" '(
-    ("tools/ai/skill" "AI_protocol.il" "6782523a846c6ad18c02f26d7ccd85a400e7fe5a00124350fa7e3d58e963a2ee"
+  SICO_sourceRequire("ai_shared" "4970f9e3fa50d4589556e56b20fb5ea29b909e520766b30f049dcb45b791ffc3" '(
+    ("tools/ai/skill/core" "AI_protocol.il" "dd5a20f819ae1ecb1011e09712a864d10beb0146f23755d824ef6917e5fc558e"
       (aiJsonWhitespaceP aiJsonSkipWhitespace aiJsonParseString aiJsonValidateRequest aiJsonParseRequest
-       aiJsonEscape aiProtocolRevision)
-      ((aiProtocolRevision "20260909.ai.protocol.v4"))
+       aiJsonEscape aiJsonString aiProtocolRevision)
+      ((aiProtocolRevision "20261106.ai.protocol.v6"))
       (aiProtocolVersion)
+      ()
       ())
-    ("tools/ai/skill" "AI_eval.il" "ee818c77c85ba593e98aeb0d557c829f1aaab30852b067b2b0b6ff3fb41ba281"
+    ("tools/ai/skill/core" "AI_eval.il" "53613dc9e152866caebcdb89fb158b188898cf4c65dd80366d5759964a13f742"
       (aiReadTextFile aiWriteTextFile aiEvalTextPrefix aiBoundResultText aiWriteEvalResult
        aiEvalNativeExpression aiEvalFlushWarnings aiEvalCaptureCall aiEvalCapture aiEvalExpression
-       aiLoadSkillFile aiWorkingDirectory aiCellViewJson aiGetContext aiEvaluatorRevision)
-      ((aiEvaluatorRevision "20260922.ai.eval.v5"))
+       aiLoadSkillFile aiWorkingDirectory aiCellViewJson aiCellViewText aiGetContext aiEvaluatorRevision)
+      ((aiEvaluatorRevision "20261103.ai.eval.v8"))
       (aiEvaluatorVersion)
+      ()
       ())
-    ("tools/ai/skill" "AI_inspect_values.il" "873eafde17d92ad6bfcd29c057f717982cc44f3708e1a2b2d651fd380080e12e"
+    ("tools/ai/skill/inspect" "AI_inspect_values.il" "8cc8d3abe65ad3bf658959e40d5a63988ecf2c813ac87394c2d7dd659bf895b0"
       (aiInspectMaxItems aiInspectNewBudget aiInspectNewSnapshotBudget aiInspectText aiInspectJsonString
        aiInspectJsonNullableString aiInspectJsonNumber aiInspectJsonBoolean aiInspectAppendJson
        aiInspectPointJson aiInspectBBoxJson aiInspectLppJson aiInspectCellViewJson
@@ -28,300 +30,427 @@ let((entryDirectory)
        aiInspectTargetError)
       ()
       (aiInspectVersion)
+      ()
       ())
-    ("tools/ai/skill" "AI_inspect_records.il" "2735e4b83d6f83d6d81201e5ffc335d2c65070a45fdc6ff44e100acbbb2615dc"
+    ("tools/ai/skill/inspect" "AI_inspect_records.il" "74127d1154730f3fa73b970366a153067504ff2baae0e67cd11b3345bdaf0d10"
       (aiInspectPlacementJson aiInspectInstTermJson aiInspectTerminalPinJson
        aiInspectSchematicInstanceJson aiInspectNetJson aiInspectTerminalJson aiInspectLayoutShapeJson
        aiInspectLayoutInstanceJson)
       ()
       (aiInspectVersion)
+      ()
       ())
-    ("tools/ai/skill" "AI_inspect_snapshot.il" "7b0ebe60fc832423a14919b19ab4dec6b7f012cdd7a20908beffe115a6cd03b5"
+    ("tools/ai/skill/inspect" "AI_inspect_snapshot.il" "33b36790f9da8dd73bc2d5a456e35462a03298501b2ddc01b599d7678c54cf16"
       (aiInspectSnapshotHeaderJson aiInspectSnapshotWriteLine aiSnapshotSchematic)
       ()
       (aiInspectVersion)
-      ())
-    ("tools/ai/skill" "AI_inspect.il" "e67ecae612aa6f1ed25755c345922f5a2973bbe86d7393249c633a9acfdd6f5b"
-      (aiInspectSchematic aiInspectLayout aiInspectSymbolPorts aiListLibraries aiInspectLibrary
-       aiInspectConfigListJson aiInspectConfigBinding aiListWindows aiInspectMasterEscape
-       aiInspectMasterOnBoundary aiInspectMasterViews aiInspectMasterPointJson aiInspectMasterBBoxJson
-       aiInspectMasterPinsJson aiInspectMasterTerminalsJson aiInspectMasterRow aiInspectMasterEvidence
-       aiInspectRevision)
-      ((aiInspectRevision "20261022.ai.inspect.v11"))
-      (aiInspectVersion)
-      ())
-    ("tools/ai/skill" "AI_pdk_core.il" "cc19e0ac138a429cd122d31e5a0efc8edc6c6cb3225e40ab849d877cdc19d1f2"
-      (aiPdkRevision aiPdkObj aiPdkArray aiPdkBool aiPdkJson aiPdkError aiPdkRaw aiPdkAttrs aiPdkSection
-       aiPdkLibrary aiPdkContext)
-      ((aiPdkRevision "20260923.ai.pdk.v5"))
       ()
       ())
-    ("tools/ai/skill" "AI_pdk_init.il" "dbffc88569375b6f97ba5ffcd089615cc715229381962c3b6d2c6fddb2e1d527"
+    ("tools/ai/skill/inspect" "AI_inspect.il" "4dc14c5fb249937e371e2113c7647deadfbb01f28a58128a4f569adb595e1926"
+      (aiInspectSchematic aiInspectLayout aiInspectSymbolPorts aiListLibraries aiInspectLibrary
+       aiInspectConfigListJson aiInspectConfigBinding aiListWindows aiInspectMasterEscape
+       aiInspectMasterOnBoundary aiInspectMasterBoundaryPoint aiInspectMasterViews
+       aiInspectMasterPointJson aiInspectMasterBBoxJson aiInspectMasterPinsJson
+       aiInspectMasterTerminalsJson aiInspectMasterRow aiInspectMasterEvidence aiInspectRevision)
+      ((aiInspectRevision "20261107.ai.inspect.v14"))
+      (aiInspectVersion)
+      ()
+      ())
+    ("tools/ai/skill/pdk" "AI_pdk_core.il" "8f904e235eb37f26e01eab81d212879f0de1d795eadb2fcd1a9774a8996040b5"
+      (aiPdkRevision aiPdkObj aiPdkArray aiPdkBool aiPdkJson aiPdkError aiPdkRaw aiPdkAttrs aiPdkSection
+       aiPdkLibrary aiPdkContext)
+      ((aiPdkRevision "20261025.ai.pdk.v8"))
+      ()
+      ()
+      ())
+    ("tools/ai/skill/datahub" "AI_datahub_contracts.il" "598499b24f2dc79bd9e6d72f4f61153f3ae55eae973dc525c0715e5ebaac3de3"
+      ()
+      ()
+      ()
+      ()
+      ())
+    ("tools/ai/skill/datahub" "AI_datahub.il" "ce9af7645ef097419ccef6bc557c080fe095c6999250cf788e9731521e7be29a"
+      (datahubRevision datahubTextOk datahubObjectPairs datahubHasField datahubField datahubKnownError
+       datahubResolve datahubCapabilityAvailable datahubCheckRequest datahubCheckValue datahubMeta
+       datahubPage datahubNextOffset datahubEnvelope datahubOk datahubMapError datahubError
+       datahubUnknown datahubCheckPage datahubCheckEnvelope datahubJson datahubLegacyErrorObject
+       datahubLegacyMode datahubLegacyPayload datahubLegacyJson datahubLegacyError datahubLegacyResult)
+      ((datahubRevision "20261106.ai.datahub.v3"))
+      (aiDatahubVersion)
+      ()
+      ())
+    ("tools/ai/skill/pdk" "AI_pdk_init.il" "4e63421f97335cebb17d75804c8b8f4cf91f8c5b9147a05e95525f1547660beb"
       (aiPdkInitRevision aiPdkInitLibrary aiPdkInitializeLibrary)
       ((aiPdkInitRevision "20260919.ai.pdk.init.v1"))
       ()
-      ())
-    ("tools/ai/skill" "AI_pdk_cdf.il" "71b66046dbed979c59ad40c7dbe63a5fa7fe3ea850cfe3357273c07f7ee28e9b"
-      (aiPdkCdfSummary aiPdkCdf)
-      ()
       ()
       ())
-    ("tools/ai/skill" "AI_pdk_db.il" "1950c0672ea8fd76f0f1d5f16ed3d0d0d18c18312678f48f8ddf921a78b60ab9"
+    ("tools/ai/skill/pdk" "AI_pdk_cdf.il" "e1cafcf9db1a22d738fdefb48e772cc277d6a29559401b380082f0eba1001b62"
+      (aiPdkCdfSummary aiPdkCdfSimulators aiPdkCdfSimNames aiPdkCdfNeedsInheritance aiPdkCdfMergeSimInfo
+       aiPdkCdfNames aiPdkCdfUnique aiPdkCdfTerminalMap aiPdkCdfPairLess aiPdkCdfEntryLess aiPdkCdfMaster
+       aiPdkCdfInstanceMeta aiPdkCdfCoverage aiPdkCdfParameterExpressions aiPdkCdfInheritance
+       aiPdkCdfSimInfo aiPdkCdf)
+      ()
+      ()
+      ()
+      ())
+    ("tools/ai/skill/pdk" "AI_pdk_db.il" "1950c0672ea8fd76f0f1d5f16ed3d0d0d18c18312678f48f8ddf921a78b60ab9"
       (aiPdkDbAttrs aiPdkPorts aiPdkGeometry aiPdkDatabase)
       ()
       ()
-      ())
-    ("tools/ai/skill" "AI_pdk_capture.il" "297eda938b5b75d1b6bb631f67604dd9078cbc4255683700dcc7d89d22da7c89"
-      (aiPdkIdentity aiPdkCellLess aiPdkDirectory aiPdkDevice aiPdkViewPaths aiPdkCategoryLabel
-       aiPdkCategoryLabels aiPdkCategoryRows aiPdkCategories aiPdkCaptureRevision aiPdkCapture aiPdkRead
-       aiPdkDrop)
-      ((aiPdkCaptureRevision "20260922.ai.pdk.capture.v2"))
       ()
       ())
-    ("tools/ai/skill" "AI_pdk_pas.il" "14d378d378837613035f51b9d22c9d2dd7729420d554c3aa7bbe23df42ac8b6e"
+    ("tools/ai/skill/pdk" "AI_pdk_capture.il" "d880a2926bc573a0fba452d58fc704040a3250246c55fbfbae897d8d4d481aa2"
+      (aiPdkIdentity aiPdkCellLess aiPdkDirectory aiPdkDevice aiPdkLayoutPinRows aiPdkLayoutView
+       aiPdkLayoutDevice aiPdkLayoutProcess aiPdkViewPaths aiPdkCategoryLabel aiPdkCategoryLabels
+       aiPdkCategoryRows aiPdkCategories aiPdkCloseNewViews aiPdkCaptureRevision aiPdkCapture aiPdkRead
+       aiPdkDrop)
+      ((aiPdkCaptureRevision "20261107.ai.pdk.capture.v8"))
+      ()
+      ()
+      ())
+    ("tools/ai/skill/pdk" "SICO_tech_units.il" "59313193975c3dba437fb8f80690e711b90fc52d3ad37d51063e6875103b8e4a"
+      (sicoTechUnitsDump)
+      ()
+      ()
+      ()
+      ())
+    ("tools/ai/skill/pdk" "AI_pdk_pas.il" "14d378d378837613035f51b9d22c9d2dd7729420d554c3aa7bbe23df42ac8b6e"
       (aiPdkPasRevision aiPdkPasDpt)
       ((aiPdkPasRevision "20261009.ai.pdk.pas.v1"))
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_pdk_symbol_wire.il" "a742f0f174de3d99cd34965e4998cea39b1f76301e2b33f054d63705b92cc7a0"
+    ("tools/ai/skill/pdk" "AI_pdk_symbol_wire.il" "a742f0f174de3d99cd34965e4998cea39b1f76301e2b33f054d63705b92cc7a0"
       (aiPdkSymbolWireRevision aiPdkSymbolWireProbe)
       ((aiPdkSymbolWireRevision "20261010.ai.pdk.symbolwire.v1"))
       ()
-      ())
-    ("tools/ai/skill" "AI_window_context.il" "300b307bc764ff29c5efea91ed33f939a3e2a18c9ee8ccd84d3d1178225cbf3d"
-      (aiWindowRevision aiWindowTry aiWindowRead aiWindowText aiWindowTitleBytes aiWindowIdentity
-       aiWindowDesignLabel aiWindowDiagnostic aiWindowRetire aiWindowGone aiWindowGraphical
-       aiWindowCapturable aiWindowSignature aiWindowAdeSession aiWindowObserve aiWindowCaptureState
-       aiWindowCapture aiWindowResolveState aiWindowResolve aiWindowStateError aiWindowCv aiWindowBBox
-       aiWindowRow aiWindowList aiWindowInspect)
-      ((aiWindowRevision "20261020.ai.window.v7"))
       ()
       ())
-    ("tools/ai/skill" "AI_selection_context.il" "9162a56d0d83a480691f24809ebef0194cd5a69a17ade1b2b2aacd31b733c84e"
+    ("tools/ai/skill/inspect" "AI_window_context.il" "7229f2935bc7edb2bcb5f66e37e5024823bb12cd726f3fe7f143097ac1f756a7"
+      (aiWindowRevision aiWindowTry aiWindowRead aiWindowText aiWindowTitleBytes aiWindowCvIdentity
+       aiWindowAdeIdentity aiWindowHierarchyText aiWindowIdentityRow aiWindowDesignLabel
+       aiWindowDiagnostic aiWindowRetire aiWindowGone aiWindowGraphical aiWindowCapturable
+       aiWindowSignature aiWindowAdeSession aiWindowObserve aiWindowCaptureState aiWindowCapture
+       aiWindowResolveState aiWindowResolve aiWindowStateError aiWindowCv aiWindowBBox aiWindowRow
+       aiWindowList aiWindowInspect)
+      ((aiWindowRevision "20261107.ai.window.v13"))
+      ()
+      ()
+      ())
+    ("tools/ai/skill/layout" "AI_layout_export_geometry.il" "1f21b4fbcb898fd4c77692b59e43322b90adda5124e6de1128cb4a66d2cea589"
+      (aiLayoutExportGeometryRevision aiLayoutExportInside aiLayoutExportOverlap
+       aiLayoutExportPointInside aiLayoutExportRound aiLayoutExportDbuBox aiLayoutExportCopyable
+       aiLayoutExportClippable aiLayoutExportBoxP aiLayoutExportFlatten aiLayoutExportShape
+       aiLayoutExportClip)
+      ((aiLayoutExportGeometryRevision "20261105.ai.layout.export.geometry.v2"))
+      (aiLayoutExportGeometryVersion)
+      ()
+      ())
+    ("tools/ai/skill/layout" "AI_layout_export_io.il" "92c0ac1e5e5cbe64b2ec11a1bf85726b9afab314a05fff397b9aba2b519530c8"
+      (aiLayoutExportText aiLayoutExportAbsolute aiLayoutExportParent aiLayoutExportQuote
+       aiLayoutExportUnique aiLayoutExportFile aiLayoutExportSidecar aiLayoutExportRun
+       aiLayoutExportOasisCommand)
+      ()
+      ()
+      ()
+      ())
+    ("tools/ai/skill/layout" "AI_layout_export_workspace.il" "5030027f2a94b4a9cfad2371708a4de09b3769d6b2d3343444fa524dbc9751fa"
+      (aiLayoutExportScratch)
+      ()
+      ()
+      ()
+      ())
+    ("tools/ai/skill/layout" "AI_layout_export.il" "7e0e1251a870c4eef52615bf017afd0e5fc7f9d335d2bc9baf80f199ebe9adbe"
+      (aiLayoutExportRevision aiLayoutExportVisibleOasis)
+      ((aiLayoutExportRevision "20261105.ai.layout.export.v2"))
+      (aiLayoutExportVersion)
+      ()
+      ())
+    ("tools/ai/skill/inspect" "AI_selection_context.il" "8ea0e52a1e6c0f7fba5a71097b4a193a2578500563c44fe64ee2c15fdb618ac9"
       (aiSelectionRevision aiSelectionText aiSelectionTarget aiSelectionMaster aiSelectionInstance
-       aiSelectionNet aiSelectionTerminal aiSelectionItem aiSelectionNetObject aiSelectionShapeName
-       aiSelectionShape aiSelectionItemName aiSelectionItemMasterText aiSelectionMatches aiSelectionList
-       aiSelectionRaiseWindow aiSelectionWindowTarget aiSelectionMasterMatches aiSelectionHighlightSet
+       aiSelectionNet aiSelectionTerminalFigures aiSelectionTerminal aiSelectionItem aiSelectionNetObject
+       aiSelectionShapeName aiSelectionShape aiSelectionItemName aiSelectionItemMasterText
+       aiSelectionMatches aiSelectionList aiSelectionRaiseWindow aiSelectionWindowTarget
+       aiSelectionMasterMatches aiSelectionHighlightSet aiSelectionForgetWindow aiSelectionForgetAll
        aiSelectionAddHilight aiSelectionUnionBox aiSelectionObjectBox aiSelectionKey aiSelectionInspect)
-      ((aiSelectionRevision "20261021.ai.selection.v2"))
+      ((aiSelectionRevision "20261106.ai.selection.v9"))
       (aiSelectionVersion)
+      ()
       ())
-    ("tools/ai/skill" "AI_selection_highlight.il" "67872ffe17eb3716ff8c833a42ef3b9cc695142d59574693bbc29c5894ee4a8c"
-      (aiSelectionHighlightRevision aiSelectionWindows aiSelectionHighlight)
-      ((aiSelectionHighlightRevision "20261021.ai.selection.highlight.v2"))
+    ("tools/ai/skill/inspect" "AI_selection_inspect.il" "ef8b5262ef2acbdd9e345bb496c97643a04b6bb5870d31ef53bada983afb6462"
+      (aiSelectionInspectRevision aiSelectionFieldList aiSelectionProperties aiSelectionSize
+       aiSelectionInstanceByName aiSelectionHierarchyCv aiSelectionHierarchyRow aiSelectionDetailRow
+       aiCopilotInspectObject aiCopilotInspectHierarchy)
+      ((aiSelectionInspectRevision "20261105.ai.selection.inspect.v3"))
+      (aiSelectionInspectVersion)
+      ()
+      ())
+    ("tools/ai/skill/inspect" "AI_selection_highlight.il" "72b244a7918fe946f5dce51854c0a40e1a86eaabfd4575ed9a49e8dcc62420ab"
+      (aiSelectionHighlightRevision aiSelectionWindows aiSelectionSelectObject aiSelectionHighlight)
+      ((aiSelectionHighlightRevision "20261106.ai.selection.highlight.v7"))
       (aiSelectionHighlightVersion)
-      ())
-    ("tools/ai/skill" "AI_entry_context.il" "bb9a25b311d1a31757af0a07fd55839c0d38436beb798a4e7bf182907cc5a4f5"
-      (aiEntryDefaultRef aiEntryLibraries aiEntryDesign aiEntryAde aiEntryContext)
-      ()
       ()
       ())
-    ("tools/ai/skill" "AI_circuit.il" "48f65a749e3553d02bc4e657bf6bb6d9761add81a5bd33084042f4cc55c759b8"
+    ("tools/ai/skill/entry" "AI_entry_context.il" "f50692c5d4c041efc70acae76dd9277df797a08219bec6d6a8748e5d6446d69f"
+      (aiEntryDefaultRef aiEntryLibraries aiEntryDesign aiEntryAde aiEntrySelectionRow aiEntryHierKind
+       aiEntryHierPath aiEntryHierSelectionItem aiEntryHierExpected aiEntryHierSelection aiEntrySelection
+       aiEntryContext)
+      ()
+      ()
+      ()
+      ())
+    ("tools/ai/skill/circuit/core" "AI_circuit.il" "0633a5c1d50f75085dfd561949901c9db68cc880f4d3cd47f43aa20992ccb377"
       (aiCircuitRevision aiCircuitNativeCall aiCircuitUpperTaken aiCircuitWindowBox
        aiCircuitPlaceRightHalf aiCircuitRaiseWindow aiCircuitJson aiCircuitBool aiCircuitObject
-       aiCircuitError aiCircuitGuiP aiCircuitMode aiCircuitTextP aiCircuitTargetP aiCircuitViewType
-       aiCircuitCvMatches aiCircuitSessionMatches aiCircuitSessions aiCircuitMissing aiCircuitOpenApis
-       aiCircuitPreflight)
+       aiCircuitError aiCircuitFailText aiCircuitGuiP aiCircuitMode aiCircuitTextP aiCircuitTargetP
+       aiCircuitViewType aiCircuitCvMatches aiCircuitSessionMatches aiCircuitSessions aiCircuitMissing
+       aiCircuitOpenApis aiCircuitPreflight)
       ((aiCircuitRevision "20260909.ai.circuit.v5"))
       ()
-      ())
-    ("tools/ai/skill" "AI_circuit_context.il" "d3801b30980a6db9ca7666bd1782d2b4eda5845f3483f2838623158fab78b5d1"
-      (aiCircuitContextJson aiCircuitInspect aiCircuitRelease aiCircuitOpen)
-      ()
       ()
       ())
-    ("tools/ai/skill" "AI_circuit_task.il" "1447e8a2880f5e932f344f87a2581d9c43475d37eb0a14474e41565ac92fabbb"
+    ("tools/ai/skill/circuit/core" "AI_circuit_properties.il" "99109ac57aa07d3a2ee5b6ed948ab6ed1e73f6d7a3fca5993bd36fa60dd091e1"
+      (aiCircuitPropertyValue aiCircuitPropertyRow aiCircuitParameterValue)
+      ()
+      ()
+      ()
+      ())
+    ("tools/ai/skill/circuit/core" "AI_circuit_context.il" "353f47f614004ff7c704e02979a9ded776c0ab1c57a5eb6e166317906770c17b"
+      (aiCircuitContextJson aiCircuitInspect aiCircuitRelease aiCircuitOpen aiCircuitAccessEdit)
+      ()
+      ()
+      ()
+      ())
+    ("tools/ai/skill/circuit/core" "AI_circuit_task.il" "1447e8a2880f5e932f344f87a2581d9c43475d37eb0a14474e41565ac92fabbb"
       (aiCircuitBeginTask aiRcReply aiRcReserve aiRcRequireEntry aiRcRequireSession aiRcRelease)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_circuit_project.il" "50182121929f3c82019a11349169b44ab5bd58f96fa60c4c849b7f3bcbabae60"
+    ("tools/ai/skill/circuit/core" "AI_circuit_project.il" "a68c51f824641e4d8cf38bb69164002763f73eea8c796423853beb4bcba8a391"
       (aiProjectRevision aiProjectSession aiProjectRequire aiProjectAssertClaim aiProjectClaim
        aiProjectTarget aiProjectObserve aiProjectReceipt aiLibraryTechPath aiLibraryMapping
        aiLibraryViewTypes aiLibraryObservation aiLibraryFacts aiLibraryCheck aiLibraryBinding
        aiLibraryRearmHint aiLibraryPrepare aiLibraryReply aiLibraryCreate)
       ((aiProjectRevision "20260911.ai.project.v1"))
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_circuit_extensions.il" "ff076257f0388e20d7d203fcfb1445f42ae738910480c4fbade17c89db0a7b96"
+    ("tools/ai/skill/circuit/core" "AI_circuit_extensions.il" "ff076257f0388e20d7d203fcfb1445f42ae738910480c4fbade17c89db0a7b96"
       (aiCrRegisterExtension aiCrListExtensions aiCrExtension aiCrExtensionValidate aiCrCreateInstance)
       ()
       ()
-      ())
-    ("tools/ai/skill" "AI_circuit_create_check.il" "ce23062a4e3890a14928f12e3404fe7d0d245cd82b1c2fda67dd84b261736116"
-      (aiCreateRevision aiCrEmpty aiCrValueText aiCrRowLess aiCrContains aiCrCenters aiCrCdfRows
-       aiCrShapeRows aiCrSafeCdf aiCrParam aiCrMasterSignature aiCrAbsent aiCrTargetFacts
-       aiCrInspectTarget aiCrTargetCheck aiCrBoxesOverlap aiCrAdditionBoxCheck aiCrRouteCheckPoints
-       aiCrAdditionCheck aiCrWorkPath aiCrDependencies aiCrBodyData aiCrBindingGeometry)
-      ((aiCreateRevision "20261022.ai.create.v12"))
       ()
       ())
-    ("tools/ai/skill" "AI_circuit_text.il" "ce0914f8c97ee0ec51915927deae23a7a7b161058024d1c64a6744435d911ce9"
+    ("tools/ai/skill/circuit/create" "AI_circuit_create_check.il" "f7b24582e6f4baae05b0b51de8882d09eff923cde9d2fb8516ac3badb0821d9f"
+      (aiCreateRevision aiCrEmpty aiCrValueText aiCrRowLess aiCrContains aiCrCenters aiCrCdfRows
+       aiCrShapeRows aiCrSafeCdf aiCrParam aiCrMasterSignature aiCrAbsent aiCrTargetFacts
+       aiCrObservationTask aiCrInspectTarget aiCrTargetCheck aiCrBoxesOverlap aiCrAdditionBoxCheck
+       aiCrRouteCheckPoints aiCrAdditionCheck aiCrWorkPath aiCrDependencies aiCrBodyData
+       aiCrBindingGeometry)
+      ((aiCreateRevision "20261106.ai.create.v14"))
+      ()
+      ()
+      ())
+    ("tools/ai/skill/circuit/core" "AI_circuit_text.il" "ce0914f8c97ee0ec51915927deae23a7a7b161058024d1c64a6744435d911ce9"
       (aiCrTextOverlap aiCrTextCost aiCrTextClear aiCrTextBetter aiCrTextWire aiCrTextPoints
        aiCrTextPlace aiCrTextNote aiCrTextFinish)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_circuit_preview.il" "5008f2a32df6235771f0cacb754084e322e3c00ccecf75fe0ac5953ce665fa63"
+    ("tools/ai/skill/circuit/core" "AI_circuit_preview.il" "a7dca4421ddd1c7aab9b6acf5ddde68be0df26e24ae7707daeabf5f328b363e1"
       (aiCrExportSvg)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_circuit_create_build.il" "89edb1c560d1480dde0559f923ee1d01ce28a36b8eb4c4a092fa7c8b0e51b8e7"
+    ("tools/ai/skill/circuit/create" "AI_circuit_create_build.il" "122ecfb7edeabe3dab9b702733090b5780788bc8d058890cec1cdc84e26a593c"
       (aiCrAppliedParams aiCrSnapshot aiCrReadback aiCrExisting aiCrPrepareCallbacks aiCopyView
-       aiCrBoxUnion aiCrRefCenter aiCrLongestSegment aiCrEdgeLabel aiCrStubTerminal aiCrRouteEdge
-       aiCrBuild)
+       aiCrBoxUnion aiCrRefCenter aiCrLongestSegment aiCrEdgeLabel aiCrStubTerminal aiCrRouteSegments
+       aiCrRouteEdge aiCrBuild)
+      ()
       ()
       ()
       ())
-    ("tools/ai/skill" "AI_circuit_create.il" "07d9f99a8c9e6b385a46b28e1fca1002a57dfd35401763166c0942c27ab7e137"
+    ("tools/ai/skill/circuit/create" "AI_circuit_create.il" "054e04a9f843fb720eb437ba94b30fb942d8f36514c2b83a5eca9431817cd0e9"
       (aiCrErrorText aiCrReply aiCreatePrepare aiCrValidate aiCreateExecute aiCreateInspect
        aiCreateRelease)
       ()
       ()
-      ())
-    ("tools/ai/skill" "AI_cdf_data.il" "acb323aaf982864bf62ec7b3a87080dd9448a58241d681dfd37d6522ef911dcb"
-      (aiCdfRevision aiCdfErrorText aiCdfTyped acdValueLess aiCdfValues aiCdfParamRows aiCdfSnapshot
-       aiCdfInspect)
-      ((aiCdfRevision "20260910.ai.cdf.v1"))
       ()
       ())
-    ("tools/ai/skill" "AI_cdf_transfer.il" "6ef0925ce25d4b79720e5014325012cbac89d8a625f5ea5166a88cab797fe5e2"
+    ("tools/ai/skill/cdf" "AI_cdf_data.il" "75050cdf29457dbe7178bfd3e885c78ec1f9d73fc10bcf6617b1d61b766f4e1d"
+      (aiCdfRevision aiCdfErrorText aiCdfOwnedString aiCdfOwnedValue aiCdfTyped acdValueLess aiCdfValues
+       aiCdfParamRows aiCdfSnapshot aiCdfInspect)
+      ((aiCdfRevision "20261106.ai.cdf.v5"))
+      ()
+      ()
+      ())
+    ("tools/ai/skill/cdf" "AI_cdf_transfer.il" "ae7c5e434a298a0621c2ff1b4385c5eb7bdb98b1349e0b14dcbfeb31cfc02e06"
       (aiCdfPut aiCdfRead aiCdfDrop)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_test_workspace.il" "7b9e77be8f909a9bcf9ffdeb1049c8d0204f7528b14179d16270ed8512ae2bbb"
+    ("tools/ai/skill/core" "AI_test_workspace.il" "7b9e77be8f909a9bcf9ffdeb1049c8d0204f7528b14179d16270ed8512ae2bbb"
       (aiTestWorkspaceLibrary)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_cdf_probe.il" "65a285b300d93387709ad6fd41f840247af728e05c09256e8ca8f8b9c695f2c4"
+    ("tools/ai/skill/cdf" "AI_cdf_probe.il" "65a285b300d93387709ad6fd41f840247af728e05c09256e8ca8f8b9c695f2c4"
       (aiCdfProbeRevision aiCdfProbeCheckpoint aiCdfSourceState aiCdfProbeReply aiCdfProbeCapture
        aiCdfProbeRun aiCdfProbe aiCdfProbeGet)
       ((aiCdfProbeRevision "20260924.ai.cdf.probe.v4"))
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_cdf_callbacks.il" "4b470c4bf0659be47c2dc6ca5265abc16569106ef26ee33fd840ab1a3d7d419d"
+    ("tools/ai/skill/cdf" "AI_cdf_callbacks.il" "08d21f3a7dcb956baed6e9bbd077cabad937e42405c117391ade99fe00b2d623"
       (aiCdfCallbackRevision aiCdfCallbackLiteral aiCdfCallbackParse aiCdfCallbackHook
        aiCdfCallbackInvoke aiCdfCallbackParam aiCdfCallbackEvidence aiCdfCallbackValidate
        aiCdfCallbackEqual aiCdfCallbackApply aiCdfCallbackCreate)
       ((aiCdfCallbackRevision "20261022.ai.cdf.callbacks.v5"))
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_cdf_update.il" "2ffc4192a18ea77651bb3a58a8cf5b19b55d8d6266a1b5a4c9746cb38e55fa19"
+    ("tools/ai/skill/cdf" "AI_cdf_update.il" "e3b64ba0097b3aadb0014ede2e555560fd31300cfb2775953d5c8c97040608d6"
       (aiCdfUpdateCheck aiCdfUpdatePrepare aiCdfUpdateReply aiCdfUpdateApply)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_pdk_cdf_validation.il" "855edc2f89316839b58c129fa3f7b443ad879a5da1d8434fbfb53c09c4b3628c"
+    ("tools/ai/skill/pdk" "AI_pdk_cdf_validation.il" "855edc2f89316839b58c129fa3f7b443ad879a5da1d8434fbfb53c09c4b3628c"
       (aiPdkCdfWorkspace aiPdkCdfInspect aiPdkCdfCase)
       ()
       ()
-      ())
-    ("tools/ai/skill" "AI_simulation_check.il" "f6060f62befd5ab61004ffe4131cc1259c01d586d8c72abd21c84764eac679cf"
-      (aiSimulationRevision aiSimFailText aiSimSorted aiSimOptionEqual aiSimConfigRef aiSimSimOptions
-       aiSimAssertEqual aiSimSourceSnapshot aiSimFileCheck aiSimSignalResolve aiSimSignalChecks
-       aiSimViewNames aiSimViewFirst aiSimViewStep aiSimViewCoverage aiSimSourceReadyP aiSimSources
-       aiSimWork aiSimSession aiSimVars aiSimSnapshot aiSimReadback aiSimValidate)
-      ((aiSimulationRevision "20261021.ai.simulation.v8"))
       ()
       ())
-    ("tools/ai/skill" "AI_simulation_config.il" "c676f7ce3d3f3ae19c05f74dd0aaf647f81c780ac7285550dddc2335fed0276e"
+    ("tools/ai/skill/simulation" "AI_simulation_check.il" "4c6ee5b8bb272e2d0016494aaecc9845d54776a8da104af52d77087a857e5965"
+      (aiSimulationRevision aiSimFailText aiSimSorted aiSimScalarValueP aiSimOptionEqual aiSimConfigRef
+       aiSimSimOptions aiSimAssertEqual aiSimSourceSnapshot aiSimFileCheck aiSimSignalResolve
+       aiSimSignalChecks aiSimViewNames aiSimViewFirst aiSimBuiltinMarkerP aiSimViewStep
+       aiSimViewCoverage aiSimSourceReadyP aiSimSources aiSimWork aiSimSession aiSimVars aiSimSnapshot
+       aiSimReadback aiSimValidate)
+      ((aiSimulationRevision "20261107.ai.simulation.v12"))
+      ()
+      ()
+      ())
+    ("tools/ai/skill/simulation" "AI_simulation_config.il" "c676f7ce3d3f3ae19c05f74dd0aaf647f81c780ac7285550dddc2335fed0276e"
       (aiSimConfigEntry aiSimConfigWalk aiSimConfigInstLess aiSimConfigSource aiSimConfigSummary)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_simulation_dimensions.il" "eb6821c283a353ab99ccc12bb2a2dc1e65d6963e11172f02b7c02bec92dfe3fe"
+    ("tools/ai/skill/simulation" "AI_simulation_dimensions.il" "eb6821c283a353ab99ccc12bb2a2dc1e65d6963e11172f02b7c02bec92dfe3fe"
       (aiSimDimensionPairLess aiSimDimensionCount aiSimExpected aiSimGlobalValues aiSimDimensionSnapshot
        aiSimConfigureDimensions aiSimReadbackDimensions)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_simulation_coordinates.il" "299da5fdce7619363f76d91cef074d9d2134517da4a568a9ae54115e8c5322ea"
+    ("tools/ai/skill/simulation" "AI_simulation_coordinates.il" "45af1a83d61370741b8f162fc7eecc4e38442fa2b2c326459f3cba40f10b0eb1"
       (aiSimCoordinateParam aiSimCoordinateNumber aiSimVerifyCoordinates)
       ()
       ()
-      ())
-    ("tools/ai/skill" "AI_simulation_setup.il" "9e7e9925cd29e0c32a0a43658c9ce79d57aaac9399bc51d8e7fb6307c23526c3"
-      (aiSimReply aiSimConfigure aiSimContext aiSimRememberOutput aiSimPreflight aiSimCreate aiSimModels
-       aiSimInspect aiSimRelease)
-      ()
       ()
       ())
-    ("tools/ai/skill" "AI_simulation_run.il" "fabf98938ecfb22330a4e7b4ab52bdd6c718da437ae4a7640d9fdfa7d2e208d0"
+    ("tools/ai/skill/simulation" "AI_simulation_setup.il" "ce8ca6585271111bdaa82763d806f7cd5bd077a357c8a993f57c8cb1ba101586"
+      (aiSimEntryTests aiSimEntryCorners aiSimEntryExpected aiSimEntryTemp aiSimReply aiSimConfigure
+       aiSimContext aiSimRememberOutput aiSimPreflight aiSimCreate aiSimModels aiSimInspect aiSimRelease
+       aiSimExpectedSession aiSimAttachedCheck aiSimAttach aiSimTargetParts aiSimTargetTask
+       aiSimTargetEntry)
+      ()
+      ()
+      ()
+      ())
+    ("tools/ai/skill/simulation" "AI_simulation_run.il" "57a96d1120dd141595be775eb8480bf97a617a15aa3b8200b6aa10022fe52126"
       (aiSimRunReply aiSimCallback aiSimNoActive aiSimIdle aiSimRun aiSimFinished aiSimStatus aiSimStop)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_templates.il" "c95e75951ec83fd81c2dd0fc4d2e1808b82d577f42cf974796ce99e7beb130b4"
+    ("tools/ai/skill/template" "AI_templates.il" "73815b23750964c7cbbd80b9058c66135678e9663892e3ad33ea4bc4d739836c"
       (aiTplGet aiTplQuoted aiTplJson aiTplFields aiTplNet aiTplGlobal aiTplPropName aiTplFigure
        aiTplWrite aiTplRecord aiTplObject aiTplBindingValue aiTplBuiltinLibrary aiTplGraphicRole
        aiTplCaptureAsset aiTplCapture aiTemplatesRevision)
-      ((aiTemplatesRevision "20261009.ai.templates.v18"))
+      ((aiTemplatesRevision "20261107.ai.templates.v19"))
+      ()
       ()
       ())
-    ("tools/ai/skill" "AI_template_capture_geometry.il" "d01de64f5e864fa3754c14e7dfdf77ffca7749637e74780abe864d08078b77f4"
+    ("tools/ai/skill/template" "AI_template_capture_geometry.il" "bb9fbcec4fb0613e2e8624d346c0f852ed2724b2961a56c97d3c7cf9aaf8c554"
       (aiTplLess aiTplResetSavedViews aiTplSavedView aiTplMasterView aiTplDependency aiTplDependencies
        aiTplTextMap aiTplElectricalEvidence aiTplCaptureGeometry)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_template_native_content.il" "c72119ecdf72313b92f5e47c9a5f42f298205ac2f7a71671ac97cdc57b06b2ff"
+    ("tools/ai/skill/template" "AI_template_native_content.il" "c72119ecdf72313b92f5e47c9a5f42f298205ac2f7a71671ac97cdc57b06b2ff"
       (aiTplNativeHash aiTplNativeView aiTplNativeContent)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_circuit_symbol.il" "b09977b25f4a9310372c7933d6b75b78cdc00d63c708b51974a51512cc60da85"
+    ("tools/ai/skill/symbol" "AI_circuit_symbol.il" "b09977b25f4a9310372c7933d6b75b78cdc00d63c708b51974a51512cc60da85"
       (aiCircuitSymbolPinBox aiCircuitCreateSymbolBox aiCircuitAnalogPinLabel)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_template_symbol_geometry.il" "c51cfc79bf4a721ea20853b18a2126c83b68894c5f576e49c6ec97d243ecbb0c"
+    ("tools/ai/skill/symbol" "AI_template_symbol_geometry.il" "c51cfc79bf4a721ea20853b18a2126c83b68894c5f576e49c6ec97d243ecbb0c"
       (aiTsLess aiTsPorts aiTsCheckPorts aiTsSnapshot aiTsBuild aiTsVic)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_template_symbol_draw.il" "fc21b1617c604cb6695b323d75dd3368ba1a5a35735e73e57b9b925306ca34fa"
+    ("tools/ai/skill/symbol" "AI_template_symbol_draw.il" "b1f8f1330e0ae5464940fc1f86d5967d7c1d0a59a2b40d391c5b8aeea1f5ba41"
       (aiTdPreflight aiTdNear aiTdStubLength aiTdContactOnBody aiTdValidateStubs aiTdShape aiTdLabel
        aiTdBuild aiDrawSymbol)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_template_symbol.il" "7621bf7e87849c95abf807bb024c810ae864a4a65883d4a9740c86a0aa930fe5"
+    ("tools/ai/skill/symbol" "AI_template_symbol.il" "99822db090b4a5f80acb8cc76ccc974ce542c6a209e9bdc48ae058292f78ef84"
       (aiTemplateSymbolRevision aiTsErrorText aiTsLibraryPath aiTsPathWithin aiTsSourceDesignP
        aiTsLibraryGuard aiTsGuardLess aiTsPath aiTsSchematic aiTsAbsent aiTemplateSymbolPreview aiTsReply
        aiTsValidate aiTemplateSymbolCreate aiTemplateSymbolInspect)
-      ((aiTemplateSymbolRevision "20261020.ai.template.symbol.v8"))
+      ((aiTemplateSymbolRevision "20261107.ai.template.symbol.v9"))
+      ()
       ()
       ())
-    ("tools/ai/skill" "AI_template_symbol_binding.il" "58bb726eb04600b9d6291b5f8abf11e11e5902bb47d4fa9ada1ccec508e495f4"
+    ("tools/ai/skill/symbol" "AI_template_symbol_binding.il" "58bb726eb04600b9d6291b5f8abf11e11e5902bb47d4fa9ada1ccec508e495f4"
       (aiTsBindingData aiTemplateSymbolBinding)
       ()
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_circuit_config.il" "a237d07e8e3246c14b851e8a3b697ca7f75eefbc5056a0054e263d23278b151d"
+    ("tools/ai/skill/circuit/core" "AI_circuit_config.il" "a237d07e8e3246c14b851e8a3b697ca7f75eefbc5056a0054e263d23278b151d"
       (aiConfigRevision aiConfigRowLess aiConfigDataSnapshot aiConfigRead aiConfigReply aiConfigInterface
        aiConfigInspect aiConfigCreate)
       ((aiConfigRevision "20261022.ai.config.v3"))
       ()
+      ()
       ())
-    ("tools/ai/skill" "AI_maestro_results.il" "d3ccd7cfcd4553509ef9675f1cf73f5e04e7c16f14bf193cdb893baba67498c4"
+    ("tools/ai/skill/maestro" "AI_maestro_results.il" "d3ccd7cfcd4553509ef9675f1cf73f5e04e7c16f14bf193cdb893baba67498c4"
       (aiResultsRevision aiResultsSession aiResultsValue aiResultsOutput aiResultsCapture aiResultsPage
        aiResultsRelease)
       ((aiResultsRevision "20260910.ai.results.v1"))
       ()
-      ())
-    ("tools/ai/skill" "AI_maestro_waveform.il" "fd61734075b77e27ab4b4466602ea6a15de7bec41266cdad1a195d202fca3245"
-      (aiWaveRevision aiWaveFreeze aiWaveCapture aiWavePage aiWaveRelease)
-      ((aiWaveRevision "20260911.ai.waveform.v2"))
       ()
       ())
-    ("tools/ai/skill" "AI_maestro_ac.il" "63c77752c92830155105cf129266d367bbd3b7a25a89f5b95e5f9f6285970bf5"
+    ("tools/ai/skill/maestro" "AI_maestro_waveform.il" "5b727b01de933154a3e06766a94d5e2ef927c1c794b47988562da0b0de33d99b"
+      (aiWaveRevision aiWaveFreeze aiWaveCapture aiWavePage aiWaveRelease)
+      ((aiWaveRevision "20260911.ai.waveform.v3"))
+      ()
+      ()
+      ())
+    ("tools/ai/skill/maestro" "AI_maestro_ac.il" "63c77752c92830155105cf129266d367bbd3b7a25a89f5b95e5f9f6285970bf5"
       (aiAcRevision aiAcFinite aiAcFreeze aiAcCapture)
       ((aiAcRevision "20260911.ai.ac.v1"))
       ()
+      ()
       ())
   ))
-  set('aiSharedLoaderVersion "ai.shared.v5.3423d38be853962c53eb089c7b8946cdd85ccd3af5d91d510c4753a7b76a00ab")
+  set('aiSharedLoaderVersion "ai.shared.v5.4970f9e3fa50d4589556e56b20fb5ea29b909e520766b30f049dcb45b791ffc3")
 )

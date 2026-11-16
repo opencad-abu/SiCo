@@ -152,7 +152,7 @@ procedure(vtsoCustom()
     ddsOpenLibManager()
     logo=getShellEnvVar("LOGO")
     unless(and(logo strlen(logo)>0)
-      logo="SiCo")
+      logo="Silicon Copilot")
     sklDir=simplifyFilename(
              strcat(getShellEnvVar("CAD_HOME") "/tools") t)
     scriptsDir=simplifyFilename(strcat(sklDir "/scripts") t)
@@ -181,11 +181,9 @@ The exact end anchor matters: `.ils` files below the DRC/LVS/RCE module director
 are frontend implementation files and are loaded lazily by their guarded entry points.
 Temporary `.ils` below `tools/scripts` are loaded only by `cadToolRegister.il`.
 
-`CAD_PYTHON` selects the shared Python executable for RCE, LVS, DRC, LEF, and
-menu generation. `RCE_PYTHON`, `LVS_PYTHON`, `DRC_PYTHON`, and `LEF_PYTHON`
-remain flow-level overrides, and `RCE_ANALYZER_PYTHON` overrides only the DSPF
-Analyzer. Consumers then try `CAD_PYTHON_ROOT/bin/python3` and `python3`; one
-flow never reads another flow's override.
+All flows and menu generation use the single
+`$SICO_HOME/runtime/python/bin/python3`. Interpreter override variables are not
+read, and flow-specific `*_PYTHON_ENTRY` variables select only source entries.
 
 `LOGO` overrides the displayed brand, followed by `COMPANY`. Unset/empty values
 and the legacy `OCAD` default fall back to `SiCo`.

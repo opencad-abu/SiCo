@@ -4,7 +4,10 @@ from .template_schema import TemplateError
 
 # Missing is not equivalent to an observed null, false, or scalar width.
 _REQUIRED = {
-    "instance": {"master_available", "schematic_available", "terminal_names", "master_view_type"},
+    "instance": {
+        "master_available", "schematic_available", "terminal_names",
+        "master_oa_view_type",
+    },
     "instance_terminal": {"net"},
     "net": {"numBits", "sigType", "is_global", "instance_terminal_count"},
     "terminal": {"direction", "numBits", "net"},

@@ -1,7 +1,7 @@
 ; Read-only geometry and connectivity record projections.
 ; Loaded with AI_inspect.il by the versioned AI parent.
 unless(and(boundp('aiInspectVersion)
-             aiInspectVersion=="20261022.ai.inspect.v11")
+             aiInspectVersion=="20261101.ai.inspect.v12")
 
 procedure(aiInspectPlacementJson(instance budget)
   let((protected values)
@@ -77,7 +77,7 @@ procedure(aiInspectSchematicInstanceJson(instance includePlacement budget)
       placement=if(includePlacement then
         strcat(",\"placement\":" aiInspectPlacementJson(instance budget)) else "")
       sprintf(nil
-        "{\"name\":%s,\"lib\":%s,\"cell\":%s,\"view\":%s,\"term_count\":%s,\"terminals\":[%s]%s}"
+        "{\"name\":%s,\"lib\":%s,\"cell\":%s,\"view_name\":%s,\"term_count\":%s,\"terminals\":[%s]%s}"
         aiInspectJsonString(car(values) budget)
         aiInspectJsonString(cadr(values) budget)
         aiInspectJsonString(caddr(values) budget)
@@ -159,7 +159,7 @@ procedure(aiInspectLayoutInstanceJson(instance budget)
     else
       values=car(protected)
       sprintf(nil
-        "{\"name\":%s,\"lib\":%s,\"cell\":%s,\"view\":%s,\"placement\":%s}"
+        "{\"name\":%s,\"lib\":%s,\"cell\":%s,\"view_name\":%s,\"placement\":%s}"
         aiInspectJsonString(car(values) budget)
         aiInspectJsonString(cadr(values) budget)
         aiInspectJsonString(caddr(values) budget)

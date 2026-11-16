@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 from skill_test_support import read_skill_source
+from skill_loader_test_support import loader_contract
 
 CAD_ROOT = Path(__file__).resolve().parents[3]
 RUN_PROBE = os.environ.get("RCE_RUN_SKILL_PROBE") == "1"
@@ -48,15 +49,10 @@ def test_lsf_monitor_selector_is_owned_validated_and_shared() -> None:
     assert "?buttonIcon" in base
 
     for flow in ("drc", "lvs", "rce", "lef"):
-        loader = (CAD_ROOT / f"{flow}/skill++/{flow.upper()}.ils").read_text(
-            encoding="utf-8"
-        )
-        assert 'SICO_lsfMonitorRevision()=="20260924.sico.monitor.environment.v3"' in loader
-        assert (
-            'cadBaseHardwareRevision()=="20260820.lsf.monitor.v7"'
-            in loader
-        )
-        protocol_at = loader.index('/skill/SICO_guiProtocol.il")')
-        lsf_at = loader.index('/skill/SICO_lsf.il")')
-        monitor_at = loader.index('/skill/SICO_lsfMonitor.il")')
+        loader = loader_contract(f"{flow}/skill++/{flow.upper()}.ils")
+        assert loader.revision("SICO_lsfMonitorRevision") == "20260924.sico.monitor.environment.v3"
+        assert loader.revision("cadBaseHardwareRevision") == "20260820.lsf.monitor.v7"
+        protocol_at = loader.index("/skill/SICO_guiProtocol.il")
+        lsf_at = loader.index("/skill/SICO_lsf.il")
+        monitor_at = loader.index("/skill/SICO_lsfMonitor.il")
         assert protocol_at < lsf_at < monitor_at

@@ -27,10 +27,18 @@ from .qrc_outputs import qrc_output_publications as qrc_output_publications
 from .qrc_outputs import qrc_output_target, qrc_per_corner_output
 from .qrc_technology import extract_tech_dirs, qrc_technology_options
 from .textutil import clean_lines, q, write_text
+from .finfet_qrc import QRC_PROCESS_DEFAULTS, qrc_finfet_technology
+from .qrc_paths import qrc_path_text
 
 
 def generate_qrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | None = None) -> Path:
-    baseline = QrcDefaults(resolve_defaults(("quantus.options",), defaults, ctx.log_dir))
+    finfet = cfg.flag("extract", "finfet_flow")
+    if finfet and any(char.isspace() for char in str(ctx.run_dir)):
+        raise ValueError("Quantus requires a run directory without whitespace; choose another run.run_dir")
+    baseline = QrcDefaults(
+        resolve_defaults(("quantus.options",), defaults, ctx.log_dir),
+        overrides=QRC_PROCESS_DEFAULTS if finfet else None,
+    )
     rc_type = RC_TYPE_QRC.get(
         cfg.text("extract", "rc_type"),
         cfg.text("extract", "rc_type"),
@@ -57,14 +65,26 @@ def generate_qrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | Non
     if output_type in QRC_FILE_OUTPUT_TYPES:
         qrc_output_type = QRC_FILE_OUTPUT_TYPES[output_type]
         output_target = qrc_output_target(cfg, ctx, output_type)
+        if finfet and qrc_per_corner_output(cfg, output_type) and any(
+            char.isspace() for char in Path(output_target).name
+        ):
+            raise ValueError("Quantus multi-corner output filename must not contain whitespace")
         output_file = f'-file_name "{q(output_target)}"'
     elif cfg.is_view_output:
         target = resolve_view_target(cfg, ctx)
         kind = view_kind(cfg)
-        if kind not in {"smart", "extracted"}:
+        if kind not in {"smart", "extracted", "idspf"}:
             raise ValueError(f"Unsupported Quantus OA view kind: {kind}")
-        output_type = "smartview" if kind == "smart" else "extview"
-        qrc_output_type = "smart_view" if kind == "smart" else "extracted_view"
+        if kind == "idspf" and ctx.input_type not in {"OA", "SCH+GDS"}:
+            raise ValueError(
+                "Interactive DSPF (iDSPF) requires OA or SCH+GDS input with a schematic"
+            )
+        output_type = {"smart": "smartview", "extracted": "extview"}.get(kind, kind)
+        qrc_output_type = {
+            "smart": "smart_view",
+            "extracted": "extracted_view",
+            "idspf": "idspf",
+        }[kind]
         netlist_output = False
         layout_view = qrc_layout_view(cfg, ctx)
         library_definitions = oa_library_definitions(cfg)
@@ -75,6 +95,11 @@ def generate_qrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | Non
                 f'-library_definitions_file "{q(str(library_definitions))}"',
             ]
         )
+        if kind == "idspf":
+            schematic_view = cfg.text(
+                "input", "schematic", "view", default="schematic"
+            ).strip() or "schematic"
+            input_db_extra.append(f'-schematic_view "{q(schematic_view)}"')
         output_db_extra.extend([cdl_map_directory, f'-view_name "{q(target.view)}"'])
         output_db_extra.extend(baseline.mode_options("output_db", qrc_output_type))
     else:
@@ -90,6 +115,7 @@ def generate_qrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | Non
     tech_dirs = extract_tech_dirs(cfg)
     tech_dir = str(tech_dirs[0])
     technology_options = qrc_technology_options(cfg, ctx, tech_dirs, baseline)
+    technology_options.extend(qrc_finfet_technology(cfg, ctx, tech_dirs))
     full_extract, net_extract = qrc_extract_commands(cfg, ctx, rc_type, baseline)
     cell_options = qrc_cell_options(cfg, ctx, Path(tech_dir))
     pin_control = ""
@@ -145,6 +171,10 @@ def generate_qrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | Non
         f'-layer_map_file "{q(ctx.cci_dir)}/{q(ctx.layout_cell)}.gds.map"',
         *input_db_extra,
     ]
+    if finfet:
+        input_db_options.append(
+            f'-device_properties_file "{q(str(Path(ctx.cci_dir) / ctx.layout_cell))}.pdsp"'
+        )
     output_defaults = baseline.options("output_db", "file" if netlist_output else "")
     if output_hierarchy_delimiter:
         output_defaults = [
@@ -175,11 +205,14 @@ def generate_qrc(cfg: RceConfig, ctx: DesignContext, *, defaults: Defaults | Non
         cell_options,
         baseline,
     )
+    if qrc_output_type == "idspf":
+        lines.extend(["", "parasitic_reduction \\", "    -enable_reduction false"])
     for command in (full_extract, net_extract):
         if command:
             lines.append("")
             lines.append(command)
-    return write_text(ctx.log_dir / "qrc.ccl", clean_lines(lines))
+    text = clean_lines(lines)
+    return write_text(ctx.log_dir / "qrc.ccl", qrc_path_text(ctx, text) if finfet else text)
 
 
 RC_TYPE_QRC = {
@@ -200,6 +233,9 @@ RC_TYPE_QRC = {
 QRC_OUTPUT_FORMAT_ALIASES = {
     "spice": "sp",
     "hspice": "sp",
+    "idspfview": "idspf",
+    "i-dspf": "idspf",
+    "interactive_dspf": "idspf",
 }
 
 

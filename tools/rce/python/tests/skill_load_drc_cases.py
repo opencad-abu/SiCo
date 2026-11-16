@@ -1,3 +1,4 @@
+from skill_loader_test_support import loader_contract
 from skill_load_fixtures import (
     CAD_ROOT,
     _procedure_body,
@@ -16,20 +17,19 @@ def test_instance_section_label_and_default_are_correct() -> None:
     assert '?value    "FALSE"' in method
     assert '?defValue "FALSE"' in method
 
-    entry = read_skill_source(CAD_ROOT / "rce/skill++/RCE.ils")
-    assert "isCallable('cadBaseGuiRevision)" in entry
-    assert 'cadBaseGuiRevision()=="20260721.case.sensitive.v2"' in entry
-    assert "isCallable('cadBaseMultiCornerRevision)" in entry
+    entry = loader_contract("rce/skill++/RCE.ils")
+    assert entry.requires("cadBaseGuiRevision")
+    assert entry.revision("cadBaseGuiRevision") == "20260721.case.sensitive.v2"
+    assert entry.requires("cadBaseMultiCornerRevision")
     assert (
-        'cadBaseMultiCornerRevision()=="20260803.multi.corner.align.v4"'
-        in entry
+        entry.revision("cadBaseMultiCornerRevision") == "20260803.multi.corner.align.v4"
     )
 
 
 def test_lvs_rule_environment_is_split_between_lvs_and_rce() -> None:
     env_options = read_skill_source(CAD_ROOT / "common/skill/SICO_envOptions.il")
     base = read_skill_source(CAD_ROOT / "common/skill++/BASEGUI.ils")
-    lvs_entry = read_skill_source(CAD_ROOT / "lvs/skill++/LVS.ils")
+    lvs_entry = loader_contract("lvs/skill++/LVS.ils")
     lvs_config = read_skill_source(CAD_ROOT / "lvs/skill++/LVSCFG.ils")
     lvs_gui = read_skill_source(CAD_ROOT / "lvs/skill++/LVSGUI.ils")
     lvs_callback = read_skill_source(CAD_ROOT / "lvs/skill++/LVSCB.ils")
@@ -57,7 +57,7 @@ def test_lvs_rule_environment_is_split_between_lvs_and_rce() -> None:
     assert "PRO_LVS_FILE" not in "".join(
         (env_options, base, lvs_config, lvs_callback, rce_config, rce_callback)
     )
-    assert 'cadBaseGuiRevision()=="20260721.case.sensitive.v2"' in lvs_entry
+    assert lvs_entry.revision("cadBaseGuiRevision") == "20260721.case.sensitive.v2"
 
 
 def test_drc_rule_environment_uses_file_name() -> None:
@@ -78,7 +78,7 @@ def test_drc_rule_select_is_wired_to_gui_and_backend() -> None:
     gui = read_skill_source(CAD_ROOT / "drc/skill++/DRCGUI.ils")
     callback = read_skill_source(CAD_ROOT / "drc/skill++/DRCCB.ils")
     selector = read_skill_source(CAD_ROOT / "drc/skill++/DRCRULESEL.ils")
-    entry = read_skill_source(CAD_ROOT / "drc/skill++/DRC.ils")
+    entry = loader_contract("drc/skill++/DRC.ils")
     protocol = read_skill_source(CAD_ROOT / "common/skill/SICO_guiProtocol.il")
     generator = (CAD_ROOT / "drc/python/drcpy/generator.py").read_text(
         encoding="utf-8"
@@ -91,7 +91,7 @@ def test_drc_rule_select_is_wired_to_gui_and_backend() -> None:
     assert 'SICO_tomlWriteBool(outFile "rule_select_enable"' in callback
     assert 'SICO_tomlWriteStringList(outFile "rule_select_groups"' in callback
     assert 'SICO_tomlWriteStringList(outFile "rule_select_checks"' in callback
-    assert 'strcat(drcSkillRoot "/skill++/DRCRULESEL.ils")' in entry
+    assert entry.contains_source("/skill++/DRCRULESEL.ils")
     assert '" rule-select-gui "' in selector
     assert 'SICO_tempPath("drc-rule-select-inputXXXX")' in selector
     assert 'SICO_tempPath("drc-rule-select-resultXXXX")' in selector
@@ -100,7 +100,7 @@ def test_drc_rule_select_is_wired_to_gui_and_backend() -> None:
     assert "SICO_guiPythonLaunchCommand" in selector
     assert "exec env -u PYTHONHOME -u PYTHONPATH" in protocol
     assert "-u QT_QPA_PLATFORM_PLUGIN_PATH" in protocol
-    assert 'strcat(drcCommonRoot "/skill/SICO_guiProtocol.il")' in entry
+    assert entry.contains_source("/skill/SICO_guiProtocol.il")
     assert "--parent-pid" in selector
     assert "drcRuleSelectRequestToken" in selector
     assert "hiIsFormDisplayed(form)" in selector
@@ -111,8 +111,8 @@ def test_drc_rule_select_is_wired_to_gui_and_backend() -> None:
 def test_drc_and_lvs_advanced_options_are_grouped_under_disclosures() -> None:
     drc_gui = read_skill_source(CAD_ROOT / "drc/skill++/DRCGUI.ils")
     lvs_gui = read_skill_source(CAD_ROOT / "lvs/skill++/LVSGUI.ils")
-    drc_entry = read_skill_source(CAD_ROOT / "drc/skill++/DRC.ils")
-    lvs_entry = read_skill_source(CAD_ROOT / "lvs/skill++/LVS.ils")
+    drc_entry = loader_contract("drc/skill++/DRC.ils")
+    lvs_entry = loader_contract("lvs/skill++/LVS.ils")
 
     assert (
         "'drcMoreContents list(inst->drcRuleSelect inst->customSvrf)" in drc_gui
@@ -126,12 +126,10 @@ def test_drc_and_lvs_advanced_options_are_grouped_under_disclosures() -> None:
     assert '?labelText   "More LVS Options"' in lvs_gui
     assert "?onFields    '(lvsMoreContents)" in lvs_gui
     assert (
-        'drcAdvancedOptionsGuiRevision()=="20260817.advanced.options.v1"'
-        in drc_entry
+        drc_entry.revision("drcAdvancedOptionsGuiRevision") == "20260817.advanced.options.v1"
     )
     assert (
-        'lvsAdvancedOptionsGuiRevision()=="20260817.advanced.options.v1"'
-        in lvs_entry
+        lvs_entry.revision("lvsAdvancedOptionsGuiRevision") == "20260817.advanced.options.v1"
     )
 
 
@@ -150,9 +148,9 @@ def test_drc_lvs_and_rce_show_rule_file_label() -> None:
         assert '?prompt   "Rule File:"' in body
         assert "Runset" not in body.split("?prompt", 1)[1].split("?items", 1)[0]
 
-    assert f'cadBaseRuleFileLabelRevision()=="{revision}"' in read_skill_source(CAD_ROOT / "lvs/skill++/LVS.ils")
-    assert f'cadBaseRuleFileLabelRevision()=="{revision}"' in read_skill_source(CAD_ROOT / "rce/skill++/RCE.ils")
-    assert f'drcRuleFileGuiRevision()=="{revision}"' in read_skill_source(CAD_ROOT / "drc/skill++/DRC.ils")
+    assert loader_contract("lvs/skill++/LVS.ils").revision("cadBaseRuleFileLabelRevision") == revision
+    assert loader_contract("rce/skill++/RCE.ils").revision("cadBaseRuleFileLabelRevision") == revision
+    assert loader_contract("drc/skill++/DRC.ils").revision("drcRuleFileGuiRevision") == revision
 
 
 def test_drc_and_lvs_run_modes_and_rve_completion_are_wired() -> None:
@@ -195,8 +193,8 @@ def test_drc_and_lvs_run_modes_and_rve_completion_are_wired() -> None:
     lvs_post = _procedure_body(lvs_run, "lvsIpcPostFunc")
     assert "lvsShowCompletionSummary(config svdb exitStatus)" in lvs_post
     assert "lvsPromptOpenRve(config svdb)" not in lvs_post
-    assert "LVS Status: CORRECT :-)" in lvs_run
-    assert "LVS Status: INCORRECT :-(" in lvs_run
+    assert "LVS Status: CORRECT ^_^" in lvs_run
+    assert "LVS Status: INCORRECT TAT" in lvs_run
     assert 'strcat(runDir "/log/callvs.log")' in lvs_run
     assert 'rexMatchp("LVS completed\\\\. CORRECT\\\\." line)' in lvs_run
     assert '?buttons       \'("Open Calibre RVE" "Close")' in lvs_run
@@ -204,8 +202,8 @@ def test_drc_and_lvs_run_modes_and_rve_completion_are_wired() -> None:
     assert 'strcat("Open Calibre RVE?\\n\\ncalibre -rve " svdb)' in lvs_run
     assert 'return(lvsOpenRve(config svdb))' in lvs_run
 
-    lvs_loader = read_skill_source(CAD_ROOT / "lvs/skill++/LVS.ils")
-    loader_guard = lvs_loader.split("procedure(lvsLoaderRevision", 1)[0]
-    assert 'lvsRveLauncherRevision()=="20260828.prompt.return.v1"' in loader_guard
-    assert "isCallable('lvsOpenRve)" in loader_guard
-    assert "isCallable('lvsShowCompletionSummary)" in loader_guard
+    lvs_loader = loader_contract("lvs/skill++/LVS.ils")
+    loader_guard = lvs_loader
+    assert loader_guard.revision("lvsRveLauncherRevision") == "20260828.prompt.return.v1"
+    assert loader_guard.requires("lvsOpenRve")
+    assert loader_guard.requires("lvsShowCompletionSummary")

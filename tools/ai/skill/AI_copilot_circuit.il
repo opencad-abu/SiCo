@@ -224,7 +224,7 @@ procedure(aiCopilotDispatch(asxSource asxFunction asxEnvelope @optional asxCid)
       list("aiCopilotListLibraries" 'aiCopilotListLibraries 1 1)
       list("aiCopilotListCells" 'aiCopilotListCells 1 1)
       list("aiCopilotListViews" 'aiCopilotListViews 2 3)
-      list("aiCopilotOpenTarget" 'aiCopilotOpenTarget 4 5)
+      list("aiCopilotOpenTarget" 'aiCopilotOpenTarget 4 6)
       list("aiCopilotInspectSelected" 'aiCopilotInspectSelected 3 3)
       list("aiCopilotHighlightObject" 'aiCopilotHighlightObject 7 8)
       list("aiCopilotListObjects" 'aiCopilotListObjects 5 5)
@@ -251,7 +251,7 @@ procedure(aiCopilotDispatch(asxSource asxFunction asxEnvelope @optional asxCid)
     let(((aiCopilotSource asxSource))
       when(and(boundp('sicoNativeIdentity) sicoNativeIdentity)
         aiCopilotRetainedCheck(asxFunction asxValues))
-      when(member(asxFunction list("aiCrInspectTarget" "aiCreatePrepare" "aiTemplateSymbolPreview"
+      when(member(asxFunction list("aiCreatePrepare" "aiTemplateSymbolPreview"
           "aiLibraryPrepare" "aiCdfUpdatePrepare"))
         asxResult=aiCopilotTaskBindingReply(asxSource
           if(asxFunction=="aiCdfUpdatePrepare" cadr(asxValues) car(asxValues)))
@@ -263,7 +263,7 @@ procedure(aiCopilotDispatch(asxSource asxFunction asxEnvelope @optional asxCid)
           return(strcat("{\"valid\":true,\"circuit\":" aiCopilotTaskBindingReply(asxSource asxRef) "}"))))
       when(and(asxFunction=="aiProjectClaim" aiProjectClaims[cadr(asxValues)])
         error("Existing claim cannot be rebound; query original receipt"))
-      when(member(asxFunction list("aiCrInspectTarget" "aiCreatePrepare" "aiTemplateSymbolPreview" "aiLibraryPrepare")) aiCopilotTaskCheck(car(asxValues)))
+      when(member(asxFunction list("aiCreatePrepare" "aiTemplateSymbolPreview" "aiLibraryPrepare")) aiCopilotTaskCheck(car(asxValues)))
       when(and(asxFunction=="aiLibraryPrepare" nth(4 asxValues)!=simplifyFilename(getWorkingDir()))
         error("Library workspace differs from captured project"))
       when(asxFunction=="aiSimStop"
@@ -304,7 +304,7 @@ procedure(aiCopilotSynchronousCaptureP(acscFunction)
     "aiCopilotInspectSelected" "aiCopilotHighlightObject" "aiCopilotListObjects"
     "aiCopilotListObjectWindows" "aiCopilotListWindows")))
 
-procedure(aiCopilotCaptureRevision() "20261021.ai.circuit.capture.v7")
+procedure(aiCopilotCaptureRevision() "20261101.ai.circuit.capture.v8")
 
 ; Return (dispatch-result output output-truncated error). The dispatch result
 ; remains the normal errset list so callers can preserve the existing protocol.

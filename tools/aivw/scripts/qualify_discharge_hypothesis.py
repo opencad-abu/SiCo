@@ -104,7 +104,7 @@ def qualify(recipe_path):
                 'plugins/discharge_state.py', 'plugins/sampled_state_sv.py', 'executors/trajectory_xcelium.py',
                 'executors/trajectory_correlation.py', 'waveform_metrics.py')]]}, 'holdout_evaluated': False}
     digest = stable_digest(request)
-    run = allocate_split_run(resolve_launch_paths(), Path('/path/to/xh/amsVerify/data/ams').resolve(),
+    run = allocate_split_run(resolve_launch_paths(), Path('/workarea/xh/amsVerify/data/ams').resolve(),
         library=plan['target']['library'], cell=plan['target']['cell'], view='discharge_hypothesis',
         kind='discharge-hypothesis', request_digest=digest)
     write_json_once(run.control_root/'request.json', request)

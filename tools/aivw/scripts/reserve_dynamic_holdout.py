@@ -66,7 +66,7 @@ def reserve(plan_path, policy_path, *, sequences=False):
                "policy_sha256": sha256_file(policy_path), "candidate": "NOT_FROZEN",
                "evaluator_isolation": "NOT_QUALIFIED"}
     digest = stable_digest(request)
-    paths = allocate_split_run(resolve_launch_paths(), Path("/path/to/xh/amsVerify/data/ams").resolve(),
+    paths = allocate_split_run(resolve_launch_paths(), Path("/workarea/xh/amsVerify/data/ams").resolve(),
         library=plan["target"]["library"], cell=plan["target"]["cell"], view="dynamic_evaluator",
         kind="dynamic-holdout-reservation", request_digest=digest)
     commitment = reserve_holdout(paths.payload_root/"private", public_cases=public, hidden_cases=hidden,

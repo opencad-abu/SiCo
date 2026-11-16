@@ -14,7 +14,7 @@
 <a class="skip" href="#main">跳到正文</a>
 <header class="topbar">
   <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
-  <span class="edition">使用手册 / 2026.09</span>
+  <span class="edition">使用手册 / 2026.10</span>
   <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
 </header>
 <noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
@@ -23,6 +23,8 @@
 <p class="rail-label">SICO DOCUMENTATION</p>
 <a href="index.html">开始阅读</a>
 <p class="nav-group">开始使用</p>
+<a href="sico-gui.html">SiCo · 客户端界面</a>
+<a href="sico-workspace.html">SiCo · 工作区页面</a>
 <a href="installation.html">01 · 安装</a>
 <a href="environment.html">02 · 环境变量</a>
 <a href="virtuoso.html">03 · Virtuoso 集成</a>
@@ -35,6 +37,9 @@
 <a href="utilities.html">LEF / GDS / CDL</a>
 <a href="lsf.html">LSF · 运行与资源</a>
 <p class="nav-group">参考附录</p>
+<a href="appendix-pdk-data-standard.html">PDK 数据标准</a>
+<a href="appendix-circuit-template-standard.html">电路模板标准</a>
+<a href="appendix-symbol-template-standard.html">Symbol 模板标准</a>
 <a href="environment-internal.html">环境接口附录</a>
 <div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
 </nav>
@@ -43,6 +48,26 @@
 <p class="eyebrow">04 / CAD FLOWS</p>
 <h1>配置流程的共同方法</h1>
 <p class="lead">环境变量提供表单初值，Profile 保存可复用的业务设置，运行 TOML 记录当次执行输入。先分清这三层，再配置具体流程。</p>
+<h2 id="gui">先看懂 flow 表单</h2>
+<p>DRC、LVS、RCE 和 LEF 的窗口结构相同：上方用 <strong>Config File</strong> 和 <strong>Load / Save / Save As…</strong> 管理 Profile，中间按 <strong>Input</strong>、<strong>Options</strong>、<strong>Output</strong>、<strong>Tool</strong>、<strong>Hardware</strong> 分区，底部固定为运行按钮。每个流程页都附有实际界面截图和逐项说明。</p>
+<div class="ui-map" aria-label="CAD flow 表单的公共布局">
+  <div><b>01 / PROFILE</b>先载入团队 Profile，再按本次设计修改库、cell、view 和路径。</div>
+  <div><b>02 / INPUT</b>确认单 cell 或多 cell、输入组合、源/版图身份以及展开的 More Input Options。</div>
+  <div><b>03 / OPTIONS</b>选择规则文件、LVS/RCE 选项、工艺 corner、抽取类型和过滤条件。</div>
+  <div><b>04 / OUTPUT</b>选择 Project / Current / Customize Directory；确认最终显示的绝对路径。</div>
+  <div><b>05 / TOOL + HARDWARE</b>核对引擎、Current Host / LSF Farm、queue、host、CPU 和并行 cell。</div>
+  <div><b>06 / BUTTONS</b>Run+Close 运行后关闭；Run 保留窗口；Report 打开已有结果；Close 仅关闭。</div>
+</div>
+<div class="table-wrap"><table><thead><tr><th>按钮</th><th>行为</th><th>什么时候用</th></tr></thead><tbody>
+<tr><td><strong>Load</strong></td><td>读取 Config File 指向的 Profile 并回填表单。</td><td>复用团队或项目设置。加载后仍要核对本次设计身份和输出目录。</td></tr>
+<tr><td><strong>Save</strong></td><td>覆盖当前 Config File 中的 Profile。</td><td>只修改已有 Profile 的选项时使用；确认不会影响其他人的共享副本。</td></tr>
+<tr><td><strong>Save As…</strong></td><td>把当前表单保存为新的 Profile 文件。</td><td>建立项目专用或实验性设置；运行 TOML 不能作为 Profile 加载。</td></tr>
+<tr><td><strong>Run+Close</strong></td><td>生成运行配置并启动任务，然后关闭表单。</td><td>设置已核对、后续不需要继续调整时使用。</td></tr>
+<tr><td><strong>Run</strong></td><td>启动任务但保留表单。</td><td>需要观察运行状态、修改下一组输入或连续提交时使用。</td></tr>
+<tr><td><strong>Report</strong></td><td>打开最近运行的结果或报告入口。</td><td>DRC 打开 RVE，LVS 打开比较结果；具体路径见各流程页。</td></tr>
+<tr><td><strong>Close</strong></td><td>关闭表单，不启动任务。</td><td>放弃本次修改或结束配置。</td></tr>
+</tbody></table></div>
+<div class="notice"><strong>Profile、运行 TOML 和环境初值不是一回事。</strong> Profile 保存业务选项；运行 TOML 记录本次执行；环境变量只提供表单初值。表单中的最终值才是本次运行输入，不能用环境变量的预期值替代界面核对。</div>
 <h2 id="configuration">配置在哪里生效</h2>
 <div class="table-wrap"><table><thead><tr><th>配置位置</th><th>负责什么</th><th>修改后何时生效</th></tr></thead><tbody>
 <tr><td>shell / 项目 modulefile</td><td>工具路径、规则候选、工艺目录、表单初值</td><td>重新启动使用这些环境的 Virtuoso / SiCo 进程。</td></tr>
@@ -88,9 +113,9 @@ flow = "RCE"</code></pre></div>
 <h2 id="next">选择具体流程</h2>
 <p><a href="drc.html">DRC →</a>　<a href="lvs.html">LVS →</a>　<a href="rce.html">RCE →</a>　<a href="mts.html">MTS →</a>　<a href="utilities.html">LEF 与导出工具 →</a></p>
 
-<footer class="page-footer"><span>内容基线 ed47e32e · 核对 2026-09-28</span><a href="drc.html">DRC 版图规则检查 →</a></footer>
+<footer class="page-footer"><span>内容基线 ed47e32e · 界面核对 2026-10-24</span><a href="drc.html">DRC 版图规则检查 →</a></footer>
 </main>
-<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#configuration">配置在哪里生效</a><a href="#project-settings">配置工程与规则候选</a><a href="#profile">保存与复用 Profile</a><a href="#outputs">输出目录与执行主机</a><a href="#defaults">CAD 统一维护的工具默认项</a><a href="#next">选择具体流程</a></aside>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#gui">先看懂 flow 表单</a><a href="#configuration">配置在哪里生效</a><a href="#project-settings">配置工程与规则候选</a><a href="#profile">保存与复用 Profile</a><a href="#outputs">输出目录与执行主机</a><a href="#defaults">CAD 统一维护的工具默认项</a><a href="#next">选择具体流程</a></aside>
 </div></div>
 </body>
 </html>

@@ -23,8 +23,9 @@ from PyQt5.QtGui import (
 )
 
 from .glyphs import hammer_wrench_image, rewind_image
-from .presentation import (event_clock, markdown_document, secondary_point_size,
-                           style_tables, transcript_link_format)
+from .presentation import (event_clock, insert_cad_link_text, markdown_document,
+                           secondary_point_size, style_tables,
+                           transcript_link_format)
 from .theme import ACCENT, active_palette
 from .tool_results import result_html
 
@@ -378,19 +379,23 @@ class TranscriptRenderer:
             stamp.setFontWeight(QFont.Normal)
             cell_cursor.insertText(" " + clock, stamp)
         cell_cursor.insertBlock(cell_block, QTextCharFormat())
-        if user or role in {"notice", "result", "audit", "reconcile"}:
-            cell_cursor.insertText(message["text"])
-            if user and not read_only and message.get("turn_id") and message.get("rewindable"):
+        if user:
+            insert_cad_link_text(cell_cursor, message["text"])
+            if not read_only and message.get("turn_id") and message.get("rewindable"):
                 self._insert_rewind(cell_cursor, message)
+        elif role in {"notice", "result", "audit", "reconcile"}:
+            cell_cursor.insertText(message["text"])
             if role == "reconcile":
                 cell_cursor.insertBlock()
-                cell_cursor.insertText("核对记录（只读）" if read_only or not message["result"].get("active")
-                                       else "请使用消息区下方的“待核对”按钮；查询后根据证据确认结论。")
+                cell_cursor.insertText(
+                    "核对记录（只读）" if read_only or not message["result"].get("active")
+                    else "请使用消息区下方的“待核对”按钮；查询后根据证据确认结论。")
             if role == "audit" and message["result"].get("pending"):
                 cell_cursor.insertBlock()
-                cell_cursor.insertHtml("<a href='" + escape(message["result"]["url"], quote=True)
-                                       + "'>" + ("查看问题" if read_only else "答复这些问题")
-                                       + "</a>")
+                cell_cursor.insertHtml(
+                    "<a href='" + escape(message["result"]["url"], quote=True)
+                    + "'>" + ("查看问题" if read_only else "答复这些问题")
+                    + "</a>")
         elif role == "context":
             cell_cursor.insertHtml(result_html(message["result"], context=True))
         elif role == "report":

@@ -3,7 +3,7 @@
 ;------------------------------------------------------------------------------
 
 unless(and(boundp('sicoProfileVersion)
-             sicoProfileVersion=="20261022.profile.environment.v6")
+             sicoProfileVersion=="20261024.profile.environment.v7")
 
 unless(boundp('cadProfileAdapters)
   cadProfileAdapters=makeTable("cadProfileAdapters" nil))
@@ -93,17 +93,7 @@ procedure(SICO_profileDefaultPath(flow)
 )
 
 procedure(SICO_profilePythonExe(flow)
-  let((key pythonRoot)
-    key=SICO_profileFlowKey(flow)
-    or(SICO_envValue(strcat(key "_PYTHON"))
-       SICO_installedPython()
-       progn(
-         pythonRoot=SICO_envValue("SICO_PYTHON_ROOT")
-         or(SICO_envValue("SICO_PYTHON")
-            when(pythonRoot
-              simplifyFilename(strcat(pythonRoot "/bin/python3") t))
-            "python3")))
-  )
+  SICO_installedPython()
 )
 
 procedure(SICO_profilePythonEntry()
@@ -484,5 +474,5 @@ procedure(SICO_profileRevision()
   "20261022.profile.environment.v6"
 )
 
-sicoProfileVersion="20261022.profile.environment.v6"
+sicoProfileVersion="20261024.profile.environment.v7"
 )

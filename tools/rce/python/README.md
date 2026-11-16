@@ -4,6 +4,9 @@ This backend replaces the old csh orchestration with a TOML-driven Python flow.
 SKILL writes the TOML file; Python normalizes it, generates the tool command
 files, and runs the selected stages serially.
 
+Planar and FinFET StarRC/Quantus flows share this entry point. Set
+RCE_FINFET_FLOW=0/1 (default 0); see [process inputs and FinFET setup](../../../docs/SICO_RCE_FINFET.md).
+
 ## Path Setup
 
 See [the repository environment guide](../../../docs/ENVIRONMENT.md) for the complete
@@ -29,14 +32,12 @@ The Bash environment example infers `CAD_HOME` from its own installed path when
 it is unset. The csh example requires `CAD_HOME` to be set before it is sourced.
 Both examples preserve caller-provided project and PDK path values.
 
-The production RCE runtime inherits `CAD_PYTHON`. Install `tomli` for RCE TOML flow
-configuration, plus PyQt5 and `pysqlite3` for the DSPF Analyzer. DSPF indexing prefers
-`pysqlite3.dbapi2` and falls back to the standard-library `sqlite3` module when
-the external package is unavailable. The selection order is `RCE_PYTHON`, then
-`CAD_PYTHON`, `CAD_PYTHON_ROOT/bin/python3`, and `python3`; `RCE_ANALYZER_PYTHON` can replace that
-selection only for the DSPF GUI. The executable wrapper uses an `env python3`
-shebang for direct shell use, while Virtuoso always passes the selected interpreter
-explicitly.
+The production RCE runtime uses `$SICO_HOME/runtime/python/bin/python3`. Install
+`tomli` for RCE TOML flow configuration, plus PyQt5 and `pysqlite3` for the DSPF
+Analyzer. DSPF indexing prefers `pysqlite3.dbapi2` and falls back to the
+standard-library `sqlite3` module when the external package is unavailable.
+Interpreter override variables are not read. The executable wrapper re-executes
+through the installation-owned interpreter for direct shell use.
 
 After environment expansion, relative paths use these bases:
 
@@ -54,6 +55,21 @@ After environment expansion, relative paths use these bases:
   directory. A `tech_dir` that already ends in the selected corner remains
   compatible. Explicit `extract.starrc` input-file overrides stay relative to
   the TOML file.
+
+## Optional File Inputs
+
+The following environment-selected file inputs are optional: `HCELL_FILE`,
+`CDL_HEADER_FILE`, `RCE_CALIBRE_VIEW_CELLMAP`,
+`RCE_STARRC_OA_DEVICE_MAP`, `RCE_STARRC_OA_LAYER_MAP`,
+`RCE_GDS_OBJECT_MAP`, `RCE_GDS_PROPERTY_MAP`,
+`RCE_GDS_USER_SKILL_FILE`, `RCE_LVS_EXTRA_FILE`,
+`RCE_STARRC_REFERENCE_FILE`, `RCE_QRC_COMMAND_FILE`,
+`RCE_QRC_LAYER_SETUP_FILE`, `RCE_QRC_LPE_CONFILE`, and
+`RCE_QUANTUS_BLOCK_CELL_FILE`. When a value is unset, empty, unresolvable,
+not a regular file, or points to a directory, RCE treats it as omitted and
+does not fail. When present, RCE uses it in the corresponding command.
+Required technology, model, and process-corner files remain validated
+separately.
 
 ## CLI
 
@@ -284,9 +300,11 @@ using `lvs.virtual_connect` remains supported; without either representation,
 virtual connect remains disabled. If Name is enabled,
 `lvs.virtual_connect_names` must contain at least one pattern.
 
-RCE's LVS stage always emits `MASK SVDB DIRECTORY "..." QUERY CCI`, without
-`PINLOC`. The optional `lvs.svdb_query` selections, including `PINLOC`, apply
-only to the standalone LVS flow; its default remains `QUERY CCI PINLOC`.
+RCE exposes the same `lvs.svdb_query` choices as standalone LVS under
+`More LVS Options`, with `CCI` selected by default. The generated
+`MASK SVDB DIRECTORY "..." QUERY ...` clause follows the user's selection;
+clearing every choice emits a bare `QUERY`. Requests without this option retain
+the RCE compatibility default `CCI`.
 
 CDL and GDS command-file rendering is implemented by the shared
 `common/python/cadstage` package. The `rcepy.gen_cdl` and `rcepy.gen_gds`
@@ -474,15 +492,18 @@ Each generator converts the normalized input to its native controls:
 | Include/Exclude Nets | run-local nets file plus `extract -selection` | run-local `NETS_FILE` | `PEX EXTRACT INCLUDE/EXCLUDE` plus `-select`/`-cselect` where required |
 | Block Cells | configured foundry block-cell file plus optional run-local merged file passed to `extraction_setup`; blocking type from `quantus.options` (shipped default `white`) | run-local `SKIP_CELLS_FILE` | merged hcell/xcell files passed with `-hcell` and `-xcell` |
 
-For Quantus QRC, `RCE_QUANTUS_BLOCK_CELL_FILE` selects the foundry blocking-cell
-file. An absolute value is used directly; a relative value is resolved below
-the effective process-corner directory. A configured missing file fails before
-Quantus starts. When the variable is unset or empty, RCE makes no assumption
-about the foundry filename and only applies user Block Cells. Without user Block
-Cells, the CCL refers to the configured foundry file directly. With user Block
-Cells, RCE writes `log/cells.merged`, preserving the foundry contents and
+For Quantus QRC, `RCE_QUANTUS_BLOCK_CELL_FILE` optionally selects a foundry
+blocking-cell file. An absolute value is used directly; a relative value is
+resolved below the effective process-corner directory. When the selected file
+does not exist, RCE omits the blocking-cell file option without failing or
+falling back to a guessed filename. When the variable is unset or empty, RCE
+also only applies user Block Cells; FinFET mode additionally uses a corner-local
+`hcell_qci` when present and omits it when absent. Without user Block Cells, the
+CCL refers to the configured foundry file directly when it exists. With user
+Block Cells, RCE writes `log/cells.merged`, preserving the foundry contents and
 appending user cells that are not already covered by a foundry exact or `*`
-wildcard entry. Quantus also recognizes its own fixed-name
+wildcard entry.
+Quantus also recognizes its own fixed-name
 `blocking_cells_file`; that native list remains cumulative and is not copied or
 duplicated by RCE. RCE does not emit the separate global `graybox -type layout`
 macro-cell mode.
@@ -796,10 +817,10 @@ top_cell_source = "schematic"
 name_source = "schematic"
 
 [extract.view]
-kind = "smart"               # QRC: smart or extracted
+kind = "idspf"               # QRC: idspf or extracted
 library = "design_lib"       # library and cell are an optional pair
 cell = "top"
-name = "av_extracted"
+name = "idspf"
 ```
 
 `extract.view.library` and `extract.view.cell` must either both be set or both
@@ -808,36 +829,38 @@ The engine-specific defaults and writers are:
 
 | Engine | `extract.view.kind` | Default view name | Native writer |
 | --- | --- | --- | --- |
-| QRC/Quantus | `smart` (default) or `extracted` | `av_extracted` | `output_db -type smart_view` or `extracted_view` |
+| QRC/Quantus | `idspf` (default) or `extracted` | `idspf` / `av_extracted` | `output_db -type idspf` or `extracted_view` |
 | Calibre XRC | `calibre` | `calibre` | `PEX NETLIST ... CALIBREVIEW SOURCENAMES/LAYOUTNAMES`, followed by Calibre Interactive import |
 | StarRC | `oa` | `starrc` | `NETLIST_FORMAT: OA` and the StarRC OA writer commands |
 
 The Virtuoso form shows these settings below `Output Type` when `view` is in
-`RCE_OUTPUT_CHOICES`. `Native View` selects the QRC variant; XRC and StarRC each
-have one variant. `View Name` is editable and `View Target` shows the resolved
-`library/cell/view`. QRC shows no mapping selector, XRC shows `Calibre Cellmap
-File`, and StarRC shows both `Device Mapping File` and `Layer Mapping File`.
+`RCE_OUTPUT_CHOICES`. QRC offers `Interactive DSPF (iDSPF)` and `Extracted View`;
+Smart View is hidden from the GUI but remains readable as a legacy backend
+configuration. XRC and StarRC each expose one variant. `View Name` is editable
+and `View Target` shows the resolved `library/cell/view`. QRC shows no mapping
+selector, XRC shows `Calibre Cellmap File`, and StarRC shows both
+`Device Mapping File` and `Layer Mapping File`.
 `Create Parasitic Netlist View` applies only to file output and is not part of
 this flow.
 
 Native view target selection is separate from `Top Cell Name`. The GUI resolves
 an OA-backed target from the input type and naming source:
 
-| Input type | QRC Smart/Extracted View target | XRC/StarRC with Schematic names | XRC/StarRC with Layout names |
+| Input type | QRC iDSPF/Extracted View target | XRC/StarRC with Schematic names | XRC/StarRC with Layout names |
 | --- | --- | --- | --- |
 | `OA` | layout OA cell | schematic OA cell | layout OA cell |
 | `SCH+GDS` | schematic OA cell | schematic OA cell | unavailable |
 | `CDL+LAY` | layout OA cell | unavailable | layout OA cell |
 | `CDL+GDS`, `SVDB`, `CCI` | unavailable | unavailable | unavailable |
 
-QRC Smart/Extracted View always uses the schematic output namespace; changing
+QRC iDSPF/Extracted View always uses the schematic output namespace; changing
 `extract.name_source` does not switch it to layout names. Calibre View and
 StarRC honor `extract.name_source` and move the implicit target to the matching
 schematic or layout OA cell. The GUI enables a run only when that target cell
 exists. After a successful process it checks that the requested view was
 created or updated.
 
-### Quantus Smart and Extracted Views
+### Quantus iDSPF and Extracted Views
 
 QRC creates both view variants directly during `output_db` and requires an
 accessible `run.cds_lib`. With `OA` or `CDL+LAY` input, the target is
@@ -851,14 +874,22 @@ that top view to exist. Override it with `extract.view.layout_view` when the
 project uses a different layout-view name. `CDL+GDS`, `SVDB`, and `CCI` have no
 implicit QRC OA target.
 
-Smart View is the canonical default and uses Quantus `smart_view` output with
-the `presistor` component mapping. Both variants default the OA view name to
-`av_extracted`. Extracted View uses `extracted_view`, maps
-`pcapacitor.c` and `presistor.r`, and enables the cellview compatibility check.
-In either case no `netlist.output_path` file is expected.
+Interactive DSPF (iDSPF) is the canonical QRC view default. RCE generates
+`output_db -type idspf -subtype extended`, disables parasitic reduction with
+`parasitic_reduction -enable_reduction false`, and passes
+`input_db -schematic_view` so Quantus can generate the pin-order and CDL-map
+inputs. It is available only for OA and SCH+GDS inputs that carry an OA
+schematic; other input types expose Extracted View only. The default OA view
+name is `idspf`; no `netlist.output_path` file is expected.
 
-See [examples/qrc_smart_view.toml](examples/qrc_smart_view.toml) for a complete
-OA-input Smart View configuration.
+Extracted View remains available and uses `extracted_view`, maps
+`pcapacitor.c` and `presistor.r`, and enables the cellview compatibility check.
+Smart View remains a legacy backend alias for existing TOML, but is no longer
+offered by the GUI and should not be used for new configurations.
+
+See the Quantus 26.10 `Interactive_DSPF_Output.html` manual and
+[examples/qrc_idspf_view.toml](examples/qrc_idspf_view.toml) for the complete
+iDSPF flow.
 
 For compatibility, existing QRC configurations may retain
 `output_type = "smartview"` or `output_type = "extview"`; these select Smart

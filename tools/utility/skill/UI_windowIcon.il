@@ -1,5 +1,5 @@
 unless(and(boundp('sicoWindowIconVersion)
-             sicoWindowIconVersion=="20260921.sico.flow.icon.v1")
+             sicoWindowIconVersion=="20261024.sico.flow.icon.v2")
 
 unless(boundp('cadWindowIconCache)
   cadWindowIconCache=nil
@@ -14,14 +14,14 @@ unless(boundp('cadWindowIconWarnedPath)
 )
 
 procedure(SICO_windowIconRevision()
-  "20260921.sico.flow.icon.v1"
+  "20261024.sico.flow.icon.v2"
 )
 
 procedure(SICO_windowIconBrand()
   cond(
     (isCallable('SICO_logo) SICO_logo())
-    (isCallable('witMenuLogo) witMenuLogo())
-    (t "SiCo")
+    (isCallable('sicoMenuLogo) sicoMenuLogo())
+    (t "Silicon Copilot")
   )
 )
 
@@ -71,5 +71,5 @@ procedure(SICO_setWindowIcon(window)
   )
 )
 
-sicoWindowIconVersion="20260921.sico.flow.icon.v1"
+sicoWindowIconVersion="20261024.sico.flow.icon.v2"
 )

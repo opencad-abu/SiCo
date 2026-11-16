@@ -17,9 +17,16 @@ from .jsonio import Writer, atomic, fail, mapping, read, relative, sha
 MAP_FIELDS = {"package.json": ("libraries", "dependencies", "files"),
               "sources.json": ("items",), "category.json": ("items",),
               "device.json": ("items",), "file.json": ("items",),
-              "model.json": ("configs", "corners", "cards")}
-SUFFIX_FIELDS = {"cdf.json": ("parameters", "rules"), "symbol.json": ("terminals",),
-                 "simulation.json": ("interfaces",), "properties.json": ("items",), "iv.json": ("runs",)}
+              "model.json": ("configs", "corners", "cards"),
+              "layout.json": ("layers", "vias", "layer_groups")}
+SUFFIX_FIELDS = {
+    "cdf.json": ("parameters", "rules"),
+    "symbol.json": ("terminals",),
+    "simulation.json": ("interfaces",),
+    "properties.json": ("items",),
+    "iv.json": ("runs",),
+}
+SUFFIX_FIELDS["layout.json"] = ("terminals",)
 
 
 @contextmanager
@@ -37,6 +44,10 @@ def logical(root, name, expected=None, *, logical_name=None):
     for field in (*MAP_FIELDS.get(name, SUFFIX_FIELDS.get(Path(name).name, ())), "evidence"):
         if field in value:
             value[field] = mapping(root, value[field])
+    if name == "layout.json" and isinstance(value.get("routing"), dict):
+        spacings = value["routing"].get("spacings")
+        if isinstance(spacings, dict):
+            value["routing"]["spacings"] = mapping(root, spacings)
     if name == "package.json":
         acceptance = (value.get("publication") or {}).get("acceptance") or {}
         receipts = acceptance.get("receipts")
@@ -86,6 +97,24 @@ class Package:
             if "dir" in row:
                 name = row["dir"] + "/cdf.json"
                 self.references(self.document(name), sources)
+        process_layout = self.document("layout.json") if self.available("layout.json") else None
+        if process_layout is not None:
+            self.references(process_layout, sources)
+        for row in devices.values():
+            if "dir" not in row:
+                continue
+            name = row["dir"] + "/layout.json"
+            if not self.available(name):
+                continue
+            if process_layout is None:
+                fail("Device layout requires package layout.json")
+            layout = self.document(name)
+            self.references(layout, sources)
+            cdf_name = row["dir"] + "/cdf.json"
+            cdf_parameters = (set(self.document(cdf_name)["parameters"])
+                              if self.available(cdf_name) else None)
+            from .layout import validate_device
+            validate_device(layout, process=process_layout, cdf_parameters=cdf_parameters)
         from .provenance import verify
         return verify(self)
 

@@ -38,9 +38,9 @@ LIBRARY = obj({"library_ref": TEXT, "revision": TEXT, "name": TEXT, "resolved_pa
 SECTION = obj({"status": STATUS, "source": NULLABLE_TEXT, "items": arr({}), "count": COUNT,
                "truncated": BOOL, "returned": COUNT, "issues": arr(TEXT)}, ("status", "items"))
 IDENTITY = obj({"target": ref("target"), "available_views": arr(TEXT), "resolved_view_path": NULLABLE_TEXT,
-                "view_type": NULLABLE_TEXT, "master_file_modified": {"anyOf": [ref("raw"), {"type": "null"}]},
+                "oa_view_type": NULLABLE_TEXT, "master_file_modified": {"anyOf": [ref("raw"), {"type": "null"}]},
                 "master_version_source": TEXT, "source": TEXT},
-               ("target", "available_views", "resolved_view_path", "view_type", "source"))
+               ("target", "available_views", "resolved_view_path", "oa_view_type", "source"))
 PARAMETER = obj({"name": NULLABLE_TEXT, "cdf_type": NULLABLE_TEXT, "value_type": NULLABLE_TEXT,
                  "prompt": NULLABLE_TEXT, "description": NULLABLE_TEXT, "raw": RAW_MAP,
                  "default": ref("field"), "current": ref("field"), "editable": ref("field"),

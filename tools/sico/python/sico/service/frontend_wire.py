@@ -84,7 +84,13 @@ class FrontendWire:
             response = {"ok": False, "kind": "protocol", "message": "服务数据校验失败，请重新连接"}
         except ValueError as exc:
             response = {"ok": False, "kind": "rejected", "message": str(exc)[:512]}
-        except Exception:
+        except Exception as exc:
+            try:
+                from ..core.diagnostics import diagnostics
+            except ImportError:  # Legacy development layouts may predate the shared queue.
+                pass
+            else:
+                diagnostics.submit(__name__, "Frontend operation failed", exc)
             response = {"ok": False, "kind": "unknown", "message": "结果未确认，请核对原请求"}
         try:
             data = encode_payload(response, limit=limit)

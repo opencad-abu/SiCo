@@ -25,6 +25,36 @@ def test_qt_import_uses_pyqt5_and_qt5() -> None:
     assert qt_version.startswith("5.")
 
 
+def test_family_style_follows_the_project_appearance(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from PyQt5.QtCore import QSettings
+    from PyQt5.QtWidgets import QApplication
+
+    from cadgui.appearance import (
+        AppearancePreferences,
+        apply_application_appearance,
+        save_appearance,
+    )
+    from cadgui.palette import DARK, active
+
+    state = tmp_path / ".sico"
+    state.mkdir(mode=0o700)
+    path = state / "ai/agent/workspace.ini"
+    path.parent.mkdir(parents=True)
+    settings = QSettings(str(path), QSettings.IniFormat)
+    save_appearance(settings, AppearancePreferences("dark", 16, 10))
+    monkeypatch.setenv("SICO_TEMP_DIR", str(state))
+    application = QApplication.instance() or QApplication([])
+    point = application.font().pointSize()
+    try:
+        app_module.apply_application_style(application)
+        assert active().name == "dark"
+        assert DARK.background in application.styleSheet()
+    finally:
+        apply_application_appearance(
+            application, AppearancePreferences("light", point, point))
+
+
 def test_qt_environment_cleanup_preserves_platform_and_runtime() -> None:
     environment = {
         "QT_QPA_PLATFORM_PLUGIN_PATH": "/virtuoso/qt/plugins",

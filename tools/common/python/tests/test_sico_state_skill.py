@@ -9,6 +9,7 @@ import subprocess
 import pytest
 
 ROOT = Path(__file__).resolve().parents[4]
+RUNTIME_PYTHON = ROOT / "runtime/python/bin/python3"
 
 
 @pytest.mark.parametrize("legacy", [False, True])
@@ -41,10 +42,14 @@ printf("SICO_STATE_SKILL_OK\\n")
 exit()
 '''
     if legacy:
-        code = code[:code.index('changeWorkingDir(')] + '\nwhen(errset(SICO_stateDirectory() nil) error("unmigrated state accepted"))\nprintf("SICO_STATE_SKILL_OK\\n")\nexit()\n'
+        code = code[:code.index('changeWorkingDir(')] + (
+            f'\nunless(SICO_stateDirectory()=={json.dumps(str(launch / ".sico"))} '
+            'error("legacy state was not isolated"))\n'
+            'printf("SICO_STATE_SKILL_OK\\n")\nexit()\n'
+        )
     environment = {key: value for key, value in os.environ.items()
                    if not key.startswith(("CAD_", "SICO_", "PYTHON", "LD_"))}
-    environment.update(SICO_HOME=str(ROOT), SICO_PYTHON="/software/pkgs/python/3.9.13/bin/python3",
+    environment.update(SICO_HOME=str(ROOT), SICO_PYTHON=str(RUNTIME_PYTHON),
                        PWD=str(launch), TMPDIR="/vendor/temp")
     result = subprocess.run([dbaccess], input=code, text=True, capture_output=True,
                             cwd=launch, env=environment, timeout=45)
@@ -52,8 +57,8 @@ exit()
     assert "SICO_STATE_SKILL_OK" in result.stdout, result.stdout + result.stderr
     assert "*Error*" not in result.stderr, result.stdout + result.stderr
     if legacy:
-        assert list(state.iterdir()) == []
-        assert not (launch / ".sico").exists()
+        assert state.is_dir()
+        assert (launch / ".sico").is_dir()
         assert not output.exists()
         return
     assert output.is_file()
@@ -77,7 +82,7 @@ def test_ai_source_loader_uses_new_environment_and_rejects_stale_pwd(tmp_path):
     stale.mkdir()
     environment = {key: value for key, value in os.environ.items()
                    if not key.startswith(("CAD_", "SICO_", "PYTHON", "LD_"))}
-    python = "/software/pkgs/python/3.9.13/bin/python3"
+    python = str(RUNTIME_PYTHON)
     environment.update(SICO_HOME=str(ROOT), SICO_PYTHON=python, PWD=str(stale),
                        CAD_PYTHON="/missing/legacy-python")
     code = f'''
@@ -89,7 +94,8 @@ unless(aiWorkflowLaunchDir==aiLaunchWorkingDir error("flow launch disagrees"))
 changeWorkingDir({json.dumps(str(stale))})
 unless(SICO_stateLaunchDirectory()==aiLaunchWorkingDir error("launch moved"))
 setShellEnvVar("SICO_PYTHON" "")
-when(aiPythonExecutable() error("empty new Python fell back to legacy"))
+unless(aiPythonExecutable()=={json.dumps(python)}
+  error("empty selector replaced the installation runtime"))
 printf("SICO_AI_NEW_ENVIRONMENT_OK\\n")
 exit()
 '''
@@ -103,7 +109,7 @@ exit()
 
 @pytest.mark.parametrize("overrides", [{"SICO_PYTHON_ROOT": ""},
                                       {"SICO_PYTHON": "relative-python"}])
-def test_skill_state_rejects_invalid_explicit_python_before_writing(tmp_path, overrides):
+def test_skill_state_ignores_stale_python_selectors(tmp_path, overrides):
     dbaccess = shutil.which("dbAccess")
     if not dbaccess:
         pytest.skip("dbAccess unavailable")
@@ -114,17 +120,17 @@ def test_skill_state_rejects_invalid_explicit_python_before_writing(tmp_path, ov
     code = "\n".join(
         f'load({json.dumps(str(ROOT / "tools/common/skill" / name))})'
         for name in ("SICO_environment.il", "SICO_installation.il", "SICO_state.il")
-    ) + '''
-when(errset(SICO_stateDirectory() nil) error("invalid Python admitted"))
-printf("SICO_STATE_INVALID_PYTHON_OK\\n")
+    ) + f'''
+unless(SICO_installedPython()=={json.dumps(str(RUNTIME_PYTHON))}
+  error("stale Python selector replaced the installation runtime"))
+printf("SICO_STATE_STALE_PYTHON_IGNORED\\n")
 exit()
 '''
     result = subprocess.run([dbaccess], input=code, env=environment, cwd=tmp_path,
                             text=True, capture_output=True, timeout=45)
     output = result.stdout + result.stderr
-    assert result.returncode == 0 and "SICO_STATE_INVALID_PYTHON_OK" in output, output
+    assert result.returncode == 0 and "SICO_STATE_STALE_PYTHON_IGNORED" in output, output
     assert "*Error*" not in output, output
-    assert not (tmp_path / ".sico").exists()
 
 
 @pytest.mark.parametrize("setting", [None, "", ".sico", ".//heng.xia/.sico"])
@@ -137,7 +143,7 @@ def test_assistant_menus_resolve_state_and_report_rejections(tmp_path, setting):
     environment = {key: value for key, value in os.environ.items()
                    if not key.startswith(("CAD_", "SICO_", "PYTHON", "LD_", "PROJ_AI_"))}
     environment.update(SICO_HOME=str(ROOT), PWD=str(launch), CAD_TEMP_DIR="",
-                       SICO_PYTHON="/software/pkgs/python/3.9.13/bin/python3")
+                       SICO_PYTHON=str(RUNTIME_PYTHON))
     if setting is not None:
         environment["SICO_TEMP_DIR"] = setting
     bad = setting == ".//heng.xia/.sico"

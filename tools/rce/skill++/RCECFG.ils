@@ -117,7 +117,7 @@ procedure(rceInitializeConfig()
                           "(rceParasiticInfoCB hiGetCurrentForm() 2)")
   )
   extmsgStruc=make_extmsg(
-    ?viewEngine      "Output type:\"extview\" and \"smartview\" only support for QRC engine,\n\tSet \"EXT Engine\" to \"QRC\"."
+    ?viewEngine      "Output types \"idspf\" and \"extview\" (legacy \"smartview\") require the QRC engine,\n\tSet \"EXT Engine\" to \"QRC\"."
     ?lvsIgnoreError  "Enable this menu will lead to a wrong connection in parasitic netlist.\n\tUnless you just want to evaluate the parasitic RC and the output will not use to run simulation,\n\tOr you should not enable this menu."
     ?inputSvdbCci    "Use LVS not cleaned data may cause a parsitic accuracy issue or simulation issue.\n\tEnsure your SVDB/CCI data was passed LVS."
     ?projShellNotSet "The system shell environment variable: \"RCE_DB_DIR\" was not set,\n\tSet it and re-start virtuoso if want to use.\n\tRun directory type will be changed to \"Current Directory\"."

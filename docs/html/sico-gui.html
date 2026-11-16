@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SiCo 使用手册：SiCo 客户端首页、会话工作区、菜单和 CAD flow 表单入口说明。">
+<title>SiCo 界面 · SiCo 使用手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b4543a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='sans-serif' font-size='24' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/manual.css">
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <a class="brand" href="index.html" aria-label="SiCo 使用手册首页"><strong>SiCo<span aria-hidden="true" style="color:var(--accent);font-size:29px">.</span></strong><span>SILICON COPILOT</span></a>
+  <span class="edition">使用手册 / 2026.10</span>
+  <div class="top-actions"><button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">目录</button><button id="theme-toggle" type="button" aria-label="切换为深色主题">深色</button><button class="print-button" type="button">打印本页</button></div>
+</header>
+<noscript><style>@media(max-width:800px){.sidebar{display:block;position:static;width:auto;height:auto;box-shadow:none}.sidebar a{display:inline-block}}.top-actions{display:none}</style><p class="no-js">全部正文与链接可直接阅读。启用 JavaScript 后可使用筛选、复制与主题切换。</p></noscript>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="手册目录">
+<p class="rail-label">SICO DOCUMENTATION</p>
+<a href="index.html">开始阅读</a>
+<p class="nav-group">开始使用</p>
+<a href="sico-gui.html" aria-current="page">SiCo · 客户端界面</a>
+<a href="sico-workspace.html">SiCo · 工作区页面</a>
+<a href="installation.html">01 · 安装</a>
+<a href="environment.html">02 · 环境变量</a>
+<a href="virtuoso.html">03 · Virtuoso 集成</a>
+<a href="flows.html">04 · CAD flows</a>
+<p class="nav-group">流程指南</p>
+<a href="drc.html">DRC · 规则检查</a>
+<a href="lvs.html">LVS · 连接检查</a>
+<a href="rce.html">RCE · 寄生提取</a>
+<a href="mts.html">MTS · 多工艺网表</a>
+<a href="utilities.html">LEF / GDS / CDL</a>
+<a href="lsf.html">LSF · 运行与资源</a>
+<p class="nav-group">参考附录</p>
+<a href="appendix-pdk-data-standard.html">PDK 数据标准</a>
+<a href="appendix-circuit-template-standard.html">电路模板标准</a>
+<a href="appendix-symbol-template-standard.html">Symbol 模板标准</a>
+<a href="environment-internal.html">环境接口附录</a>
+<div class="rail-footer">SiCo 使用手册<br>Silicon Copilot · 使用参考</div>
+</nav>
+<div class="reading">
+<main id="main">
+<p class="eyebrow">00 / CLIENT INTERFACE</p>
+<h1>先认清界面，再开始任务。</h1>
+<p class="lead">SiCo 客户端分成“首页”和“会话工作区”两个阶段；DRC、LVS、RCE、MTS 等 CAD flow 则从 Virtuoso 的 SiCo 菜单打开独立表单。本页先说明客户端页面、菜单和按钮，再给出各 flow 的界面入口。</p>
+<div class="meta"><span class="tag">图形界面导览</span><span class="tag">按钮级说明</span><span class="tag">截图核对 · 2026.10.24</span></div>
+
+<figure class="figure">
+  <a href="assets/screenshots/sico-connected.png" aria-label="查看连接后的 SiCo 主界面原图"><img src="assets/screenshots/sico-connected.png" alt="连接后的 SiCo 主界面：左侧导航、中间对话、右侧审阅和底部输入区" loading="lazy"></a>
+  <figcaption><strong>连接后的 SiCo 主界面。</strong>示例已绑定 <code>adc_top/adc_8bit/layout</code>，并显示会话、任务、审阅与运行状态。左侧导航、右侧工作台和每个子页面的完整截图见<a href="sico-workspace.html">SiCo 工作区页面</a>。<span class="zoom-hint">点击图片查看原始尺寸</span></figcaption>
+</figure>
+
+<div class="ui-map" aria-label="SiCo 界面组成">
+  <div><b>首页</b>选择或启动 CDNS-IC、检查项目服务、进入智能体设置，并从会话历史继续。</div>
+  <div><b>会话工作区</b>阅读对话、查看任务队列与工作台、审阅工具请求，并在底部输入新任务。</div>
+  <div><b>CAD flow 表单</b>从 Virtuoso 的 <strong>SiCo</strong> 菜单打开，按输入、选项、输出和硬件分区。</div>
+  <div><b>独立监控窗口</b>MTS、LSF 和 DSPF Analyzer 使用独立窗口，关闭后不影响已经启动的项目服务。</div>
+</div>
+
+<h2 id="home">首页：连接与继续</h2>
+<p>首页是独立入口，不要求已经建立 AI 会话。顶部显示工程目录，中部给出连接状态与两个 CDNS-IC 入口，下部列出当前工程的会话历史。</p>
+<figure class="figure compact">
+  <a href="assets/screenshots/sico-home.png" aria-label="查看 SiCo 首页原图"><img src="assets/screenshots/sico-home.png" alt="SiCo 首页：工程路径、CDNS-IC 连接、智能体设置和会话历史" loading="lazy"></a>
+  <figcaption><strong>SiCo 首页。</strong>示例使用演示工程和示例历史；连接后会进入上方所示的会话工作区。<span class="zoom-hint">点击图片查看原始尺寸</span></figcaption>
+</figure>
+<div class="table-wrap"><table><thead><tr><th>页面/按钮</th><th>作用</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>工程：路径</strong></td><td>显示本次启动使用的工程目录。</td><td>连接 Virtuoso、读取 <code>cds.lib</code> 和写入 <code>.sico</code> 状态都以该目录为边界；先确认路径再连接。</td></tr>
+<tr><td><strong>连接 CDNS-IC…</strong></td><td>关联当前用户、当前工程中已经启动的 Virtuoso。</td><td>virtuoso 必须先加载 SiCo 集成；列表为空时检查工程路径、用户和 SiCo 初始化。</td></tr>
+<tr><td><strong>启动 CDNS-IC…</strong></td><td>由 SiCo 启动新的 Virtuoso 进程并建立关联。</td><td>需要站点已经配置启动命令；启动失败时查看窗口内提示和 Virtuoso 日志。</td></tr>
+<tr><td><strong>通信</strong>菜单</td><td>连接、启动、取消连接、断开连接和查看连接信息。</td><td>EMPY-AE 与 SNPS-CC 在当前版本显示为禁用入口。</td></tr>
+<tr><td><strong>智能体设置…</strong></td><td>配置模型、工作区、外部资源、数据来源等会话默认项。</td><td>修改会影响新会话；已有会话仍按启动时的设置运行。</td></tr>
+<tr><td><strong>Codex 特性…</strong></td><td>设置工程默认的 Codex 内建特性。</td><td>用于新会话和启动任务；不确定时保留工程默认值。</td></tr>
+<tr><td><strong>服务</strong>菜单</td><td>重试服务连接、停止服务或处理异常收尾。</td><td>“停止”会结束当前项目服务；普通关闭窗口应使用“挂起”，让会话继续保留。</td></tr>
+<tr><td><strong>会话历史</strong>列表</td><td>显示会话名称与状态。</td><td>双击一行进入该会话；只读浏览不会修改历史内容。</td></tr>
+<tr><td><strong>帮助</strong></td><td>打开本手册或显示产品、Python、Qt 与安装目录版本。</td><td>手册固定使用 Firefox 打开；文件缺失或浏览器不可用时会给出窗口内提示。</td></tr>
+</tbody></table></div>
+<div class="notice"><strong>关闭窗口不等于停止服务。</strong> 首页和会话窗口的关闭动作默认挂起界面，项目服务与已打开会话继续运行；只有明确选择“结束服务”才停止后台会话、队列和作业。通过 SiCo 启动的 Virtuoso 不会被自动关闭。</div>
+
+<h2 id="workspace">会话工作区：对话、任务与审阅</h2>
+<p>进入会话后，窗口由左侧导航、中央对话区、右侧工作台和底部输入区组成。左右面板都可以收成窄条；窗口变窄时会优先收起左侧导航，避免挤压对话正文。</p>
+<div class="notice"><strong>需要逐个页面查看？</strong> 左侧“会话历史 / 任务队列 / 窗口绑定 / 后台检查”，右侧“审阅 / 汇报 / 数据 / 进程 / 终端”，以及“详情”和设置页面，均在<a href="sico-workspace.html">SiCo 工作区页面</a>中配有截图和按钮说明。</div>
+<div class="table-wrap"><table><thead><tr><th>页面/按钮</th><th>作用</th><th>使用要点</th></tr></thead><tbody>
+<tr><td><strong>会话历史</strong>页签</td><td>上方列出本窗口已打开的会话，下方列出未打开的历史记录。</td><td>单击只选中，双击或回车才浏览；绿/橙/蓝圆点表示活动状态，灰色表示历史。</td></tr>
+<tr><td><strong>任务队列</strong>页签</td><td>显示排队、执行和已结束的任务。</td><td>忙碌时继续输入会进入该队列；取消只影响当前任务，未发送草稿会保留。</td></tr>
+<tr><td><strong>窗口绑定</strong>页签</td><td>显示当前对话关联的 Virtuoso 实例、设计对象与上下文。</td><td>提交任务前核对 library / cell / view；关联失效时从这里重新绑定。</td></tr>
+<tr><td><strong>后台检查</strong>页签</td><td>查看后台任务、服务连接和恢复状态。</td><td>用于诊断重连、租约和后台作业问题，不替代 CAD flow 的运行日志。</td></tr>
+<tr><td><strong>对话</strong>页签</td><td>显示用户输入、模型回复、工具调用和结果卡片。</td><td>工具运行中仍可继续输入；需要改变方向时使用“引导”而不是重复提交。</td></tr>
+<tr><td><strong>详情</strong>页签</td><td>显示当前选中的工件、审阅、结果或进程详情。</td><td>从对话中的链接、卡片或右侧列表进入；切回对话不会丢失当前页。</td></tr>
+<tr><td><strong>右侧工作台</strong></td><td>提供“审阅 / 汇报 / 数据 / 进程 / 终端”页面，并按工程任务、阶段和执行筛选。</td><td>审阅页用于回答需要确认的工具请求；汇报和数据页列出可读取的产物。</td></tr>
+<tr><td><strong>底部输入区</strong></td><td>输入任务，选择附件、执行权限、模型、推理强度、持续目标和回合设置。</td><td>回车发送，Shift+回车换行；忙碌时发送会排队，输入框中的未提交草稿不会被清空。</td></tr>
+<tr><td><strong>附件</strong>按钮</td><td>添加图片、音频、技能或文件引用。</td><td>附件随本回合提交；不把未确认的临时路径当作已提交内容。</td></tr>
+<tr><td><strong>执行权限</strong></td><td>选择 Codex 可以执行的本地操作范围。</td><td>范围越宽，越要确认当前目标和工程目录；涉及删除时仍应走审阅。</td></tr>
+<tr><td><strong>模型 / 推理强度</strong></td><td>覆盖本回合使用的模型与推理强度。</td><td>“模型默认”表示不覆盖；选项由当前模型清单决定，清单不可读时在回合设置中重试。</td></tr>
+<tr><td><strong>持续目标</strong>按钮</td><td>为当前会话设置长期目标。</td><td>目标适合跨多轮执行的任务；一次性问题不必设置。</td></tr>
+<tr><td><strong>回合设置</strong>按钮</td><td>修改本回合的模型、权限、推理和附件选项。</td><td>设置按会话和回合保存；提交前核对输入区上方的摘要。</td></tr>
+<tr><td><strong>停止 / 回到最新</strong>按钮</td><td>停止当前执行，或在阅读历史后回到最新位置。</td><td>停止后输入框保留草稿；需要继续未完成任务时使用恢复入口，不重新发送同一请求。</td></tr>
+</tbody></table></div>
+<h3 id="workspace-menus">菜单栏</h3>
+<div class="table-wrap"><table><thead><tr><th>菜单</th><th>常用入口</th><th>说明</th></tr></thead><tbody>
+<tr><td><strong>会话</strong></td><td>返回当前会话、会话历史与操作、执行待办任务、关闭 SiCo</td><td>关闭 SiCo 会先询问挂起还是结束服务。</td></tr>
+<tr><td><strong>通信 / 服务</strong></td><td>连接、启动、断开、连接信息；重试或停止项目服务</td><td>菜单是否出现取决于当前窗口和已登记的服务入口。</td></tr>
+<tr><td><strong>视图</strong></td><td>恢复默认布局</td><td>恢复面板宽度、停靠位置和左右页签显示。</td></tr>
+<tr><td><strong>工作区</strong></td><td>打开预览产物、会话历史与操作</td><td>用于查看图像、报告或其他已登记产物。</td></tr>
+<tr><td><strong>设置</strong></td><td>外观设置、智能体设置、Codex 特性、工程记忆</td><td>外观立即生效；模型和工程记忆的适用范围见各对话框说明。</td></tr>
+<tr><td><strong>工具</strong></td><td>终端</td><td>打开独立终端窗口；命令仍受当前工程和服务环境约束。</td></tr>
+<tr><td><strong>帮助</strong></td><td>用户手册、版本信息</td><td>位于菜单栏最右侧；手册为离线 HTML。</td></tr>
+</tbody></table></div>
+
+<h2 id="flow-forms">CAD flow 的界面入口</h2>
+<p>CAD flow 不在 SiCo 客户端内部打开，而是从 Virtuoso 菜单栏的 <strong>SiCo</strong> 菜单启动。窗口标题以当前站点标识开头，例如 <code>Silicon Copilot::DRC</code>。各表单共享同一套分区和底部按钮，但输入类型、工艺选项和输出项不同。</p>
+<div class="table-wrap"><table><thead><tr><th>菜单入口</th><th>窗口</th><th>主要用途</th></tr></thead><tbody>
+<tr><td><strong>SiCo → DRC</strong></td><td>DRC</td><td>运行 Calibre DRC，选择规则组、规则文件和 RVE 结果。</td></tr>
+<tr><td><strong>SiCo → LVS</strong></td><td>LVS</td><td>比较 OA/CDL/GDS 组合，生成 SVDB 并打开 RVE。</td></tr>
+<tr><td><strong>SiCo → RCE</strong></td><td>RCE</td><td>配置单角或多角寄生提取，输出 DSPF/SPEF/SPF 或原生 view。</td></tr>
+<tr><td><strong>SiCo → DSPF Analyzer…</strong></td><td>DSPF Analyzer</td><td>浏览寄生网表、网络连通性和电阻路径。</td></tr>
+<tr><td><strong>SiCo → Stream GDS / Export CDL</strong></td><td>Stream GDS / Export CDL</td><td>导出独立 GDS 或 CDL 数据。</td></tr>
+<tr><td><strong>SiCo → LEF Generator</strong></td><td>LEF Generator</td><td>生成 geometry LEF 与 technology LEF。</td></tr>
+<tr><td><strong>SiCo → Netlist to View…</strong></td><td>Netlist to View</td><td>把 Spectre/HSPICE/SPICE/DSPF 文本网表导入 OA view。</td></tr>
+<tr><td><strong>SiCo → MTS Netlistor…</strong></td><td>MTS Netlistor</td><td>从源工程生成多工艺网表并发布 symbol/netlist view。</td></tr>
+<tr><td><strong>SiCo → LSF Load Monitor</strong></td><td>LSF Loading Monitor</td><td>查看队列、主机、作业负载并选择运行位置。</td></tr>
+</tbody></table></div>
+
+<h2 id="flow-shared">flow 表单的共同结构</h2>
+<p>DRC、LVS、RCE 和 LEF 都把控件放在带标题的边框组中。初次打开时先从上到下检查，不要直接点 Run。</p>
+<div class="ui-map" aria-label="CAD flow 表单的五个公共区域">
+  <div><b>Profile</b><code>Config File</code> 与 <strong>Load / Save / Save As…</strong> 管理可复用业务设置。</div>
+  <div><b>Input</b>选择 run scope、输入类型、library / cell / view，必要时展开 More Input Options。</div>
+  <div><b>Options</b>选择规则文件、LVS/RCE 选项、工艺 corner、抽取类型与过滤条件。</div>
+  <div><b>Output</b>决定项目/当前/自定义输出目录；RCE 还包含输出格式、view 和 reduction。</div>
+  <div><b>Tool / Hardware</b>核对引擎、执行主机、队列、CPU 和并行 cell 数。</div>
+  <div><b>底部按钮</b><strong>Run+Close</strong> 运行后关闭，<strong>Run</strong> 保留窗口，<strong>Report</strong> 打开已有结果，<strong>Close</strong> 关闭。</div>
+</div>
+<div class="notice"><strong>有三角形的地方不要漏看。</strong> “More DRC Options”“More LVS Options”“More Extraction Options”“More Input Options”等展开后包含规则选择、CDL Include、SVDB 查询、过滤和自定义 SVRF。折叠状态不会重置已经保存的值，但会影响本次运行内容。</div>
+
+<h2 id="first-use">第一次操作的推荐顺序</h2>
+<ol class="steps">
+<li>从工程目录启动 SiCo，在首页核对“工程”路径，等待项目服务就绪。</li>
+<li>使用 <strong>通信 → 连接 CDNS-IC…</strong> 关联已经加载 SiCo 的 Virtuoso，或使用 <strong>启动 CDNS-IC…</strong> 新开实例。</li>
+<li>在 Virtuoso 中选择对应 flow，先点 <strong>Load</strong> 载入团队 Profile，再核对输入和输出路径。</li>
+<li>需要远程执行时，在 Hardware 区选择 <strong>LSF Farm</strong>，通过 <strong>LSF</strong> 按钮验证 queue / host，再提交。</li>
+<li>运行后用 <strong>Report</strong> 或运行目录中的日志/结果检查问题；需要复用设置时用 <strong>Save As…</strong> 保存新的 Profile。</li>
+</ol>
+
+<footer class="page-footer"><span>内容基线 ed47e32e · 界面核对 2026-10-24</span><a href="sico-workspace.html">SiCo 工作区页面 →</a></footer>
+</main>
+<aside class="toc" id="toc" aria-label="本页目录"><strong>本页内容</strong><a href="#home">首页：连接与继续</a><a href="#workspace">会话工作区</a><a href="#workspace-menus">菜单栏</a><a href="#flow-forms">CAD flow 入口</a><a href="#flow-shared">flow 表单结构</a><a href="#first-use">第一次操作顺序</a></aside>
+</div></div>
+</body>
+</html>

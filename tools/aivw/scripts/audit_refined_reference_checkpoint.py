@@ -45,7 +45,7 @@ def audit(config_path):
         if pair['run_status']=='PASS':raise ValueError('failed history unexpectedly passed')
         failed.append(pair)
     request={'kind':'refined-reference-checkpoint-audit','config_sha256':sha256_file(config_path),'auditor_sha256':sha256_file(Path(__file__)),'inputs':rows,'failed_reference_runs':failed};digest=stable_digest(request)
-    run=allocate_split_run(resolve_launch_paths(),Path('/path/to/xh/amsVerify/data/ams').resolve(),library='aivw',cell='refined_reference',view='audit',kind='refined-reference-audit',request_digest=digest)
+    run=allocate_split_run(resolve_launch_paths(),Path('/workarea/xh/amsVerify/data/ams').resolve(),library='aivw',cell='refined_reference',view='audit',kind='refined-reference-audit',request_digest=digest)
     summary={'status':'PASS_EVIDENCE_AUDIT','qualification':'NOT_ESTABLISHED','holdout_evaluated':False,'inputs':rows,'failed_reference_runs':failed}
     write_json_once(run.control_root/'request.json',request);write_json_once(run.payload_root/'summary.json',summary)
     publish_split_manifests(run,request_digest=digest,status=summary['status'],control_details={'payload_root':str(run.payload_root)},payload_details={'scope':'evidence_consistency_not_accuracy_qualification'},control_artifacts=[run.control_root/'request.json'],payload_artifacts=[run.payload_root/'summary.json'])

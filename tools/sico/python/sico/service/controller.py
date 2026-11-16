@@ -9,7 +9,7 @@ import uuid
 
 from ..core.contracts import BoundContext
 from ..core.startup import INITIAL_PROMPT
-from .python_startup import initial_context
+
 from ..transport.targets import submission
 from .backend_commands import SessionBackendCommands
 from .binding_commands import SessionBindings
@@ -331,11 +331,7 @@ class SessionController:
                 if self.inbox.active.get("origin") == "startup":
                     initialize = getattr(self.loop, "initialize_context", None)
                     options = {"context": context, "input_id": input_id}
-                    stream = (
-                        initialize(self._cancel.is_set, **options)
-                        if initialize
-                        else initial_context(self.loop, self._cancel.is_set, **options)
-                    )
+                    stream = initialize(self._cancel.is_set, **options)
                 else:
                     stream = self.loop.run(
                         text,

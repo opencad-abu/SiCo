@@ -3,7 +3,7 @@
 import pytest
 
 from utility.a_philosophy_exports import ExportResolver, check_export_groups, surface_digest
-from conftest import write
+from utility.tests.gate_fixtures import write
 
 
 @pytest.fixture
